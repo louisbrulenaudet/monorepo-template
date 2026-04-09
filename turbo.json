@@ -1,0 +1,113 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "tui",
+  "envMode": "loose",
+  "globalDependencies": [
+    "biome.json",
+    "tsconfig.json",
+    "pnpm-workspace.yaml",
+    ".npmrc"
+  ],
+  "concurrency": "20",
+  "tasks": {
+    "lint": {
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.js",
+        "**/*.json",
+        "biome.json",
+        "**/vite.config.*",
+        "**/tailwind.config.*"
+      ],
+      "outputs": []
+    },
+    "format": {
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.js",
+        "**/*.json",
+        "biome.json",
+        "**/vite.config.*",
+        "**/tailwind.config.*"
+      ],
+      "outputs": []
+    },
+    "check": {
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.js",
+        "**/*.json",
+        "biome.json",
+        "**/vite.config.*",
+        "**/tailwind.config.*"
+      ],
+      "outputs": []
+    },
+    "check-types": {
+      "dependsOn": [
+        "^check-types",
+        "types"
+      ],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "tsconfig.json",
+        "**/worker-configuration.d.ts",
+        "$TURBO_ROOT$/tsconfig.json"
+      ],
+      "outputs": []
+    },
+    "types": {
+      "dependsOn": [
+        "^types"
+      ],
+      "inputs": [
+        "wrangler.jsonc",
+        "wrangler.toml"
+      ],
+      "outputs": [
+        "worker-configuration.d.ts"
+      ]
+    },
+    "build": {
+      "dependsOn": [
+        "^build",
+        "types"
+      ],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.js",
+        "src/**/*.jsx",
+        "src/content/**",
+        "public/**/*",
+        "index.html",
+        "**/vite.config.*",
+        "**/tailwind.config.*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "preview": {
+      "cache": false,
+      "persistent": true
+    },
+    "deploy": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": false,
+      "outputLogs": "new-only"
+    }
+  }
+}

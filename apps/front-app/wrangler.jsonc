@@ -1,0 +1,30 @@
+{
+  "name": "front-app",
+  "compatibility_date": "2026-04-07",
+  "assets": {
+    "not_found_handling": "single-page-application"
+  },
+  "preview_urls": false,
+  "send_metrics": false,
+  "vars": {
+    "ENVIRONMENT": "dev"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true,
+  "compatibility_flags": ["nodejs_compat"],
+  "env": {
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production"
+      },
+      "observability": {
+        "enabled": true,
+        "traces": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}

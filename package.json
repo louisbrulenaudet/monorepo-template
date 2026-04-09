@@ -1,0 +1,35 @@
+{
+  "name": "monorepo",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "check": "biome check --write .",
+    "check-types": "turbo run check-types",
+    "generate-types": "turbo run types --filter='./apps/*'",
+    "update": "pnpm update --recursive",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.10",
+    "@cloudflare/workers-types": "^4.20260408.1",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^25.5.2",
+    "cloc": "2.6.0-cloc",
+    "cloudflare": "^5.2.0",
+    "git-format-staged": "^4.0.1",
+    "husky": "^9.1.7",
+    "turbo": "^2.9.5",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.81.0"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=18"
+  }
+}

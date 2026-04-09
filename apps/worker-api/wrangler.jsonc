@@ -1,0 +1,27 @@
+{
+  "name": "worker-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-07",
+  "dev": {
+    "port": 8725,
+    "inspector_port": 0
+  },
+  "send_metrics": false,
+  "vars": {
+    "ENVIRONMENT": "dev",
+    "CORS_ORIGINS": "http://localhost:5174"
+  },
+  "env": {
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production"
+      },
+      "observability": {
+        "enabled": true,
+        "traces": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}

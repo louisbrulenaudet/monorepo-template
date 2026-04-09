@@ -1,0 +1,25 @@
+{
+  "name": "worker-api",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "format": "biome format . --write",
+    "lint": "biome lint . --write",
+    "check": "biome check . --write",
+    "check-types": "tsc --noEmit",
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --minify src/index.ts",
+    "types": "wrangler types -c ./wrangler.jsonc"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "@repo/dtos-common": "workspace:*",
+    "@repo/enums-common": "workspace:*",
+    "hono": "^4.12.12"
+  },
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "node": ">=18"
+  }
+}

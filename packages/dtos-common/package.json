@@ -1,0 +1,25 @@
+{
+  "name": "@repo/dtos-common",
+  "version": "0.0.1",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api/index.ts"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*"
+  },
+  "scripts": {
+    "format": "biome format . --write",
+    "lint": "biome lint . --write",
+    "check": "biome check . --write",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/enums-common": "workspace:*",
+    "zod": "^4.3.6"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "front-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "format": "biome format . --write",
+    "lint": "biome lint . --write",
+    "check": "biome check . --write",
+    "check-types": "tsc -p tsconfig.json --noEmit",
+    "build": "pnpm run check-types && vite build",
+    "preview": "pnpm run build && vite preview",
+    "deploy": "pnpm run build && wrangler deploy",
+    "types": "wrangler types"
+  },
+  "dependencies": {
+    "@repo/dtos-common": "workspace:*",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router": "^7.14.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.31.1",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "^4.2.2",
+    "vite": "^8.0.7"
+  }
+}

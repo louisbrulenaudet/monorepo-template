@@ -1,0 +1,21 @@
+{
+  "name": "@repo/typescript-config",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./base.json": "./base.json",
+    "./workers.json": "./workers.json",
+    "./workers-lib.json": "./workers-lib.json",
+    "./vite-react.json": "./vite-react.json",
+    "./vite-node.json": "./vite-node.json"
+  },
+  "scripts": {
+    "lint": "biome lint . --write",
+    "check": "biome check . --write"
+  }
+}

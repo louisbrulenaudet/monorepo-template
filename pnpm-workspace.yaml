@@ -1,0 +1,23 @@
+packages:
+  - apps/*
+  - packages/*
+
+auditConfig:
+  ignoreCves: []
+  ignoreGhsas: []
+
+ignoredBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
+
+onlyBuiltDependencies:
+  - protobufjs
+
+minimumReleaseAge: 1440
+
+minimumReleaseAgeExclude:
+  - '@cloudflare/*'
+  - wrangler
+  - miniflare
+  - typescript
