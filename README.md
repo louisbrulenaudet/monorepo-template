@@ -199,7 +199,7 @@ pnpm turbo dev --filter=worker-name
 
 1. **Start the target worker (e.g., ORM service):**
    ```bash
-   cd apps/orm-account
+   cd apps/orm-example
    make dev
    ```
 

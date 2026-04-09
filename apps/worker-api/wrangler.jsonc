@@ -8,8 +8,7 @@
   },
   "send_metrics": false,
   "vars": {
-    "ENVIRONMENT": "dev",
-    "CORS_ORIGINS": "http://localhost:5174"
+    "ENVIRONMENT": "dev"
   },
   "env": {
     "production": {

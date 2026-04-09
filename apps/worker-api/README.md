@@ -9,11 +9,11 @@ A REST API gateway providing secure HTTP endpoints for frontend applications and
 
 ## Current configuration (checked-in starter)
 
-The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev port **8725**, and a minimal set of `vars` (e.g. `ENVIRONMENT`, `CORS_ORIGINS`).
+The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev port **8725**, and a minimal set of `vars` (e.g. `ENVIRONMENT`).
 
 What you can run today:
 - Health endpoint at `GET /api/v1/health`
-- Default CORS suitable for local `front-app` development (`http://localhost:5174`)
+- CORS allows any origin by default. To restrict browsers to specific origins, set the `CORS_ORIGINS` var (comma-separated list, e.g. `http://localhost:5174,https://app.example.com`) in `wrangler.jsonc` or `.dev.vars`.
 
 What you can add as you grow the repo:
 - **Service bindings** to other Workers (configure under `services` in `wrangler.jsonc`)

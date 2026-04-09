@@ -17,25 +17,25 @@ const app = new Hono<{ Bindings: WorkerApiBindings }>();
 
 app.use(secureHeaders());
 
-const defaultAllowedOrigins = ["http://localhost:5174"];
 const allowedHeaders = ["Content-Type", "Authorization"];
 const allowedMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
 
-function parseCorsOrigins(value: string | undefined): string[] {
-  if (!value) {
-    return defaultAllowedOrigins;
+/** `null` means permissive mode (any origin). */
+function parseCorsOrigins(value: string | undefined): string[] | null {
+  if (value === undefined || value.trim() === "") {
+    return null;
   }
   const origins = value
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
-  return origins.length > 0 ? origins : defaultAllowedOrigins;
+  return origins.length > 0 ? origins : null;
 }
 
 app.use("/api/*", (c, next) => {
   const allowedOrigins = parseCorsOrigins(c.env.CORS_ORIGINS);
   return cors({
-    origin: allowedOrigins,
+    origin: allowedOrigins ?? "*",
     allowHeaders: allowedHeaders,
     allowMethods: allowedMethods,
     maxAge: 600,
@@ -61,7 +61,7 @@ app.use("/api/*", async (c, next) => {
   const allowedOrigins = parseCorsOrigins(c.env.CORS_ORIGINS);
 
   return csrf({
-    origin: allowedOrigins,
+    origin: allowedOrigins === null ? () => true : allowedOrigins,
     secFetchSite: (value) => value === "same-origin" || value === "same-site",
   })(c, next);
 });
