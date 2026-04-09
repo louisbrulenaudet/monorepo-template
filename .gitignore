@@ -17,6 +17,7 @@
 .env.production
 .env.*
 !.env.example
+!.env.production.example
 
 # Dependencies and build cache
 node_modules/

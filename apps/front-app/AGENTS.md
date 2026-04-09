@@ -69,7 +69,7 @@ apps/front-app/
 | Add a typed API call | `src/services/workerApi/<feature>.ts` using `fetchJsonWithSchema` |
 | Add a reusable UI component | `src/components/ui/<ComponentName>.tsx` |
 | Add a data-fetching hook | `src/hooks/use-<feature>.ts` |
-| Change the API base URL | `src/config/env.ts` (`VITE_WORKER_API_BASE_URL`) |
+| Change the API base URL | `src/config/env.ts` (`VITE_WORKER_API_BASE_URL`); production builds: `.env.production` from [`.env.production.example`](.env.production.example) |
 | Add a frontend-only enum | `src/enums/<feature>.ts` + export from `src/enums/index.ts` |
 | Add a shared enum | `packages/enums-common/src/index.ts` |
 | Modify SPA routing behavior | `wrangler.jsonc` |
@@ -99,6 +99,9 @@ flowchart LR
 ```bash
 # Copy for local overrides
 cp .env.example .env.local
+
+# Production build / deploy (not loaded by vite dev)
+cp .env.production.example .env.production
 ```
 
 **Important**: `VITE_*` variables are **inlined at build time** by Vite. Changing the API URL requires a rebuild and redeploy — it is not a runtime config.

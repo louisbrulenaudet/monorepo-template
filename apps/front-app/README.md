@@ -121,11 +121,18 @@ From this app directory (`apps/front-app/`):
 
 The app calls `worker-api` using a base URL from `import.meta.env.VITE_WORKER_API_BASE_URL`. In development it defaults to `http://localhost:8725` when unset (see `src/config/env.ts`).
 
-Copy [`.env.example`](.env.example) to `.env` or `.env.local` and set `VITE_WORKER_API_BASE_URL` when needed.
+| Goal | File |
+|------|------|
+| Local dev overrides | Copy [`.env.example`](.env.example) to `.env` or `.env.local` |
+| Production build / deploy | Copy [`.env.production.example`](.env.production.example) to `.env.production` |
+
+Vite loads `.env.production` only for `vite build` (not for `vite dev`), so you can keep a stable API URL for deploys without changing dev defaults.
 
 Examples:
 - **Development** (default): leave unset → `http://localhost:8725`
-- **Production**: set to your deployed `worker-api` origin at build time
+- **Production**: set `VITE_WORKER_API_BASE_URL` in `.env.production` to your deployed `worker-api` origin before `make build` or `make deploy`
+
+Deploy only the frontend from the monorepo root: `pnpm turbo run deploy --filter=front-app`.
 
 Important: `VITE_*` variables are inlined during build. Changing `VITE_WORKER_API_BASE_URL` requires rebuilding/redeploying the frontend assets.
 
