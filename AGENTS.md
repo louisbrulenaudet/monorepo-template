@@ -545,7 +545,7 @@ Use this table to immediately find the right location for any task without searc
 | Add a typed API call from frontend | `apps/front-app/src/services/workerApi/<feature>.ts` |
 | Add a reusable React component | `apps/front-app/src/components/ui/` |
 | Add a reusable hook | `apps/front-app/src/hooks/` |
-| Change API base URL in frontend | `apps/front-app/src/config/env.ts` (`VITE_WORKER_API_BASE_URL`) |
+| Change API base URL in frontend | `apps/front-app/src/config/env.ts` (`VITE_API_BASE_URL`) |
 | Add middleware to API | `apps/worker-api/src/index.ts` (before route mounts) |
 | Change shared TS compiler options | `packages/typescript-config/<preset>.json` |
 | Add a new Worker app | Scaffold under `apps/`, then run `make install` |

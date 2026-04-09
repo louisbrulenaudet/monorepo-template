@@ -49,7 +49,7 @@ apps/front-app/
 
 ```mermaid
 flowchart LR
-  Env[env_ts] --> BaseUrl[workerApiBaseUrl]
+  Env[env_ts] --> BaseUrl[apiBaseUrl]
   BaseUrl --> Services[src_services_workerApi]
   Services --> Fetch[fetchJsonWithSchema]
   Fetch --> API[worker-api_HTTP]
@@ -119,7 +119,7 @@ From this app directory (`apps/front-app/`):
 
 ### Environment Variables
 
-The app calls `worker-api` using a base URL from `import.meta.env.VITE_WORKER_API_BASE_URL`. In development it defaults to `http://localhost:8725` when unset (see `src/config/env.ts`).
+The app calls `worker-api` using a base URL from `import.meta.env.VITE_API_BASE_URL`. In development it defaults to `http://localhost:8725` when unset (see `src/config/env.ts`).
 
 | Goal | File |
 |------|------|
@@ -130,11 +130,11 @@ Vite loads `.env.production` only for `vite build` (not for `vite dev`), so you 
 
 Examples:
 - **Development** (default): leave unset → `http://localhost:8725`
-- **Production**: set `VITE_WORKER_API_BASE_URL` in `.env.production` to your deployed `worker-api` origin before `make build` or `make deploy`
+- **Production**: set `VITE_API_BASE_URL` in `.env.production` to your deployed `worker-api` origin before `make build` or `make deploy`
 
 Deploy only the frontend from the monorepo root: `pnpm turbo run deploy --filter=front-app`.
 
-Important: `VITE_*` variables are inlined during build. Changing `VITE_WORKER_API_BASE_URL` requires rebuilding/redeploying the frontend assets.
+Important: `VITE_*` variables are inlined during build. Changing `VITE_API_BASE_URL` requires rebuilding/redeploying the frontend assets.
 
 ## Development
 

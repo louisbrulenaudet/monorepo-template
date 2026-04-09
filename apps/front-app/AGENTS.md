@@ -45,7 +45,7 @@ apps/front-app/
 │   │   ├── fetch-api.ts              # fetchJsonWithSchema utility
 │   │   └── api-health-dot.ts
 │   ├── config/
-│   │   └── env.ts                    # VITE_WORKER_API_BASE_URL + dev default
+│   │   └── env.ts                    # VITE_API_BASE_URL + dev default
 │   ├── enums/
 │   │   ├── api-health-status.ts      # Frontend-only enums
 │   │   └── index.ts
@@ -69,7 +69,7 @@ apps/front-app/
 | Add a typed API call | `src/services/workerApi/<feature>.ts` using `fetchJsonWithSchema` |
 | Add a reusable UI component | `src/components/ui/<ComponentName>.tsx` |
 | Add a data-fetching hook | `src/hooks/use-<feature>.ts` |
-| Change the API base URL | `src/config/env.ts` (`VITE_WORKER_API_BASE_URL`); production builds: `.env.production` from [`.env.production.example`](.env.production.example) |
+| Change the API base URL | `src/config/env.ts` (`VITE_API_BASE_URL`); production builds: `.env.production` from [`.env.production.example`](.env.production.example) |
 | Add a frontend-only enum | `src/enums/<feature>.ts` + export from `src/enums/index.ts` |
 | Add a shared enum | `packages/enums-common/src/index.ts` |
 | Modify SPA routing behavior | `wrangler.jsonc` |
@@ -79,7 +79,7 @@ apps/front-app/
 
 ```mermaid
 flowchart LR
-  EnvTs["src/config/env.ts\n(VITE_WORKER_API_BASE_URL)"] --> BaseUrl["workerApiBaseUrl"]
+  EnvTs["src/config/env.ts\n(VITE_API_BASE_URL)"] --> BaseUrl["apiBaseUrl"]
   BaseUrl --> Service["src/services/workerApi/<feature>.ts"]
   Service --> Fetch["fetchJsonWithSchema(url, Schema)"]
   Fetch --> HTTP["HTTP to worker-api :8725"]
@@ -88,13 +88,13 @@ flowchart LR
   Hook --> Component["React component"]
 ```
 
-**Never** hardcode `http://localhost:8725` outside `src/config/env.ts`. All API base URL usage must go through `workerApiBaseUrl`.
+**Never** hardcode `http://localhost:8725` outside `src/config/env.ts`. All API base URL usage must go through `apiBaseUrl`.
 
 ## Environment Configuration
 
 | Variable | Purpose |
 |---------|---------|
-| `VITE_WORKER_API_BASE_URL` | Base URL for `worker-api`; defaults to `http://localhost:8725` in dev if unset |
+| `VITE_API_BASE_URL` | Base URL for `worker-api`; defaults to `http://localhost:8725` in dev if unset |
 
 ```bash
 # Copy for local overrides
@@ -188,7 +188,7 @@ import { HealthResponseSchema } from "@repo/dtos-common/api";
 
 export async function getHealth() {
   return fetchJsonWithSchema(
-    `${workerApiBaseUrl}/api/v1/health`,
+    `${apiBaseUrl}/api/v1/health`,
     HealthResponseSchema,
   );
 }
