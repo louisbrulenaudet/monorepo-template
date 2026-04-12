@@ -61,7 +61,7 @@ app.use("/api/*", async (c, next) => {
   const allowedOrigins = parseCorsOrigins(c.env.CORS_ORIGINS);
 
   return csrf({
-    origin: allowedOrigins === null ? () => true : allowedOrigins,
+    origin: allowedOrigins ?? (() => true),
     secFetchSite: (value) => value === "same-origin" || value === "same-site",
   })(c, next);
 });

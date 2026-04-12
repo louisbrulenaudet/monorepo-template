@@ -16,17 +16,17 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.10",
-    "@cloudflare/workers-types": "^4.20260408.1",
+    "@biomejs/biome": "^2.4.11",
+    "@cloudflare/workers-types": "^4.20260412.1",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^25.5.2",
+    "@types/node": "^25.6.0",
     "cloc": "2.6.0-cloc",
     "cloudflare": "^5.2.0",
     "git-format-staged": "^4.0.1",
     "husky": "^9.1.7",
-    "turbo": "^2.9.5",
+    "turbo": "^2.9.6",
     "typescript": "^5.9.3",
-    "wrangler": "^4.81.0"
+    "wrangler": "^4.81.1"
   },
   "packageManager": "pnpm@10.33.0",
   "engines": {
