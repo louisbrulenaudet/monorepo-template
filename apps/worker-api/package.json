@@ -16,7 +16,7 @@
     "@hono/zod-validator": "^0.7.6",
     "@repo/dtos-common": "workspace:*",
     "@repo/enums-common": "workspace:*",
-    "hono": "^4.12.12"
+    "hono": "^4.12.14"
   },
   "packageManager": "pnpm@10.27.0",
   "engines": {
