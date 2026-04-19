@@ -9,9 +9,9 @@
     "lint": "biome lint . --write",
     "check": "biome check . --write",
     "check-types": "tsc -p tsconfig.json --noEmit",
-    "build": "pnpm run check-types && vite build",
-    "preview": "pnpm run build && vite preview",
-    "deploy": "pnpm run build && wrangler deploy --env production",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "wrangler deploy --env production",
     "types": "wrangler types"
   },
   "dependencies": {

@@ -1,113 +1,72 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
-  "envMode": "loose",
+  "envMode": "strict",
   "globalDependencies": [
     "biome.json",
     "tsconfig.json",
     "pnpm-workspace.yaml",
     ".npmrc"
   ],
+  "globalPassThroughEnv": ["CI", "NODE_ENV"],
   "concurrency": "20",
   "tasks": {
     "lint": {
-      "inputs": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.js",
-        "**/*.json",
-        "biome.json",
-        "**/vite.config.*",
-        "**/tailwind.config.*"
-      ],
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "format": {
-      "inputs": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.js",
-        "**/*.json",
-        "biome.json",
-        "**/vite.config.*",
-        "**/tailwind.config.*"
-      ],
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "check": {
-      "inputs": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.js",
-        "**/*.json",
-        "biome.json",
-        "**/vite.config.*",
-        "**/tailwind.config.*"
-      ],
+      "cache": false,
+      "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "check-types": {
-      "dependsOn": [
-        "^check-types",
-        "types"
-      ],
-      "inputs": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "tsconfig.json",
-        "**/worker-configuration.d.ts",
-        "$TURBO_ROOT$/tsconfig.json"
-      ],
+      "cache": false,
+      "dependsOn": ["^check-types", "types"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.json"],
       "outputs": []
     },
     "types": {
-      "dependsOn": [
-        "^types"
-      ],
-      "inputs": [
-        "wrangler.jsonc",
-        "wrangler.toml"
-      ],
-      "outputs": [
-        "worker-configuration.d.ts"
-      ]
+      "cache": false,
+      "dependsOn": ["^types"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["worker-configuration.d.ts"]
     },
     "build": {
-      "dependsOn": [
-        "^build",
-        "types"
-      ],
-      "inputs": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.js",
-        "src/**/*.jsx",
-        "src/content/**",
-        "public/**/*",
-        "index.html",
-        "**/vite.config.*",
-        "**/tailwind.config.*",
-        "tsconfig.json",
-        "package.json"
-      ],
-      "outputs": [
-        "dist/**"
-      ]
+      "cache": false,
+      "dependsOn": ["^build", "check-types", "types"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["dist/**"],
+      "env": ["NODE_ENV", "VITE_API_BASE_URL"]
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "passThroughEnv": ["VITE_API_BASE_URL"]
     },
     "preview": {
+      "dependsOn": ["build"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "passThroughEnv": ["VITE_API_BASE_URL", "NODE_ENV"]
     },
     "deploy": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "cache": false,
-      "outputLogs": "new-only"
+      "outputLogs": "new-only",
+      "passThroughEnv": [
+        "CI",
+        "NODE_ENV",
+        "CLOUDFLARE_API_TOKEN",
+        "CLOUDFLARE_ACCOUNT_ID",
+        "CF_ACCOUNT_ID"
+      ]
     }
   }
 }
