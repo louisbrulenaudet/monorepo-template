@@ -36,8 +36,8 @@ Conduct a performance-only review. Inspect the following and call out violations
 
 ### Frontend critical path and bundle size
 
-- **Artifacts:** [apps/front-app/vite.config.ts](apps/front-app/vite.config.ts), [apps/front-app/src/main.tsx](apps/front-app/src/main.tsx), [apps/front-app/src/App.tsx](apps/front-app/src/App.tsx), components under [apps/front-app/src/](apps/front-app/src/).
-- **Checks:** Vite: code-splitting per route or chunk strategy (`React.lazy`, dynamic import); no single huge bundle without reason. Tree-shaking: avoid barrel imports that pull in unused code; check for side-effectful imports. Prefetch or preload for high-probability next navigation when added. LCP: hero or main image has `fetchpriority="high"` and appropriate size where applicable; no render-blocking scripts on critical path.
+- **Artifacts:** [apps/front-app/vite.config.ts](apps/front-app/vite.config.ts), [apps/front-app/src/main.tsx](apps/front-app/src/main.tsx), [apps/front-app/src/routes/](apps/front-app/src/routes/), [apps/front-app/src/pages/](apps/front-app/src/pages/), components under [apps/front-app/src/](apps/front-app/src/).
+- **Checks:** Vite: TanStack Router `autoCodeSplitting` per route; no single huge bundle without reason. Tree-shaking: avoid barrel imports that pull in unused code; check for side-effectful imports. Prefetch or preload for high-probability next navigation when added. LCP: hero or main image has `fetchpriority="high"` and appropriate size where applicable; no render-blocking scripts on critical path.
 
 ### Images and layout stability
 

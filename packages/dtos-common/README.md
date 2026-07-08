@@ -1,6 +1,6 @@
 # @repo/dtos-common
 
-[![Biome](https://img.shields.io/static/v1?label=lint&message=Biome&color=blue&logo=biome&logoColor=white)](https://biomejs.dev/)
+[![OXC](https://img.shields.io/badge/lint-oxlint-blue)](https://oxc.rs)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Zod](https://img.shields.io/static/v1?label=validation&message=Zod&color=blue&logo=zod&logoColor=white)](https://github.com/colinhacks/zod)
 
@@ -21,7 +21,7 @@ This is the “contract” layer of the repo: schema changes happen here first, 
 
 - **Language:** TypeScript (strict mode, ESNext)
 - **Validation:** Zod
-- **Formatting/Linting:** Biome (spaces, double quotes, recommended rules)
+- **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm
 
 ## Installation
@@ -87,17 +87,17 @@ return c.json(response);
 
 | Command                | Description                                 |
 |------------------------|---------------------------------------------|
-| `make format`          | Format codebase using Biome                 |
-| `make lint`            | Lint codebase using Biome                   |
-| `make check`           | Run full Biome check (format + lint)        |
+| `make format`          | Format codebase using oxfmt                 |
+| `make lint`            | Lint codebase using oxlint                  |
+| `make check`           | Run full OXC check (oxfmt + oxlint)         |
 | `make check-types`     | Check TypeScript types                      |
 
 ### Direct pnpm Commands
 
 ```bash
-pnpm format          # Format with Biome
-pnpm lint            # Lint with Biome
-pnpm check           # Full Biome check
+pnpm format          # Format with oxfmt
+pnpm lint            # Lint with oxlint
+pnpm check           # Full OXC check
 pnpm check-types     # Check TypeScript types
 ```
 

@@ -1,0 +1,94 @@
+# Agent Hooks Instructions
+
+## Overview
+
+The `hooks/` directory holds **shared agent hook scripts** for Cursor and Claude Code. Hooks observe or control the agent loop: block unsafe git commands, format/lint after edits, and log debug events. Scripts are tool-agnostic; wiring lives in [`.cursor/hooks.json`](../.cursor/hooks.json) and [`.claude/settings.json`](../.claude/settings.json).
+
+Guardrails enforced here mirror [`.cursor/rules/guardrails.mdc`](../.cursor/rules/guardrails.mdc) and [`.claude/rules/guardrails.md`](../.claude/rules/guardrails.md).
+
+## Structure
+
+```
+hooks/
+├── git/                    # Shell command guards (preToolUse)
+│   ├── guard-destructive-git.sh
+│   └── guard-secret-commit.sh
+├── quality/                # Post-edit format + lint (postToolUse)
+│   ├── format-changed.sh
+│   └── lint-changed.sh
+├── logging/                # Debug logs (fire-and-forget)
+│   ├── session-start.sh        # Cursor sessionStart
+│   └── instructions-loaded.sh  # Claude InstructionsLoaded
+└── logs/                   # Git-ignored runtime output
+```
+
+## Where to Change Things
+
+| Task | Location |
+|------|----------|
+| Block a new git pattern | `git/guard-destructive-git.sh` or `git/guard-secret-commit.sh` |
+| Change format/lint behaviour | `quality/format-changed.sh` or `quality/lint-changed.sh` |
+| Add Cursor hook wiring | [`.cursor/hooks.json`](../.cursor/hooks.json) |
+| Add Claude hook wiring | [`.claude/settings.json`](../.claude/settings.json) → `hooks` |
+| Session / instruction logs | `logging/*.sh` → `hooks/logs/` |
+| Human overview | [README.md](README.md) |
+
+## Wiring
+
+```mermaid
+flowchart LR
+  subgraph config [Tool config]
+    Cursor[".cursor/hooks.json"]
+    Claude[".claude/settings.json"]
+  end
+  subgraph scripts [hooks/]
+    Git["git/"]
+    Quality["quality/"]
+    Logging["logging/"]
+  end
+  Cursor --> Git
+  Cursor --> Quality
+  Cursor --> Logging
+  Claude --> Git
+  Claude --> Quality
+  Claude --> Logging
+```
+
+Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-secret-commit.sh`).
+
+## Authoring Conventions
+
+- **Shebang**: `#!/usr/bin/env sh` — POSIX shell; `jq` optional with `sed` fallback.
+- **Project root**: `ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"`
+- **JSON input**: read stdin; support both `.tool_input.command` (Claude) and `.command` (Cursor).
+- **Blocking**: exit `2` to deny; message on stderr.
+- **Non-blocking** (format, logging): always exit `0`.
+- **Fail open** on parse errors or missing tools — hooks must not wedge normal workflows.
+- **Filenames**: kebab-case under category folders.
+
+## Hook Behavior Summary
+
+| Script | Trigger | Exit 2 when |
+|--------|---------|-------------|
+| `git/guard-secret-commit.sh` | git add / git commit | Secret path named or in staged set |
+| `git/guard-destructive-git.sh` | any git command | reset --hard, push --force, checkout --, etc. |
+| `quality/format-changed.sh` | after Write/Edit | never (always 0) |
+| `quality/lint-changed.sh` | after Write/Edit | oxlint reports problems on `.ts`/`.tsx` |
+| `logging/session-start.sh` | Cursor sessionStart | never |
+| `logging/instructions-loaded.sh` | Claude InstructionsLoaded | never |
+
+## Debugging
+
+| Log | Command |
+|-----|---------|
+| Cursor sessions | `tail -f hooks/logs/session-start.log` |
+| Claude instruction load | `tail -f hooks/logs/instructions-loaded.log` |
+| Cursor hook errors | Customize → Hooks output channel |
+
+## Contribution
+
+- Edit scripts only under `hooks/` — do not duplicate under `.cursor/hooks/` or `.claude/hooks/`.
+- When adding a hook, update [`.cursor/hooks.json`](../.cursor/hooks.json), [`.claude/settings.json`](../.claude/settings.json) (if applicable), [README.md](README.md), and this file.
+- Align new guards with [guardrails](../.cursor/rules/guardrails.mdc); never weaken secret or destructive-git protection without explicit user approval.
+- `chmod +x` new scripts before committing.
+- Follow conventions in the root [AGENTS.md](../AGENTS.md).

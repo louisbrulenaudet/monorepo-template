@@ -31,7 +31,7 @@ The worker-api serves as the public-facing HTTP API gateway for monorepo. It pro
 - **Middleware:** CORS, compression, body limits, secure headers
 - **Runtime:** Cloudflare Workers
 - **Service bindings:** BUSINESS_LOGIC_SERVICE — add under `services` in `wrangler.jsonc` when integrating
-- **Formatting/Linting:** Biome (spaces, double quotes, recommended rules)
+- **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Build Tools:** tsx, Wrangler
 - **Package Manager:** pnpm
 
@@ -74,13 +74,13 @@ Expected response:
 | `make install` | Install dependencies for this app |
 | `make dev` | Start Wrangler dev server (port 8725) |
 | `make deploy` | Deploy to Cloudflare Workers |
-| `make format` | Format codebase using Biome |
-| `make lint` | Lint codebase using Biome |
-| `make check` | Run full Biome check (format + lint) |
+| `make format` | Format via Turborepo (`format:fix` per package) |
+| `make lint` | Lint via Turborepo (`lint:fix` per package) |
+| `make check` | Lint + format check via Turborepo |
 | `make check-types` | Typecheck |
 | `make types` | Generate Wrangler types |
 | `make update` | Update dependencies |
-| `make ci` | Run CI checks (check + lint + format) |
+| `make ci` | Full CI via Turborepo: lint + format + check-types |
 
 ## Deployment
 

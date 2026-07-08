@@ -1,5 +1,3 @@
-// src/components/ui/Button.tsx
-
 import type { ButtonHTMLAttributes } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";

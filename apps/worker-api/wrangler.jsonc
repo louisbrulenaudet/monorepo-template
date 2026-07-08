@@ -1,26 +1,26 @@
 {
   "name": "worker-api",
   "main": "src/index.ts",
-  "compatibility_date": "2026-04-07",
+  "compatibility_date": "2026-07-08",
   "dev": {
     "port": 8725,
-    "inspector_port": 0
+    "inspector_port": 0,
   },
   "send_metrics": false,
   "vars": {
-    "ENVIRONMENT": "dev"
+    "ENVIRONMENT": "dev",
   },
   "env": {
     "production": {
       "vars": {
-        "ENVIRONMENT": "production"
+        "ENVIRONMENT": "production",
       },
       "observability": {
         "enabled": true,
         "traces": {
-          "enabled": true
-        }
-      }
-    }
-  }
+          "enabled": true,
+        },
+      },
+    },
+  },
 }

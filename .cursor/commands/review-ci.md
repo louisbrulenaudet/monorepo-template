@@ -17,7 +17,7 @@ This command is project-scoped and works with @ mentions and Rules. For a full r
 - **Reproducibility** — CI install uses `--frozen-lockfile` (or equivalent) so builds fail on lockfile drift; same Node/pnpm versions as local dev.
 - **Permissions** — Minimal permissions (e.g. contents: read for CI that only needs to read repo); no write unless deploy or release.
 - **Secrets** — No secrets in logs; use GitHub secrets for any tokens; mask in outputs if needed.
-- **Hooks** — Pre-commit runs formatter/lint on staged files; fast and deterministic (e.g. Biome format only or check).
+- **Hooks** — Pre-commit runs formatter/lint on staged files; fast and deterministic (e.g. oxfmt format only or check).
 - **Deploy** — Deploy step separate from main CI or behind approval; optional smoke/health check after deploy.
 
 Align with root [AGENTS.md](AGENTS.md) for Makefile targets and tooling.
@@ -53,8 +53,8 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 
 ### Husky and pre-commit
 
-- **Artifacts:** [.husky/pre-commit](.husky/pre-commit), [make/husky.mk](make/husky.mk) or root Makefile (prepare target), [biome.json](biome.json).
-- **Checks:** Pre-commit hook runs formatter (e.g. Biome) on staged files only; command is fast (no full lint if format is enough for pre-commit). Use git-format-staged or lint-staged so only staged files are processed. Hook is executable and invoked by Husky. `make prepare` (or equivalent) installs hooks; documented in AGENTS.md or README. No heavy steps (e.g. full build) in pre-commit.
+- **Artifacts:** [.husky/pre-commit](.husky/pre-commit), [make/husky.mk](make/husky.mk) or root Makefile (prepare target), [.oxfmtrc.json](.oxfmtrc.json), [.oxlintrc.json](.oxlintrc.json).
+- **Checks:** Pre-commit hook runs formatter (oxfmt) on staged files only; command is fast (no full lint if format is enough for pre-commit). Use git-format-staged or lint-staged so only staged files are processed. Hook is executable and invoked by Husky. `make prepare` (or equivalent) installs hooks; documented in AGENTS.md or README. No heavy steps (e.g. full build) in pre-commit.
 
 ### Deploy pipeline
 
@@ -95,7 +95,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 - [ ] Caching (pnpm, Turborepo) reviewed
 - [ ] Lockfile and frozen install reviewed
 - [ ] Branch/trigger strategy reviewed
-- [ ] Dependabot and pre-commit (Husky/Biome) reviewed
+- [ ] Dependabot and pre-commit (Husky/oxfmt) reviewed
 - [ ] Deploy pipeline and optional smoke test reviewed
 - [ ] Plan structured as Critical / Improvements / Optional with what/where/why
 

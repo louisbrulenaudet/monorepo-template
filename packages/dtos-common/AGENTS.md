@@ -1,163 +1,125 @@
 # @repo/dtos-common Agent Instructions
 
-## Project Overview
+## Overview
 
-`@repo/dtos-common` is the **single source of truth** for all HTTP request/response shapes in the monorepo. It contains **Zod schemas** and inferred TypeScript types consumed by:
+**Single source of truth** for validated wire shapes across communication layers. Consumed by Workers, gateways, and (for HTTP) `front-app`.
 
-- **`apps/worker-api`** — validation at the route boundary via `@hono/zod-validator`
-- **`apps/front-app`** — response parsing via `fetchJsonWithSchema`
+| Layer | Subpath | Boundary |
+|-------|---------|----------|
+| **HTTP REST** | `@repo/dtos-common/api` | `front-app` ↔ `worker-api` over HTTP |
+| **RPC** | `@repo/dtos-common/rpc` | Worker-to-Worker **service bindings** |
+| **Queue** | `@repo/dtos-common/queue` | Queue producer/consumer message bodies |
+| **Webhook** | `@repo/dtos-common/webhook` | Inbound webhook payloads (`webhook-*` workers) |
 
-Schema changes here are **API contract changes** and propagate to all consumers. Treat every edit accordingly.
+Schema changes are **contract changes** for that layer. Rules load from `.claude/rules/contracts.md` when editing `src/**`.
 
-## Project Structure
+## Structure
 
 ```
 packages/dtos-common/
 ├── src/
 │   ├── api/
-│   │   ├── health.ts        # Health endpoint schemas
-│   │   └── index.ts         # Re-exports all HTTP DTOs
-│   │   └── other-example.ts # Shared other example schemas
-│   └── index.ts             # Package entry — re-exports from src/api/
-├── tsconfig.json            # Extends @repo/typescript-config/workers-lib.json
-├── biome.json               # Biome overrides (inherits root)
-├── Makefile
-└── package.json
+│   │   ├── <feature>.ts    # Schemas per feature (kebab-case)
+│   │   └── index.ts        # Named exports
+│   ├── rpc/                # Service-binding RPC shapes (Date fields, joined read models)
+│   │   ├── <feature>.ts
+│   │   └── index.ts
+│   ├── queue/
+│   │   ├── <feature>.ts
+│   │   └── index.ts
+│   ├── webhook/
+│   │   ├── <feature>.ts
+│   │   └── index.ts
+│   └── index.ts            # Package entry — re-exports `api/` (extend when other layers have schemas)
 ```
 
-### Where to Change Things
+Import via subpath: `@repo/dtos-common/api`, `@repo/dtos-common/rpc`, `@repo/dtos-common/queue`, `@repo/dtos-common/webhook`.
+
+One feature file per concern within a layer. Filenames are **kebab-case** (`health.ts`, `user-profile.ts`).
+
+## Where to Put a Shape
+
+| If the payload crosses… | Directory | Import from |
+|-------------------------|-----------|-------------|
+| HTTP between browser and `worker-api` | `src/api/<feature>.ts` | `@repo/dtos-common/api` |
+| Service binding between Workers | `src/rpc/<feature>.ts` | `@repo/dtos-common/rpc` |
+| A queue (producer → consumer) | `src/queue/<feature>.ts` | `@repo/dtos-common/queue` |
+| An external webhook into `webhook-*` | `src/webhook/<feature>.ts` | `@repo/dtos-common/webhook` |
+
+**Do not mix layers** in one file — e.g. an HTTP response schema belongs in `api/`, not `rpc/`, even if fields look similar.
+
+### Layer notes
+
+- **`api/`** — JSON-safe types only (no `Date` objects on the wire). Used with `zValidator` in `worker-api` and `fetchJsonWithSchema` in `front-app`.
+- **`rpc/`** — Shapes passed through service bindings; may use `z.coerce.date()` or ISO strings for timestamps and richer joined read models not exposed on public HTTP.
+- **`queue/`** — Durable/async job payloads; version carefully when multiple producers or consumers exist.
+- **`webhook/`** — Third-party event bodies; validate at the `webhook-*` worker boundary before handing off to business workers.
+
+## Where to Change Things
 
 | Task | Location |
 |------|---------|
-| Add schemas for a new endpoint | `src/api/<feature>.ts` |
-| Export new schemas to consumers | `src/api/index.ts` (named export) |
-| Expose from the package root | `src/index.ts` (re-export from `src/api/`) |
+| New HTTP endpoint schemas | `src/api/<feature>.ts` → `src/api/index.ts` |
+| New RPC method schemas | `src/rpc/<feature>.ts` → `src/rpc/index.ts` |
+| New queue message schemas | `src/queue/<feature>.ts` → `src/queue/index.ts` |
+| New webhook payload schemas | `src/webhook/<feature>.ts` → `src/webhook/index.ts` |
+| New public subpath | Add `"./<layer>"` to `package.json` `exports` when introducing a layer |
 
-### Zod Schema Naming
+## Schema Naming
 
 | Suffix | Use for |
 |--------|---------|
-| `Schema` | General data structures (e.g. `ExampleSchema`) |
-| `RequestSchema` | Inbound request payloads (e.g. `ExampleRequestSchema`) |
-| `ResponseSchema` | Outbound response payloads (e.g. `ExampleResponseSchema`) |
+| `Schema` | General structures |
+| `RequestSchema` | Inbound payloads |
+| `ResponseSchema` | Outbound payloads |
+| `MessageSchema` | Queue message bodies (queue layer) |
+| `EventSchema` | Webhook event payloads (webhook layer) |
 
-### Inferred Type Naming
-
-- Name = schema name **without** the `Schema` suffix.
-- **Never** use a `Type` suffix (`ExampleRequestType` is forbidden).
-- Always use `z.infer<typeof ...Schema>`.
-- Declare **all inferred types at the bottom of the file**, after all schema definitions — never interleaved.
+Inferred types: same name **without** `Schema`; **never** a `Type` suffix. Declare all `z.infer<>` types **at the bottom of the file**.
 
 ```typescript
-// ✅ Correct — schemas first, types grouped at the bottom
-export const ExampleRequestSchema = z.object({
-  verbose: z.boolean().optional(),
-});
-
-export const ExampleResponseSchema = z.object({
-  status: z.string(),
-  timestamp: z.string(),
-});
+export const ExampleRequestSchema = z.object({ verbose: z.boolean().optional() });
+export const ExampleResponseSchema = z.object({ status: z.string(), timestamp: z.string() });
 
 export type ExampleRequest = z.infer<typeof ExampleRequestSchema>;
 export type ExampleResponse = z.infer<typeof ExampleResponseSchema>;
-
-// ❌ Incorrect
-export const ExampleRequest = z.object({ ... });           // missing Schema suffix
-export type ExampleRequestType = z.infer<typeof ...>;     // forbidden Type suffix
-export type ExampleRes = z.infer<typeof ExampleResponseSchema>; // name doesn't match
 ```
-
-### File Naming
-
-Files under `src/api/` must be `kebab-case` (enforced by Biome). Name by resource or feature:
-- `health.ts`, `example.ts`, `other-example.ts`
 
 ## Consumer Expectations
 
-| Consumer | How it uses schemas |
-|----------|-------------------|
-| `worker-api` | `zValidator("json" \| "param" \| "query", SomeRequestSchema)` at the route boundary |
-| `front-app` | `fetchJsonWithSchema(url, SomeResponseSchema)` or `.safeParse()` for forms |
+| Layer | Typical consumer | Validation |
+|-------|------------------|------------|
+| `api` | `worker-api`, `front-app` | `zValidator`, `fetchJsonWithSchema` |
+| `rpc` | Calling + called Worker | Parse at binding boundary before business logic |
+| `queue` | Producer + consumer Worker | Parse in `handlers/message.ts` (or equivalent) |
+| `webhook` | `webhook-*` worker | Parse at route/handler entry |
 
-**Never** redefine these shapes in apps. If a shape is needed in both `worker-api` and `front-app`, it belongs here.
-
-## Zod Patterns
-
-- **Schemas are the single source of truth.** Export inferred types with `z.infer<typeof ...Schema>` — avoid parallel hand-written interfaces for the same wire shape.
-- **Unknown keys**: agree project-wide on whether to use `.strict()`. If a schema uses `.strict()`, all schemas in that file/feature should follow the same policy.
-- **At boundaries**: prefer `.safeParse()` when you need structured failures (e.g. in `front-app` form validation); use `.parse()` when failure should throw in a controlled context (e.g. inside `fetchJsonWithSchema`).
-- **Cross-field validation**: use `.refine()` or `.superRefine()`. Keep error messages suitable for API clients (no internal details).
-- **Shared enum values**: use `z.nativeEnum(SomeEnum)` referencing `@repo/enums-common` — never duplicate string literals in schemas.
-
-### Example Schema File
-
-```typescript
-// src/api/example.ts
-import { z } from "zod";
-
-export const ExampleRequestSchema = z.object({
-  example: z.string().min(1).max(253),
-});
-
-export const ExampleResponseSchema = z.object({
-  id: z.string(),
-  example: z.string(),
-  createdAt: z.string().datetime(),
-});
-
-export type ExampleRequest = z.infer<typeof ExampleRequestSchema>;
-export type ExampleResponse = z.infer<typeof ExampleResponseSchema>;
-```
+Never redefine these shapes in apps.
 
 ## Contract Change Workflow
 
-A schema change is an **API contract change**. Always update all consumers in the same PR.
+1. Edit the schema in `src/<layer>/<feature>.ts`.
+2. Export from `src/<layer>/index.ts`.
+3. Update every producer and consumer of that layer in the **same PR**.
+4. For `api/` changes: also update `worker-api` and `front-app`.
+5. `make check-types`.
 
-```mermaid
-flowchart LR
-  DTO["1. Edit schema in\nsrc/api/<feature>.ts"] --> Export["2. Export from\nsrc/api/index.ts"]
-  Export --> API["3. Update worker-api\nroute validation"]
-  API --> UI["4. Update front-app\nservice / form parsing"]
-  UI --> TypeCheck["5. make check-types\n(root or per-package)"]
-```
+**Additive** changes preferred. **Breaking** changes need versioning (new route, queue message version field, or new RPC method) and coordinated migration.
 
-1. Add or modify schemas in `src/api/<feature>.ts`.
-2. Export from `src/api/index.ts`.
-3. Update `worker-api` to validate the new shapes.
-4. Update `front-app` to parse/validate the new shapes.
-5. Run `make check-types` to confirm no type regressions across the monorepo.
+## Zod Notes
 
-### Compatibility Rules
+- Shared enum values: `z.enum(SomeEnum)` from `@repo/enums-common` — no duplicate literals.
+- Pick `.strict()` policy per file/feature and apply consistently.
+- `.safeParse()` at trust boundaries; `.parse()` only in controlled throw contexts.
+- No business logic in this package — shapes and validation only.
 
-- **Additive changes** (new optional fields, new endpoints) are safe and preferred.
-- **Breaking changes** (removing fields, changing types, renaming) require:
-  - A new route version in `worker-api` (e.g. `/api/v2/...`)
-  - A deliberate migration in `front-app`
-  - Documenting the change in the PR description
-
-## Common Commands
-
-From `packages/dtos-common`:
+## Commands
 
 | Command | Description |
 |---------|-------------|
-| `make format` | Format with Biome |
-| `make lint` | Lint with Biome |
-| `make check` | Full Biome check |
-| `make check-types` | TypeScript typecheck |
-
-## Best Practices
-
-- **Single source of truth**: one Zod schema per wire shape. Never define the same shape in two places.
-- **Consistent strictness**: decide per-project whether schemas use `.strict()` and apply it consistently.
-- **Document breaking changes** in PR descriptions. Bump all consumers in the same change when possible.
-- **No business logic**: this package holds shapes and validation only — no HTTP calls, no side effects.
-- **Zod version alignment**: keep the same Zod version across all packages and apps (`pnpm update` from root).
+| `make format` / `make lint` / `make check` | OXC |
+| `make check-types` | TypeScript |
 
 ## Contribution
 
-- Follow the naming rules in the root [`AGENTS.md`](../../AGENTS.md).
-- Any change that affects a wire format must be **coordinated** with `worker-api` and `front-app` in the same PR.
-- Run `make check-types` before merging to confirm no regressions.
-- When adding new schema design conventions, keep them aligned with [Zod](https://zod.dev).
+Coordinate wire-format changes with all consumers in the same PR. See root [AGENTS.md](../../AGENTS.md) for monorepo conventions.

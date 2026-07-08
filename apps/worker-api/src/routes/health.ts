@@ -1,5 +1,3 @@
-// src/routes/health.ts
-
 import { HealthResponseSchema } from "@repo/dtos-common/api";
 import { Hono } from "hono";
 

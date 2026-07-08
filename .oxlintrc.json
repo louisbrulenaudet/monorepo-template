@@ -1,0 +1,242 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "builtin": true
+  },
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "import",
+    "promise",
+    "node",
+    "vitest"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "off",
+    "style": "off",
+    "perf": "error",
+    "restriction": "off",
+    "nursery": "off"
+  },
+  "options": {
+    "typeAware": true,
+    "denyWarnings": true,
+    "maxWarnings": 0,
+    "reportUnusedDisableDirectives": "error"
+  },
+  "ignorePatterns": [
+    "**/worker-configuration.d.ts",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.turbo/**",
+    "**/.wrangler/**",
+    "**/.flue-vite/**",
+    "**/.flue-vite.wrangler.jsonc",
+    "**/.vite/**",
+    "**/.tanstack/**",
+    "**/.cache/**",
+    "**/coverage/**",
+    "**/.vitest/**",
+    "**/route-tree.gen.ts",
+    "**/routeTree.gen.ts",
+    ".claude/**",
+    ".agents/**",
+    ".vscode/**",
+    ".cursor/**"
+  ],
+  "globals": {
+    "console": "readonly"
+  },
+  "settings": {
+    "better-tailwindcss": {
+      "entryPoint": "apps/front-app/src/index.css"
+    }
+  },
+  "rules": {
+    "curly": ["error", "all"],
+    "max-lines-per-function": [
+      "error",
+      {
+        "max": 100,
+        "skipBlankLines": true,
+        "IIFEs": true
+      }
+    ],
+    "no-new-func": "error",
+    "no-script-url": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/parameter-properties": [
+      "error",
+      {
+        "prefer": "class-property"
+      }
+    ],
+    "typescript/switch-exhaustiveness-check": [
+      "error",
+      { "considerDefaultExhaustiveForUnions": true }
+    ],
+    "typescript/prefer-literal-enum-member": "error",
+    "typescript/consistent-type-imports": [
+      "error",
+      { "prefer": "type-imports", "fixStyle": "separate-type-imports" }
+    ],
+    "typescript/consistent-type-exports": [
+      "error",
+      { "fixMixedExportsWithInlineTypeSpecifier": true }
+    ],
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": [
+      "error",
+      {
+        "checksVoidReturn": {
+          "attributes": false
+        }
+      }
+    ],
+    "typescript/await-thenable": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/restrict-template-expressions": "error",
+    "import/no-cycle": ["error", { "maxDepth": 10 }],
+    "unicorn/no-empty-file": "off",
+    "unicorn/no-useless-spread": "off",
+    "unicorn/filename-case": [
+      "error",
+      {
+        "case": "kebabCase"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "scripts/**/*.{js,mjs,cjs}",
+        "apps/*/scripts/**/*.{js,mjs,cjs}",
+        "**/*.config.{js,mjs,cjs,ts}",
+        "**/vite.config.ts",
+        "**/vitest.config.ts"
+      ],
+      "env": {
+        "node": true
+      }
+    },
+    {
+      "files": [
+        "apps/worker-*/**/*.{ts,js,mjs}",
+        "apps/orm-*/**/*.{ts,js,mjs}",
+        "apps/webhook-*/**/*.{ts,js,mjs}",
+        "apps/front-*/src/worker*.{ts,tsx}"
+      ],
+      "env": {
+        "worker": true,
+        "serviceworker": true
+      },
+      "globals": {
+        "ExecutionContext": "readonly",
+        "WebSocketPair": "readonly",
+        "HTMLRewriter": "readonly",
+        "D1Database": "readonly",
+        "KVNamespace": "readonly",
+        "R2Bucket": "readonly",
+        "Queue": "readonly",
+        "DurableObjectNamespace": "readonly",
+        "ServiceWorkerGlobalScope": "readonly"
+      }
+    },
+    {
+      "files": ["apps/front-*/**/*.{ts,tsx,js,jsx}"],
+      "env": {
+        "browser": true
+      }
+    },
+    {
+      "files": ["apps/front-*/src/**/*.tsx"],
+      "rules": {
+        "unicorn/filename-case": [
+          "error",
+          {
+            "cases": {
+              "kebabCase": true,
+              "pascalCase": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/front-*/**/*"],
+      "rules": {
+        "max-lines-per-function": "off"
+      }
+    },
+    {
+      "files": ["apps/front-*/src/**/*.{ts,tsx}"],
+      "plugins": [
+        "eslint",
+        "typescript",
+        "unicorn",
+        "oxc",
+        "import",
+        "promise",
+        "node",
+        "vitest",
+        "react",
+        "jsx-a11y"
+      ],
+      "jsPlugins": ["eslint-plugin-better-tailwindcss"],
+      "rules": {
+        "react/exhaustive-deps": "error",
+        "react/no-array-index-key": "error",
+        "react/rules-of-hooks": "error",
+        "react/no-danger": "error",
+        "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
+        "better-tailwindcss/enforce-canonical-classes": "error"
+      }
+    },
+    {
+      "files": [
+        "**/*.test.{ts,tsx,js,jsx}",
+        "**/*.spec.{ts,tsx,js,jsx}",
+        "**/tests/**/*.{ts,tsx,js,jsx}",
+        "e2e/**/*.{ts,tsx,js,jsx}"
+      ],
+      "env": {
+        "vitest": true,
+        "node": true
+      },
+      "rules": {
+        "max-lines-per-function": "off",
+        "typescript/no-explicit-any": "off",
+        "typescript/no-non-null-assertion": "off",
+        "vitest/require-to-throw-message": "off"
+      }
+    },
+    {
+      "files": ["**/*.eval.ts"],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "vitest/no-standalone-expect": "off"
+      }
+    },
+    {
+      "files": ["**/worker-configuration.d.ts"],
+      "rules": {
+        "unicorn/filename-case": "off"
+      }
+    }
+  ]
+}

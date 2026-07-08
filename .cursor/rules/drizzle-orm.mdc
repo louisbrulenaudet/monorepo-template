@@ -1,0 +1,35 @@
+---
+description: "Drizzle ORM naming for orm-* workers — snake_case tables/columns, migrations only."
+alwaysApply: false
+globs: apps/orm-*/src/**
+---
+
+<!-- Synced with .claude/rules/drizzle-orm.md — update both when changing. -->
+
+# Drizzle ORM Naming
+
+`orm-*` workers hold **schema and migrations only** — no business logic, no HTTP routing.
+
+## Database naming
+
+| Kind | Convention | Examples |
+|------|-----------|---------|
+| Tables | `snake_case`, **plural** | `accounts`, `hostnames` |
+| Columns | `snake_case`, **singular** | `id`, `account_id`, `created_at` |
+| Foreign keys | `snake_case`, `{table_singular}_id` | `account_id`, `hostname_id` |
+
+```typescript
+// ✅ Correct
+const accountsTable = pgTable("accounts", {
+  id: text("id").primaryKey(),
+  account_id: text("account_id").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// ❌ Incorrect — singular table, plural column
+const accountTable = pgTable("account", {
+  hostname_ids: serial("hostname_ids"),
+});
+```
+
+Migrations live under the `orm-*` worker only. Other workers access data via service bindings, not direct DB connections in route handlers.

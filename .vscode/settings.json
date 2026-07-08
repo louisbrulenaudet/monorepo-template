@@ -1,22 +1,149 @@
 {
-  "makefile.configureOnOpen": false,
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.rulers": [
+    80
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "always"
+  },
+  "oxc.path.oxlint": "node_modules/.bin/oxlint",
+  "oxc.path.oxfmt": "node_modules/.bin/oxfmt",
+  "oxc.configPath": ".oxlintrc.json",
+  "oxc.fmt.configPath": ".oxfmtrc.json",
+  "oxc.lint.run": "onType",
+  "oxc.requireConfig": true,
+  "oxc.typeAware": true,
+  "oxc.unusedDisableDirectives": "deny",
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "never"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "never"
+    }
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[markdown]": {
+    "editor.formatOnSave": false
+  },
+  "[yaml]": {
+    "editor.formatOnSave": false
+  },
+  "[jsonc]": {
+    "editor.formatOnSave": false
+  },
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "js/ts.tsserver.maxMemory": 4096,
+  "tailwindCSS.experimental.configFile": {
+    "apps/front-app/src/index.css": "apps/front-app/src/**"
+  },
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "files.associations": {
+    "*.css": "tailwindcss",
+    "wrangler.jsonc": "jsonc"
+  },
+  "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,*.d.ts,**/vite.config.ts,**/vitest.config.ts,**/vitest.*.config.ts}",
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "apps/*/wrangler.jsonc",
+        "apps/*/wrangler.json"
+      ],
+      "url": "./node_modules/wrangler/config-schema.json"
+    }
+  ],
   "files.exclude": {
     "**/node_modules": true,
     "**/.turbo": true,
     "**/.wrangler": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.vite": true,
+    "**/.tanstack": true,
+    "**/.vite-hmr": true,
+    "**/.vitest": true,
+    "**/coverage": true,
+    "**/test-results": true,
     "**/.cache": true,
-    "**/.vite": true
+    "**/.tailwindcss": true,
+    "**/preview": true,
+    "**/*.tsbuildinfo": true,
+    "**/.pnpm-store": true,
+    "**/.husky/_": true,
+    "**/.claude/worktrees": true,
+    "**/.claude/logs": true,
+    "**/.claude/agent-memory-local": true,
+    "**/CLAUDE.local.md": true,
+    "**/.staging.vars": true,
+    "**/.env.local": true,
+    "**/.env.development": true,
+    "**/.env.test": true,
+    "**/.env.production": true
   },
-  "files.associations": {
-    "wrangler.json": "jsonc"
+  "explorer.sortOrder": "foldersNestsFiles",
+  "explorer.compactFolders": true,
+  "cSpell.enabled": true,
+  "cSpell.language": "en",
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.turbo/**": true,
+    "**/.wrangler/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.vite/**": true,
+    "**/.tanstack/**": true,
+    "**/.vitest/**": true,
+    "**/coverage/**": true,
+    "**/test-results/**": true,
+    "**/.cache/**": true,
+    "**/.pnpm-store/**": true,
+    "**/.claude/worktrees/**": true,
+    "**/.claude/logs/**": true,
+    "**/.claude/memories/**": true
   },
-  "editor.defaultFormatter": "biomejs.biome",
-  "editor.codeActionsOnSave": {
-    "source.organizeImports.biome": "explicit"
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.turbo": true,
+    "**/.wrangler": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.vite": true,
+    "**/.tanstack": true,
+    "**/.vitest": true,
+    "**/coverage": true,
+    "**/test-results": true,
+    "**/.cache": true,
+    "**/.pnpm-store": true,
+    "**/.claude/worktrees": true,
+    "**/.claude/logs": true,
+    "**/.claude/memories": true,
+    "pnpm-lock.yaml": true
   },
-  "[javascript][javascriptreact][typescript][typescriptreact][json]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
+  "search.useIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": true,
+  "search.followSymlinks": false,
+  "npm.autoDetect": "off",
+  "npm.packageManager": "pnpm",
   "cSpell.words": [
     "adsense",
     "bezier",
@@ -75,6 +202,7 @@
     "linkedom",
     "llmtxt",
     "localstorage",
+    "lockfiles",
     "loglevel",
     "Makefiles",
     "maxtimeout",
@@ -88,9 +216,14 @@
     "njsproj",
     "noemail",
     "nonblocking",
+    "nosniff",
     "ntvs",
     "oklab",
     "openai",
+    "oxfmt",
+    "oxfmtrc",
+    "oxlint",
+    "oxlintrc",
     "prerender",
     "pressable",
     "protobufjs",
@@ -99,6 +232,7 @@
     "rgba",
     "robotstxt",
     "schemaorg",
+    "serviceworker",
     "setext",
     "setstate",
     "sitemapindex",
@@ -109,16 +243,20 @@
     "subpaths",
     "subrequests",
     "tailwindcss",
+    "tanstack",
     "tiktok",
     "tosorted",
+    "tsgolint",
     "Turborepo",
     "txts",
     "unixepoch",
     "unobserve",
+    "unparseable",
     "unvalidated",
     "URLSET",
     "usetransition",
     "vercel",
+    "VITE",
     "vitest",
     "WAAPI",
     "weur",
@@ -126,6 +264,7 @@
     "workerd",
     "xlink",
     "youtube",
-    "yusukebe"
+    "yusukebe",
+    "zstd"
   ]
 }

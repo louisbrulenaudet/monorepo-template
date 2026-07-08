@@ -48,7 +48,7 @@ Cover the following dimensions (if a dimension yields no findings, say so in one
   - worker-api: CORS origins and preflight, CSRF and body limits per middleware; third-party verification (e.g. Turnstile) only when implemented; service secrets only in env (`.dev.vars` / wrangler).
   - Validation and errors: Zod schemas from `@repo/dtos-common` at HTTP boundaries; consistent Hono error handling; safe logging and no sensitive data in responses or logs.
 - **Maintainability & code quality**
-  - Conventions: naming (camelCase, CONSTANT_CASE, PascalCase enums and CONSTANT_CASE members per AGENTS.md); Biome and TypeScript strict; consistent patterns across apps.
+  - Conventions: naming (camelCase, CONSTANT_CASE, PascalCase enums and CONSTANT_CASE members per AGENTS.md); OXC and TypeScript strict; consistent patterns across apps.
   - Structure: clear separation apps/packages; DTOs in `@repo/dtos-common`, routes and handlers in `worker-api`; React components and utils in `front-app/src/`.
   - Evolution: duplication, readability, testability; sustainability of shared DTOs and API surface.
 - **CI, reproducibility & observability**

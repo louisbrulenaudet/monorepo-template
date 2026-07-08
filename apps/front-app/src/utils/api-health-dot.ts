@@ -1,5 +1,3 @@
-// src/utils/apiHealthDot.ts
-
 import { ApiHealthStatus } from "@enums/api-health-status";
 
 export function getApiHealthDotClassName(

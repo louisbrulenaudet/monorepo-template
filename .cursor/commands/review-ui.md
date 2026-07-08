@@ -26,7 +26,7 @@ Conduct a UI-only review. Inspect the following and call out violations or impro
 
 ### Tailwind and theme usage
 
-- **Artifacts:** [apps/front-app/src/index.css](apps/front-app/src/index.css), [apps/front-app/src/App.css](apps/front-app/src/App.css), [apps/front-app/src/App.tsx](apps/front-app/src/App.tsx), and any components under [apps/front-app/src/](apps/front-app/src/).
+- **Artifacts:** [apps/front-app/src/index.css](apps/front-app/src/index.css), [apps/front-app/src/App.css](apps/front-app/src/App.css), [apps/front-app/src/main.tsx](apps/front-app/src/main.tsx), [apps/front-app/src/routes/](apps/front-app/src/routes/), and any components under [apps/front-app/src/](apps/front-app/src/).
 - **Checks:** Use `@theme` or Tailwind theme for colors and spacing; no raw hex/rgb outside theme unless justified. Utilities: prefer `text-primary`, `bg-surface`, `p-4`, etc., over arbitrary `text-[#fff]` or `p-[13px]`. Spacing: consistent scale (e.g. 4, 8, 16, 24). No one-off values that should be in theme. Typography: use theme font families and sizes; avoid inline font-size in px when a utility exists.
 
 ### Responsive design
@@ -71,7 +71,7 @@ Conduct a UI-only review. Inspect the following and call out violations or impro
 
 ### Component consistency
 
-- **Artifacts:** Shared button/link patterns in [apps/front-app/src/](apps/front-app/src/); primary UI in [apps/front-app/src/App.tsx](apps/front-app/src/App.tsx) and child components.
+- **Artifacts:** Shared button/link patterns in [apps/front-app/src/components/ui/](apps/front-app/src/components/ui/); primary UI in [apps/front-app/src/pages/HomePage.tsx](apps/front-app/src/pages/HomePage.tsx) and child components.
 - **Checks:** Buttons: consistent size, padding, and hover/focus states. Links: distinguishable (underline or color); focus style. Primary vs secondary actions visually clear. Same component or pattern for same purpose (e.g. one button style for CTAs).
 
 ### Anti-patterns to flag
@@ -114,7 +114,7 @@ Conduct a UI-only review. Inspect the following and call out violations or impro
 
 ## Context usage
 
-- Use `@file` for index.css, App.css, App.tsx, and component files under `front-app/src/`.
+- Use `@file` for index.css, App.css, main.tsx, routes/__root.tsx, pages/HomePage.tsx, and component files under `front-app/src/`.
 - Use `@code` for specific class names or style blocks when suggesting changes.
 - Use `@docs` or `@web` for WCAG 2.2 and Tailwind v4 when checking guidelines.
 

@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "bradlc.vscode-tailwindcss",
+    "streetsidesoftware.code-spell-checker",
+    "editorconfig.editorconfig",
+    "usernamehw.errorlens",
+    "yoavbls.pretty-ts-errors"
+  ],
+  "unwantedRecommendations": [
+    // This repo uses Oxc, not Prettier/Biome/ESLint — avoid conflicting fixers
+    "esbenp.prettier-vscode",
+    "biomejs.biome",
+    "dbaeumer.vscode-eslint",
+    "github.vscode-github-actions",
+    "vitest.explorer"
+  ]
+}

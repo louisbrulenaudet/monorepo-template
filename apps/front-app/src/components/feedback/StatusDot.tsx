@@ -1,5 +1,3 @@
-// src/components/feedback/StatusDot.tsx
-
 export type StatusDotProps = Readonly<{
   className: string;
   label: string;

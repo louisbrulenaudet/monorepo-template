@@ -1,5 +1,3 @@
-// src/components/feedback/ApiHealthIndicator.tsx
-
 import { ApiHealthStatus } from "@enums/api-health-status";
 import { getApiHealthDotClassName } from "@utils/api-health-dot";
 import { StatusDot } from "@/components/feedback/StatusDot";

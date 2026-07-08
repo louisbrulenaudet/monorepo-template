@@ -1,0 +1,101 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev: full stack",
+      "detail": "turbo run dev — wrangler (mcp) + vite (login-ui) + flue (worker-agent)",
+      "type": "shell",
+      "command": "make dev",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "ci: full gate",
+      "detail": "make ci — types + format + lint + check-types (pre-PR gate)",
+      "type": "shell",
+      "command": "make ci",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$tsc"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "check-types",
+      "detail": "turbo run check-types — tsc --noEmit across every workspace",
+      "type": "shell",
+      "command": "make check-types",
+      "group": "build",
+      "problemMatcher": [
+        "$tsc"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "check: format + lint",
+      "detail": "oxfmt . && oxlint --fix at the repo root",
+      "type": "shell",
+      "command": "make check",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "types: regenerate wrangler types",
+      "detail": "turbo run types — wrangler types for every Worker",
+      "type": "shell",
+      "command": "make types",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "build",
+      "detail": "turbo run build — mcp dry-run deploy + vite build + flue build",
+      "type": "shell",
+      "command": "make build",
+      "group": "build",
+      "problemMatcher": [
+        "$tsc"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "test",
+      "detail": "turbo run test — Vitest suites across workspaces",
+      "type": "shell",
+      "command": "pnpm test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

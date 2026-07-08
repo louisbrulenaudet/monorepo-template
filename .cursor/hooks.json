@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "hooks/git/guard-secret-commit.sh",
+        "matcher": "Shell",
+        "timeout": 10
+      },
+      {
+        "command": "hooks/git/guard-destructive-git.sh",
+        "matcher": "Shell",
+        "timeout": 10
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "hooks/quality/format-changed.sh",
+        "matcher": "Write",
+        "timeout": 30
+      },
+      {
+        "command": "hooks/quality/lint-changed.sh",
+        "matcher": "Write",
+        "timeout": 30
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "hooks/logging/session-start.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}

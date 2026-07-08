@@ -1,6 +1,6 @@
 # TypeScript Config
 
-[![Biome](https://img.shields.io/badge/lint-biome-blue?logo=biome)](https://biomejs.dev/)
+[![OXC](https://img.shields.io/badge/lint-oxlint-blue)](https://oxc.rs)
 [![TypeScript](https://img.shields.io/badge/language-typescript-blue?logo=typescript)](https://www.typescriptlang.org/)
 
 Shared TypeScript configuration presets for the monorepo, providing consistent TypeScript settings across all applications and workers. This package ensures type safety, modern ES features, and optimal compiler settings for Cloudflare Workers, Astro applications, and library packages.
@@ -22,7 +22,7 @@ The typescript-config package provides standardized TypeScript configurations th
 ## Tech Stack
 
 - **Language:** TypeScript
-- **Formatting/Linting:** Biome (spaces, double quotes, recommended rules)
+- **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm
 
 ## Installation

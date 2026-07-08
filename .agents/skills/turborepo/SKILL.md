@@ -10,6 +10,7 @@ description: |
   or has apps/packages directories.
 metadata:
   version: 2.9.7-canary.13
+disable-model-invocation: true
 ---
 
 # Turborepo Skill

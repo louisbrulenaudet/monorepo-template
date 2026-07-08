@@ -1,98 +1,233 @@
 // apps/front-app/vite.config.ts
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+import babel from "@rolldown/plugin-babel";
+import tailwindcss from "@tailwindcss/vite";
+import { devtools } from "@tanstack/devtools-vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { cloudflare } from "@cloudflare/vite-plugin";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { visualizer } from "rollup-plugin-visualizer";
+import { defineConfig, loadEnv } from "vite";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, "../..");
+const appDir = path.dirname(fileURLToPath(import.meta.url));
+const analyzeBundle = process.env.ANALYZE === "true";
+const repoRoot = path.resolve(appDir, "../..");
+const productionEnvKeys = ["VITE_API_BASE_URL"] as const;
+
+function isPlaceholderOrigin(value: string): boolean {
+  try {
+    const hostname = new URL(value).hostname;
+    return (
+      hostname.endsWith(".example.com") || hostname.endsWith(".your-domain.com")
+    );
+  } catch {
+    return true;
+  }
+}
+
+function assertProductionOriginEnv(mode: string, command: string): void {
+  const isStaticAnalysis = process.argv.some((arg) => arg.includes("knip"));
+  if (isStaticAnalysis || command !== "build" || mode !== "production") {
+    return;
+  }
+
+  const env = loadEnv(mode, appDir, "VITE_");
+  const missing = productionEnvKeys.filter((key) => !env[key]);
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing production frontend env: ${missing.join(", ")}. ` +
+        "Set them in apps/front-app/.env.production or the deploy environment.",
+    );
+  }
+
+  const placeholders = productionEnvKeys.filter((key) =>
+    env[key] ? isPlaceholderOrigin(env[key]) : false,
+  );
+  if (placeholders.length > 0) {
+    throw new Error(
+      `Production frontend env contains placeholder origins: ${placeholders.join(
+        ", ",
+      )}.`,
+    );
+  }
+}
+
+function cspHeaders(apiBaseUrl: string): string {
+  const apiOrigin = new URL(apiBaseUrl).origin;
+  const csp = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "img-src 'self' data: https:",
+    "font-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    `connect-src 'self' ${apiOrigin}`,
+  ].join("; ");
+
+  return [
+    "/assets/*",
+    "  Cache-Control: public, max-age=31536000, immutable",
+    "",
+    "/*",
+    "  Cache-Control: public, max-age=0, must-revalidate",
+    `  Content-Security-Policy: ${csp}`,
+    "  Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=()",
+    "  Referrer-Policy: strict-origin-when-cross-origin",
+    "  X-Content-Type-Options: nosniff",
+    "  X-Frame-Options: DENY",
+    "",
+  ].join("\n");
+}
+
+function generatedHeadersPlugin(mode: string, command: string) {
+  return {
+    name: "generated-security-headers",
+    apply: "build" as const,
+    closeBundle() {
+      if (command !== "build") {
+        return;
+      }
+
+      const env = loadEnv(mode, appDir, "VITE_");
+      const apiBaseUrl = env.VITE_API_BASE_URL;
+      if (!apiBaseUrl) {
+        return;
+      }
+
+      writeFileSync(
+        path.resolve(appDir, "dist/_headers"),
+        cspHeaders(apiBaseUrl),
+      );
+    },
+  };
+}
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), cloudflare()],
+export default defineConfig(({ command, mode }) => {
+  assertProductionOriginEnv(mode, command);
 
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@utils": path.resolve(__dirname, "./src/utils"),
-      "@enums": path.resolve(__dirname, "./src/enums"),
-      "@components": path.resolve(__dirname, "./src/components"),
-      "@ui": path.resolve(__dirname, "./src/components/ui"),
-      "@routes": path.resolve(__dirname, "./src/routes"),
-      "@hooks": path.resolve(__dirname, "./src/hooks"),
-      "@services": path.resolve(__dirname, "./src/services"),
-      "@config": path.resolve(__dirname, "./src/config"),
-      "@lib": path.resolve(__dirname, "./src/lib"),
-      "@types": path.resolve(__dirname, "./src/types"),
-      "@dtos": path.resolve(__dirname, "./src/dtos"),
+  return {
+    plugins: [
+      devtools(),
+      tanstackRouter({
+        autoCodeSplitting: true,
+        generatedRouteTree: "./src/routeTree.gen.ts",
+        routeFileIgnorePattern: "routeTree\\.gen\\.ts",
+        routesDirectory: "./src/routes",
+        target: "react",
+      }),
+      react(),
+      babel({ presets: [reactCompilerPreset()] }),
+      tailwindcss(),
+      cloudflare(),
+      generatedHeadersPlugin(mode, command),
+      ...(analyzeBundle
+        ? [
+            visualizer({
+              filename: "dist/stats.html",
+              gzipSize: true,
+              brotliSize: true,
+              open: false,
+            }),
+          ]
+        : []),
+    ],
+
+    resolve: {
+      alias: {
+        "@": path.resolve(appDir, "./src"),
+        "@utils": path.resolve(appDir, "./src/utils"),
+        "@enums": path.resolve(appDir, "./src/enums"),
+        "@components": path.resolve(appDir, "./src/components"),
+        "@ui": path.resolve(appDir, "./src/components/ui"),
+        "@routes": path.resolve(appDir, "./src/routes"),
+        "@pages": path.resolve(appDir, "./src/pages"),
+        "@hooks": path.resolve(appDir, "./src/hooks"),
+        "@services": path.resolve(appDir, "./src/services"),
+        "@config": path.resolve(appDir, "./src/config"),
+      },
     },
-  },
 
-  css: {
-    devSourcemap: true,
-  },
-
-  build: {
-    target: "esnext",
-    minify: "oxc",
-    sourcemap: mode === "development" ? "inline" : "hidden",
-    cssCodeSplit: true,
-    assetsInlineLimit: 4096,
-    reportCompressedSize: false,
-    chunkSizeWarningLimit: 1000,
-    modulePreload: {
-      polyfill: false,
+    css: {
+      devSourcemap: true,
     },
-    rolldownOptions: {
-      output: {
-        manualChunks(id) {
-          // Keep internal workspace packages split out once they grow.
-          if (id.includes("/packages/dtos-common/")) {
-            return "repo-dtos-common";
-          }
 
-          if (!id.includes("node_modules")) {
-            return;
-          }
-          if (
-            id.includes("node_modules/react/") ||
-            id.includes("node_modules/react-dom/")
-          ) {
-            return "react-vendor";
-          }
+    build: {
+      target: "esnext",
+      minify: "oxc",
+      sourcemap: mode === "development" ? "inline" : "hidden",
+      cssCodeSplit: true,
+      assetsInlineLimit: 4096,
+      reportCompressedSize: false,
+      chunkSizeWarningLimit: 500,
+      modulePreload: {
+        polyfill: false,
+      },
+      rolldownOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("/packages/dtos-common/")) {
+              return "repo-dtos-common";
+            }
 
-          return "vendor";
+            if (!id.includes("node_modules")) {
+              return undefined;
+            }
+            if (
+              id.includes("node_modules/react/") ||
+              id.includes("node_modules/react-dom/")
+            ) {
+              return "react-vendor";
+            }
+
+            if (id.includes("node_modules/@tanstack/react-router")) {
+              return "tanstack-router-vendor";
+            }
+
+            if (id.includes("node_modules/@tanstack/")) {
+              return "tanstack-query-vendor";
+            }
+
+            return "vendor";
+          },
         },
       },
     },
-  },
 
-  server: {
-    host: true,
-    port: 5174,
-    strictPort: true,
-    hmr: {
-      overlay: true,
+    server: {
+      host: true,
+      port: 5174,
+      strictPort: true,
+      hmr: {
+        overlay: true,
+      },
+      warmup: {
+        clientFiles: ["./src/main.tsx", "./src/routes/__root.tsx"],
+      },
+      fs: {
+        allow: [repoRoot],
+        strict: true,
+      },
     },
-    warmup: {
-      clientFiles: ["./src/main.tsx", "./src/App.tsx"],
-    },
-    fs: {
-      allow: [repoRoot],
-      strict: true,
-    },
-  },
 
-  preview: {
-    port: 4174,
-    strictPort: true,
-  },
+    preview: {
+      port: 4174,
+      strictPort: true,
+    },
 
-  optimizeDeps: {
-    entries: ["index.html", "src/main.tsx"],
-    include: ["react", "react-dom"],
-  },
-}));
+    optimizeDeps: {
+      entries: ["index.html", "src/main.tsx"],
+      include: [
+        "react",
+        "react-dom",
+        "@tanstack/react-router",
+        "@tanstack/react-query",
+      ],
+    },
+  };
+});

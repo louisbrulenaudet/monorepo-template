@@ -1,5 +1,3 @@
-// src/utils/fetch-api.ts
-
 type SchemaLike<T> = {
   parse: (value: unknown) => T;
 };
@@ -26,40 +24,8 @@ function resolveSignal(
     return parent;
   }
 
-  const timeoutFactory = (
-    AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal }
-  ).timeout;
-  const anyFactory = (
-    AbortSignal as unknown as {
-      any?: (signals: AbortSignal[]) => AbortSignal;
-    }
-  ).any;
-
-  if (timeoutFactory && anyFactory) {
-    const timeoutSignal = timeoutFactory(timeoutMs);
-    return parent ? anyFactory([parent, timeoutSignal]) : timeoutSignal;
-  }
-
-  if (!parent) {
-    return timeoutFactory ? timeoutFactory(timeoutMs) : undefined;
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  const onAbort = () => controller.abort();
-  parent.addEventListener("abort", onAbort, { once: true });
-
-  controller.signal.addEventListener(
-    "abort",
-    () => {
-      clearTimeout(timeoutId);
-      parent.removeEventListener("abort", onAbort);
-    },
-    { once: true },
-  );
-
-  return controller.signal;
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return parent ? AbortSignal.any([parent, timeoutSignal]) : timeoutSignal;
 }
 
 async function fetchJsonRaw(

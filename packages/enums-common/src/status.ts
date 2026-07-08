@@ -1,5 +1,3 @@
-// src/status.ts
-
 export enum Status {
   PENDING = "PENDING",
   PROCESSING = "PROCESSING",

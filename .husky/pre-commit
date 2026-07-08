@@ -1,0 +1,3 @@
+set -e
+npx git-format-staged --formatter 'pnpm exec oxfmt {{path}}' '*.{ts,tsx,js,jsx,json}'
+pnpm lint:fix

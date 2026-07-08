@@ -1,6 +1,6 @@
 # @repo/enums-common
 
-[![Biome](https://img.shields.io/static/v1?label=lint&message=Biome&color=blue&logo=biome&logoColor=white)](https://biomejs.dev/)
+[![OXC](https://img.shields.io/badge/lint-oxlint-blue)](https://oxc.rs)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 This package centralizes enum values that are reused across applications (frontend UI, API validation, and shared mappings) to avoid duplicating string literals.
@@ -17,7 +17,7 @@ Provide strongly typed enum values shared across `@repo/*` packages and apps.
 ## Tech Stack
 
 - **Language:** TypeScript (strict mode, ESNext)
-- **Formatting/Linting:** Biome (spaces, double quotes, recommended rules)
+- **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm
 
 ## Installation
@@ -70,18 +70,17 @@ const allowed = Object.values(Subject);
 
 | Command                | Description                                 |
 |------------------------|---------------------------------------------|
-| `make format`          | Format codebase using Biome                 |
-| `make lint`            | Lint codebase using Biome                   |
-| `make check`           | Run full Biome check (format + lint)        |
+| `make format`          | Format codebase using oxfmt                 |
+| `make lint`            | Lint codebase using oxlint                  |
+| `make check`           | Run full OXC check (oxfmt + oxlint)         |
 | `make check-types`     | Check TypeScript types                      |
-| `make types`           | Generate TypeScript type definitions        |
 
 ### Direct pnpm Commands
 
 ```bash
-pnpm format          # Format with Biome
-pnpm lint            # Lint with Biome
-pnpm check           # Full Biome check
+pnpm format          # Format with oxfmt
+pnpm lint            # Lint with oxlint
+pnpm check           # Full OXC check
 pnpm check-types     # Check TypeScript types
 ```
 

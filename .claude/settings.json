@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(make ci)",
+      "Bash(make check-types)",
+      "Bash(make types)",
+      "Bash(make lint)",
+      "Bash(make format)",
+      "Bash(make build)",
+      "Bash(pnpm --filter * run check-types)",
+      "Bash(pnpm --filter * test)",
+      "Bash(pnpm --filter * exec tsc --noEmit)",
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:developers.cloudflare.com)"
+    ],
+    "deny": [
+      "Edit(**/dist/**)",
+      "Write(**/dist/**)",
+      "Edit(**/worker-configuration.d.ts)",
+      "Write(**/worker-configuration.d.ts)"
+    ],
+    "ask": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/git/guard-secret-commit.sh\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/git/guard-destructive-git.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/quality/format-changed.sh\"",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/quality/lint-changed.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/logging/instructions-loaded.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "security-guidance@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true
+  },
+  "autoMemoryEnabled": true
+}

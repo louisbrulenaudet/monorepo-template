@@ -52,7 +52,7 @@ Conduct an SEO-only review. Inspect the following and call out violations or imp
 
 ### Heading hierarchy and semantic HTML
 
-- **Artifacts:** [apps/front-app/src/App.tsx](apps/front-app/src/App.tsx) and components under [apps/front-app/src/](apps/front-app/src/).
+- **Artifacts:** [apps/front-app/src/pages/](apps/front-app/src/pages/), [apps/front-app/src/routes/](apps/front-app/src/routes/), and components under [apps/front-app/src/](apps/front-app/src/).
 - **Checks:** One h1 per view; h2/h3 in order. Landmarks: main, nav, header, footer used where appropriate. Lists use ul/ol; buttons/links semantics correct. Images: alt text meaningful (decorative: alt="" or role="presentation" where appropriate).
 
 ### Bot experience and optional edge behavior
@@ -99,7 +99,7 @@ Conduct an SEO-only review. Inspect the following and call out violations or imp
 
 ## Context usage
 
-- Use `@file` for index.html, App.tsx, public assets, and any SEO config modules.
+- Use `@file` for index.html, main.tsx, pages/, routes/, public assets, and any SEO config modules.
 - Use `@code` for meta snippets or JSON-LD when suggesting changes.
 - Use `@docs` or `@web` for Google structured data guidelines and CWV thresholds.
 

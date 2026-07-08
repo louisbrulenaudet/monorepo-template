@@ -1,9 +1,11 @@
-// src/main.tsx
-
+import { QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App from "./App.tsx";
+import { ErrorBoundary } from "@/components/feedback/ErrorBoundary";
+import { queryClient } from "@/config/query-client";
+import { router } from "@/router";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -12,6 +14,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

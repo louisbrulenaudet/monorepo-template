@@ -1,6 +1,6 @@
 # Monorepo starter based on pnpm with Cloudflare, Hono, React, Vite and Tailwind 🚚⛅
 
-[![Biome](https://img.shields.io/static/v1?label=lint&message=Biome&color=blue&logo=biome&logoColor=white)](https://biomejs.dev/)
+[![OXC](https://img.shields.io/badge/lint-oxlint-blue)](https://oxc.rs)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Cloudflare](https://img.shields.io/static/v1?label=runtime&message=Cloudflare&color=blue&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/)
 [![pnpm](https://img.shields.io/static/v1?label=package%20manager&message=pnpm&color=blueviolet&logo=pnpm&logoColor=white)](https://pnpm.io/)
@@ -120,8 +120,8 @@ This installs Husky git hooks to ensure code quality standards are enforced on c
 | check           | Check the codebase for issues                       |
 | deploy          | Deploy all apps/workers (via Turborepo)             |
 | build           | Build all packages and apps (via Turborepo)         |
-| format          | Format the codebase using Biome                     |
-| lint            | Lint the codebase using Biome                       |
+| format          | Format the codebase using oxfmt                     |
+| lint            | Lint the codebase using oxlint                      |
 | dev             | Start dev servers (via Turborepo)                   |
 | preview         | Preview production builds locally (via Turborepo)    |
 | types           | Generate worker-configuration.d.ts files recursively |
@@ -308,7 +308,7 @@ Each worker uses environment-specific configuration:
 - **Use strict TypeScript everywhere:** Enforce type safety across all workers
 - **Validate all data with Zod schemas:** Ensure data integrity and type safety
 - **Implement comprehensive error handling:** Use CoreError-based system for structured error management
-- **Follow Biome formatting standards:** Consistent code style across the monorepo
+- **Follow OXC formatting standards:** Consistent code style across the monorepo (oxfmt + oxlint)
 - **Use shared packages:** Leverage `@repo/*` packages for common functionality
 
 ### Service Communication
@@ -329,7 +329,7 @@ This repository uses [Husky](https://typicode.github.io/husky/) to automate git 
 
 ### Pre-commit Hook
 
-The pre-commit hook automatically formats staged files using Biome before each commit. This ensures consistent code formatting across the repository without requiring manual intervention.
+The pre-commit hook automatically formats staged files using oxfmt before each commit. This ensures consistent code formatting across the repository without requiring manual intervention.
 
 The hook uses `git-format-staged` to only format files that are staged for commit, making the process fast and efficient.
 
@@ -356,11 +356,18 @@ This will display all configured hooks and verify they are executable.
 ### How It Works
 
 1. **On commit:** Before a commit is finalized, Husky runs the pre-commit hook
-2. **Auto-formatting:** The hook formats all staged files using Biome
+2. **Auto-formatting:** The hook formats all staged files using oxfmt
 3. **Automatic:** If formatting makes changes, the commit continues with the formatted files
 4. **No interruption:** The process is transparent and doesn't require additional steps
 
 This ensures that all committed code follows the project's formatting standards automatically.
+
+## AI agent instructions
+
+- **[AGENTS.md](AGENTS.md)** — cross-tool project conventions (Cursor workspace rules, human onboarding).
+- **[CLAUDE.md](CLAUDE.md)** — Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).
+- **Per-app/package** — each workspace has matching `AGENTS.md` and `CLAUDE.md` (nested files load on demand in Claude Code).
+- **Path-scoped rules** — `.claude/rules/*.md` apply when editing matching file paths; unconditional guardrails in `guardrails.md`.
 
 ## Shared Packages (`@repo/*`)
 

@@ -39,6 +39,9 @@ node_modules/
 # Vite development cache - regenerated on each dev run
 .vite/
 
+# TanStack Router generator temp cache
+**/.tanstack/
+
 # Source maps - generated during builds, not needed for analysis
 *.map
 **/*.map
@@ -132,8 +135,6 @@ $RECYCLE.BIN/
 .rts2_cache_es/
 .rts2_cache_umd/
 
-# Biome cache
-.biome/
 
 # Tailwind CSS cache (v4+)
 .tailwindcss/

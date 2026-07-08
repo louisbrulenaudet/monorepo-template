@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach: mcp Worker (:9229)",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "cwd": "${workspaceFolder}",
+            "resolveSourceMapLocations": null,
+            "sourceMaps": true,
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "restart": true,
+            "continueOnAttach": true,
+            "attachExistingChildren": false,
+            "autoAttachChildProcesses": false
+        }
+    ]
+}

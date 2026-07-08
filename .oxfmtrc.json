@@ -1,0 +1,70 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "useTabs": false,
+  "tabWidth": 2,
+  "printWidth": 80,
+  "endOfLine": "lf",
+  "insertFinalNewline": true,
+  "singleQuote": false,
+  "jsxSingleQuote": false,
+  "quoteProps": "as-needed",
+  "trailingComma": "all",
+  "semi": true,
+  "arrowParens": "always",
+  "bracketSameLine": false,
+  "bracketSpacing": true,
+  "objectWrap": "preserve",
+  "proseWrap": "preserve",
+  "embeddedLanguageFormatting": "auto",
+  "jsdoc": true,
+  "sortPackageJson": {
+    "sortScripts": true
+  },
+  "sortImports": {
+    "partitionByNewline": true,
+    "newlinesBetween": false,
+    "groups": [
+      "type-import",
+      [
+        "value-builtin",
+        "value-external"
+      ],
+      "type-internal",
+      "value-internal",
+      [
+        "type-parent",
+        "type-sibling",
+        "type-index"
+      ],
+      [
+        "value-parent",
+        "value-sibling",
+        "value-index"
+      ],
+      "unknown"
+    ]
+  },
+  "ignorePatterns": [
+    "**/worker-configuration.d.ts",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.turbo/**",
+    "**/.wrangler/**",
+    "**/.flue-vite/**",
+    "**/.flue-vite.wrangler.jsonc",
+    "**/.vite/**",
+    "**/.cache/**",
+    "**/coverage/**",
+    "**/.vitest/**",
+    "**/route-tree.gen.ts",
+    "**/routeTree.gen.ts",
+    "**/*.md",
+    "**/*.markdown",
+    "**/*.mdx",
+    ".claude/**",
+    ".agents/**",
+    ".vscode/**",
+    ".cursor/**"
+  ]
+}

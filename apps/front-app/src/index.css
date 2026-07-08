@@ -31,7 +31,7 @@
     box-shadow:
       0 0 0 4px color-mix(in oklab, var(--health-glow-color), transparent 70%),
       0 0 12px 2px
-      color-mix(in oklab, var(--health-glow-color), transparent 25%);
+        color-mix(in oklab, var(--health-glow-color), transparent 25%);
   }
 }
 
@@ -71,30 +71,11 @@
   h1 {
     @apply text-5xl leading-tight md:text-6xl;
   }
-
-  button {
-    @apply cursor-pointer rounded-lg border border-transparent bg-neutral-900 px-5 py-2.5 text-base font-medium text-white transition-colors;
-  }
-
-  button:hover {
-    @apply border-indigo-400;
-  }
-
-  button:focus,
-  button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
-  }
 }
 
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
-  }
-
-  @layer base {
-    button {
-      @apply bg-slate-50 text-slate-900;
-    }
   }
 }

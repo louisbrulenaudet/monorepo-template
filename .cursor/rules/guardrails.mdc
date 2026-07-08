@@ -1,0 +1,44 @@
+---
+alwaysApply: true
+---
+
+<!-- Synced with .claude/rules/guardrails.md — update both when changing. -->
+
+# Guardrails
+
+These apply to every change, everywhere. They are hard "don'ts" — when one would be violated, stop and ask rather than proceed.
+
+## Never commit secrets
+
+Do not commit credentials, API keys, tokens, private keys, `.dev.vars` / `.env*` files, database dumps, or logs that contain any of those. A secret you generated for local use stays out of version control.
+
+## Destructive or irreversible actions — ask first
+
+- Do not run history-rewriting or working-tree-destroying commands (`git reset --hard`, `git checkout -- <path>`, `git clean -f`, `git push --force`, branch/tag deletion) unless the user asked for that exact operation. Prefer additive, reversible steps.
+- Commit or push only when asked, and never directly to the default branch.
+- Before deleting or overwriting a file you did not create, look at it first; if its contents contradict how it was described, surface that instead of proceeding.
+
+## Generated files are outputs, not sources
+
+Never hand-edit generated artifacts (e.g. `wrangler types` output, the Flue-generated deploy manifest under `dist/**`, or any build output). Change the source of truth and regenerate through the documented command (`make types`, the framework's build step, etc.).
+
+## Stay within the task's scope
+
+A task scoped to configuration, rules, docs, or agent setup must not drift into application source, `wrangler` manifests, workflows, migrations, or infrastructure unless the user asks. Narrow the blast radius to what was requested.
+
+## One source of truth
+
+Never duplicate a shared DTO schema or a shared enum value inside an app. See [contracts.mdc](.cursor/rules/contracts.mdc).
+
+## Respect the boundaries
+
+Browser / SPA code talks to backends over HTTP only — never through Worker service bindings. Keep credentials and privileged calls server-side.
+
+## Least privilege for model-facing surfaces
+
+When exposing an operation to a model or an untrusted external caller, keep it read/query-oriented. Never expose a surface that creates, rotates, or deletes long-lived credentials, or that performs any other irreversible privileged action on the caller's behalf.
+
+## Do not paper over failures
+
+- Never silence a failing check to make it pass: do not disable a lint rule, add a blanket ignore directive, cast through `any` / `as unknown`, or loosen a type just to clear an error. Fix the cause.
+- Do not ignore failing validation, type errors, or tests. Either fix them, or stop and report the exact command run and its output.

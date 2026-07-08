@@ -2,19 +2,23 @@
   "name": "@repo/enums-common",
   "version": "0.0.1",
   "private": true,
-  "sideEffects": false,
   "type": "module",
+  "sideEffects": false,
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts"
   },
-  "devDependencies": {
-    "@repo/typescript-config": "workspace:*"
-  },
   "scripts": {
-    "format": "biome format . --write",
-    "lint": "biome lint . --write",
-    "check": "biome check . --write",
-    "check-types": "tsc --noEmit"
+    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern --type-aware .",
+    "check-types": "tsc --noEmit",
+    "format": "oxfmt --check .",
+    "format:fix": "oxfmt .",
+    "lint": "oxlint --no-error-on-unmatched-pattern --type-aware .",
+    "lint:fix": "oxlint --no-error-on-unmatched-pattern --type-aware --fix ."
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "oxfmt": "^0.58.0",
+    "oxlint": "^1.73.0"
   }
 }

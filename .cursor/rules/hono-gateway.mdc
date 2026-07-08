@@ -1,0 +1,62 @@
+---
+description: "Hono gateway Worker rules — middleware order, zValidator, thin handlers, service bindings."
+alwaysApply: false
+globs: apps/worker-*/src/**/*.ts,apps/webhook-*/src/**/*.ts
+---
+
+<!-- Synced with .claude/rules/hono-gateway.md — update both when changing. -->
+
+# Hono Gateway (Workers) Rules
+
+`worker-api` and sibling `worker-*` / `webhook-*` apps use **Hono** on Cloudflare Workers. For deep patterns load the **`hono`** and **`workers-best-practices`** skills.
+
+## Request lifecycle
+
+```mermaid
+flowchart TD
+  Client["Client / front-app"] -->|"HTTP"| HonoApp["Hono app"]
+  HonoApp --> CORS["CORS first"]
+  CORS --> Limits["Compression / body limits"]
+  Limits --> Auth["Auth optional"]
+  Auth --> Validation["zValidator at boundary"]
+  Validation --> Handler["Thin route handler"]
+  Handler --> Binding["Service binding optional"]
+  Handler --> Response["c.json()"]
+```
+
+## Middleware order (`src/index.ts`)
+
+1. **CORS** — first (preflight `OPTIONS` before auth/routes).
+2. **Secure headers** — production (`X-Content-Type-Options`, etc.).
+3. **Compression / body limits** — e.g. 3 MB body cap.
+4. **Pretty JSON** — development only.
+
+## Validation
+
+- Validate every input at the route boundary with `@hono/zod-validator`.
+- Import schemas from `@repo/dtos-common/api` — never redefine wire shapes locally.
+- Targets: `zValidator("json" | "param" | "query", Schema)`.
+
+## Handlers
+
+- **Thin handlers**: validate → call service module or `env.BINDING` → `c.json()`.
+- No business logic inline in route files.
+- HTTP status codes: `400` validation, `401` unauthenticated, `403` forbidden, `404` not found, `500` internal.
+- RESTful paths: plural nouns (`/items`), verbs via HTTP method.
+
+## Workers runtime
+
+- **No global mutable state** for per-request data — use Hono context (`c.get` / `c.set`).
+- **No floating promises** — always `await` or return async work.
+- **No `setInterval` / long-lived timers** — CPU time limits apply.
+- Respect Workers constraints for streams, WebSockets, and subrequests.
+
+## Service bindings
+
+- Worker-to-Worker only — never from `front-app` (HTTP only for browsers).
+- Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()`.
+- Run `make types` after adding bindings to regenerate `worker-configuration.d.ts`.
+
+## Before finishing
+
+Run `make ci`. See [workers-config.mdc](.cursor/rules/workers-config.mdc) when editing `wrangler.jsonc`.

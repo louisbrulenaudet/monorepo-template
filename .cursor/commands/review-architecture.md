@@ -37,7 +37,7 @@ Conduct an architecture-only review. Inspect the following and call out violatio
 ### Turborepo task graph and caching
 
 - **Artifacts:** [turbo.json](turbo.json), root and app [package.json](package.json) scripts.
-- **Checks:** Tasks `lint`, `format`, `check`, `check-types`, `types`, `build`, `dev`, `preview`, `deploy` are defined; `build` has correct `dependsOn` (e.g. no missing dependency on type generation if applicable). Global dependency files (e.g. `biome.json`, `tsconfig.json`, `pnpm-workspace.yaml`) are listed where they affect cache validity. No task cycles. Caching is beneficial (e.g. `build` cacheable, `dev` not cacheable).
+- **Checks:** Tasks `lint`, `format`, `check`, `check-types`, `types`, `build`, `dev`, `preview`, `deploy` are defined; `build` has correct `dependsOn` (e.g. no missing dependency on type generation if applicable). Global dependency files (e.g. `.oxfmtrc.json`, `.oxlintrc.json`, `tsconfig.json`, `pnpm-workspace.yaml`) are listed where they affect cache validity. No task cycles. Caching is beneficial (e.g. `build` cacheable, `dev` not cacheable).
 
 ### Makefile and port allocation
 

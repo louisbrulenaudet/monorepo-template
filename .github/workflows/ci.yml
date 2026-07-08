@@ -3,15 +3,20 @@ name: CI
 on:
   push:
     branches:
-      - '**'
+      - "**"
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DO_NOT_TRACK: "1"
+  TELEMETRY_DISABLED: "1"
+  WRANGLER_SEND_METRICS: "false"
+
 jobs:
-  check:
-    name: Lint and check codebase
+  ci:
+    name: Lint, typecheck, and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -19,12 +24,6 @@ jobs:
     strategy:
       matrix:
         node-version: [22]
-
-    env:
-      TURBO_TELEMETRY_DISABLED: "1"
-      DO_NOT_TRACK: "1"
-      TELEMETRY_DISABLED: "1"
-      WRANGLER_SEND_METRICS: "false"
 
     steps:
       - name: Checkout repository
@@ -43,8 +42,20 @@ jobs:
       - name: Install dependencies
         run: make install-frozen
 
-      - name: Lint and format
-        run: make ci
+      - parallel:
+          - name: Lint
+            run: pnpm turbo run lint
+
+          - name: Format check
+            run: pnpm turbo run format
+
+          - name: Generate Worker types
+            run: pnpm turbo run types --filter='./apps/*'
+
+      - name: Typecheck
+        run: pnpm turbo run check-types
 
       - name: Build
-        run: make build
+        env:
+          VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
+        run: pnpm turbo run build

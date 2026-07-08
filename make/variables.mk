@@ -2,7 +2,7 @@
 
 # Project configuration
 PROJECT_NAME := monorepo
-VERSION := 0.1.0
+VERSION := 0.1.1
 
 # Colors for formatting
 BLUE := \033[1;34m

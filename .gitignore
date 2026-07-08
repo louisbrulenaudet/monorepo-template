@@ -46,6 +46,9 @@ node_modules/
 # Vite development cache - regenerated on each dev run
 .vite/
 
+# TanStack Router generator temp cache (atomic writes via router-plugin)
+**/.tanstack/
+
 # Source maps - generated during builds, not needed in repository
 *.map
 *.d.ts.map
@@ -143,9 +146,6 @@ out/
 .rts2_cache_es/
 .rts2_cache_umd/
 
-# Biome cache
-.biome/
-
 # Tailwind CSS cache (v4+)
 .tailwindcss/
 
@@ -154,6 +154,12 @@ out/
 
 # Husky internal files
 .husky/_/
+
+# Claude Code personal project overrides (see code.claude.com/docs/en/memory)
+CLAUDE.local.md
+
+# Agent debug logs (hooks)
+hooks/logs/
 
 # Cloudflare backup files
 wrangler.toml.bak

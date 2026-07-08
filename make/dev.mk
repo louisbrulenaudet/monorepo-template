@@ -12,9 +12,9 @@ update: ## Update dependencies to their latest versions
 	@echo "🔄 Updating dependencies..."
 	pnpm update --recursive
 
-check: ## Check the codebase using Biome
+check: ## Check the codebase using OXC
 	@echo "🔍 Checking codebase..."
-	pnpm turbo run check
+	pnpm check
 
 login: ## Login to Cloudflare
 	@echo "🔑 Logging in to Cloudflare..."
@@ -45,15 +45,14 @@ types: ## Generate worker-configuration.d.ts files recursively
 	@echo "📄 Generating TypeScript type definitions..."
 	pnpm turbo run types
 
-format: ## Format the codebase using Biome
+format: ## Format the codebase using OXC (write)
 	@echo "📝 Formatting code..."
-	pnpm turbo run format
+	pnpm format
 
-lint: ## Lint the codebase using Biome
+lint: ## Lint the codebase using OXC (auto-fix)
 	@echo "🔍 Running code analysis..."
-	pnpm turbo run lint
+	pnpm lint
 
 ci: ## Run full checks before committing for CI/CD pipeline
 	@echo "🔍 Running CI checks..."
-	pnpm turbo run check
-	pnpm turbo run check-types
+	pnpm run ci

@@ -1,6 +1,6 @@
 # front-app
 
-[![Biome](https://img.shields.io/badge/lint-biome-blue?logo=biome)](https://biomejs.dev/)
+[![OXC](https://img.shields.io/badge/lint-oxlint-blue)](https://oxc.rs)
 [![TypeScript](https://img.shields.io/badge/language-typescript-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/static/v1?label=framework&message=React&color=blue&logo=react&logoColor=white)](https://react.dev/)
 [![Vite](https://img.shields.io/static/v1?label=build&message=Vite&color=blue&logo=vite&logoColor=white)](https://vite.dev/)
@@ -23,17 +23,20 @@ apps/front-app/
 │   │   └── env.ts                 # Environment + defaults (API base URL)
 │   ├── enums/                     # Frontend enums
 │   ├── hooks/                     # React hooks
-│   ├── routes/                    # Route-level components (lazy loaded)
+│   ├── routes/                    # TanStack file routes (loaders, guards)
+│   ├── pages/                     # Page UI (imported by *.lazy.tsx)
+│   ├── routeTree.gen.ts           # Generated route tree (commit this file)
+│   ├── router.tsx                 # TanStack Router instance
 │   ├── services/
-│   │   └── workerApi/             # Typed HTTP calls to worker-api
+│   │   └── worker-api/            # Typed HTTP calls to worker-api
 │   ├── utils/                     # Shared utilities (fetch wrapper, helpers)
-│   ├── App.tsx                    # Root component (lazy route loading)
-│   ├── main.tsx                   # React entry
+│   ├── main.tsx                   # React entry (RouterProvider)
 │   └── index.css                  # Tailwind entry + global styles
-├── public/                        # Static assets (including Cloudflare headers)
+├── public/                        # Static assets
 ├── index.html
-├── vite.config.ts                 # Vite + Cloudflare Workers plugin config
+├── vite.config.ts                 # Vite + TanStack Router + Cloudflare plugin
 ├── wrangler.jsonc                 # Cloudflare Workers deploy config (assets + SPA)
+├── .env.production.example        # Production env template
 ├── tsconfig.json
 ├── Makefile
 └── README.md
@@ -50,7 +53,7 @@ apps/front-app/
 ```mermaid
 flowchart LR
   Env[env_ts] --> BaseUrl[apiBaseUrl]
-  BaseUrl --> Services[src_services_workerApi]
+  BaseUrl --> Services[src/services/worker-api]
   Services --> Fetch[fetchJsonWithSchema]
   Fetch --> API[worker-api_HTTP]
   API --> UI[React_UI]
@@ -61,11 +64,13 @@ More detail for agents: [AGENTS.md](AGENTS.md).
 ### Tech Stack
 
 - **Framework**: React 19 + TypeScript
-- **Build tool**: Vite (with `@cloudflare/vite-plugin`)
+- **Routing**: TanStack Router (file-based, auto code splitting)
+- **Data fetching**: TanStack Query
+- **Build tool**: Vite (with `@cloudflare/vite-plugin`, React Compiler)
 - **Runtime**: Cloudflare Workers (static assets + SPA routing)
 - **Styling**: Tailwind CSS v4 (via Vite plugin)
 - **API integration**: `fetchJsonWithSchema` wrapper + shared Zod schemas from `@repo/dtos-common`
-- **Formatting/Linting**: Biome
+- **Formatting/Linting**: OXC (oxfmt / oxlint)
 - **Package manager**: pnpm
 
 ## Prerequisites
@@ -99,13 +104,14 @@ From this app directory (`apps/front-app/`):
 | `make preview` | Build + preview locally |
 | `make build` | Build for production |
 | `make deploy` | Build + deploy to Cloudflare Workers |
-| `make format` | Format codebase using Biome |
-| `make lint` | Lint codebase using Biome |
-| `make check` | Run full Biome check (format + lint) |
+| `make format` | Format via Turborepo (`format:fix` per package) |
+| `make lint` | Lint via Turborepo (`lint:fix` per package) |
+| `make check` | Lint + format check via Turborepo |
 | `make check-types` | Typecheck |
 | `make types` | Generate Wrangler types |
 | `make update` | Update dependencies |
-| `make ci` | Run CI checks (check + lint + format) |
+| `make ci` | Full CI via Turborepo: lint + format + check-types |
+| `pnpm analyze` | Production build + bundle visualization (`dist/stats.html`) |
 
 ## Development Ports
 
@@ -135,6 +141,8 @@ Examples:
 Deploy only the frontend from the monorepo root: `pnpm turbo run deploy --filter=front-app`.
 
 Important: `VITE_*` variables are inlined during build. Changing `VITE_API_BASE_URL` requires rebuilding/redeploying the frontend assets.
+
+Production builds also generate `dist/_headers` with cache and security headers (CSP includes the API origin from `VITE_API_BASE_URL`).
 
 ## Development
 
@@ -168,6 +176,10 @@ make deploy
 
 This runs a production build and deploys using Wrangler (`wrangler deploy`).
 
-## React Compiler
+## Bundle analysis
 
-The React Compiler is not enabled here because of its impact on dev & build performance. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```sh
+pnpm analyze
+```
+
+Opens `dist/stats.html` after a production build (set `ANALYZE=true` via the script).

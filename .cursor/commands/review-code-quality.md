@@ -1,6 +1,6 @@
 # Review code quality command
 
-Run a **code-quality-focused** review: naming conventions, TypeScript strictness, Biome compliance, duplication, readability, error handling patterns, testability, and type safety. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run a **code-quality-focused** review: naming conventions, TypeScript strictness, OXC (oxfmt/oxlint) compliance, duplication, readability, error handling patterns, testability, and type safety. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
 
 ## Cursor command usage
 
@@ -14,7 +14,7 @@ This command is project-scoped and works with @ mentions and Rules. For a full r
 
 - **Naming** — Per root [AGENTS.md](AGENTS.md): variables and functions `camelCase`; constants `CONSTANT_CASE`; enum names `PascalCase`, enum members `CONSTANT_CASE`. No single-letter names except trivial loop indices; descriptive names for exports and public APIs.
 - **TypeScript** — Strict mode; no `any` or unsafe `as` without justification; no `@ts-ignore` without comment. Explicit return types on exported functions; inferred where trivial. Zod schemas co-located with inferred types where used.
-- **Biome** — Format and lint applied; no disabled rules that hide real issues; consistent style (spaces, double quotes, line width).
+- **OXC (oxfmt / oxlint)** — Format and lint applied; no disabled rules that hide real issues; consistent style (spaces, double quotes, line width 80).
 - **Structure** — Single responsibility per file/function; files under ~300 lines, functions under ~50 lines where practical; clear separation (DTOs in `@repo/dtos-common`, routes, handlers, utils).
 - **Errors** — Hono `HTTPException` and centralized `onError` where used; avoid leaking internals; safe logging (no sensitive data).
 - **Duplication and dead code** — No copy-paste blocks that should be shared; no dead imports or unreachable code; no string literals where enums or constants exist.
@@ -35,10 +35,10 @@ Conduct a code-quality-only review. Inspect the following and call out violation
 - **Artifacts:** All `.ts` and `.tsx` files in apps and packages; [tsconfig.json](tsconfig.json) and app tsconfigs.
 - **Checks:** No `any` unless justified (e.g. third-party type gap) and commented. No `as` casts that hide bugs (prefer type guards or schema parsing). No `@ts-ignore` without a short comment and ticket if applicable. Exported functions have explicit return types. Optional chaining and nullish coalescing used instead of loose checks where appropriate. Zod inference: use `z.infer<typeof schema>` for types; no duplicate hand-written types that can drift. Generic constraints where generics are used.
 
-### Biome and format
+### OXC format and lint
 
-- **Artifacts:** [biome.json](biome.json), all source files (format and lint).
-- **Checks:** Code is formatted with Biome (spaces, double quotes, line width 80 per config). Lint: no biome-ignore that disables a rule without a one-line justification. Consistent use of optional chaining, template literals, and const where applicable. No unused variables or imports (Biome or manual check). No debug code (e.g. `console.log`) left in production paths.
+- **Artifacts:** [.oxfmtrc.json](.oxfmtrc.json), [.oxlintrc.json](.oxlintrc.json), all source files (format and lint).
+- **Checks:** Code is formatted with oxfmt (spaces, double quotes, line width 80 per config). Lint: no oxlint-disable that disables a rule without a one-line justification. Consistent use of optional chaining, template literals, and const where applicable. No unused variables or imports (oxlint or manual check). No debug code (e.g. `console.log`) left in production paths.
 
 ### Duplication and DRY
 
@@ -81,7 +81,7 @@ Conduct a code-quality-only review. Inspect the following and call out violation
 2. **Read conventions** — Root and app AGENTS.md for naming, structure, and error handling.
 3. **Inspect naming** — Variables, functions, constants, enums across key files; flag convention violations.
 4. **Inspect TypeScript** — any, as, @ts-ignore, return types, Zod usage; flag strictness issues.
-5. **Inspect Biome and format** — Lint/format consistency; unused code; console/debugger.
+5. **Inspect OXC format and lint** — Lint/format consistency; unused code; console/debugger.
 6. **Inspect duplication and structure** — Repeated logic; file/function size; separation of concerns.
 7. **Inspect error handling** — Hono error handling; catch/rethrow; logging.
 8. **Inspect dead code and literals** — Unused exports/imports; string literals vs enums/constants.
@@ -93,7 +93,7 @@ Conduct a code-quality-only review. Inspect the following and call out violation
 - [ ] Root and app AGENTS.md consulted for naming and patterns
 - [ ] Naming conventions (camelCase, CONSTANT_CASE, PascalCase enums) reviewed
 - [ ] TypeScript strictness and type safety reviewed
-- [ ] Biome/format and lint (including no dead code) reviewed
+- [ ] OXC format and lint (including no dead code) reviewed
 - [ ] Duplication and structure (file/function size, DRY) reviewed
 - [ ] Error handling patterns (Hono, logging) reviewed
 - [ ] Testability and dead code/string literals reviewed
@@ -110,7 +110,7 @@ If context is insufficient, suggest which files or @ references to add.
 ## Review checklist
 
 - **Correctness:** Naming and types are consistent with AGENTS.md; no logic errors introduced by suggestions.
-- **Conventions:** Matches project standards (Biome, TypeScript strict, shared DTOs).
+- **Conventions:** Matches project standards (OXC, TypeScript strict, shared DTOs).
 - **Quality:** Readability and maintainability improved; testability preserved or improved.
 - **Actionability:** Every suggestion is implementable (e.g. "rename X to Y", "extract Z to util").
 - **Trade-offs:** Note any (e.g. file split vs navigation; explicit return types vs brevity).

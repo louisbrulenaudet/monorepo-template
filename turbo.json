@@ -3,7 +3,8 @@
   "ui": "tui",
   "envMode": "strict",
   "globalDependencies": [
-    "biome.json",
+    ".oxfmtrc.json",
+    ".oxlintrc.json",
     "tsconfig.json",
     "pnpm-workspace.yaml",
     ".npmrc"
@@ -11,36 +12,48 @@
   "globalPassThroughEnv": ["CI", "NODE_ENV"],
   "concurrency": "20",
   "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
     "lint": {
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": []
+    },
+    "lint:fix": {
+      "dependsOn": ["transit"],
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "format": {
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": []
+    },
+    "format:fix": {
+      "dependsOn": ["transit"],
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "check": {
-      "cache": false,
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "check-types": {
-      "cache": false,
-      "dependsOn": ["^check-types", "types"],
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.json"],
       "outputs": []
     },
     "types": {
-      "cache": false,
-      "dependsOn": ["^types"],
+      "dependsOn": ["^transit"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["worker-configuration.d.ts"]
     },
     "build": {
-      "cache": false,
-      "dependsOn": ["^build", "check-types", "types"],
+      "dependsOn": ["^build", "check-types"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["dist/**"],
       "env": ["NODE_ENV", "VITE_API_BASE_URL"]

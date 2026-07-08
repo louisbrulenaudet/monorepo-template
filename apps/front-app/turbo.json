@@ -1,6 +1,9 @@
 {
   "extends": ["//"],
   "tasks": {
+    "check-types": {
+      "dependsOn": ["transit", "types"]
+    },
     "deploy": {
       "dependsOn": ["build", "^build"]
     }
