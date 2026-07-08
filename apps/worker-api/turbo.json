@@ -1,6 +1,12 @@
 {
   "extends": ["//"],
   "tasks": {
+    "lint": {
+      "dependsOn": ["transit", "types"]
+    },
+    "lint:fix": {
+      "dependsOn": ["transit", "types"]
+    },
     "check-types": {
       "dependsOn": ["transit", "types"]
     }

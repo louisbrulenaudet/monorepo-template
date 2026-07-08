@@ -49,9 +49,6 @@ jobs:
           - name: Format check
             run: pnpm turbo run format
 
-          - name: Generate Worker types
-            run: pnpm turbo run types --filter='./apps/*'
-
       - name: Typecheck
         run: pnpm turbo run check-types
 
