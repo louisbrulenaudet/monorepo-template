@@ -1,6 +1,6 @@
 # @repo/enums-common
 
-[![OXC](https://img.shields.io/badge/lint-oxlint-blue)](https://oxc.rs)
+[![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 This package centralizes enum values that are reused across applications (frontend UI, API validation, and shared mappings) to avoid duplicating string literals.

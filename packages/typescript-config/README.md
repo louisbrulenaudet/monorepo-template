@@ -1,6 +1,6 @@
 # TypeScript Config
 
-[![OXC](https://img.shields.io/badge/lint-oxlint-blue)](https://oxc.rs)
+[![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
 [![TypeScript](https://img.shields.io/badge/language-typescript-blue?logo=typescript)](https://www.typescriptlang.org/)
 
 Shared TypeScript configuration presets for the monorepo, providing consistent TypeScript settings across all applications and workers. This package ensures type safety, modern ES features, and optimal compiler settings for Cloudflare Workers, Astro applications, and library packages.
