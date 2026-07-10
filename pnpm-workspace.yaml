@@ -9,9 +9,6 @@ catalog:
   tailwindcss: ^4.3.2
   zod: ^4.4.3
 
-overrides:
-  "@types/node": "26.1.0"
-
 auditConfig:
   ignoreCves: []
   ignoreGhsas: []
