@@ -1,5 +1,6 @@
 {
   "recommendations": [
+    "TypeScriptTeam.native-preview",
     "oxc.oxc-vscode",
     "bradlc.vscode-tailwindcss",
     "streetsidesoftware.code-spell-checker",
@@ -8,7 +9,6 @@
     "yoavbls.pretty-ts-errors"
   ],
   "unwantedRecommendations": [
-    // This repo uses Oxc, not Prettier/Biome/ESLint - avoid conflicting fixers
     "esbenp.prettier-vscode",
     "biomejs.biome",
     "dbaeumer.vscode-eslint",

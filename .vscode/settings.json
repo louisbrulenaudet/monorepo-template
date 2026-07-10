@@ -48,9 +48,6 @@
   "[jsonc]": {
     "editor.formatOnSave": false
   },
-  "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
-  "js/ts.tsserver.maxMemory": 4096,
   "tailwindCSS.experimental.configFile": {
     "apps/front-app/src/index.css": "apps/front-app/src/**"
   },
@@ -272,5 +269,7 @@
     "youtube",
     "yusukebe",
     "zstd"
-  ]
+  ],
+  "js/ts.experimental.useTsgo": true,
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }
