@@ -1,18 +1,18 @@
 ---
-description: "OXC lint and format rules — curly blocks, max lines, no any, type imports, floating promises."
+description: "OXC lint and format rules - curly blocks, max lines, no any, type imports, floating promises."
 alwaysApply: false
 globs: apps/**/*.{ts,tsx},packages/**/*.ts
 ---
 
 # Code Style
 
-OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format). Do not restyle to match personal habits — match the surrounding file and let `oxfmt` decide layout. These rules run with `denyWarnings: true` / `maxWarnings: 0`, so any warning fails CI.
+OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format). Do not restyle to match personal habits - match the surrounding file and let `oxfmt` decide layout. These rules run with `denyWarnings: true` / `maxWarnings: 0`, so any warning fails CI.
 
 ## Hard rules (oxlint will fail the build)
 
-- Always use block statements for `if`, `else`, loops, and similar control flow — no single-line bodies (`curly: all`).
-- Keep every function under 100 non-blank lines (`max-lines-per-function`). Extract helpers rather than growing a handler. (Disabled only in `apps/front-*/**` — React SPAs per `.oxlintrc.json`.)
-- No `any` — use precise types or `unknown` plus validation (`typescript/no-explicit-any`). Allowed only in `*.test.ts` / `*.spec.ts`.
+- Always use block statements for `if`, `else`, loops, and similar control flow - no single-line bodies (`curly: all`).
+- Keep every function under 100 non-blank lines (`max-lines-per-function`). Extract helpers rather than growing a handler. (Disabled only in `apps/front-*/**` - React SPAs per `.oxlintrc.json`.)
+- No `any` - use precise types or `unknown` plus validation (`typescript/no-explicit-any`). Allowed only in `*.test.ts` / `*.spec.ts`.
 - Remove unused imports and variables before finishing (`no-unused-vars`).
 - Do not use TypeScript constructor parameter properties (`typescript/parameter-properties`). Declare fields explicitly and assign in the body.
 - Use type-only imports/exports: `import type { … }` / `export type { … }` (`consistent-type-imports` / `consistent-type-exports`, separate specifiers).

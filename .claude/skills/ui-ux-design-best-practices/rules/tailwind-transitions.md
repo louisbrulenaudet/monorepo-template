@@ -1,11 +1,11 @@
 ---
-title: Tailwind v4 — Transition Utilities
+title: Tailwind v4 - Transition Utilities
 impact: HIGH
 impactDescription: correct transition utilities ensure only the right properties animate, preventing layout thrashing and unintended side effects
 tags: tailwind, transitions, duration, timing-function, easing, delay, motion-reduce
 ---
 
-## Tailwind v4 — Transition Utilities
+## Tailwind v4 - Transition Utilities
 
 > Source: https://tailwindcss.com/docs
 
@@ -16,7 +16,7 @@ Docs: https://tailwindcss.com/docs/transition-property
 | Class | `transition-property` value |
 |---|---|
 | `transition` | `color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, translate, scale, rotate, filter, backdrop-filter, display, content-visibility, overlay, pointer-events` |
-| `transition-all` | `all` — avoid; prefer specific properties |
+| `transition-all` | `all` - avoid; prefer specific properties |
 | `transition-colors` | color, background-color, border-color, and related color properties |
 | `transition-opacity` | `opacity` |
 | `transition-shadow` | `box-shadow` |
@@ -29,7 +29,7 @@ All `transition-*` utilities automatically apply:
 - `transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1)` (ease-in-out) as default
 - `transition-duration: 150ms` as default
 
-**Prefer `transition-transform` or `transition-[transform,opacity]` over `transition-all`** — specifying exact properties avoids unnecessary work and prevents unintended transitions on layout properties.
+**Prefer `transition-transform` or `transition-[transform,opacity]` over `transition-all`** - specifying exact properties avoids unnecessary work and prevents unintended transitions on layout properties.
 
 ```html
 <!-- Correct: only animate what changes -->
@@ -75,7 +75,7 @@ Docs: https://tailwindcss.com/docs/transition-timing-function
 | Class | CSS Output |
 |---|---|
 | `ease-linear` | `linear` |
-| `ease-in` | `cubic-bezier(0.4, 0, 1, 1)` — **avoid for UI interactions** |
+| `ease-in` | `cubic-bezier(0.4, 0, 1, 1)` - **avoid for UI interactions** |
 | `ease-out` | `cubic-bezier(0, 0, 0.2, 1)` |
 | `ease-in-out` | `cubic-bezier(0.4, 0, 0.2, 1)` |
 | `ease-[<value>]` | Arbitrary cubic-bezier |

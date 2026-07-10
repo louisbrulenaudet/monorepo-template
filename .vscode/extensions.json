@@ -8,7 +8,7 @@
     "yoavbls.pretty-ts-errors"
   ],
   "unwantedRecommendations": [
-    // This repo uses Oxc, not Prettier/Biome/ESLint — avoid conflicting fixers
+    // This repo uses Oxc, not Prettier/Biome/ESLint - avoid conflicting fixers
     "esbenp.prettier-vscode",
     "biomejs.biome",
     "dbaeumer.vscode-eslint",

@@ -17,11 +17,11 @@ These principles apply to any interactive component:
 
 3. **Handle edge cases invisibly.** Pause timers when the tab is hidden. Fill gaps between stacked elements with pseudo-elements to maintain hover state. Capture pointer events during drag. Users never notice these, and that is exactly right.
 
-4. **Use transitions, not keyframes, for dynamic UI.** Elements added rapidly need interruptible transitions — keyframes restart from zero on interruption.
+4. **Use transitions, not keyframes, for dynamic UI.** Elements added rapidly need interruptible transitions - keyframes restart from zero on interruption.
 
 5. **Cohesion matters.** The whole experience should be cohesive. The easing and duration should fit the personality of the component. A playful component can be bouncier. A professional dashboard should be crisp and fast. Match the motion to the mood.
 
-6. **The opacity + height combination.** When items enter and exit a list, the opacity change must work well with the height animation. There is no formula — adjust until it feels right.
+6. **The opacity + height combination.** When items enter and exit a list, the opacity change must work well with the height animation. There is no formula - adjust until it feels right.
 
 ### Debugging Animations
 
@@ -64,6 +64,6 @@ When reviewing UI code, check for:
 | Same enter/exit transition speed | Make exit faster than enter |
 | Elements all appear at once | Add stagger delay (30–80ms between items) |
 | `transition-all` | Specify `transition-transform` or `transition-[transform,opacity]` |
-| `animate-spin` directly on `<svg>` | Wrap in `<div class="animate-spin">` — SVG lacks GPU acceleration |
+| `animate-spin` directly on `<svg>` | Wrap in `<div class="animate-spin">` - SVG lacks GPU acceleration |
 | `blur-2xl` in animations | Keep at `blur-xs` or `blur-sm`; heavy blur is expensive in Safari |
 | `will-change-transform` everywhere | Last resort only; over-use degrades performance |

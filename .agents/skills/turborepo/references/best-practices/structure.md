@@ -214,13 +214,13 @@ Create a shared TypeScript config package:
 packages/
 └── typescript-config/
     ├── package.json
-    ├── strict.json
+    ├── base.json
     ├── nextjs.json
     └── library.json
 ```
 
 ```json
-// packages/typescript-config/strict.json
+// packages/typescript-config/base.json
 {
   "compilerOptions": {
     "strict": true,

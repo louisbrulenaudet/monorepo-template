@@ -1,11 +1,11 @@
 ---
-title: Tailwind v4 — Common Animation Patterns and Anti-Patterns
+title: Tailwind v4 - Common Animation Patterns and Anti-Patterns
 impact: HIGH
 impactDescription: ready-to-use patterns for the most common UI components and a checklist of mistakes to avoid
 tags: tailwind, patterns, button, dropdown, popover, modal, toast, tooltip, stagger, frosted-glass, anti-patterns
 ---
 
-## Tailwind v4 — Common Animation Patterns and Anti-Patterns
+## Tailwind v4 - Common Animation Patterns and Anti-Patterns
 
 > Source: https://tailwindcss.com/docs
 
@@ -34,7 +34,7 @@ tags: tailwind, patterns, button, dropdown, popover, modal, toast, tooltip, stag
 ">
 ```
 
-### Popover (scale from trigger — Radix UI)
+### Popover (scale from trigger - Radix UI)
 
 ```html
 <div class="
@@ -111,7 +111,7 @@ Or with CSS:
 .stagger-item:nth-child(4) { animation-delay: 150ms; }
 ```
 
-Keep delays short — 30–80ms between items. Longer delays make the interface feel slow.
+Keep delays short - 30–80ms between items. Longer delays make the interface feel slow.
 
 ### Frosted glass surface
 
@@ -124,9 +124,9 @@ Keep delays short — 30–80ms between items. Longer delays make the interface 
 | Anti-pattern | Fix |
 |---|---|
 | `transition-all` | Use `transition-transform`, `transition-colors`, or `transition-[transform,opacity]` |
-| `animate-spin` on an `<svg>` directly | Wrap in `<div class="animate-spin">` — SVG lacks hardware acceleration |
+| `animate-spin` on an `<svg>` directly | Wrap in `<div class="animate-spin">` - SVG lacks hardware acceleration |
 | `blur-2xl` or heavier in animations | Keep blur at `blur-xs` or `blur-sm`; heavy blur is expensive in Safari |
-| `will-change-transform` on every element | Last resort only — over-use degrades performance |
+| `will-change-transform` on every element | Last resort only - over-use degrades performance |
 | Hover without `[@media(hover:hover)]` guard | Touch triggers hover on tap; gate with the media query |
-| `ease-in` on enter/exit | Use `ease-out` — `ease-in` starts slow and feels unresponsive |
+| `ease-in` on enter/exit | Use `ease-out` - `ease-in` starts slow and feels unresponsive |
 | `duration-500` on UI elements | UI stays under `duration-300`; use longer only for marketing/explanatory motion |

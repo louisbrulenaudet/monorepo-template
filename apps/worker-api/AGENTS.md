@@ -50,7 +50,7 @@ flowchart TD
 
 ## Middleware Order (`src/index.ts`)
 
-1. CORS (first — preflight before auth).
+1. CORS (first - preflight before auth).
 2. Secure headers (production).
 3. Compression / body limits.
 4. Pretty JSON (dev only).
@@ -71,7 +71,7 @@ app.post(
 );
 ```
 
-Import schemas from `@repo/dtos-common/api` — never redefine wire shapes locally.
+Import schemas from `@repo/dtos-common/api` - never redefine wire shapes locally.
 
 ## Adding an Endpoint
 

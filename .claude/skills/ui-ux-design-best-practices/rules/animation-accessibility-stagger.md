@@ -89,7 +89,7 @@ When multiple elements enter together, stagger their appearance. Each element an
 ))}
 ```
 
-Keep stagger delays short — **30–80ms between items**. Longer delays make the interface feel slow. Stagger is decorative — never block interaction while stagger animations are playing.
+Keep stagger delays short - **30–80ms between items**. Longer delays make the interface feel slow. Stagger is decorative - never block interaction while stagger animations are playing.
 
 ### Asymmetric Enter/Exit Timing
 
@@ -117,4 +117,4 @@ This pattern applies broadly: **slow where the user is deciding, fast where the 
             group-active:duration-[2s] group-active:ease-linear">
 ```
 
-**Exit is always faster than enter.** Users are waiting for the system to respond on exit — slow exits feel broken.
+**Exit is always faster than enter.** Users are waiting for the system to respond on exit - slow exits feel broken.

@@ -7,7 +7,7 @@ tags: animation, springs, framer-motion, gestures, physics, interruptibility
 
 ## Spring Animations
 
-Springs feel more natural than duration-based animations because they simulate real physics. They do not have fixed durations — they settle based on physical parameters.
+Springs feel more natural than duration-based animations because they simulate real physics. They do not have fixed durations - they settle based on physical parameters.
 
 ### When to use springs
 
@@ -18,7 +18,7 @@ Springs feel more natural than duration-based animations because they simulate r
 
 ### Spring configuration (Framer Motion / Motion)
 
-**Apple's approach (recommended — easier to reason about):**
+**Apple's approach (recommended - easier to reason about):**
 
 ```js
 { type: "spring", duration: 0.5, bounce: 0.2 }
@@ -49,10 +49,10 @@ const springRotation = useSpring(mouseX * 0.1, {
 });
 ```
 
-This works because the animation is **decorative** — it does not serve a function. If this were a functional graph in a data-heavy app, no animation would be better. Know when decoration helps and when it hinders.
+This works because the animation is **decorative** - it does not serve a function. If this were a functional graph in a data-heavy app, no animation would be better. Know when decoration helps and when it hinders.
 
 ### Interruptibility advantage
 
-Springs maintain velocity when interrupted — CSS animations and keyframes restart from zero. This makes springs ideal for gestures users might change mid-motion.
+Springs maintain velocity when interrupted - CSS animations and keyframes restart from zero. This makes springs ideal for gestures users might change mid-motion.
 
 Use springs when a user might reverse direction before the animation completes (e.g., swiping a drawer partially then releasing).

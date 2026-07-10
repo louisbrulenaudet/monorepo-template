@@ -30,7 +30,7 @@ The worker-api serves as the public-facing HTTP API gateway for monorepo. It pro
 - **Validation:** Zod schemas for request/response validation
 - **Middleware:** CORS, compression, body limits, secure headers
 - **Runtime:** Cloudflare Workers
-- **Service bindings:** BUSINESS_LOGIC_SERVICE — add under `services` in `wrangler.jsonc` when integrating
+- **Service bindings:** BUSINESS_LOGIC_SERVICE - add under `services` in `wrangler.jsonc` when integrating
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Build Tools:** tsx, Wrangler
 - **Package Manager:** pnpm

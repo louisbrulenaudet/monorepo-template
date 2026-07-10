@@ -118,8 +118,8 @@ packages/dtos-common/
 ## Best Practices
 
 1. **Use DTOs from this package** instead of re-implementing Zod schemas in apps.
-2. **Treat Zod schemas as source of truth** — infer types with `z.infer<typeof Schema>`; do not hand-write parallel interfaces.
-3. **Reference shared wire values** from `@repo/enums-common` via `z.enum(ValueSet)` or `z.enum([...] as const)` — never duplicate string literals.
+2. **Treat Zod schemas as source of truth** - infer types with `z.infer<typeof Schema>`; do not hand-write parallel interfaces.
+3. **Reference shared wire values** from `@repo/enums-common` via `z.enum(ValueSet)` or `z.enum([...] as const)` - never duplicate string literals.
 
 ### Compatibility / versioning
 

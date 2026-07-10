@@ -21,7 +21,7 @@ Fast, disk-efficient package manager for this **pnpm + Turborepo** monorepo. pnp
 | Build/lint/dev/deploy | **Turborepo** | `pnpm turbo run <task>` or `make <task>` |
 | Affected CI | **Turborepo** | `pnpm turbo run <task> --affected` |
 
-Do **not** put task logic in root `package.json` when it belongs in packages — see the `turborepo` skill.
+Do **not** put task logic in root `package.json` when it belongs in packages - see the `turborepo` skill.
 
 ## This Repo
 
@@ -49,10 +49,10 @@ Always link internal packages with the workspace protocol:
 }
 ```
 
-- `workspace:*` — always use the local workspace version (preferred).
+- `workspace:*` - always use the local workspace version (preferred).
 - On publish, pnpm rewrites `workspace:` to semver ranges automatically.
 
-Never duplicate a shared package version as a registry range in an app — use `workspace:*`.
+Never duplicate a shared package version as a registry range in an app - use `workspace:*`.
 
 ## Catalogs (Shared Tool Versions)
 
@@ -80,12 +80,12 @@ Reference in any `package.json`:
 
 **Workflow for bumping a shared tool:**
 
-1. **All catalog + non-catalog deps:** `make update` — runs `pnpm update --recursive --latest`, which rewrites catalog ranges in `pnpm-workspace.yaml` and keeps `"catalog:"` in manifests.
+1. **All catalog + non-catalog deps:** `make update` - runs `pnpm update --recursive --latest`, which rewrites catalog ranges in `pnpm-workspace.yaml` and keeps `"catalog:"` in manifests.
 2. **One catalog-managed package:** `pnpm update --recursive --latest <pkg>` (e.g. `oxfmt`).
 3. **Manual pin:** edit `pnpm-workspace.yaml` `catalog:`, then `pnpm install`.
 4. Run `make ci` after any dependency bump.
 
-Do **not** bump the same package in multiple `package.json` files independently — use the catalog.
+Do **not** bump the same package in multiple `package.json` files independently - use the catalog.
 
 Workspace-level `overrides` (e.g. `@types/node`) stay in `pnpm-workspace.yaml`, not in individual manifests.
 
@@ -126,7 +126,7 @@ pnpm why <pkg>
 pnpm install --frozen-lockfile
 ```
 
-Prefer `--filter <name>` over `cd apps/foo && pnpm add` — keeps context at repo root.
+Prefer `--filter <name>` over `cd apps/foo && pnpm add` - keeps context at repo root.
 
 Package names: `front-app`, `worker-api`, `@repo/dtos-common`, `@repo/enums-common`, `@repo/typescript-config`.
 
@@ -157,18 +157,18 @@ public-hoist-pattern[]=@cloudflare/*
 public-hoist-pattern[]=*types*
 ```
 
-- **Do not** enable `shamefully-hoist=true` unless a tool is completely broken — it defeats pnpm's strict layout.
+- **Do not** enable `shamefully-hoist=true` unless a tool is completely broken - it defeats pnpm's strict layout.
 - If a specific tool cannot resolve a phantom dependency, add a targeted `public-hoist-pattern[]=<pattern>` in `.npmrc`.
 - Workers apps need `@cloudflare/*` and `*types*` hoisted for TypeScript and Wrangler.
 
 ## Performance Settings (`.npmrc`)
 
-Already configured — do not remove without reason:
+Already configured - do not remove without reason:
 
-- `side-effects-cache=true` — skip re-running unchanged postinstall scripts
-- `package-import-method=clone-or-copy` — fast linking from store
-- `network-concurrency=16` — parallel fetches
-- `recursive-install=true` — `pnpm install` at root installs all workspace packages
+- `side-effects-cache=true` - skip re-running unchanged postinstall scripts
+- `package-import-method=clone-or-copy` - fast linking from store
+- `network-concurrency=16` - parallel fetches
+- `recursive-install=true` - `pnpm install` at root installs all workspace packages
 
 ## CI
 
@@ -182,7 +182,7 @@ GitHub Actions uses:
 Rules:
 
 - Always commit `pnpm-lock.yaml` with manifest changes.
-- CI uses `--frozen-lockfile` — lockfile must be in sync.
+- CI uses `--frozen-lockfile` - lockfile must be in sync.
 - Never commit `.env`, `.dev.vars`, or secrets.
 
 ## Common Mistakes

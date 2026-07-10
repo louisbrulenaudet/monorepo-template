@@ -1,24 +1,24 @@
 # Review CI command
 
-Run a **CI-focused** review: GitHub Actions workflow, caching, lockfile and reproducibility, branch/trigger strategy, Dependabot, Husky pre-commit, and deploy pipeline. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run a **CI-focused** review: GitHub Actions workflow, caching, lockfile and reproducibility, branch/trigger strategy, Dependabot, Husky pre-commit, and deploy pipeline. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review-ci` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text after `/review-ci` is scope—e.g. `/review-ci workflow only`, `/review-ci caching`—narrow accordingly. If none given, assume full CI review (workflow, lockfile, hooks, deploy, Dependabot).
+- **Parameters:** Any text after `/review-ci` is scope-e.g. `/review-ci workflow only`, `/review-ci caching`-narrow accordingly. If none given, assume full CI review (workflow, lockfile, hooks, deploy, Dependabot).
 
 This command is project-scoped and works with @ mentions and Rules. For a full review use `/review` instead.
 
 ## Best practices alignment
 
-- **Workflow** — Checkout with sufficient fetch depth when needed; Node and pnpm versions pinned and aligned with package.json engines/packageManager; steps run in a sensible order (install → lint → typecheck → build).
-- **Caching** — pnpm store and optionally Turborepo remote cache to speed runs; cache keys include lockfile hash where appropriate.
-- **Reproducibility** — CI install uses `--frozen-lockfile` (or equivalent) so builds fail on lockfile drift; same Node/pnpm versions as local dev.
-- **Permissions** — Minimal permissions (e.g. contents: read for CI that only needs to read repo); no write unless deploy or release.
-- **Secrets** — No secrets in logs; use GitHub secrets for any tokens; mask in outputs if needed.
-- **Hooks** — Pre-commit runs formatter/lint on staged files; fast and deterministic (e.g. oxfmt format only or check).
-- **Deploy** — Deploy step separate from main CI or behind approval; optional smoke/health check after deploy.
+- **Workflow** - Checkout with sufficient fetch depth when needed; Node and pnpm versions pinned and aligned with package.json engines/packageManager; steps run in a sensible order (install → lint → typecheck → build).
+- **Caching** - pnpm store and optionally Turborepo remote cache to speed runs; cache keys include lockfile hash where appropriate.
+- **Reproducibility** - CI install uses `--frozen-lockfile` (or equivalent) so builds fail on lockfile drift; same Node/pnpm versions as local dev.
+- **Permissions** - Minimal permissions (e.g. contents: read for CI that only needs to read repo); no write unless deploy or release.
+- **Secrets** - No secrets in logs; use GitHub secrets for any tokens; mask in outputs if needed.
+- **Hooks** - Pre-commit runs formatter/lint on staged files; fast and deterministic (e.g. oxfmt format only or check).
+- **Deploy** - Deploy step separate from main CI or behind approval; optional smoke/health check after deploy.
 
 Align with root [AGENTS.md](AGENTS.md) for Makefile targets and tooling.
 
@@ -78,14 +78,14 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 
 ## Steps
 
-1. **Gather scope** — Full CI or specific area (workflow, cache, hooks, deploy, Dependabot). Default to full.
-2. **Read conventions** — AGENTS.md for Makefile targets (install-frozen, check, check-types, build, deploy) and tooling.
-3. **Inspect workflow** — ci.yml: checkout, setup-node, pnpm, install, check, check-types, build; permissions and triggers.
-4. **Inspect caching** — pnpm and Turborepo cache usage; cache keys.
-5. **Inspect lockfile and install** — install-frozen; packageManager and engines; lockfile committed.
-6. **Inspect Dependabot and Husky** — dependabot.yml; .husky/pre-commit and prepare target.
-7. **Inspect deploy** — Deploy workflow or job; permissions; optional health check.
-8. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
+1. **Gather scope** - Full CI or specific area (workflow, cache, hooks, deploy, Dependabot). Default to full.
+2. **Read conventions** - AGENTS.md for Makefile targets (install-frozen, check, check-types, build, deploy) and tooling.
+3. **Inspect workflow** - ci.yml: checkout, setup-node, pnpm, install, check, check-types, build; permissions and triggers.
+4. **Inspect caching** - pnpm and Turborepo cache usage; cache keys.
+5. **Inspect lockfile and install** - install-frozen; packageManager and engines; lockfile committed.
+6. **Inspect Dependabot and Husky** - dependabot.yml; .husky/pre-commit and prepare target.
+7. **Inspect deploy** - Deploy workflow or job; permissions; optional health check.
+8. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
 

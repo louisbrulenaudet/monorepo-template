@@ -1,12 +1,12 @@
 # Review command
 
-Run a review of the current context (code, PR, or docs). Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run a review of the current context (code, PR, or docs). Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text the user types after `/review` is included in the prompt as additional context. Treat it as scope or focus—e.g. `/review full codebase`, `/review only worker-api`, `/review focus on security`—and narrow or prioritize the review accordingly. If no extra text is given, assume the current context (selection, open files, or full project) and apply the full review flow below.
+- **Parameters:** Any text the user types after `/review` is included in the prompt as additional context. Treat it as scope or focus-e.g. `/review full codebase`, `/review only worker-api`, `/review focus on security`-and narrow or prioritize the review accordingly. If no extra text is given, assume the current context (selection, open files, or full project) and apply the full review flow below.
 
 This command is project-scoped and works together with @ mentions and Rules for context.
 
@@ -14,13 +14,13 @@ This command is project-scoped and works together with @ mentions and Rules for 
 
 This command is designed to align with industry best practices for (AI-assisted) code and technical reviews:
 
-- **Explicit scope and dimensions** — Clear categories (architecture, scalability, performance, security, maintainability, CI) so feedback is scoped and not generic.
-- **Context and conventions** — Reference to AGENTS.md and key artifacts ensures context-aware, project-aligned suggestions.
-- **Actionable, explainable feedback** — Every item requires **what**, **where**, and **why**; suggestions must be implementable.
-- **Structured output** — Critical / Improvements / Optional with headings and bullets for scannable plans.
-- **Conduct and scope** — Be constructive and specific. Stay in scope; call out out-of-scope concerns as separate follow-up items. For minor polish, prefix with **Nit:** so the author knows it's non-blocking.
-- **Trade-offs** — When a suggestion involves trade-offs (e.g. performance vs readability), mention them briefly so the author can decide.
-- **Cursor commands** — Plain Markdown in `.cursor/commands/`; content is the prompt when the user runs the command; text after the command name is additional context (scope/focus). See [Cursor – Commands](https://docs.cursor.com/context/commands).
+- **Explicit scope and dimensions** - Clear categories (architecture, scalability, performance, security, maintainability, CI) so feedback is scoped and not generic.
+- **Context and conventions** - Reference to AGENTS.md and key artifacts ensures context-aware, project-aligned suggestions.
+- **Actionable, explainable feedback** - Every item requires **what**, **where**, and **why**; suggestions must be implementable.
+- **Structured output** - Critical / Improvements / Optional with headings and bullets for scannable plans.
+- **Conduct and scope** - Be constructive and specific. Stay in scope; call out out-of-scope concerns as separate follow-up items. For minor polish, prefix with **Nit:** so the author knows it's non-blocking.
+- **Trade-offs** - When a suggestion involves trade-offs (e.g. performance vs readability), mention them briefly so the author can decide.
+- **Cursor commands** - Plain Markdown in `.cursor/commands/`; content is the prompt when the user runs the command; text after the command name is additional context (scope/focus). See [Cursor – Commands](https://docs.cursor.com/context/commands).
 
 ## Deep technical review
 
@@ -52,7 +52,7 @@ Cover the following dimensions (if a dimension yields no findings, say so in one
   - Structure: clear separation apps/packages; DTOs in `@repo/dtos-common`, routes and handlers in `worker-api`; React components and utils in `front-app/src/`.
   - Evolution: duplication, readability, testability; sustainability of shared DTOs and API surface.
 - **CI, reproducibility & observability**
-  - CI: `.github/workflows/ci.yml` — install, lint/format (`make check`), typecheck (`make check-types`), build; cache and lockfile handling; branch/trigger strategy.
+  - CI: `.github/workflows/ci.yml` - install, lint/format (`make check`), typecheck (`make check-types`), build; cache and lockfile handling; branch/trigger strategy.
   - Reproducibility: `make install` and lockfile, env documented (e.g. `.dev.vars.example`), build modes and deploy pipeline.
 - **User experience**
   - Styling: Tailwind CSS, Vite plugin, dark mode, responsive design, mobile-first approach, consistent UI/UX patterns.
@@ -76,13 +76,13 @@ Use this checklist to track that every dimension and step is covered before subm
 - [ ] Context gathered and scope clear
 - [ ] Root and app AGENTS.md consulted
 - [ ] Key artifacts inspected
-- [ ] **Architecture & configuration** — reviewed
-- [ ] **Scalability** — reviewed
-- [ ] **Performance optimization** — reviewed
-- [ ] **Security & robustness** — reviewed
-- [ ] **Maintainability & code quality** — reviewed
-- [ ] **CI, reproducibility & observability** — reviewed
-- [ ] **Styling** — reviewed
+- [ ] **Architecture & configuration** - reviewed
+- [ ] **Scalability** - reviewed
+- [ ] **Performance optimization** - reviewed
+- [ ] **Security & robustness** - reviewed
+- [ ] **Maintainability & code quality** - reviewed
+- [ ] **CI, reproducibility & observability** - reviewed
+- [ ] **Styling** - reviewed
 - [ ] Review checklist (correctness, conventions, quality, actionability) applied to findings
 - [ ] Plan structured as Critical / Improvements / Optional with what/where/why
 - [ ] Every dimension appears in the plan (finding or one-line "no issues")
@@ -105,7 +105,7 @@ When reviewing, consider (for a full or deep codebase review, also apply the **D
 - **Correctness**: logic, edge cases, possible bugs.
 - **Conventions**: consistency with project standards (e.g. AGENTS.md, naming, patterns).
 - **Quality**: security, performance, or maintainability where relevant.
-- **Actionability**: every suggestion must be clear and implementable—no vague advice.
+- **Actionability**: every suggestion must be clear and implementable-no vague advice.
 - **Trade-offs**: when a suggestion involves trade-offs (e.g. performance vs readability), state them briefly so the author can decide.
 - **Scope**: limit findings to the review scope; call out out-of-scope concerns as separate follow-up tasks rather than blocking the current plan.
 
@@ -117,4 +117,4 @@ Respond with a **plan** only (no implementation unless the user explicitly asks)
 2. **Improvements** – worthwhile changes (clarity, robustness, consistency).
 3. **Optional** – nice-to-haves (style, minor refactors). Prefix with **Nit:** when the item is pure polish so the author knows it's non-blocking.
 
-For each item give: **what** to change, **where** (file and area), and **why**. Keep items short and scannable. For deep reviews, address every dimension above—if a dimension has no findings, say so in one line (e.g. "Scalability: no issues identified").
+For each item give: **what** to change, **where** (file and area), and **why**. Keep items short and scannable. For deep reviews, address every dimension above-if a dimension has no findings, say so in one line (e.g. "Scalability: no issues identified").

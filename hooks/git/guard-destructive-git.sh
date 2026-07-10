@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Purpose: Block history-rewriting / working-tree-destroying git commands.
 # Target: Cursor preToolUse (Shell) and Claude Code PreToolUse (Bash).
-# Canonical location: hooks/git/ — wired from .cursor/hooks.json and .claude/settings.json.
+# Canonical location: hooks/git/ - wired from .cursor/hooks.json and .claude/settings.json.
 #
 # Mirrors .cursor/rules/guardrails.mdc and .claude/rules/guardrails.md.
 

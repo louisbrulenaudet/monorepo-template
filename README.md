@@ -238,7 +238,8 @@ Each worker uses environment-specific configuration:
 - **Configuration:** `.dev.vars` files for local environment variables
 
 ### Staging/Production Environments
-- **Configuration:** Environment variables defined in `wrangler.jsonc`
+- **Configuration:** `env.staging` and `env.production` blocks in `wrangler.jsonc`
+- **Deploy:** `wrangler deploy --env staging` or `--env production`
 - **Service Bindings:** Connected to deployed workers
 
 ### Environment Variables Example
@@ -246,18 +247,33 @@ Each worker uses environment-specific configuration:
 ```jsonc
 // In wrangler.jsonc
 {
+  "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "my-worker",
+  "compatibility_date": "2026-07-08",
+  "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "ENVIRONMENT": "dev"
   },
   "env": {
+    "staging": {
+      "vars": { "ENVIRONMENT": "staging" },
+      "observability": { "enabled": true, "traces": { "enabled": true } }
+    },
     "production": {
-      "vars": {
-        "ENVIRONMENT": "production"
-      }
+      "vars": { "ENVIRONMENT": "production" },
+      "observability": { "enabled": true, "traces": { "enabled": true } }
+      // "routes": [{ "pattern": "api.example.com", "custom_domain": true }]
     }
   }
 }
+```
+
+### Multi-worker local dev
+
+When service bindings connect Workers, run each in a separate terminal, or use multiple `-c` flags (first config is HTTP-primary):
+
+```sh
+wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/orm-example/wrangler.jsonc
 ```
 
 ### Service Binding Configuration
@@ -364,10 +380,10 @@ This ensures that all committed code follows the project's formatting standards 
 
 ## AI agent instructions
 
-- **[AGENTS.md](AGENTS.md)** — cross-tool project conventions (Cursor workspace rules, human onboarding).
-- **[CLAUDE.md](CLAUDE.md)** — Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).
-- **Per-app/package** — each workspace has matching `AGENTS.md` and `CLAUDE.md` (nested files load on demand in Claude Code).
-- **Path-scoped rules** — `.claude/rules/*.md` apply when editing matching file paths; unconditional guardrails in `guardrails.md`.
+- **[AGENTS.md](AGENTS.md)** - cross-tool project conventions (Cursor workspace rules, human onboarding).
+- **[CLAUDE.md](CLAUDE.md)** - Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).
+- **Per-app/package** - each workspace has matching `AGENTS.md` and `CLAUDE.md` (nested files load on demand in Claude Code).
+- **Path-scoped rules** - `.claude/rules/*.md` apply when editing matching file paths; unconditional guardrails in `guardrails.md`.
 
 ## Shared Packages (`@repo/*`)
 

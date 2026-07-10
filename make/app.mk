@@ -1,4 +1,4 @@
-# make/app.mk — reusable per-package targets (include from apps/*/Makefile or packages/*/Makefile)
+# make/app.mk - reusable per-package targets (include from apps/*/Makefile or packages/*/Makefile)
 #
 # Resolves the workspace package name from package.json (dir name != package name for @repo/*).
 

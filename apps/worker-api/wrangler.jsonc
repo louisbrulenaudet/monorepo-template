@@ -1,7 +1,13 @@
 {
+  "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "worker-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "send_metrics": false,
+  "upload_source_maps": true,
+  "minify": true,
+  // "placement": { "mode": "smart" }, // only when calling a centralized backend (DB/Hyperdrive); adds latency for a pure edge gateway
   "cache": {
     "enabled": true,
   },
@@ -17,11 +23,32 @@
     "port": 8725,
     "inspector_port": 0,
   },
-  "send_metrics": false,
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "head_sampling_rate": 1,
+    },
+  },
+  // Uncomment when adding secrets - wrangler types + deploy validate these names (no .dev.vars needed in CI):
+  // "secrets": {
+  //   "required": ["EXAMPLE_SECRET"],
+  // },
   "vars": {
     "ENVIRONMENT": "dev",
   },
   "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+      },
+      "observability": {
+        "enabled": true,
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 0.01,
+        },
+      },
+    },
     "production": {
       "vars": {
         "ENVIRONMENT": "production",
@@ -30,6 +57,7 @@
         "enabled": true,
         "traces": {
           "enabled": true,
+          "head_sampling_rate": 0.01,
         },
       },
     },

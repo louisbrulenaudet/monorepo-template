@@ -20,11 +20,11 @@ if (Math.abs(swipeAmount) >= SWIPE_THRESHOLD || velocity > 0.11) {
 }
 ```
 
-A quick flick should be enough — even if the drag distance is small.
+A quick flick should be enough - even if the drag distance is small.
 
 ### Damping at boundaries
 
-When a user drags past the natural boundary (e.g., dragging a drawer up when already at top), apply damping. The more they drag, the less the element moves. Things in real life do not suddenly stop — they slow down first.
+When a user drags past the natural boundary (e.g., dragging a drawer up when already at top), apply damping. The more they drag, the less the element moves. Things in real life do not suddenly stop - they slow down first.
 
 ```js
 // Damping formula: progressively resist movement past boundary
@@ -57,4 +57,4 @@ function onPointerDown(e) {
 
 Allow movement past boundaries with increasing friction. It feels more natural than hitting an invisible wall.
 
-Use the damping formula above and increase the resistance factor (0.2) to taste. A factor of 0.1 means only 10% of movement past the boundary is applied — strong friction. A factor of 0.5 is lighter.
+Use the damping formula above and increase the resistance factor (0.2) to taste. A factor of 0.1 means only 10% of movement past the boundary is applied - strong friction. A factor of 0.5 is lighter.

@@ -15,8 +15,8 @@
   "scripts": {
     "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern .",
     "check-types": "tsc -b",
-    "deploy": "wrangler deploy --env production --minify src/index.ts",
-    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --env production",
+    "dev": "wrangler dev",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",
     "lint": "oxlint --no-error-on-unmatched-pattern .",

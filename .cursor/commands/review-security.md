@@ -1,23 +1,23 @@
 # Review security command
 
-Run a **security-focused** review: HTTP security headers, CSP, bot protection (when implemented), CORS/CSRF, input validation, secret management, dependency vulnerabilities, and error information leakage. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run a **security-focused** review: HTTP security headers, CSP, bot protection (when implemented), CORS/CSRF, input validation, secret management, dependency vulnerabilities, and error information leakage. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review-security` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text after `/review-security` is scope—e.g. `/review-security headers only`, `/review-security worker-api`—narrow accordingly. If none given, assume full security review (`front-app` build + `worker-api` + env and deps).
+- **Parameters:** Any text after `/review-security` is scope-e.g. `/review-security headers only`, `/review-security worker-api`-narrow accordingly. If none given, assume full security review (`front-app` build + `worker-api` + env and deps).
 
 This command is project-scoped and works with @ mentions and Rules. For a full review use `/review` instead.
 
 ## Best practices alignment
 
-- **Headers** — CSP with nonces or strict-dynamic where needed; X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy; HSTS in production where applicable (often platform + `hono/secure-headers` on API).
-- **Input validation** — All external input (API bodies, query params, path params) validated with Zod schemas from `@repo/dtos-common` and `@hono/zod-validator` where applicable; use `.strict()` on schemas when appropriate; reject unknown keys; sanitize for context (HTML, URL, etc.) where output.
-- **Secrets** — Never in repo or client bundle; only in `.dev.vars` or wrangler env; no logging or error messages that include secrets.
-- **Bot protection** — Turnstile (or equivalent) on sensitive endpoints **when implemented**; token verified server-side before any processing; no bypass for "trusted" clients without verification.
-- **CORS and CSRF** — CORS allowlist (no wildcard in production); preflight handled; state-changing `/api/*` requests protected (e.g. `hono/csrf` with same-site / origin rules per AGENTS.md patterns).
-- **Errors and logging** — No stack traces or internal paths in client-facing responses; safe logging (no sensitive data); consistent Hono error handling (`HTTPException`, `onError`).
+- **Headers** - CSP with nonces or strict-dynamic where needed; X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy; HSTS in production where applicable (often platform + `hono/secure-headers` on API).
+- **Input validation** - All external input (API bodies, query params, path params) validated with Zod schemas from `@repo/dtos-common` and `@hono/zod-validator` where applicable; use `.strict()` on schemas when appropriate; reject unknown keys; sanitize for context (HTML, URL, etc.) where output.
+- **Secrets** - Never in repo or client bundle; only in `.dev.vars` or wrangler env; no logging or error messages that include secrets.
+- **Bot protection** - Turnstile (or equivalent) on sensitive endpoints **when implemented**; token verified server-side before any processing; no bypass for "trusted" clients without verification.
+- **CORS and CSRF** - CORS allowlist (no wildcard in production); preflight handled; state-changing `/api/*` requests protected (e.g. `hono/csrf` with same-site / origin rules per AGENTS.md patterns).
+- **Errors and logging** - No stack traces or internal paths in client-facing responses; safe logging (no sensitive data); consistent Hono error handling (`HTTPException`, `onError`).
 
 Align with root [AGENTS.md](AGENTS.md) and [apps/worker-api/AGENTS.md](apps/worker-api/AGENTS.md) for env and validation patterns.
 
@@ -83,15 +83,15 @@ Conduct a security-only review. Inspect the following and call out violations or
 
 ## Steps
 
-1. **Gather scope** — Full security or specific area (headers, CORS, validation, secrets, deps). Default to full.
-2. **Read conventions** — AGENTS.md for env, validation, and error handling.
-3. **Inspect security headers** — worker-api middleware; CSP and other headers.
-4. **Inspect bot protection** — When implemented: frontend token submission; worker-api verification order.
-5. **Inspect CORS** — worker-api middleware; allowlist and preflight.
-6. **Inspect validation** — DTOs in `@repo/dtos-common` and route usage; strict and safe usage.
-7. **Inspect secrets and errors** — Env usage, error responses, logging; no leakage.
-8. **Consider dependencies and rate limiting** — pnpm audit; rate limit on sensitive endpoints.
-9. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
+1. **Gather scope** - Full security or specific area (headers, CORS, validation, secrets, deps). Default to full.
+2. **Read conventions** - AGENTS.md for env, validation, and error handling.
+3. **Inspect security headers** - worker-api middleware; CSP and other headers.
+4. **Inspect bot protection** - When implemented: frontend token submission; worker-api verification order.
+5. **Inspect CORS** - worker-api middleware; allowlist and preflight.
+6. **Inspect validation** - DTOs in `@repo/dtos-common` and route usage; strict and safe usage.
+7. **Inspect secrets and errors** - Env usage, error responses, logging; no leakage.
+8. **Consider dependencies and rate limiting** - pnpm audit; rate limit on sensitive endpoints.
+9. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
 

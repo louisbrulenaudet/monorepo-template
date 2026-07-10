@@ -1,22 +1,22 @@
 # Review configuration command
 
-Run a **configuration-focused** review: environment and secrets handling, Cloudflare/wrangler setup, TypeScript and OXC configs, Vite and Wrangler configuration, build modes, and dev/staging/prod parity. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run a **configuration-focused** review: environment and secrets handling, Cloudflare/wrangler setup, TypeScript and OXC configs, Vite and Wrangler configuration, build modes, and dev/staging/prod parity. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review-configuration` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text after `/review-configuration` is scope—e.g. `/review-configuration env only`, `/review-configuration front-app`—narrow accordingly. If none given, assume all configuration (env, wrangler, TS, OXC, Vite).
+- **Parameters:** Any text after `/review-configuration` is scope-e.g. `/review-configuration env only`, `/review-configuration front-app`-narrow accordingly. If none given, assume all configuration (env, wrangler, TS, OXC, Vite).
 
 This command is project-scoped and works with @ mentions and Rules. For a full review use `/review` instead.
 
 ## Best practices alignment
 
-- **Secrets** — Never in repo or client bundle; use `.dev.vars` (workers) and wrangler env; document required vars in `.dev.vars.example`.
-- **Environment** — Clear split: client-exposed keys via Vite (`import.meta.env`, e.g. `VITE_*` if used); server-only secrets and config in Workers; build modes (development/production) consistent across tools.
-- **TypeScript** — Strict mode everywhere; shared configs from `@repo/typescript-config` (`strict.json` core → runtime presets); root solution `tsconfig.json` with project references; no conflicting compiler options between packages.
-- **OXC (oxfmt / oxlint)** — Single source of truth for format and lint; consistent rules; no conflicting formatters (e.g. Prettier).
-- **Cloudflare** — Wrangler and Vite build aligned; compatibility date and flags documented; bindings and env match usage; `front-app` assets (SPA) and `worker-api` worker entry configured correctly.
+- **Secrets** - Never in repo or client bundle; use `.dev.vars` (workers) and wrangler env; document required vars in `.dev.vars.example`.
+- **Environment** - Clear split: client-exposed keys via Vite (`import.meta.env`, e.g. `VITE_*` if used); server-only secrets and config in Workers; build modes (development/production) consistent across tools.
+- **TypeScript** - Strict mode everywhere; shared configs from `@repo/typescript-config` (`strict.json` core → runtime presets); root solution `tsconfig.json` with project references; no conflicting compiler options between packages.
+- **OXC (oxfmt / oxlint)** - Single source of truth for format and lint; consistent rules; no conflicting formatters (e.g. Prettier).
+- **Cloudflare** - Wrangler and Vite build aligned; compatibility date and flags documented; bindings and env match usage; `front-app` assets (SPA) and `worker-api` worker entry configured correctly.
 
 Align with root [AGENTS.md](AGENTS.md) and app AGENTS.md for stated config and port allocation.
 
@@ -42,7 +42,7 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 ### TypeScript configuration
 
 - **Artifacts:** Root [tsconfig.json](tsconfig.json), [packages/typescript-config/](packages/typescript-config/) (`strict.json`, `workers.json`, `workers-lib.json`, `vite-react.json`, `vite-node.json`), [apps/front-app/tsconfig.json](apps/front-app/tsconfig.json) + `tsconfig.app.json` / `tsconfig.node.json`, [apps/worker-api/tsconfig.json](apps/worker-api/tsconfig.json), [packages/dtos-common/tsconfig.json](packages/dtos-common/tsconfig.json), [packages/enums-common/tsconfig.json](packages/enums-common/tsconfig.json).
-- **Checks:** All extend from `@repo/typescript-config` where appropriate. `strict` enabled via `strict.json` inheritance. Root tsconfig uses solution-style `references`; `dtos-common` references `enums-common`. Worker apps set `compilerOptions.types` for `worker-configuration.d.ts`. React apps use split layout: `vite-react.json` for `src/**`, `vite-node.json` for `vite.config.ts`. `workers-lib.json` keeps `isolatedDeclarations` off (schema-first `z.infer` in `@repo/dtos-common`). `erasableSyntaxOnly` on — no `export enum`; use `as const` objects in `@repo/enums-common`. Each package running `check-types` declares `typescript` in devDependencies.
+- **Checks:** All extend from `@repo/typescript-config` where appropriate. `strict` enabled via `strict.json` inheritance. Root tsconfig uses solution-style `references`; `dtos-common` references `enums-common`. Worker apps set `compilerOptions.types` for `worker-configuration.d.ts`. React apps use split layout: `vite-react.json` for `src/**`, `vite-node.json` for `vite.config.ts`. `workers-lib.json` keeps `isolatedDeclarations` off (schema-first `z.infer` in `@repo/dtos-common`). `erasableSyntaxOnly` on - no `export enum`; use `as const` objects in `@repo/enums-common`. Each package running `check-types` declares `typescript` in devDependencies.
 
 ### OXC (oxfmt / oxlint)
 
@@ -65,14 +65,14 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 
 ## Steps
 
-1. **Gather scope** — All config or specific area (env, wrangler, TS, OXC, Vite). Default to full configuration review.
-2. **Read conventions** — Root and app AGENTS.md for env, ports, and tooling.
-3. **Inspect env and secrets** — .dev.vars.example, wrangler vars, codebase for env usage; confirm no secrets in client or repo.
-4. **Inspect wrangler and Vite** — Both wrangler.jsonc files; front-app vite.config.ts; alignment between build output and deployment.
-5. **Inspect TypeScript** — All tsconfig files and typescript-config package; strict and extends chain.
-6. **Inspect OXC** — `.oxfmtrc.json` and `.oxlintrc.json`; format/lint rules and ignore patterns.
-7. **Inspect build and lockfile** — package.json scripts, turbo.json, .npmrc, engines; reproducibility and build mode.
-8. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
+1. **Gather scope** - All config or specific area (env, wrangler, TS, OXC, Vite). Default to full configuration review.
+2. **Read conventions** - Root and app AGENTS.md for env, ports, and tooling.
+3. **Inspect env and secrets** - .dev.vars.example, wrangler vars, codebase for env usage; confirm no secrets in client or repo.
+4. **Inspect wrangler and Vite** - Both wrangler.jsonc files; front-app vite.config.ts; alignment between build output and deployment.
+5. **Inspect TypeScript** - All tsconfig files and typescript-config package; strict and extends chain.
+6. **Inspect OXC** - `.oxfmtrc.json` and `.oxlintrc.json`; format/lint rules and ignore patterns.
+7. **Inspect build and lockfile** - package.json scripts, turbo.json, .npmrc, engines; reproducibility and build mode.
+8. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
 

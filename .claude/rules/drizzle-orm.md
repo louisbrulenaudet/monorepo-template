@@ -5,7 +5,7 @@ paths:
 
 # Drizzle ORM Naming
 
-`orm-*` workers hold **schema and migrations only** — no business logic, no HTTP routing.
+`orm-*` workers hold **schema and migrations only** - no business logic, no HTTP routing.
 
 ## Database naming
 
@@ -23,7 +23,7 @@ const accountsTable = pgTable("accounts", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-// ❌ Incorrect — singular table, plural column
+// ❌ Incorrect - singular table, plural column
 const accountTable = pgTable("account", {
   hostname_ids: serial("hostname_ids"),
 });

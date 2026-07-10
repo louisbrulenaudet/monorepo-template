@@ -3,7 +3,7 @@
   "tasks": [
     {
       "label": "dev: full stack",
-      "detail": "turbo run dev — wrangler (mcp) + vite (login-ui) + flue (worker-agent)",
+      "detail": "turbo run dev - wrangler (mcp) + vite (login-ui) + flue (worker-agent)",
       "type": "shell",
       "command": "make dev",
       "isBackground": true,
@@ -15,7 +15,7 @@
     },
     {
       "label": "ci: full gate",
-      "detail": "make ci — types + format + lint + check-types (pre-PR gate)",
+      "detail": "make ci - types + format + lint + check-types (pre-PR gate)",
       "type": "shell",
       "command": "make ci",
       "group": {
@@ -32,7 +32,7 @@
     },
     {
       "label": "check-types",
-      "detail": "turbo run check-types — tsc --noEmit across every workspace",
+      "detail": "turbo run check-types - tsc --noEmit across every workspace",
       "type": "shell",
       "command": "make check-types",
       "group": "build",
@@ -58,7 +58,7 @@
     },
     {
       "label": "types: regenerate wrangler types",
-      "detail": "turbo run types — wrangler types for every Worker",
+      "detail": "turbo run types - wrangler types for every Worker",
       "type": "shell",
       "command": "make types",
       "group": "build",
@@ -70,7 +70,7 @@
     },
     {
       "label": "build",
-      "detail": "turbo run build — mcp dry-run deploy + vite build + flue build",
+      "detail": "turbo run build - mcp dry-run deploy + vite build + flue build",
       "type": "shell",
       "command": "make build",
       "group": "build",
@@ -84,7 +84,7 @@
     },
     {
       "label": "test",
-      "detail": "turbo run test — Vitest suites across workspaces",
+      "detail": "turbo run test - Vitest suites across workspaces",
       "type": "shell",
       "command": "pnpm test",
       "group": {

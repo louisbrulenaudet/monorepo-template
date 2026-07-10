@@ -3,7 +3,7 @@
 [![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-Shared **constrained string values** reused across apps and packages (HTTP methods, status codes, CORS headers, etc.). Implemented as `as const` objects — not TypeScript `enum`.
+Shared **constrained string values** reused across apps and packages (HTTP methods, status codes, CORS headers, etc.). Implemented as `as const` objects - not TypeScript `enum`.
 
 ## Purpose
 
@@ -13,7 +13,7 @@ Provide strongly typed, wire-safe string literals so Zod schemas, Workers, and t
 
 - **Consistent values across the repo** (frontend + worker-api + dtos-common)
 - **Type-safe imports** via `as const` objects and derived union types
-- **Erasable syntax** — compatible with `erasableSyntaxOnly` (no runtime enum emit)
+- **Erasable syntax** - compatible with `erasableSyntaxOnly` (no runtime enum emit)
 
 ## Tech Stack
 
@@ -80,7 +80,7 @@ const statusValues = [Status.PENDING, Status.FAILED] as const;
 export const TerminalStatusSchema = z.enum(statusValues);
 ```
 
-Avoid passing a plain `string[]` without `as const` — Zod will infer `string` instead of a literal union.
+Avoid passing a plain `string[]` without `as const` - Zod will infer `string` instead of a literal union.
 
 ## When to add values here
 
@@ -122,9 +122,9 @@ packages/enums-common/
 
 ## Best practices
 
-1. **Never duplicate wire literals** — import from this package or promote here on second use.
+1. **Never duplicate wire literals** - import from this package or promote here on second use.
 2. **Use `as const` objects**, not `export enum`.
-3. **String values only** on HTTP/JSON boundaries — no numeric enums.
+3. **String values only** on HTTP/JSON boundaries - no numeric enums.
 4. **Explicit `readonly` arrays** for exported lists when `isolatedDeclarations`-style clarity helps (e.g. CORS allow-lists).
 
 Agent-focused notes: [AGENTS.md](AGENTS.md).

@@ -1,11 +1,11 @@
 ---
-title: Tailwind v4 — Animation Utilities and Custom Keyframes
+title: Tailwind v4 - Animation Utilities and Custom Keyframes
 impact: MEDIUM
 impactDescription: built-in animate-* utilities and @theme keyframe registration cover the majority of animation use cases without custom CSS
 tags: tailwind, animation, animate, keyframes, theme, spin, pulse, ping, bounce, custom
 ---
 
-## Tailwind v4 — Animation Utilities and Custom Keyframes
+## Tailwind v4 - Animation Utilities and Custom Keyframes
 
 > Source: https://tailwindcss.com/docs
 
@@ -15,16 +15,16 @@ Docs: https://tailwindcss.com/docs/animation
 
 | Class | Animation |
 |---|---|
-| `animate-spin` | `spin 1s linear infinite` — loading indicators |
-| `animate-ping` | `ping 1s cubic-bezier(0,0,0.2,1) infinite` — notification pings |
-| `animate-pulse` | `pulse 2s cubic-bezier(0.4,0,0.6,1) infinite` — skeleton loading |
+| `animate-spin` | `spin 1s linear infinite` - loading indicators |
+| `animate-ping` | `ping 1s cubic-bezier(0,0,0.2,1) infinite` - notification pings |
+| `animate-pulse` | `pulse 2s cubic-bezier(0.4,0,0.6,1) infinite` - skeleton loading |
 | `animate-bounce` | `bounce 1s infinite` |
 | `animate-none` | Removes animation |
 | `animate-[<value>]` | Arbitrary animation shorthand |
 | `animate-(<custom-property>)` | CSS variable shorthand |
 
 ```html
-<!-- Animate spinner wrapper (not SVG directly — no hardware acceleration on SVG) -->
+<!-- Animate spinner wrapper (not SVG directly - no hardware acceleration on SVG) -->
 <div class="animate-spin motion-reduce:animate-none">
   <svg>...</svg>
 </div>

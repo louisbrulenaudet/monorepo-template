@@ -1,7 +1,7 @@
 ---
 title: Component Animation Patterns
 impact: HIGH
-impactDescription: direct user-facing feel — buttons, popovers, tooltips are touched constantly
+impactDescription: direct user-facing feel - buttons, popovers, tooltips are touched constantly
 tags: animation, components, buttons, popovers, tooltips, blur, scale, feedback
 ---
 
@@ -59,7 +59,7 @@ Start from `scale(0.9)` or higher, combined with opacity. Even a barely-visible 
 
 Popovers should scale in from their trigger, not from center. The default `origin-center` is wrong for almost every popover.
 
-**Exception: modals.** Modals should keep `origin-center` because they are not anchored to a specific trigger — they appear centered in the viewport.
+**Exception: modals.** Modals should keep `origin-center` because they are not anchored to a specific trigger - they appear centered in the viewport.
 
 ```css
 /* Radix UI */

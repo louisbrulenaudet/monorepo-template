@@ -30,7 +30,7 @@ packages/dtos-common/
 │   ├── webhook/
 │   │   ├── <feature>.ts
 │   │   └── index.ts
-│   └── index.ts            # Package entry — re-exports `api/` (extend when other layers have schemas)
+│   └── index.ts            # Package entry - re-exports `api/` (extend when other layers have schemas)
 ```
 
 Import via subpath: `@repo/dtos-common/api`, `@repo/dtos-common/rpc`, `@repo/dtos-common/queue`, `@repo/dtos-common/webhook`.
@@ -46,14 +46,14 @@ One feature file per concern within a layer. Filenames are **kebab-case** (`heal
 | A queue (producer → consumer) | `src/queue/<feature>.ts` | `@repo/dtos-common/queue` |
 | An external webhook into `webhook-*` | `src/webhook/<feature>.ts` | `@repo/dtos-common/webhook` |
 
-**Do not mix layers** in one file — e.g. an HTTP response schema belongs in `api/`, not `rpc/`, even if fields look similar.
+**Do not mix layers** in one file - e.g. an HTTP response schema belongs in `api/`, not `rpc/`, even if fields look similar.
 
 ### Layer notes
 
-- **`api/`** — JSON-safe types only (no `Date` objects on the wire). Used with `zValidator` in `worker-api` and `fetchJsonWithSchema` in `front-app`.
-- **`rpc/`** — Shapes passed through service bindings; may use `z.coerce.date()` or ISO strings for timestamps and richer joined read models not exposed on public HTTP.
-- **`queue/`** — Durable/async job payloads; version carefully when multiple producers or consumers exist.
-- **`webhook/`** — Third-party event bodies; validate at the `webhook-*` worker boundary before handing off to business workers.
+- **`api/`** - JSON-safe types only (no `Date` objects on the wire). Used with `zValidator` in `worker-api` and `fetchJsonWithSchema` in `front-app`.
+- **`rpc/`** - Shapes passed through service bindings; may use `z.coerce.date()` or ISO strings for timestamps and richer joined read models not exposed on public HTTP.
+- **`queue/`** - Durable/async job payloads; version carefully when multiple producers or consumers exist.
+- **`webhook/`** - Third-party event bodies; validate at the `webhook-*` worker boundary before handing off to business workers.
 
 ## Where to Change Things
 
@@ -108,10 +108,10 @@ Never redefine these shapes in apps.
 
 ## Zod Notes
 
-- Shared constrained values from `@repo/enums-common`: `z.enum(Status)` for the full set, or `z.enum([Status.A, Status.B] as const)` for a subset — never duplicate string literals. Plain `string[]` without `as const` widens inference to `string`.
+- Shared constrained values from `@repo/enums-common`: `z.enum(Status)` for the full set, or `z.enum([Status.A, Status.B] as const)` for a subset - never duplicate string literals. Plain `string[]` without `as const` widens inference to `string`.
 - Pick `.strict()` policy per file/feature and apply consistently.
 - `.safeParse()` at trust boundaries; `.parse()` only in controlled throw contexts.
-- No business logic in this package — shapes and validation only.
+- No business logic in this package - shapes and validation only.
 
 ## Commands
 

@@ -11,13 +11,13 @@ The typescript-config package provides standardized TypeScript configurations th
 
 ## Features
 
-- **Strict core** — Shared strict flags in `strict.json`
-- **Cloudflare Workers Support** — Optimized settings for Cloudflare Workers runtime
-- **Worker Libraries** — Configuration for shared worker libraries
-- **React Vite Support** — TypeScript config optimized for React projects built with Vite
-- **Strict Type Checking** — Comprehensive type safety with strict mode enabled
-- **Modern ES Features** — ES2023+ target with latest language features
-- **Consistent Settings** — Unified compiler options across all projects
+- **Strict core** - Shared strict flags in `strict.json`
+- **Cloudflare Workers Support** - Optimized settings for Cloudflare Workers runtime
+- **Worker Libraries** - Configuration for shared worker libraries
+- **React Vite Support** - TypeScript config optimized for React projects built with Vite
+- **Strict Type Checking** - Comprehensive type safety with strict mode enabled
+- **Modern ES Features** - ES2023+ target with latest language features
+- **Consistent Settings** - Unified compiler options across all projects
 
 ## Tech Stack
 
@@ -77,7 +77,7 @@ For shared libraries without a `wrangler.jsonc`, extend `workers-lib.json` and o
 ### React app (Vite)
 
 ```json
-// tsconfig.json — solution root
+// tsconfig.json - solution root
 {
   "files": [],
   "references": [
@@ -86,7 +86,7 @@ For shared libraries without a `wrangler.jsonc`, extend `workers-lib.json` and o
   ]
 }
 
-// tsconfig.app.json — browser source
+// tsconfig.app.json - browser source
 {
   "extends": "@repo/typescript-config/vite-react.json",
   "include": ["src/**/*.ts", "src/**/*.tsx"],
@@ -96,7 +96,7 @@ For shared libraries without a `wrangler.jsonc`, extend `workers-lib.json` and o
   }
 }
 
-// tsconfig.node.json — Vite config (Node)
+// tsconfig.node.json - Vite config (Node)
 {
   "extends": "@repo/typescript-config/vite-node.json",
   "include": ["vite.config.ts"]
@@ -142,21 +142,21 @@ The repo root `tsconfig.json` references all packages for IDE navigation. Use `m
 3. **Worker types in `compilerOptions.types`**: Not only in `include`
 4. **Path aliases**: Configure in the app tsconfig (TS 5.0+ resolves `paths` relative to the tsconfig; `baseUrl` is optional) + `vite.config.ts`
 5. **Verify after changes**: Run `make check-types` from the repo root
-6. **Schema-first DTOs**: `@repo/dtos-common` uses `z.infer<typeof Schema>` — `workers-lib.json` keeps `isolatedDeclarations` off so exported Zod schemas do not need duplicate hand-written types
+6. **Schema-first DTOs**: `@repo/dtos-common` uses `z.infer<typeof Schema>` - `workers-lib.json` keeps `isolatedDeclarations` off so exported Zod schemas do not need duplicate hand-written types
 
 ## Type Safety Features
 
 All presets inherit from `strict.json`:
 
-- **Strict Mode** — Full type checking
-- **No Unchecked Indexed Access** — Safer array/object access
-- **No Unused Locals/Parameters** — Catches unused code
-- **No Implicit Returns** — All code paths must return
-- **No Implicit Override** — Subclass methods must use `override` when overriding
-- **No Fallthrough Cases** — Prevents switch bugs
-- **Verbatim Module Syntax** — Correct ESM type imports
-- **No Unchecked Side Effect Imports** — Validates side-effect imports
-- **Erasable Syntax Only** — No runtime TS constructs (`enum`, namespaces, etc.)
-- **Exact Optional Property Types** — Optional props may be absent, not explicitly `undefined`
-- **No Property Access From Index Signature** — Bracket notation for index-signature keys
-- **No Error Truncation** — Full type text in diagnostics
+- **Strict Mode** - Full type checking
+- **No Unchecked Indexed Access** - Safer array/object access
+- **No Unused Locals/Parameters** - Catches unused code
+- **No Implicit Returns** - All code paths must return
+- **No Implicit Override** - Subclass methods must use `override` when overriding
+- **No Fallthrough Cases** - Prevents switch bugs
+- **Verbatim Module Syntax** - Correct ESM type imports
+- **No Unchecked Side Effect Imports** - Validates side-effect imports
+- **Erasable Syntax Only** - No runtime TS constructs (`enum`, namespaces, etc.)
+- **Exact Optional Property Types** - Optional props may be absent, not explicitly `undefined`
+- **No Property Access From Index Signature** - Bracket notation for index-signature keys
+- **No Error Truncation** - Full type text in diagnostics

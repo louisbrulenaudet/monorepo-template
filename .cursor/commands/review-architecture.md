@@ -1,22 +1,22 @@
 # Review architecture command
 
-Run an **architecture-focused** review of the monorepo: layout, workspace dependencies, Turborepo task graph, app vs package boundaries, dependency direction, and module coupling/cohesion. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run an **architecture-focused** review of the monorepo: layout, workspace dependencies, Turborepo task graph, app vs package boundaries, dependency direction, and module coupling/cohesion. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review-architecture` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text after `/review-architecture` is additional scope—e.g. `/review-architecture only packages`, `/review-architecture front-app worker-api boundary`—narrow the review accordingly. If none given, assume full monorepo architecture.
+- **Parameters:** Any text after `/review-architecture` is additional scope-e.g. `/review-architecture only packages`, `/review-architecture front-app worker-api boundary`-narrow the review accordingly. If none given, assume full monorepo architecture.
 
 This command is project-scoped and works with @ mentions and Rules. For a full multi-dimension review, use `/review` instead.
 
 ## Best practices alignment
 
-- **Dependency direction** — Apps depend on packages; packages must not depend on apps. No circular dependencies between workspaces.
-- **Single responsibility** — Each package has one clear purpose (e.g. `@repo/dtos-common`, `@repo/enums-common`, `@repo/typescript-config`).
-- **Public API surface** — Packages expose a minimal, stable API via barrel exports; internal modules are not re-exported unless intentional.
-- **Turborepo** — Task graph is acyclic; cache boundaries and `dependsOn` are correct; no redundant or missing tasks.
-- **Makefile** — Single entry point for common operations; app-specific Makefiles delegate to root or extend cleanly; port allocation is documented and consistent.
+- **Dependency direction** - Apps depend on packages; packages must not depend on apps. No circular dependencies between workspaces.
+- **Single responsibility** - Each package has one clear purpose (e.g. `@repo/dtos-common`, `@repo/enums-common`, `@repo/typescript-config`).
+- **Public API surface** - Packages expose a minimal, stable API via barrel exports; internal modules are not re-exported unless intentional.
+- **Turborepo** - Task graph is acyclic; cache boundaries and `dependsOn` are correct; no redundant or missing tasks.
+- **Makefile** - Single entry point for common operations; app-specific Makefiles delegate to root or extend cleanly; port allocation is documented and consistent.
 
 Align with root [AGENTS.md](AGENTS.md) and app-level AGENTS.md for stated architecture and naming.
 
@@ -64,14 +64,14 @@ Conduct an architecture-only review. Inspect the following and call out violatio
 
 ## Steps
 
-1. **Gather scope** — Full monorepo or specific area (e.g. only packages, only Turborepo). If scope is unclear, default to full architecture.
-2. **Read conventions** — Root [AGENTS.md](AGENTS.md) and app AGENTS.md for stated architecture, workspace layout, and port allocation.
-3. **Inspect workspace and dependencies** — Open pnpm-workspace.yaml, root and app/package package.json files; trace `@repo/*` and cross-workspace dependencies; reason about or run cycle detection.
-4. **Inspect Turborepo** — Open turbo.json and script definitions; verify task graph and cache configuration.
-5. **Inspect Makefile** — Root Makefile and make/*.mk; app Makefiles; verify targets and port usage.
-6. **Inspect package APIs** — packages/dtos-common, packages/enums-common, and packages/typescript-config entry points and exports; ensure minimal, stable public API.
-7. **Review app structure** — worker-api layers (routes, handlers); front-app React tree and boundaries with worker-api; alignment with AGENTS.md.
-8. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. If a sub-area has no findings, say so in one line.
+1. **Gather scope** - Full monorepo or specific area (e.g. only packages, only Turborepo). If scope is unclear, default to full architecture.
+2. **Read conventions** - Root [AGENTS.md](AGENTS.md) and app AGENTS.md for stated architecture, workspace layout, and port allocation.
+3. **Inspect workspace and dependencies** - Open pnpm-workspace.yaml, root and app/package package.json files; trace `@repo/*` and cross-workspace dependencies; reason about or run cycle detection.
+4. **Inspect Turborepo** - Open turbo.json and script definitions; verify task graph and cache configuration.
+5. **Inspect Makefile** - Root Makefile and make/*.mk; app Makefiles; verify targets and port usage.
+6. **Inspect package APIs** - packages/dtos-common, packages/enums-common, and packages/typescript-config entry points and exports; ensure minimal, stable public API.
+7. **Review app structure** - worker-api layers (routes, handlers); front-app React tree and boundaries with worker-api; alignment with AGENTS.md.
+8. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. If a sub-area has no findings, say so in one line.
 
 ## Checklist
 

@@ -6,7 +6,7 @@ This folder holds Cursor-specific agent configuration. Shared hook **scripts** l
 
 | Path | Purpose |
 |------|---------|
-| [`rules/`](rules/) | Path-scoped project rules (`.mdc`) — parallel to [`.claude/rules/`](../.claude/rules/) |
+| [`rules/`](rules/) | Path-scoped project rules (`.mdc`) - parallel to [`.claude/rules/`](../.claude/rules/) |
 | [`hooks.json`](hooks.json) | Agent hook wiring → scripts under [`hooks/`](../hooks/) |
 | [`agents/`](agents/) | Custom subagents (`ci-verifier`, `docs-researcher`, `test-runner`) |
 | [`commands/`](commands/) | Slash commands for structured reviews (`/review`, `/review-ci`, …) |

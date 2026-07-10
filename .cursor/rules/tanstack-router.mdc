@@ -1,18 +1,18 @@
 ---
-description: "TanStack Router v1 rules — file-based routing, typed navigation, loaders, Query integration."
+description: "TanStack Router v1 rules - file-based routing, typed navigation, loaders, Query integration."
 alwaysApply: false
 globs: apps/front-*/src/**/*.{ts,tsx}
 ---
 
 # TanStack Router (v1) Rules
 
-TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route data, and URL state. This is a client SPA — ignore all TanStack Start / SSR / server-function / streaming features. For deep guidance load the **`tanstack-router`** skill.
+TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route data, and URL state. This is a client SPA - ignore all TanStack Start / SSR / server-function / streaming features. For deep guidance load the **`tanstack-router`** skill.
 
 ## Setup & the generated tree
 
-- Use **file-based routing** via the Vite plugin — `import { tanstackRouter } from "@tanstack/router-plugin/vite"`, configured as `tanstackRouter({ target: "react", autoCodeSplitting: true })` and placed **before** `@vitejs/plugin-react` in `plugins` (Vite wiring lives in [frontend-architecture.mdc](.cursor/rules/frontend-architecture.mdc)). Reserve code-based routing for programmatic/virtual trees only.
-- **`routeTree.gen.ts` is a generated artifact** — the plugin regenerates it on dev/build. Never hand-edit it. In this repo it is **committed** and excluded from lint/format (`.oxlintrc.json` / `.oxfmtrc.json`); a hand-authored change to it is a build-config bug, not a source change (see [guardrails.mdc](.cursor/rules/guardrails.mdc)).
-- Register the router type once for global inference — without this, all `to`/`params`/`search` type safety silently degrades:
+- Use **file-based routing** via the Vite plugin - `import { tanstackRouter } from "@tanstack/router-plugin/vite"`, configured as `tanstackRouter({ target: "react", autoCodeSplitting: true })` and placed **before** `@vitejs/plugin-react` in `plugins` (Vite wiring lives in [frontend-architecture.mdc](.cursor/rules/frontend-architecture.mdc)). Reserve code-based routing for programmatic/virtual trees only.
+- **`routeTree.gen.ts` is a generated artifact** - the plugin regenerates it on dev/build. Never hand-edit it. In this repo it is **committed** and excluded from lint/format (`.oxlintrc.json` / `.oxfmtrc.json`); a hand-authored change to it is a build-config bug, not a source change (see [guardrails.mdc](.cursor/rules/guardrails.mdc)).
+- Register the router type once for global inference - without this, all `to`/`params`/`search` type safety silently degrades:
   ```ts
   declare module "@tanstack/react-router" {
     interface Register {
@@ -26,13 +26,13 @@ TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route da
 
 - Define each route with `createFileRoute("/path")({...})`; the root with `createRootRouteWithContext<{...}>()` (see context below). Export it as `Route`.
 - Conventions in `src/routes/`: `index.tsx` → index; `$param.tsx` → dynamic segment; `_pathless.tsx` / `_layout/` → layout route that adds nesting/UI **without** a URL segment; `(group)/` → grouping with no URL impact; `$.tsx` → splat.
-- Keep route files thin: route config + colocated route-specific UI. Prefer the route's own bound hooks — `Route.useSearch()`, `Route.useParams()`, `Route.useLoaderData()` — over the free hooks with `{ from }`.
+- Keep route files thin: route config + colocated route-specific UI. Prefer the route's own bound hooks - `Route.useSearch()`, `Route.useParams()`, `Route.useLoaderData()` - over the free hooks with `{ from }`.
 
 ## Type-safe navigation & search params
 
 - Navigate only with typed `<Link to="/posts/$postId" params={{ postId }}>` and the typed `useNavigate()`. Never hand-build URL strings or use raw `<a href>` for internal routes.
 - Treat **search params as first-class typed state**: validate with `validateSearch` against a schema (Zod), read with `Route.useSearch()`, and update immutably (`search={(prev) => ({ ...prev, page })}`). Never read/mutate `window.location.search`. Always parse to a concrete schema **with defaults** so downstream types are non-optional.
-- When a `loader` depends on search params, add `loaderDeps: ({ search }) => ({ ... })` — otherwise the loader won't re-run on search changes and serves stale data.
+- When a `loader` depends on search params, add `loaderDeps: ({ search }) => ({ ... })` - otherwise the loader won't re-run on search changes and serves stale data.
 
 ## Data loading, context & auth
 
@@ -67,7 +67,7 @@ TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route da
     component: PostDetail,
   });
   ```
-- Set **`defaultPreloadStaleTime: 0`** on the router so freshness is governed by Query's `staleTime`, not the router's separate preload cache. This is the most common Router+Query misconfiguration — get it right.
+- Set **`defaultPreloadStaleTime: 0`** on the router so freshness is governed by Query's `staleTime`, not the router's separate preload cache. This is the most common Router+Query misconfiguration - get it right.
 
 ## Before finishing
 

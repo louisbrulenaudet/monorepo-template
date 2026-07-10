@@ -1,6 +1,10 @@
 # Copy this file to `.dev.vars` for local `wrangler dev`.
-# Values here are for documentation only — never commit real secrets.
+# Values here are for documentation only - never commit real secrets.
 #
 # Minimal template: no variables are required for the current codebase (health
-# route only). When you add Clerk authentication or other secrets, define them
-# here and in Wrangler (e.g. `wrangler secret put …` for deploys).
+# route only). When you add secrets:
+# 1. Uncomment `secrets.required` in `wrangler.jsonc` (same secret names).
+# 2. Add matching keys here (only listed names are loaded once `secrets` is defined).
+# 3. Deploy: `wrangler secret put EXAMPLE_SECRET --env staging` (repeat per env).
+#
+# EXAMPLE_SECRET="replace-me"

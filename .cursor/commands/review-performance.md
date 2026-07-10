@@ -1,22 +1,22 @@
 # Review performance command
 
-Run a **performance-focused** review: algorithmic complexity, data structures, memory leaks, bundle size, critical path, cache strategy, images, and Worker cold starts. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run a **performance-focused** review: algorithmic complexity, data structures, memory leaks, bundle size, critical path, cache strategy, images, and Worker cold starts. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review-performance` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text after `/review-performance` is scope—e.g. `/review-performance frontend only`, `/review-performance worker-api`—narrow accordingly. If none given, assume full performance review (frontend + worker-api).
+- **Parameters:** Any text after `/review-performance` is scope-e.g. `/review-performance frontend only`, `/review-performance worker-api`-narrow accordingly. If none given, assume full performance review (frontend + worker-api).
 
 This command is project-scoped and works with @ mentions and Rules. For a full review use `/review` instead.
 
 ## Best practices alignment
 
-- **Algorithms and data structures** — Prefer O(n) or better for hot paths; avoid redundant loops, repeated sorts, or nested iterations over large collections; use appropriate structures (Map/Set for lookups, avoid repeated array scans).
-- **Memory** — No closure or WeakRef leaks in long-lived Workers; no unbounded caches or growing global state; React effects and subscriptions cleaned up on unmount.
-- **Frontend** — Critical path minimal; lazy load below-the-fold; `fetchpriority` for LCP; explicit dimensions to avoid CLS; code-splitting and tree-shaking; prefetch where beneficial.
-- **Caching** — Cache TTLs and keys match content type (HTML vs assets vs API); no over-caching of dynamic content or under-caching of static; Cloudflare asset and API cache headers correct.
-- **Worker and API** — Bundle size within limits (e.g. &lt; 1 MB compressed for Workers); no blocking I/O on critical path; cold start impact minimized (small deps, no heavy init).
+- **Algorithms and data structures** - Prefer O(n) or better for hot paths; avoid redundant loops, repeated sorts, or nested iterations over large collections; use appropriate structures (Map/Set for lookups, avoid repeated array scans).
+- **Memory** - No closure or WeakRef leaks in long-lived Workers; no unbounded caches or growing global state; React effects and subscriptions cleaned up on unmount.
+- **Frontend** - Critical path minimal; lazy load below-the-fold; `fetchpriority` for LCP; explicit dimensions to avoid CLS; code-splitting and tree-shaking; prefetch where beneficial.
+- **Caching** - Cache TTLs and keys match content type (HTML vs assets vs API); no over-caching of dynamic content or under-caching of static; Cloudflare asset and API cache headers correct.
+- **Worker and API** - Bundle size within limits (e.g. &lt; 1 MB compressed for Workers); no blocking I/O on critical path; cold start impact minimized (small deps, no heavy init).
 
 Align with root [AGENTS.md](AGENTS.md) and app AGENTS.md for build and deployment model.
 
@@ -71,14 +71,14 @@ Conduct a performance-only review. Inspect the following and call out violations
 
 ## Steps
 
-1. **Gather scope** — Full performance or specific area (algorithms, frontend, cache, images, worker-api). Default to full.
-2. **Read conventions** — AGENTS.md for build and Worker behavior.
-3. **Inspect hot paths** — front-app utils and worker-api handlers; reason about complexity and data structures.
-4. **Inspect Worker and React** — Long-lived state, caches, listeners; identify leak risks.
-5. **Inspect frontend build and images** — vite.config.ts, component usage; bundle and CLS.
-6. **Inspect cache strategy** — wrangler, headers, TTLs where applicable.
-7. **Inspect worker-api** — Bundle size, init cost, external calls and timeouts.
-8. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
+1. **Gather scope** - Full performance or specific area (algorithms, frontend, cache, images, worker-api). Default to full.
+2. **Read conventions** - AGENTS.md for build and Worker behavior.
+3. **Inspect hot paths** - front-app utils and worker-api handlers; reason about complexity and data structures.
+4. **Inspect Worker and React** - Long-lived state, caches, listeners; identify leak risks.
+5. **Inspect frontend build and images** - vite.config.ts, component usage; bundle and CLS.
+6. **Inspect cache strategy** - wrangler, headers, TTLs where applicable.
+7. **Inspect worker-api** - Bundle size, init cost, external calls and timeouts.
+8. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
 

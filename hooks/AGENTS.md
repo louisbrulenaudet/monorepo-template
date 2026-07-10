@@ -58,12 +58,12 @@ Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-s
 
 ## Authoring Conventions
 
-- **Shebang**: `#!/usr/bin/env sh` — POSIX shell; `jq` optional with `sed` fallback.
+- **Shebang**: `#!/usr/bin/env sh` - POSIX shell; `jq` optional with `sed` fallback.
 - **Project root**: `ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"`
 - **JSON input**: read stdin; support both `.tool_input.command` (Claude) and `.command` (Cursor).
 - **Blocking**: exit `2` to deny; message on stderr.
 - **Non-blocking** (format, logging): always exit `0`.
-- **Fail open** on parse errors or missing tools — hooks must not wedge normal workflows.
+- **Fail open** on parse errors or missing tools - hooks must not wedge normal workflows.
 - **Filenames**: kebab-case under category folders.
 
 ## Hook Behavior Summary
@@ -87,7 +87,7 @@ Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-s
 
 ## Contribution
 
-- Edit scripts only under `hooks/` — do not duplicate under `.cursor/hooks/` or `.claude/hooks/`.
+- Edit scripts only under `hooks/` - do not duplicate under `.cursor/hooks/` or `.claude/hooks/`.
 - When adding a hook, update [`.cursor/hooks.json`](../.cursor/hooks.json), [`.claude/settings.json`](../.claude/settings.json) (if applicable), [README.md](README.md), and this file.
 - Align new guards with [guardrails](../.cursor/rules/guardrails.mdc); never weaken secret or destructive-git protection without explicit user approval.
 - `chmod +x` new scripts before committing.

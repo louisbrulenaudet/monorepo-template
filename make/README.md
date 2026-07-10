@@ -4,10 +4,10 @@ Shared Makefile fragments for the monorepo. The root [Makefile](../Makefile) and
 
 ## Purpose
 
-- **Single interface** — `make dev`, `make ci`, `make build` instead of remembering turbo filter syntax.
-- **Separation of concern** — each fragment owns one area (deps, quality, build, deploy, …).
-- **pnpm / turbo leverage** — scope to one package (`SCOPE=`) or only changed packages (`AFFECTED=1`).
-- **Scalable per-package UX** — new apps get a ~4-line `Makefile` via [`app.mk`](app.mk).
+- **Single interface** - `make dev`, `make ci`, `make build` instead of remembering turbo filter syntax.
+- **Separation of concern** - each fragment owns one area (deps, quality, build, deploy, …).
+- **pnpm / turbo leverage** - scope to one package (`SCOPE=`) or only changed packages (`AFFECTED=1`).
+- **Scalable per-package UX** - new apps get a ~4-line `Makefile` via [`app.mk`](app.mk).
 
 ## Layout
 
@@ -90,7 +90,7 @@ make build AFFECTED=1               # Build only changed packages (CI)
 make lint FILTER=...front-app...   # Advanced turbo filter syntax
 ```
 
-`install`, `update`, `login`, and `prepare` are **not** turbo-scoped — they operate at the workspace or tool level.
+`install`, `update`, `login`, and `prepare` are **not** turbo-scoped - they operate at the workspace or tool level.
 
 ## Per-package commands
 
@@ -132,7 +132,7 @@ make build AFFECTED=1
 | `deploy.mk` | `login`, `deploy` | wrangler / turbo |
 | `husky.mk` | `prepare`, `husky-status` | pnpm / shell |
 | `skills.mk` | `skills-update` | bash script |
-| `turbo.mk` | (no targets — shared `TURBO_FILTER`) | — |
+| `turbo.mk` | (no targets - shared `TURBO_FILTER`) | - |
 | `app.mk` | All turbo targets, scoped to `PKG` | turbo `--filter=$(PKG)` |
 
 ## Adding a new app or package
@@ -163,9 +163,9 @@ cd apps/worker-api && make help              # Per-package targets
 
 ## Best Practices
 
-1. **Prefer make over raw turbo** for day-to-day and CI — keeps filter syntax in one place.
+1. **Prefer make over raw turbo** for day-to-day and CI - keeps filter syntax in one place.
 2. **Use `SCOPE=`** for single-package work; use **`AFFECTED=1`** in CI or before pushing.
-3. **Do not duplicate targets** in per-package Makefiles — extend [`app.mk`](app.mk) instead.
-4. **Keep fragments concern-separated** — deps stay in `deps.mk`, quality in `quality.mk`, etc.
+3. **Do not duplicate targets** in per-package Makefiles - extend [`app.mk`](app.mk) instead.
+4. **Keep fragments concern-separated** - deps stay in `deps.mk`, quality in `quality.mk`, etc.
 
 See [AGENTS.md](../AGENTS.md) for agent-oriented conventions and the full monorepo decision checklist.

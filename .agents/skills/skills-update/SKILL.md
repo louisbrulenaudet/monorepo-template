@@ -14,7 +14,7 @@ disable-model-invocation: true 
 Refresh externally installed skills listed in [`skills-lock.json`](../../../skills-lock.json).
 Installed copies live under [`.agents/skills/`](../../).
 
-Invocation is **explicit only** — do not update skills unless the user requests it.
+Invocation is **explicit only** - do not update skills unless the user requests it.
 
 ## Hard rules
 
@@ -33,7 +33,7 @@ Invocation is **explicit only** — do not update skills unless the user request
 
 ## Workflow
 
-1. Read `skills-lock.json` and collect `Object.keys(skills)` — this is the
+1. Read `skills-lock.json` and collect `Object.keys(skills)` - this is the
    authoritative list. Do not rely on a stale embedded list.
 2. For each name, run a **separate** command:
 
@@ -105,7 +105,7 @@ lockfile gains a `skillPath`.
 ## Known limitations
 
 - `stripe-best-practices` (`sourceType: well-known`, `docs.stripe.com`) cannot
-  be re-added with `npx skills add` — the CLI tries to git-clone the source and
+  be re-added with `npx skills add` - the CLI tries to git-clone the source and
   fails. Leave as-is or refresh manually when the skills CLI supports it.
 
 ## Output format

@@ -1,5 +1,5 @@
 ---
-description: "Filename and identifier naming — kebab-case files, camelCase/PascalCase/CONSTANT_CASE in code."
+description: "Filename and identifier naming - kebab-case files, camelCase/PascalCase/CONSTANT_CASE in code."
 alwaysApply: false
 globs: apps/**/*.{ts,tsx},packages/**/*.ts
 ---
@@ -11,7 +11,7 @@ Match the casing of the surrounding code. The conventions below are enforced by 
 ## Filenames (enforced by `unicorn/filename-case`)
 
 - **kebab-case**: all-lowercase words joined by hyphens (`some-module.ts`). Never PascalCase, camelCase, or snake_case in a filename.
-- **Exception — `apps/front-*/**`**: a React component file may use PascalCase to mirror the component it exports (`SomeComponent.tsx`); every non-component file (hooks, utils, services) stays kebab-case.
+- **Exception - `apps/front-*/**`**: a React component file may use PascalCase to mirror the component it exports (`SomeComponent.tsx`); every non-component file (hooks, utils, services) stays kebab-case.
 
 ## Code identifiers
 
@@ -24,7 +24,7 @@ Match the casing of the surrounding code. The conventions below are enforced by 
 
 ## Snake_case is the exception, not the norm
 
-The only place snake_case appears is an identifier that must match an external contract — e.g. an MCP tool's `name` / OpenAPI `operationId`, which is snake_case even though the file that defines it stays kebab-case. Do not introduce snake_case anywhere else.
+The only place snake_case appears is an identifier that must match an external contract - e.g. an MCP tool's `name` / OpenAPI `operationId`, which is snake_case even though the file that defines it stays kebab-case. Do not introduce snake_case anywhere else.
 
 ## DTOs
 

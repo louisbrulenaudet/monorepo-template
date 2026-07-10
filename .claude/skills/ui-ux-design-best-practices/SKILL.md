@@ -22,26 +22,26 @@ Load this skill when:
 
 ### Animation
 
-- `rules/animation-decision-framework.md` — core philosophy, should-animate decision tree, easing selection, duration cheatsheet, perceived performance
-- `rules/animation-springs.md` — spring config (Framer Motion / Motion), mouse interactions, interruptibility advantage
-- `rules/animation-component-patterns.md` — buttons, scale(0) rule, origin-aware popovers, tooltip instant-on-subsequent, blur crossfades
-- `rules/animation-transitions-transforms.md` — CSS transitions vs keyframes, `@starting-style`, translateY percentages, scale children, GPU acceleration
-- `rules/animation-clip-path.md` — `inset()` shape, hold-to-delete/confirm pattern, tab color transitions, scroll reveals, comparison sliders
-- `rules/animation-gestures.md` — momentum dismissal, boundary damping, pointer capture, multi-touch protection, friction stops
-- `rules/animation-performance.md` — only animate transform/opacity, CSS variable inheritance, Framer Motion hardware acceleration, WAAPI
-- `rules/animation-accessibility-stagger.md` — `prefers-reduced-motion`, touch hover gating, stagger delays, asymmetric enter/exit timing
-- `rules/animation-review-checklist.md` — component design principles, slow-motion debugging, review checklist table
+- `rules/animation-decision-framework.md` - core philosophy, should-animate decision tree, easing selection, duration cheatsheet, perceived performance
+- `rules/animation-springs.md` - spring config (Framer Motion / Motion), mouse interactions, interruptibility advantage
+- `rules/animation-component-patterns.md` - buttons, scale(0) rule, origin-aware popovers, tooltip instant-on-subsequent, blur crossfades
+- `rules/animation-transitions-transforms.md` - CSS transitions vs keyframes, `@starting-style`, translateY percentages, scale children, GPU acceleration
+- `rules/animation-clip-path.md` - `inset()` shape, hold-to-delete/confirm pattern, tab color transitions, scroll reveals, comparison sliders
+- `rules/animation-gestures.md` - momentum dismissal, boundary damping, pointer capture, multi-touch protection, friction stops
+- `rules/animation-performance.md` - only animate transform/opacity, CSS variable inheritance, Framer Motion hardware acceleration, WAAPI
+- `rules/animation-accessibility-stagger.md` - `prefers-reduced-motion`, touch hover gating, stagger delays, asymmetric enter/exit timing
+- `rules/animation-review-checklist.md` - component design principles, slow-motion debugging, review checklist table
 
 ### Tailwind v4
 
-- `rules/tailwind-v4-changes.md` — v3→v4 migration table, arbitrary value syntax, CSS variable shorthand
-- `rules/tailwind-transitions.md` — `transition-property`, `transition-duration`, `transition-timing-function`, `transition-delay`
-- `rules/tailwind-transforms.md` — `scale`, `translate`, `rotate`, `transform-origin`, GPU `transform-gpu`
-- `rules/tailwind-animations.md` — `animate-*` builtins, custom `@theme` keyframes
-- `rules/tailwind-effects.md` — `opacity`, `blur`, `backdrop-blur`
-- `rules/tailwind-interactivity.md` — `will-change`, `pointer-events`, `cursor`, `user-select`
-- `rules/tailwind-variants.md` — `motion-reduce:` / `motion-safe:`, touch hover gating, `starting:`, stacking variants
-- `rules/tailwind-patterns.md` — ready-to-use patterns (button, dropdown, modal, toast, tooltip, stagger, frosted glass) + anti-patterns table
+- `rules/tailwind-v4-changes.md` - v3→v4 migration table, arbitrary value syntax, CSS variable shorthand
+- `rules/tailwind-transitions.md` - `transition-property`, `transition-duration`, `transition-timing-function`, `transition-delay`
+- `rules/tailwind-transforms.md` - `scale`, `translate`, `rotate`, `transform-origin`, GPU `transform-gpu`
+- `rules/tailwind-animations.md` - `animate-*` builtins, custom `@theme` keyframes
+- `rules/tailwind-effects.md` - `opacity`, `blur`, `backdrop-blur`
+- `rules/tailwind-interactivity.md` - `will-change`, `pointer-events`, `cursor`, `user-select`
+- `rules/tailwind-variants.md` - `motion-reduce:` / `motion-safe:`, touch hover gating, `starting:`, stacking variants
+- `rules/tailwind-patterns.md` - ready-to-use patterns (button, dropdown, modal, toast, tooltip, stagger, frosted glass) + anti-patterns table
 
 ## Quick Reference
 
@@ -53,7 +53,7 @@ Load this skill when:
 
 | Frequency | Decision |
 |---|---|
-| 100+ times/day (keyboard shortcuts, command palette) | No animation — ever |
+| 100+ times/day (keyboard shortcuts, command palette) | No animation - ever |
 | Tens of times/day (hover effects, list navigation) | Remove or drastically reduce |
 | Occasional (modals, drawers, toasts) | Standard animation |
 | Rare or first-time (onboarding, celebrations) | Can add delight |
@@ -79,7 +79,7 @@ Load this skill when:
 | Hover / color change | ease | `ease-linear` or default |
 | Constant motion (spinner, marquee) | linear | `ease-linear` |
 
-**Never use `ease-in` for UI interactions.** It starts slow — the exact moment the user is watching most closely — making the interface feel sluggish.
+**Never use `ease-in` for UI interactions.** It starts slow - the exact moment the user is watching most closely - making the interface feel sluggish.
 
 ### Custom Easing Values (register in `@theme`)
 
@@ -126,7 +126,7 @@ When reviewing UI code, output a markdown table:
 | `ease-in` on dropdown | `ease-out` with custom curve | `ease-in` feels sluggish |
 | No `:active` state on button | `active:scale-[0.97]` | Buttons must feel responsive to press |
 | `transform-origin: center` on popover | `origin-[var(--radix-popover-content-transform-origin)]` | Scale from trigger, not center |
-| Animation on keyboard action | Remove animation entirely | Repeated 100x/day — animation adds delay |
+| Animation on keyboard action | Remove animation entirely | Repeated 100x/day - animation adds delay |
 | Duration > 300ms on UI element | Reduce to 150–250ms | Slow transitions feel broken |
 | Hover without `@media (hover: hover)` guard | Add `@media (hover: hover) and (pointer: fine)` | Touch devices trigger hover on tap |
 | Keyframes on rapidly-triggered element | CSS transitions for interruptibility | Keyframes restart from zero on interruption |

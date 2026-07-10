@@ -45,7 +45,7 @@ flowchart TD
 
 | Package | Purpose |
 |---------|---------|
-| `@repo/dtos-common` | Shared Zod schemas — `src/api/*` (HTTP), `src/rpc/*`, `src/queue/*`, `src/webhook/*` |
+| `@repo/dtos-common` | Shared Zod schemas - `src/api/*` (HTTP), `src/rpc/*`, `src/queue/*`, `src/webhook/*` |
 | `@repo/enums-common` | Shared constrained string values (`as const` objects) across apps/packages |
 | `@repo/typescript-config` | TypeScript presets for Workers and Vite React |
 
@@ -88,11 +88,21 @@ Reserved ranges: ORM 8700–8710, app workers 8720–8729, webhooks 8760–8769,
 
 ## Environment
 
-Copy `.dev.vars.example` → `.dev.vars` per app before local runs. Never commit `.dev.vars` or real secrets — update `.dev.vars.example` when adding keys.
+Copy `.dev.vars.example` → `.dev.vars` per app before local runs. Never commit `.dev.vars` or real secrets - update `.dev.vars.example` when adding keys.
 
 ## Service Bindings
 
-Worker-to-Worker calls use bindings in `wrangler.jsonc` (`services` array) and `env.BINDING` — zero latency, no public URL. **Do not** use bindings from `front-app`.
+Worker-to-Worker calls use bindings in `wrangler.jsonc` (`services` array) and `env.BINDING` - zero latency, no public URL. **Do not** use bindings from `front-app`.
+
+## Wrangler environments
+
+| Environment | Deploy | Config block |
+|-------------|--------|--------------|
+| Local dev | `wrangler dev` | Root-level `vars`, `dev` |
+| Staging | `wrangler deploy --env staging` | `env.staging` |
+| Production | `wrangler deploy --env production` | `env.production` |
+
+After any `wrangler.jsonc` edit: `make types` then `make check-types`.
 
 ## Contract Change Workflow
 
@@ -107,7 +117,7 @@ Prefer **additive** changes. For breaking changes, version the route (e.g. `/api
 
 Lint and format: `.oxlintrc.json` and `.oxfmtrc.json` at repo root (`make ci`). Naming, contracts, React, and Workers patterns load from **path-scoped** `.claude/rules/` when editing matching files. Unconditional guardrails: `.claude/rules/guardrails.md`.
 
-TypeScript presets: see [packages/typescript-config/AGENTS.md](packages/typescript-config/AGENTS.md) — apps **extend** a preset; do not fork compiler options.
+TypeScript presets: see [packages/typescript-config/AGENTS.md](packages/typescript-config/AGENTS.md) - apps **extend** a preset; do not fork compiler options.
 
 ## Make Commands (root)
 
@@ -135,7 +145,7 @@ CI uses `make ci AFFECTED=1` and `make build AFFECTED=1`.
 
 ### Per-package commands
 
-Each app/package has a minimal `Makefile` that includes [`make/app.mk`](make/app.mk) — targets are auto-scoped to that workspace package (resolved from `package.json` `name`):
+Each app/package has a minimal `Makefile` that includes [`make/app.mk`](make/app.mk) - targets are auto-scoped to that workspace package (resolved from `package.json` `name`):
 
 ```bash
 cd apps/worker-api && make dev    # turbo run dev --filter=worker-api
@@ -153,14 +163,14 @@ Per-app command tables: see each app's `AGENTS.md`.
 | Hooks | [`.claude/settings.json`](.claude/settings.json) | [`.cursor/hooks.json`](.cursor/hooks.json) |
 | Hook scripts (shared) | [`hooks/`](hooks/) | [`hooks/`](hooks/) |
 | Subagents | [`.claude/agents/`](.claude/agents/) | [`.cursor/agents/`](.cursor/agents/) |
-| Slash commands | — | [`.cursor/commands/`](.cursor/commands/) |
+| Slash commands | - | [`.cursor/commands/`](.cursor/commands/) |
 | Deep skills | [`.agents/skills/`](.agents/skills/) | same (shared) |
 | Nested app guides | `CLAUDE.md` per app/package | `AGENTS.md` per app/package |
 
 - Claude Code: nested `CLAUDE.md` in apps/packages load on demand; debug instruction loading with `tail -f hooks/logs/instructions-loaded.log`.
 - Cursor: path-scoped rules attach by glob; debug hook activity in **Customize → Hooks** output channel; session logs in `hooks/logs/session-start.log`.
 - **Keeping Claude + Cursor in sync:** when you edit a path-scoped rule or subagent, update the parallel file in the other folder (`.claude/rules/*.md` ↔ `.cursor/rules/*.mdc`, `.claude/agents/*.md` ↔ `.cursor/agents/*.md`). Hook scripts are canonical in [`hooks/`](hooks/); both tools reference that directory via their config files.
-- **Vite 8 config:** [`.claude/rules/vite-config.md`](.claude/rules/vite-config.md) ↔ [`.cursor/rules/vite-config.mdc`](.cursor/rules/vite-config.mdc) — scoped to `apps/front-*/vite.config.ts` only.
+- **Vite 8 config:** [`.claude/rules/vite-config.md`](.claude/rules/vite-config.md) ↔ [`.cursor/rules/vite-config.mdc`](.cursor/rules/vite-config.mdc) - scoped to `apps/front-*/vite.config.ts` only.
 
 See [`.cursor/README.md`](.cursor/README.md) for a quick index of the Cursor setup.
 
@@ -180,8 +190,8 @@ Extend this table when adding a new app or package with its own guide.
 
 ## Decision Checklist
 
-1. Schema already in `@repo/dtos-common`? Import it — don't redefine.
-2. Constrained value already in `@repo/enums-common`? Import it — don't duplicate literals.
+1. Schema already in `@repo/dtos-common`? Import it - don't redefine.
+2. Constrained value already in `@repo/enums-common`? Import it - don't duplicate literals.
 3. Worker-to-Worker call? Service binding, not HTTP.
 4. Filename follows kebab-case? (PascalCase only for React `.tsx` components in `front-app`.)
 5. Worker function under 100 lines? Extract helpers if not.

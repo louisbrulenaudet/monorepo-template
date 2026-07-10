@@ -1,22 +1,22 @@
 # Review UI command
 
-Run a **UI/UX-focused** review: Tailwind usage, responsive design, dark mode, accessibility (WCAG 2.2 AA), component patterns, layout stability, typography, color contrast, and motion (respecting reduced-motion). Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run a **UI/UX-focused** review: Tailwind usage, responsive design, dark mode, accessibility (WCAG 2.2 AA), component patterns, layout stability, typography, color contrast, and motion (respecting reduced-motion). Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review-ui` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text after `/review-ui` is scope—e.g. `/review-ui accessibility only`, `/review-ui contact form`—narrow accordingly. If none given, assume full UI review (styles, components, layouts, a11y, responsive, dark mode).
+- **Parameters:** Any text after `/review-ui` is scope-e.g. `/review-ui accessibility only`, `/review-ui contact form`-narrow accordingly. If none given, assume full UI review (styles, components, layouts, a11y, responsive, dark mode).
 
 This command is project-scoped and works with @ mentions and Rules. For a full review use `/review` instead.
 
 ## Best practices alignment
 
-- **Tailwind** — Utility-first; use theme tokens (colors, spacing, typography) from [apps/front-app/src/index.css](apps/front-app/src/index.css) and [apps/front-app/src/App.css](apps/front-app/src/App.css); avoid arbitrary values when a utility exists; consistent spacing scale.
-- **Responsive** — Mobile-first; breakpoints (sm, md, lg) used consistently; no horizontal scroll on small viewports; touch targets at least 44×44px.
-- **Dark mode** — All pages and components support dark theme; no hardcoded light-only colors; contrast and readability in both themes.
-- **Layout stability** — No CLS from images (width/height or aspect-ratio); consistent typography scale; route or CSS transitions smooth and optional (respect prefers-reduced-motion).
-- **Component patterns** — Consistent buttons, links, and form controls; loading and error states; no content-only reliance on color or shape.
+- **Tailwind** - Utility-first; use theme tokens (colors, spacing, typography) from [apps/front-app/src/index.css](apps/front-app/src/index.css) and [apps/front-app/src/App.css](apps/front-app/src/App.css); avoid arbitrary values when a utility exists; consistent spacing scale.
+- **Responsive** - Mobile-first; breakpoints (sm, md, lg) used consistently; no horizontal scroll on small viewports; touch targets at least 44×44px.
+- **Dark mode** - All pages and components support dark theme; no hardcoded light-only colors; contrast and readability in both themes.
+- **Layout stability** - No CLS from images (width/height or aspect-ratio); consistent typography scale; route or CSS transitions smooth and optional (respect prefers-reduced-motion).
+- **Component patterns** - Consistent buttons, links, and form controls; loading and error states; no content-only reliance on color or shape.
 
 Align with root [AGENTS.md](AGENTS.md) and app AGENTS.md for styling stack (Tailwind v4 with Vite, entry CSS under `front-app/src/`).
 
@@ -88,15 +88,15 @@ Conduct a UI-only review. Inspect the following and call out violations or impro
 
 ## Steps
 
-1. **Gather scope** — Full UI or specific area (a11y, responsive, dark mode, forms, transitions). Default to full.
-2. **Read conventions** — AGENTS.md for Tailwind and Vite/CSS entry usage.
-3. **Inspect theme and Tailwind** — index.css / App.css theme; component class usage; arbitrary values and consistency.
-4. **Inspect responsive** — Breakpoints, overflow, touch targets across key pages.
-5. **Inspect dark mode** — Theme variables and coverage across the app.
-6. **Inspect accessibility** — Contrast, focus, labels, skip link, reduced-motion.
-7. **Inspect forms and states** — Forms and any async UI; loading and error handling.
-8. **Inspect layout and motion** — Image dimensions, CSS transitions, reduced-motion.
-9. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
+1. **Gather scope** - Full UI or specific area (a11y, responsive, dark mode, forms, transitions). Default to full.
+2. **Read conventions** - AGENTS.md for Tailwind and Vite/CSS entry usage.
+3. **Inspect theme and Tailwind** - index.css / App.css theme; component class usage; arbitrary values and consistency.
+4. **Inspect responsive** - Breakpoints, overflow, touch targets across key pages.
+5. **Inspect dark mode** - Theme variables and coverage across the app.
+6. **Inspect accessibility** - Contrast, focus, labels, skip link, reduced-motion.
+7. **Inspect forms and states** - Forms and any async UI; loading and error handling.
+8. **Inspect layout and motion** - Image dimensions, CSS transitions, reduced-motion.
+9. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
 

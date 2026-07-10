@@ -1,5 +1,5 @@
 ---
-description: "Hono gateway Worker rules — middleware order, zValidator, thin handlers, service bindings."
+description: "Hono gateway Worker rules - middleware order, zValidator, thin handlers, service bindings."
 alwaysApply: false
 globs: apps/worker-*/src/**/*.ts,apps/webhook-*/src/**/*.ts
 ---
@@ -24,15 +24,15 @@ flowchart TD
 
 ## Middleware order (`src/index.ts`)
 
-1. **CORS** — first (preflight `OPTIONS` before auth/routes).
-2. **Secure headers** — production (`X-Content-Type-Options`, etc.).
-3. **Compression / body limits** — e.g. 3 MB body cap.
-4. **Pretty JSON** — development only.
+1. **CORS** - first (preflight `OPTIONS` before auth/routes).
+2. **Secure headers** - production (`X-Content-Type-Options`, etc.).
+3. **Compression / body limits** - e.g. 3 MB body cap.
+4. **Pretty JSON** - development only.
 
 ## Validation
 
 - Validate every input at the route boundary with `@hono/zod-validator`.
-- Import schemas from `@repo/dtos-common/api` — never redefine wire shapes locally.
+- Import schemas from `@repo/dtos-common/api` - never redefine wire shapes locally.
 - Targets: `zValidator("json" | "param" | "query", Schema)`.
 
 ## Handlers
@@ -44,14 +44,14 @@ flowchart TD
 
 ## Workers runtime
 
-- **No global mutable state** for per-request data — use Hono context (`c.get` / `c.set`).
-- **No floating promises** — always `await` or return async work.
-- **No `setInterval` / long-lived timers** — CPU time limits apply.
+- **No global mutable state** for per-request data - use Hono context (`c.get` / `c.set`).
+- **No floating promises** - always `await` or return async work.
+- **No `setInterval` / long-lived timers** - CPU time limits apply.
 - Respect Workers constraints for streams, WebSockets, and subrequests.
 
 ## Service bindings
 
-- Worker-to-Worker only — never from `front-app` (HTTP only for browsers).
+- Worker-to-Worker only - never from `front-app` (HTTP only for browsers).
 - Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()`.
 - Run `make types` after adding bindings to regenerate `worker-configuration.d.ts`.
 

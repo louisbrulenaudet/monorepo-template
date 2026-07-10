@@ -5,14 +5,14 @@ paths:
 
 ## Config shape
 
-- `defineConfig(({ command, mode }) => …)` — compare `command === "build"` / `command === "serve"` explicitly.
-- `appDir` from `import.meta.url`, not `process.cwd()`. Config-time env: `loadEnv(mode, appDir, "VITE_")` — `.env*` is not in `process.env` during config evaluation.
+- `defineConfig(({ command, mode }) => …)` - compare `command === "build"` / `command === "serve"` explicitly.
+- `appDir` from `import.meta.url`, not `process.cwd()`. Config-time env: `loadEnv(mode, appDir, "VITE_")` - `.env*` is not in `process.env` during config evaluation.
 - Small build-only plugins inline; extract only when shared across `front-*` apps. TS bundling issues: `vite --configLoader runner`.
 
 ## Vite 8 (Rolldown + Oxc)
 
-- `build.rolldownOptions` / `optimizeDeps.rolldownOptions` — not deprecated `rollupOptions` / `esbuildOptions`. `build.minify: "oxc"`. `build.commonjsOptions` is a no-op.
-- `manualChunks` (function) works but is deprecated — preserve existing splits when editing; use `codeSplitting` for refactors.
+- `build.rolldownOptions` / `optimizeDeps.rolldownOptions` - not deprecated `rollupOptions` / `esbuildOptions`. `build.minify: "oxc"`. `build.commonjsOptions` is a no-op.
+- `manualChunks` (function) works but is deprecated - preserve existing splits when editing; use `codeSplitting` for refactors.
 
 ## Plugins (order matters)
 
@@ -21,7 +21,7 @@ paths:
 ## Monorepo
 
 - `server.fs.strict: true`, `server.fs.allow: [repoRoot]` (`path.resolve(appDir, "../..")`) for `@repo/*`.
-- `resolve.alias` mirrors `tsconfig.json` paths — update both together.
+- `resolve.alias` mirrors `tsconfig.json` paths - update both together.
 
 ## Dev server
 
@@ -32,8 +32,8 @@ paths:
 
 - `target: "esnext"`; `sourcemap`: inline (dev) / hidden (prod); `reportCompressedSize: false`; `cssCodeSplit: true`; `modulePreload.polyfill: false`.
 - Chunk vendors: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`. HTML `Cache-Control: no-cache` via generated `_headers`.
-- Only `VITE_*` in client bundle — no secrets. Fail production `build` on missing/placeholder required vars; skip under static analysis (`knip`). Generate `dist/_headers` in a build plugin — never hand-edit ([guardrails.md](guardrails.md)). Deploy in `wrangler.jsonc`.
-- `optimizeDeps.entries` + `include` for heavy deps — dev pre-bundler only, not production bundle size.
+- Only `VITE_*` in client bundle - no secrets. Fail production `build` on missing/placeholder required vars; skip under static analysis (`knip`). Generate `dist/_headers` in a build plugin - never hand-edit ([guardrails.md](guardrails.md)). Deploy in `wrangler.jsonc`.
+- `optimizeDeps.entries` + `include` for heavy deps - dev pre-bundler only, not production bundle size.
 
 ## Verification
 

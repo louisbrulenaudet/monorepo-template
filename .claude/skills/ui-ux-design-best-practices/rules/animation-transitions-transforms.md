@@ -12,12 +12,12 @@ tags: animation, transitions, keyframes, starting-style, transform, translateY, 
 **Use CSS transitions for interruptible UI.** CSS transitions can be retargeted mid-animation. Keyframes restart from zero. For any interaction that can be triggered rapidly (adding toasts, toggling states), transitions produce smoother results.
 
 ```css
-/* Interruptible — correct for UI */
+/* Interruptible - correct for UI */
 .toast {
   transition: transform 400ms ease;
 }
 
-/* Not interruptible — avoid for dynamic UI */
+/* Not interruptible - avoid for dynamic UI */
 @keyframes slideIn {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }

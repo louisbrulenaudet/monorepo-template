@@ -1,11 +1,11 @@
 ---
-title: Tailwind v4 — Opacity, Blur, and Backdrop Blur
+title: Tailwind v4 - Opacity, Blur, and Backdrop Blur
 impact: MEDIUM
 impactDescription: opacity and blur are the two safe-to-animate properties beyond transform; correct usage avoids Safari performance issues
 tags: tailwind, opacity, blur, backdrop-blur, frosted-glass, performance, safari
 ---
 
-## Tailwind v4 — Opacity, Blur, and Backdrop Blur
+## Tailwind v4 - Opacity, Blur, and Backdrop Blur
 
 > Source: https://tailwindcss.com/docs
 

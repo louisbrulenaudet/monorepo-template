@@ -1,23 +1,23 @@
 # Review SEO command
 
-Run an **SEO-focused** review: meta tags, Open Graph, canonical URLs, structured data, sitemap, RSS, robots, crawlability, Core Web Vitals, heading hierarchy, and optional bot/LLM surfaces when implemented. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run an **SEO-focused** review: meta tags, Open Graph, canonical URLs, structured data, sitemap, RSS, robots, crawlability, Core Web Vitals, heading hierarchy, and optional bot/LLM surfaces when implemented. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review-seo` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text after `/review-seo` is scope—e.g. `/review-seo meta only`, `/review-seo public assets`—narrow accordingly. If none given, assume full SEO review (meta, structured data, feeds, CWV, headings; optional items when present).
+- **Parameters:** Any text after `/review-seo` is scope-e.g. `/review-seo meta only`, `/review-seo public assets`-narrow accordingly. If none given, assume full SEO review (meta, structured data, feeds, CWV, headings; optional items when present).
 
 This command is project-scoped and works with @ mentions and Rules. For a full review use `/review` instead.
 
 ## Best practices alignment
 
-- **Meta and crawlability** — Every document view has an appropriate `<title>` and meta description; Open Graph and Twitter Card where relevant; canonical URL set for multi-URL content; no duplicate content without canonical.
-- **Structured data** — JSON-LD for key entity types when used (e.g. WebSite, WebApplication); valid and minimal; no conflicting or empty required fields.
-- **Feeds and discovery** — When sitemap/RSS/robots exist: complete and valid; lastmod accurate; robots.txt allow/disallow correct; humans.txt and llms.txt where documented.
-- **Core Web Vitals** — LCP, INP, CLS within targets (e.g. LCP &lt; 2.5s, CLS &lt; 0.1); critical path and layout stability (dimensions, fonts) support good metrics.
-- **Semantic and headings** — Single h1 per logical page; logical heading hierarchy (h1 → h2 → h3, no skips); semantic HTML (article, nav, main); alt text on all meaningful images.
-- **Bot experience** — Optional: markdown/plain-text or edge behavior for crawlers/LLMs when implemented; consistent with crawlability goals.
+- **Meta and crawlability** - Every document view has an appropriate `<title>` and meta description; Open Graph and Twitter Card where relevant; canonical URL set for multi-URL content; no duplicate content without canonical.
+- **Structured data** - JSON-LD for key entity types when used (e.g. WebSite, WebApplication); valid and minimal; no conflicting or empty required fields.
+- **Feeds and discovery** - When sitemap/RSS/robots exist: complete and valid; lastmod accurate; robots.txt allow/disallow correct; humans.txt and llms.txt where documented.
+- **Core Web Vitals** - LCP, INP, CLS within targets (e.g. LCP &lt; 2.5s, CLS &lt; 0.1); critical path and layout stability (dimensions, fonts) support good metrics.
+- **Semantic and headings** - Single h1 per logical page; logical heading hierarchy (h1 → h2 → h3, no skips); semantic HTML (article, nav, main); alt text on all meaningful images.
+- **Bot experience** - Optional: markdown/plain-text or edge behavior for crawlers/LLMs when implemented; consistent with crawlability goals.
 
 Align with root [AGENTS.md](AGENTS.md) and app AGENTS.md for content and routing.
 
@@ -75,15 +75,15 @@ Conduct an SEO-only review. Inspect the following and call out violations or imp
 
 ## Steps
 
-1. **Gather scope** — Full SEO or specific area (meta, structured data, feeds, CWV, headings). Default to full.
-2. **Read conventions** — AGENTS.md for site structure and public routes.
-3. **Inspect meta and OG** — index.html and per-route head; uniqueness and completeness.
-4. **Inspect structured data** — JSON-LD when present; validity and required fields.
-5. **Inspect sitemap and RSS** — Coverage when used; robots.txt and discovery.
-6. **Inspect CWV and layout** — Fonts, images, dimensions; reason about LCP/INP/CLS.
-7. **Inspect headings and semantics** — One h1, hierarchy, landmarks, alt text.
-8. **Inspect optional bot/edge** — When implemented; consistency and crawlability.
-9. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
+1. **Gather scope** - Full SEO or specific area (meta, structured data, feeds, CWV, headings). Default to full.
+2. **Read conventions** - AGENTS.md for site structure and public routes.
+3. **Inspect meta and OG** - index.html and per-route head; uniqueness and completeness.
+4. **Inspect structured data** - JSON-LD when present; validity and required fields.
+5. **Inspect sitemap and RSS** - Coverage when used; robots.txt and discovery.
+6. **Inspect CWV and layout** - Fonts, images, dimensions; reason about LCP/INP/CLS.
+7. **Inspect headings and semantics** - One h1, hierarchy, landmarks, alt text.
+8. **Inspect optional bot/edge** - When implemented; consistency and crawlability.
+9. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
 

@@ -18,7 +18,7 @@ Tiered edge cache in front of Worker **`fetch()`** entrypoints only (eyeball, bi
 | Auth'd GET (shared payload) | Gateway uncached → strip `Authorization` → cached inner `fetch` |
 | Auth'd GET (per-user stable) | `ctx.props` (e.g. `userId`) + strip `Authorization` |
 | `Set-Cookie` / unstripped `Authorization` / WebSocket / `Vary: *` | Auto-bypass or no cache |
-| RPC (`env.BINDING.method()`) | Not cacheable — default binding style (free) |
+| RPC (`env.BINDING.method()`) | Not cacheable - default binding style (free) |
 
 ## Wrangler
 
@@ -27,7 +27,7 @@ Tiered edge cache in front of Worker **`fetch()`** entrypoints only (eyeball, bi
 | `worker-api` gateway | `"cache": { "enabled": true }` + `exports.default.cache.enabled: false` |
 | `worker-*` backend | `"cache": { "enabled": true }` on read entrypoint |
 
-**Anti-pattern:** don't enable cache on the gateway and return `no-store` — still pays tier lookup. Disable in `exports`. After `wrangler.jsonc` edits: `make types` ([workers-config.md](workers-config.md)).
+**Anti-pattern:** don't enable cache on the gateway and return `no-store` - still pays tier lookup. Disable in `exports`. After `wrangler.jsonc` edits: `make types` ([workers-config.md](workers-config.md)).
 
 ## Hono headers (`c.json(..., status, headers)`)
 
@@ -38,7 +38,7 @@ Tiered edge cache in front of Worker **`fetch()`** entrypoints only (eyeball, bi
 
 ## RPC vs `fetch` (bindings)
 
-**Default RPC** — free, no cache. **Use `fetch()` only** for hot read paths where a cache HIT skips expensive callee CPU:
+**Default RPC** - free, no cache. **Use `fetch()` only** for hot read paths where a cache HIT skips expensive callee CPU:
 
 | Call | Cache | Request | CPU |
 |------|-------|---------|-----|

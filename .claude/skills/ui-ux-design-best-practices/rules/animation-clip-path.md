@@ -7,7 +7,7 @@ tags: animation, clip-path, inset, hold-to-delete, tab-transitions, scroll-revea
 
 ## `clip-path` for Animation
 
-`clip-path` is not just for shapes — it is one of the most powerful animation tools in CSS.
+`clip-path` is not just for shapes - it is one of the most powerful animation tools in CSS.
 
 ### The `inset` shape
 

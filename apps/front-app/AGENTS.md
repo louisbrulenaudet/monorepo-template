@@ -2,7 +2,7 @@
 
 ## Overview
 
-`front-app` is the **React SPA** for the monorepo: **Vite**, **Tailwind CSS v4**, deployed as static assets + SPA routing on **Cloudflare Workers**. Communicates with **`worker-api` over HTTP only** — no service bindings.
+`front-app` is the **React SPA** for the monorepo: **Vite**, **Tailwind CSS v4**, deployed as static assets + SPA routing on **Cloudflare Workers**. Communicates with **`worker-api` over HTTP only** - no service bindings.
 
 - **Dev**: `http://localhost:5174`
 - **API**: `worker-api` at `http://localhost:8725` (via `src/config/env.ts`)
@@ -17,7 +17,7 @@ React 19 + TypeScript, Vite + Cloudflare plugin, Tailwind v4, TanStack Router + 
 
 ```
 apps/front-app/src/
-├── routes/          # TanStack file routes (loaders, guards — thin)
+├── routes/          # TanStack file routes (loaders, guards - thin)
 ├── pages/           # Page UI (imported by *.lazy.tsx)
 ├── services/worker-api/   # <feature>.ts + <feature>-query-options.ts
 ├── hooks/           # use-<feature>.ts
@@ -60,7 +60,7 @@ flowchart LR
 |---------|---------|
 | `VITE_API_BASE_URL` | `worker-api` base URL; defaults to `http://localhost:8725` in dev |
 
-`VITE_*` vars are **inlined at build time** — changing the API URL requires rebuild + redeploy.
+`VITE_*` vars are **inlined at build time** - changing the API URL requires rebuild + redeploy.
 
 ```bash
 cp .env.example .env.local              # local overrides
@@ -103,18 +103,18 @@ export async function getHealth() {
 
 ## Import Conventions
 
-Import modules directly — no barrel re-exports in `src/enums/` or `src/services/worker-api/`:
+Import modules directly - no barrel re-exports in `src/enums/` or `src/services/worker-api/`:
 
 ```typescript
 import { ApiHealthStatus } from "@enums/api-health-status";
 import { getHealth } from "@/services/worker-api/health";
 ```
 
-Query keys: `["worker-api", "<feature>", ...]` — colocate `queryOptions` next to the service module.
+Query keys: `["worker-api", "<feature>", ...]` - colocate `queryOptions` next to the service module.
 
 ## Best Practices
 
-- Never duplicate Zod wire schemas — use `@repo/dtos-common`.
+- Never duplicate Zod wire schemas - use `@repo/dtos-common`.
 - Never hardcode API origins outside `env.ts`.
 - Lazy-load page UI via `*.lazy.tsx` + `src/pages/`; loaders stay in eager route files.
 - Shared value sets in `@repo/enums-common`; UI-only value sets in `src/enums/` (same `as const` pattern).

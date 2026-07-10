@@ -23,7 +23,7 @@ Every animation decision exists because the aggregate of invisible correctness c
 
 | Frequency | Decision |
 |---|---|
-| 100+ times/day (keyboard shortcuts, command palette toggle) | No animation — ever |
+| 100+ times/day (keyboard shortcuts, command palette toggle) | No animation - ever |
 | Tens of times/day (hover effects, list navigation) | Remove or drastically reduce |
 | Occasional (modals, drawers, toasts) | Standard animation |
 | Rare / first-time (onboarding, feedback forms, celebrations) | Can add delight |
@@ -36,11 +36,11 @@ Every animation must have a clear answer to "why does this animate?"
 
 Valid purposes:
 
-- **Spatial consistency** — toast enters and exits from the same direction, making swipe-to-dismiss feel intuitive
-- **State indication** — a morphing button shows a state change has occurred
-- **Explanation** — a marketing animation shows how a feature works
-- **Feedback** — a button scales on press, confirming the interface heard the user
-- **Preventing jarring changes** — elements appearing or disappearing without transition feel broken
+- **Spatial consistency** - toast enters and exits from the same direction, making swipe-to-dismiss feel intuitive
+- **State indication** - a morphing button shows a state change has occurred
+- **Explanation** - a marketing animation shows how a feature works
+- **Feedback** - a button scales on press, confirming the interface heard the user
+- **Preventing jarring changes** - elements appearing or disappearing without transition feel broken
 
 If the purpose is just "it looks cool" and the user will see it often, do not animate.
 
@@ -59,7 +59,7 @@ Is the element entering or exiting?
     Default → ease-out
 ```
 
-**Never use `ease-in` for UI animations.** It starts slow — the exact moment the user is watching most closely. A dropdown with `ease-in` at 300ms *feels* slower than `ease-out` at the same 300ms because the delay is at the start.
+**Never use `ease-in` for UI animations.** It starts slow - the exact moment the user is watching most closely. A dropdown with `ease-in` at 300ms *feels* slower than `ease-out` at the same 300ms because the delay is at the start.
 
 **Use custom easing curves.** The built-in CSS easings are too gentle. They lack the punch that makes animations feel intentional.
 
@@ -78,7 +78,7 @@ Is the element entering or exiting?
 ```
 
 ```html
-<!-- Tailwind v4 — use via CSS variable shorthand -->
+<!-- Tailwind v4 - use via CSS variable shorthand -->
 <div class="ease-(--ease-out-strong)">
 <div class="ease-(--ease-in-out-strong)">
 <div class="ease-(--ease-drawer)">
@@ -99,11 +99,11 @@ Resources for strong custom curves: [easing.dev](https://easing.dev/) and [easin
 | Modals, drawers | 200–500ms |
 | Marketing / explanatory | Can be longer |
 
-**UI animations should stay under 300ms.** A 180ms dropdown feels more responsive than a 400ms one. Faster UI makes the whole app feel faster — not just the animation.
+**UI animations should stay under 300ms.** A 180ms dropdown feels more responsive than a 400ms one. Faster UI makes the whole app feel faster - not just the animation.
 
 ### Perceived Performance
 
-Speed in animation is not just about feeling snappy — it directly affects how users perceive the app's performance:
+Speed in animation is not just about feeling snappy - it directly affects how users perceive the app's performance:
 
 - A fast-spinning spinner makes loading feel faster (same load time, different perception)
 - A 180ms select animation feels more responsive than a 400ms one

@@ -1,11 +1,11 @@
 ---
-title: Tailwind v4 — Accessibility Variants, @starting-style, and Stacking
+title: Tailwind v4 - Accessibility Variants, @starting-style, and Stacking
 impact: HIGH
 impactDescription: motion-reduce/motion-safe and starting: variant are essential for accessible animations and CSS-only entry animations
 tags: tailwind, variants, motion-reduce, motion-safe, starting-style, stacking, dark-mode, group, data-attributes
 ---
 
-## Tailwind v4 — Accessibility Variants, `@starting-style`, and Stacking
+## Tailwind v4 - Accessibility Variants, `@starting-style`, and Stacking
 
 > Source: https://tailwindcss.com/docs
 
@@ -16,7 +16,7 @@ tags: tailwind, variants, motion-reduce, motion-safe, starting-style, stacking, 
 | `motion-safe:` | `@media (prefers-reduced-motion: no-preference)` |
 | `motion-reduce:` | `@media (prefers-reduced-motion: reduce)` |
 
-**Prefer `motion-safe:` when adding motion from scratch** — it results in fewer overrides. Use `motion-reduce:` when undoing existing motion utilities.
+**Prefer `motion-safe:` when adding motion from scratch** - it results in fewer overrides. Use `motion-reduce:` when undoing existing motion utilities.
 
 ```html
 <!-- motion-safe approach: add animation only when motion is ok -->

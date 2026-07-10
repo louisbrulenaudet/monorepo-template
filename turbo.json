@@ -52,7 +52,7 @@
     },
     "types": {
       "dependsOn": ["^transit"],
-      "inputs": ["$TURBO_DEFAULT$"],
+      "inputs": ["$TURBO_DEFAULT$", "wrangler.jsonc"],
       "outputs": ["worker-configuration.d.ts"]
     },
     "build": {

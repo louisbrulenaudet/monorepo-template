@@ -19,7 +19,7 @@ These properties skip layout and paint, running on the GPU. Animating `padding`,
 <div class="transition-[height,padding] duration-300">
 ```
 
-### CSS variables are inheritable — update transform directly
+### CSS variables are inheritable - update transform directly
 
 Changing a CSS variable on a parent recalculates styles for all children. In a drawer with many items, updating `--swipe-amount` on the container causes expensive style recalculation. Update `transform` directly on the element instead.
 
@@ -33,13 +33,13 @@ element.style.transform = `translateY(${distance}px)`;
 
 ### Framer Motion hardware acceleration
 
-Framer Motion's shorthand properties (`x`, `y`, `scale`) use `requestAnimationFrame` on the main thread — they are **not** hardware-accelerated. For GPU acceleration, use the full `transform` string:
+Framer Motion's shorthand properties (`x`, `y`, `scale`) use `requestAnimationFrame` on the main thread - they are **not** hardware-accelerated. For GPU acceleration, use the full `transform` string:
 
 ```jsx
-// NOT hardware accelerated — drops frames under load
+// NOT hardware accelerated - drops frames under load
 <motion.div animate={{ x: 100 }} />
 
-// Hardware accelerated — stays smooth even when main thread is busy
+// Hardware accelerated - stays smooth even when main thread is busy
 <motion.div animate={{ transform: "translateX(100px)" }} />
 ```
 
@@ -51,7 +51,7 @@ CSS animations run off the main thread. When the browser is busy loading a new p
 
 ### Use WAAPI for programmatic CSS animations
 
-The Web Animations API gives JavaScript control with CSS performance — hardware-accelerated, interruptible, no library needed.
+The Web Animations API gives JavaScript control with CSS performance - hardware-accelerated, interruptible, no library needed.
 
 ```js
 element.animate(

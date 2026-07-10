@@ -1,23 +1,23 @@
 # Review code quality command
 
-Run a **code-quality-focused** review: naming conventions, TypeScript strictness, OXC (oxfmt/oxlint) compliance, duplication, readability, error handling patterns, testability, and type safety. Your reply must be a **plan of suggested changes**: concise, actionable, and structured—not only prose.
+Run a **code-quality-focused** review: naming conventions, TypeScript strictness, OXC (oxfmt/oxlint) compliance, duplication, readability, error handling patterns, testability, and type safety. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
 ## Cursor command usage
 
 This file is a [Cursor custom command](https://docs.cursor.com/context/commands): plain Markdown in `.cursor/commands/`. When the user runs `/review-code-quality` in chat, this content is sent as the prompt.
 
-- **Parameters:** Any text after `/review-code-quality` is scope—e.g. `/review-code-quality worker-api only`, `/review-code-quality naming`—narrow accordingly. If none given, assume full code quality review (both apps and shared packages).
+- **Parameters:** Any text after `/review-code-quality` is scope-e.g. `/review-code-quality worker-api only`, `/review-code-quality naming`-narrow accordingly. If none given, assume full code quality review (both apps and shared packages).
 
 This command is project-scoped and works with @ mentions and Rules. For a full review use `/review` instead.
 
 ## Best practices alignment
 
-- **Naming** — Per root [AGENTS.md](AGENTS.md): variables and functions `camelCase`; constants `CONSTANT_CASE`; constrained string set names `PascalCase`, members `CONSTANT_CASE` via `as const` objects (not `export enum`). No single-letter names except trivial loop indices; descriptive names for exports and public APIs.
-- **TypeScript** — Strict mode; no `any` or unsafe `as` without justification; no `@ts-ignore` without comment. Explicit return types on exported functions; inferred where trivial. Zod schemas co-located with inferred types where used.
-- **OXC (oxfmt / oxlint)** — Format and lint applied; no disabled rules that hide real issues; consistent style (spaces, double quotes, line width 80).
-- **Structure** — Single responsibility per file/function; files under ~300 lines, functions under ~50 lines where practical; clear separation (DTOs in `@repo/dtos-common`, routes, handlers, utils).
-- **Errors** — Hono `HTTPException` and centralized `onError` where used; avoid leaking internals; safe logging (no sensitive data).
-- **Duplication and dead code** — No copy-paste blocks that should be shared; no dead imports or unreachable code; no string literals where shared `as const` value sets or constants exist.
+- **Naming** - Per root [AGENTS.md](AGENTS.md): variables and functions `camelCase`; constants `CONSTANT_CASE`; constrained string set names `PascalCase`, members `CONSTANT_CASE` via `as const` objects (not `export enum`). No single-letter names except trivial loop indices; descriptive names for exports and public APIs.
+- **TypeScript** - Strict mode; no `any` or unsafe `as` without justification; no `@ts-ignore` without comment. Explicit return types on exported functions; inferred where trivial. Zod schemas co-located with inferred types where used.
+- **OXC (oxfmt / oxlint)** - Format and lint applied; no disabled rules that hide real issues; consistent style (spaces, double quotes, line width 80).
+- **Structure** - Single responsibility per file/function; files under ~300 lines, functions under ~50 lines where practical; clear separation (DTOs in `@repo/dtos-common`, routes, handlers, utils).
+- **Errors** - Hono `HTTPException` and centralized `onError` where used; avoid leaking internals; safe logging (no sensitive data).
+- **Duplication and dead code** - No copy-paste blocks that should be shared; no dead imports or unreachable code; no string literals where shared `as const` value sets or constants exist.
 
 Align with root and app AGENTS.md for conventions and patterns.
 
@@ -28,7 +28,7 @@ Conduct a code-quality-only review. Inspect the following and call out violation
 ### Naming conventions
 
 - **Artifacts:** All [apps/front-app/src/](apps/front-app/src/) and [apps/worker-api/src/](apps/worker-api/src/) (variables, functions, constants, constrained value sets), [packages/dtos-common/src/](packages/dtos-common/src/), [packages/enums-common/src/](packages/enums-common/src/).
-- **Checks:** Variables: camelCase (e.g. `blogPostList`, `postId`). Functions: camelCase (e.g. `getPost()`, `validateEmail()`). Constants: CONSTANT_CASE (e.g. `MAX_RETRIES`, `DEFAULT_TIMEOUT`). Value set object names: PascalCase (e.g. `HttpMethod`, `Status`). Members: CONSTANT_CASE (e.g. `HttpMethod.GET`). Use `as const` objects + derived types — never `export enum`. File names: kebab-case for modules; PascalCase for React components in `front-app`. Exported types: PascalCase.
+- **Checks:** Variables: camelCase (e.g. `blogPostList`, `postId`). Functions: camelCase (e.g. `getPost()`, `validateEmail()`). Constants: CONSTANT_CASE (e.g. `MAX_RETRIES`, `DEFAULT_TIMEOUT`). Value set object names: PascalCase (e.g. `HttpMethod`, `Status`). Members: CONSTANT_CASE (e.g. `HttpMethod.GET`). Use `as const` objects + derived types - never `export enum`. File names: kebab-case for modules; PascalCase for React components in `front-app`. Exported types: PascalCase.
 
 ### TypeScript strictness and type safety
 
@@ -78,15 +78,15 @@ Conduct a code-quality-only review. Inspect the following and call out violation
 
 ## Steps
 
-1. **Gather scope** — Full codebase or specific app/area (e.g. worker-api, front-app). Default to both apps and packages.
-2. **Read conventions** — Root and app AGENTS.md for naming, structure, and error handling.
-3. **Inspect naming** — Variables, functions, constants, constrained value sets across key files; flag convention violations.
-4. **Inspect TypeScript** — any, as, @ts-ignore, return types, Zod usage; flag strictness issues.
-5. **Inspect OXC format and lint** — Lint/format consistency; unused code; console/debugger.
-6. **Inspect duplication and structure** — Repeated logic; file/function size; separation of concerns.
-7. **Inspect error handling** — Hono error handling; catch/rethrow; logging.
-8. **Inspect dead code and literals** — Unused exports/imports; string literals vs shared value sets/constants.
-9. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
+1. **Gather scope** - Full codebase or specific app/area (e.g. worker-api, front-app). Default to both apps and packages.
+2. **Read conventions** - Root and app AGENTS.md for naming, structure, and error handling.
+3. **Inspect naming** - Variables, functions, constants, constrained value sets across key files; flag convention violations.
+4. **Inspect TypeScript** - any, as, @ts-ignore, return types, Zod usage; flag strictness issues.
+5. **Inspect OXC format and lint** - Lint/format consistency; unused code; console/debugger.
+6. **Inspect duplication and structure** - Repeated logic; file/function size; separation of concerns.
+7. **Inspect error handling** - Hono error handling; catch/rethrow; logging.
+8. **Inspect dead code and literals** - Unused exports/imports; string literals vs shared value sets/constants.
+9. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
 

@@ -1,11 +1,11 @@
 ---
-title: Tailwind v4 — Transform Utilities
+title: Tailwind v4 - Transform Utilities
 impact: HIGH
 impactDescription: native CSS scale/translate/rotate properties and transform-origin are the foundation of all GPU-accelerated animation
 tags: tailwind, transforms, scale, translate, rotate, transform-origin, GPU, hardware-acceleration
 ---
 
-## Tailwind v4 — Transform Utilities
+## Tailwind v4 - Transform Utilities
 
 > Source: https://tailwindcss.com/docs
 
@@ -145,7 +145,7 @@ Docs: https://tailwindcss.com/docs/transform-origin
 <div class="origin-top scale-95 opacity-0 transition-[transform,opacity]
             data-open:scale-100 data-open:opacity-100">
 
-<!-- Modal stays centered — keep origin-center (default) -->
+<!-- Modal stays centered - keep origin-center (default) -->
 <div class="origin-center scale-95 opacity-0 ...">
 
 <!-- Tooltip scales from its anchor -->
@@ -159,7 +159,7 @@ Docs: https://tailwindcss.com/docs/transform
 | Class | Effect |
 |---|---|
 | `transform-gpu` | Adds `translateZ(0)` to force GPU compositing layer |
-| `transform-cpu` | Default — CPU-based transforms |
+| `transform-cpu` | Default - CPU-based transforms |
 | `transform-none` | Removes all transforms |
 
 ```html

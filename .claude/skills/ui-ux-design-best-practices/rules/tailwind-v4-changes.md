@@ -1,11 +1,11 @@
 ---
-title: Tailwind CSS v4 — What Changed and Arbitrary Value Syntax
+title: Tailwind CSS v4 - What Changed and Arbitrary Value Syntax
 impact: HIGH
 impactDescription: understanding v4 breaking changes prevents using deprecated v3 patterns and unlocks new CSS variable shorthand
 tags: tailwind, v4, migration, arbitrary-values, CSS-variables, theme, transforms
 ---
 
-## Tailwind CSS v4 — What Changed and Arbitrary Value Syntax
+## Tailwind CSS v4 - What Changed and Arbitrary Value Syntax
 
 > All content reflects **Tailwind CSS v4.2** (April 2026).
 > Source: https://tailwindcss.com/docs
@@ -31,7 +31,7 @@ All v4 utilities support two extension syntaxes:
 <!-- Arbitrary value (square brackets) -->
 <div class="duration-160 scale-[0.97] ease-[cubic-bezier(0.23,1,0.32,1)]">
 
-<!-- CSS variable shorthand (parentheses) — v4 only -->
+<!-- CSS variable shorthand (parentheses) - v4 only -->
 <div class="ease-(--ease-out-strong) scale-(--my-scale)">
 <!-- Equivalent to: ease-[var(--ease-out-strong)] scale-[var(--my-scale)] -->
 ```

@@ -1,11 +1,11 @@
 ---
-title: Tailwind v4 — Interactivity Utilities
+title: Tailwind v4 - Interactivity Utilities
 impact: MEDIUM
 impactDescription: will-change, pointer-events, cursor, and select control how the browser and user interact with elements during and after animation
 tags: tailwind, interactivity, will-change, pointer-events, cursor, user-select, drag
 ---
 
-## Tailwind v4 — Interactivity Utilities
+## Tailwind v4 - Interactivity Utilities
 
 > Source: https://tailwindcss.com/docs
 
@@ -81,4 +81,4 @@ Docs: https://tailwindcss.com/docs/user-select
 <code class="select-all">sk-prod-abc123xyz</code>
 ```
 
-Always add `select-none` to draggable elements and buttons that respond to `:active` — without it, rapid clicks or drags will select text.
+Always add `select-none` to draggable elements and buttons that respond to `:active` - without it, rapid clicks or drags will select text.

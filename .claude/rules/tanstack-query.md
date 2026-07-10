@@ -5,20 +5,20 @@ paths:
 
 # TanStack Query (v5) Rules
 
-TanStack Query (`@tanstack/react-query` v5) owns **all server state** — anything fetched from an API. It is the single source of truth for the server cache. For deep guidance load the **`tanstack-query`** skill.
+TanStack Query (`@tanstack/react-query` v5) owns **all server state** - anything fetched from an API. It is the single source of truth for the server cache. For deep guidance load the **`tanstack-query`** skill.
 
-**Never** fetch in `useEffect` + `useState`, and never mirror query data into `useState`/a store. This is a client SPA, so ignore all SSR machinery (`dehydrate`/`<HydrationBoundary>`, per-request clients, streaming) — the module-singleton client below is correct.
+**Never** fetch in `useEffect` + `useState`, and never mirror query data into `useState`/a store. This is a client SPA, so ignore all SSR machinery (`dehydrate`/`<HydrationBoundary>`, per-request clients, streaming) - the module-singleton client below is correct.
 
 ## v5 API (do not use v4 shapes)
 
 - Hooks take **one object**: `useQuery({ queryKey, queryFn, ... })`.
-- `status: 'loading'` → `'pending'`; use **`isPending`** for "no data yet". A *redefined* `isLoading` still exists in v5 (`isPending && isFetching`, i.e. first fetch in flight) — don't assume it means v4's `isLoading`. `cacheTime` → **`gcTime`**. `useErrorBoundary` → **`throwOnError`**. `keepPreviousData` → `placeholderData: keepPreviousData`.
+- `status: 'loading'` → `'pending'`; use **`isPending`** for "no data yet". A *redefined* `isLoading` still exists in v5 (`isPending && isFetching`, i.e. first fetch in flight) - don't assume it means v4's `isLoading`. `cacheTime` → **`gcTime`**. `useErrorBoundary` → **`throwOnError`**. `keepPreviousData` → `placeholderData: keepPreviousData`.
 
-## Query definitions — `queryOptions` + key factory
+## Query definitions - `queryOptions` + key factory
 
-- Define every query with the **`queryOptions()` helper** in the feature's colocated module — in this repo that is `src/services/worker-api/<feature>-query-options.ts`, next to the HTTP call in `src/services/worker-api/<feature>.ts`. Consume the same object everywhere: `useQuery(opts)`, `useSuspenseQuery(opts)`, `queryClient.ensureQueryData(opts)`, `setQueryData(opts.queryKey, …)`. This is the canonical pattern — do not inline `{ queryKey, queryFn }` at call sites.
+- Define every query with the **`queryOptions()` helper** in the feature's colocated module - in this repo that is `src/services/worker-api/<feature>-query-options.ts`, next to the HTTP call in `src/services/worker-api/<feature>.ts`. Consume the same object everywhere: `useQuery(opts)`, `useSuspenseQuery(opts)`, `queryClient.ensureQueryData(opts)`, `setQueryData(opts.queryKey, …)`. This is the canonical pattern - do not inline `{ queryKey, queryFn }` at call sites.
 - Structure keys hierarchically, generic → specific, under the backend namespace so prefix invalidation cascades: `['worker-api','health']`, `['worker-api','users',userId]`. A single query can use a literal `as const` key (as `healthQueryOptions` does); once a feature has several related queries, promote them to a **query key factory** object (`['todos']` → `['todos','list',filters]` → `['todos','detail',id]`). Keys must be JSON-serializable.
-- Keep `queryFn` pure and typed: delegate the fetch to the service module's `fetchJsonWithSchema` helper (it forwards the `signal` for auto-cancel, throws a real `Error` on non-OK, and **validates the response** with the shared Zod schema — never `as T`). See [contracts.md](contracts.md) / [type-inference.md](type-inference.md).
+- Keep `queryFn` pure and typed: delegate the fetch to the service module's `fetchJsonWithSchema` helper (it forwards the `signal` for auto-cancel, throws a real `Error` on non-OK, and **validates the response** with the shared Zod schema - never `as T`). See [contracts.md](contracts.md) / [type-inference.md](type-inference.md).
 
 ```ts
 export const todoKeys = {
@@ -50,19 +50,19 @@ export const todoDetailQuery = (id: number) =>
 ## Reads
 
 - Use **`enabled`** for dependent/conditional queries (`enabled: !!userId`); never call hooks conditionally, and guard params so they are never `undefined` while enabled.
-- Use **`select`** to derive/narrow data — with structural sharing (on by default) it avoids re-renders when the slice is unchanged.
+- Use **`select`** to derive/narrow data - with structural sharing (on by default) it avoids re-renders when the slice is unchanged.
 - Prefer **`useSuspenseQuery(opts)`** under a `<Suspense>` + error boundary (or the router's pending/error components): `data` is then guaranteed defined. Don't combine `useSuspenseQuery` with `enabled`/`placeholderData`.
 - Use `placeholderData: keepPreviousData` for pagination/filtering to avoid loading flashes; gate "next" on `isPlaceholderData`.
 
 ## Mutations
 
-- Use `useMutation`; invalidate affected queries in `onSuccess`/`onSettled` via `queryClient.invalidateQueries({ queryKey })`. Invalidation is the default way to keep the cache truthful — `setQueryData` is only for surgical writes.
-- Optimistic updates require the full ritual: `cancelQueries` → snapshot with `getQueryData` → `setQueryData` → return the snapshot as context → roll back in `onError` → `invalidateQueries` in `onSettled`. Skipping `cancelQueries` causes races. (Current v5 injects a `context` arg with a live `context.client` into the mutation callbacks — you may call `context.client.setQueryData(...)` etc. instead of closing over `useQueryClient()`.)
+- Use `useMutation`; invalidate affected queries in `onSuccess`/`onSettled` via `queryClient.invalidateQueries({ queryKey })`. Invalidation is the default way to keep the cache truthful - `setQueryData` is only for surgical writes.
+- Optimistic updates require the full ritual: `cancelQueries` → snapshot with `getQueryData` → `setQueryData` → return the snapshot as context → roll back in `onError` → `invalidateQueries` in `onSettled`. Skipping `cancelQueries` causes races. (Current v5 injects a `context` arg with a live `context.client` into the mutation callbacks - you may call `context.client.setQueryData(...)` etc. instead of closing over `useQueryClient()`.)
 
 ## Router integration
 
-- In a route `loader`, warm the cache with `context.queryClient.ensureQueryData(someQuery(...))`; render with `useSuspenseQuery(someQuery(...))` in the component — same `queryOptions` object, one cache entry. Full pattern (context wiring, `defaultPreloadStaleTime: 0`) in [tanstack-router.md](tanstack-router.md).
+- In a route `loader`, warm the cache with `context.queryClient.ensureQueryData(someQuery(...))`; render with `useSuspenseQuery(someQuery(...))` in the component - same `queryOptions` object, one cache entry. Full pattern (context wiring, `defaultPreloadStaleTime: 0`) in [tanstack-router.md](tanstack-router.md).
 
 ## Before finishing
 
-Run `make ci`. Keep responses validated at the boundary and every Oxc rule green — don't cast through `any` (see [guardrails.md](guardrails.md)).
+Run `make ci`. Keep responses validated at the boundary and every Oxc rule green - don't cast through `any` (see [guardrails.md](guardrails.md)).
