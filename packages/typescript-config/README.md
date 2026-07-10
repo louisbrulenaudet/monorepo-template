@@ -157,7 +157,6 @@ All presets inherit from `strict.json`:
 - **Verbatim Module Syntax** — Correct ESM type imports
 - **No Unchecked Side Effect Imports** — Validates side-effect imports
 - **Erasable Syntax Only** — No runtime TS constructs (`enum`, namespaces, etc.)
-
 - **Exact Optional Property Types** — Optional props may be absent, not explicitly `undefined`
 - **No Property Access From Index Signature** — Bracket notation for index-signature keys
 - **No Error Truncation** — Full type text in diagnostics
