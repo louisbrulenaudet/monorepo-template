@@ -1,7 +1,6 @@
 ---
 name: tanstack-router
 description: Type-safe routing for React and Solid applications with first-class search params, data loading, and seamless integration with the React ecosystem.
-disable-model-invocation: true 
 ---
 
 

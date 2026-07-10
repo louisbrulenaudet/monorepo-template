@@ -2,6 +2,17 @@
   "name": "worker-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-08",
+  "cache": {
+    "enabled": true,
+  },
+  "exports": {
+    "default": {
+      "type": "worker",
+      "cache": {
+        "enabled": false,
+      },
+    },
+  },
   "dev": {
     "port": 8725,
     "inspector_port": 0,

@@ -2,26 +2,44 @@
   "name": "worker-api",
   "version": "0.0.0",
   "private": true,
+  "description": "Public Hono HTTP gateway on Cloudflare Workers; validates requests with shared Zod contracts.",
+  "keywords": [
+    "api",
+    "cloudflare-workers",
+    "hono",
+    "http-gateway",
+    "worker",
+    "zod"
+  ],
   "main": "src/index.ts",
   "scripts": {
-    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern --type-aware .",
-    "check-types": "tsc --noEmit",
+    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern .",
+    "check-types": "tsc -b",
     "deploy": "wrangler deploy --env production --minify src/index.ts",
     "dev": "wrangler dev src/index.ts",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",
-    "lint": "oxlint --no-error-on-unmatched-pattern --type-aware .",
-    "lint:fix": "oxlint --no-error-on-unmatched-pattern --type-aware --fix .",
+    "lint": "oxlint --no-error-on-unmatched-pattern .",
+    "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
     "types": "wrangler types -c ./wrangler.jsonc"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.8.0",
     "@repo/dtos-common": "workspace:*",
     "@repo/enums-common": "workspace:*",
-    "hono": "^4.12.28"
+    "hono": "^4.12.29"
   },
   "devDependencies": {
-    "oxfmt": "^0.58.0",
-    "oxlint": "^1.73.0"
+    "@repo/typescript-config": "workspace:*",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "monorepo": {
+    "kind": "app",
+    "role": "http-gateway",
+    "prefix": "worker-",
+    "devPort": 8725,
+    "agentGuide": "AGENTS.md"
   }
 }

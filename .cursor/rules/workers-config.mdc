@@ -4,8 +4,6 @@ alwaysApply: false
 globs: **/wrangler.jsonc,apps/**/src/types/*.d.ts,**/.dev.vars.example
 ---
 
-<!-- Synced with .claude/rules/workers-config.md — update both when changing. -->
-
 # Wrangler / Config Rules
 
 `wrangler.jsonc` is the **source of truth** for a Worker's bindings, vars, and routes. Two files derive from configuration and must never be hand-edited (they are outputs — see [guardrails.mdc](.cursor/rules/guardrails.mdc)):
@@ -27,3 +25,4 @@ Missing required config must fail predictably, not degrade: missing upstream ser
 
 - Production route/env changes are checked by the pre-deploy validator (`scripts/validate-production-config.mjs`). Do not weaken it to pass.
 - After editing any `wrangler.jsonc`, run `make types` and `make check-types`.
+- Workers Cache (`cache.enabled`, per-entrypoint `exports`): see [workers-cache.mdc](workers-cache.mdc).

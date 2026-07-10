@@ -4,8 +4,6 @@ alwaysApply: false
 globs: apps/front-*/src/**/*.{ts,tsx}
 ---
 
-<!-- Synced with .claude/rules/react.md — update both when changing. -->
-
 # React (19) Component & Hook Rules
 
 These apps are **client-only Vite SPAs** — no SSR, no React Server Components, no `"use server"`. Anything framed around those in general React guidance does not apply here. For deep guidance load the **`vercel-react-best-practices`** skill.

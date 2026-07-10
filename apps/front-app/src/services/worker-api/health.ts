@@ -13,10 +13,6 @@ export async function getHealth(options?: {
   return fetchJsonWithSchema(
     `${apiBaseUrl}/api/v1/health`,
     HealthResponseSchema,
-    {
-      signal: options?.signal,
-      timeoutMs: options?.timeoutMs,
-      dedupe: options?.dedupe,
-    },
+    options,
   );
 }

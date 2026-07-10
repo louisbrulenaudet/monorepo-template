@@ -1,7 +1,6 @@
 ---
 name: hono
 description: Use when building Hono web applications or when the user asks about Hono APIs, routing, middleware, JSX, validation, testing, or streaming. TRIGGER when code imports from 'hono' or 'hono/*', or user mentions Hono. Use `npx hono request` to test endpoints.
-disable-model-invocation: true 
 ---
 
 # Hono Skill

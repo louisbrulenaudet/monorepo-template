@@ -4,8 +4,6 @@ alwaysApply: false
 globs: apps/front-*/src/**/*.{ts,tsx}
 ---
 
-<!-- Synced with .claude/rules/tanstack-query.md — update both when changing. -->
-
 # TanStack Query (v5) Rules
 
 TanStack Query (`@tanstack/react-query` v5) owns **all server state** — anything fetched from an API. It is the single source of truth for the server cache. For deep guidance load the **`tanstack-query`** skill.

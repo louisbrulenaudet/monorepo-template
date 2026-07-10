@@ -1,5 +1,6 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@repo/typescript-config/workers-lib.json",
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "tsconfig.json"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

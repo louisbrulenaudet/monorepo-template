@@ -46,7 +46,7 @@ flowchart TD
 | Package | Purpose |
 |---------|---------|
 | `@repo/dtos-common` | Shared Zod schemas — `src/api/*` (HTTP), `src/rpc/*`, `src/queue/*`, `src/webhook/*` |
-| `@repo/enums-common` | Shared enumerations across apps/packages |
+| `@repo/enums-common` | Shared constrained string values (`as const` objects) across apps/packages |
 | `@repo/typescript-config` | TypeScript presets for Workers and Vite React |
 
 ## Worker Prefixes
@@ -67,8 +67,8 @@ flowchart TD
 | Service-binding RPC schemas | `packages/dtos-common/src/rpc/<feature>.ts` |
 | Queue message schemas | `packages/dtos-common/src/queue/<feature>.ts` |
 | Webhook payload schemas | `packages/dtos-common/src/webhook/<feature>.ts` |
-| Shared enum values | `packages/enums-common/src/index.ts` |
-| Worker-local enum | `apps/<worker>/src/enums/` |
+| Shared constrained value set | `packages/enums-common/src/index.ts` |
+| Worker-local value set | `apps/<worker>/src/enums/` |
 | Frontend API service | `apps/front-app/src/services/worker-api/<feature>.ts` |
 | Frontend page | `apps/front-app/src/pages/` + `src/routes/` (TanStack file routes) |
 | Reusable UI / hooks | `apps/front-app/src/components/ui/`, `src/hooks/` |
@@ -121,7 +121,28 @@ TypeScript presets: see [packages/typescript-config/AGENTS.md](packages/typescri
 | `make build` / `make deploy` | Build or deploy via Turborepo |
 | `make format` / `make lint` | Fix formatting / lint issues |
 
-Per-app commands: see each app's `AGENTS.md` or `Makefile`.
+### Scoping (pnpm / Turborepo)
+
+Pass optional variables to any turbo-backed root target:
+
+| Variable | Effect | Example |
+|----------|--------|---------|
+| `SCOPE` | `--filter=<package>` | `make dev SCOPE=worker-api` |
+| `FILTER` | Raw turbo filter expression | `make build FILTER=...front-app...` |
+| `AFFECTED` | `--affected` (changed packages vs base) | `make ci AFFECTED=1` |
+
+CI uses `make ci AFFECTED=1` and `make build AFFECTED=1`.
+
+### Per-package commands
+
+Each app/package has a minimal `Makefile` that includes [`make/app.mk`](make/app.mk) — targets are auto-scoped to that workspace package (resolved from `package.json` `name`):
+
+```bash
+cd apps/worker-api && make dev    # turbo run dev --filter=worker-api
+cd packages/dtos-common && make ci  # turbo run lint format check-types --filter=@repo/dtos-common
+```
+
+Per-app command tables: see each app's `AGENTS.md`.
 
 ## Memory Layout (Claude Code + Cursor)
 
@@ -139,6 +160,7 @@ Per-app commands: see each app's `AGENTS.md` or `Makefile`.
 - Claude Code: nested `CLAUDE.md` in apps/packages load on demand; debug instruction loading with `tail -f hooks/logs/instructions-loaded.log`.
 - Cursor: path-scoped rules attach by glob; debug hook activity in **Customize → Hooks** output channel; session logs in `hooks/logs/session-start.log`.
 - **Keeping Claude + Cursor in sync:** when you edit a path-scoped rule or subagent, update the parallel file in the other folder (`.claude/rules/*.md` ↔ `.cursor/rules/*.mdc`, `.claude/agents/*.md` ↔ `.cursor/agents/*.md`). Hook scripts are canonical in [`hooks/`](hooks/); both tools reference that directory via their config files.
+- **Vite 8 config:** [`.claude/rules/vite-config.md`](.claude/rules/vite-config.md) ↔ [`.cursor/rules/vite-config.mdc`](.cursor/rules/vite-config.mdc) — scoped to `apps/front-*/vite.config.ts` only.
 
 See [`.cursor/README.md`](.cursor/README.md) for a quick index of the Cursor setup.
 
@@ -146,10 +168,11 @@ See [`.cursor/README.md`](.cursor/README.md) for a quick index of the Cursor set
 
 | Focus | Guide | Claude entry |
 |-------|-------|--------------|
+| pnpm workspaces | [.agents/skills/pnpm/SKILL.md](.agents/skills/pnpm/SKILL.md) | [.claude/skills/pnpm/SKILL.md](.claude/skills/pnpm/SKILL.md) |
 | React SPA | [apps/front-app/AGENTS.md](apps/front-app/AGENTS.md) | [apps/front-app/CLAUDE.md](apps/front-app/CLAUDE.md) |
 | HTTP gateway | [apps/worker-api/AGENTS.md](apps/worker-api/AGENTS.md) | [apps/worker-api/CLAUDE.md](apps/worker-api/CLAUDE.md) |
 | Zod DTOs | [packages/dtos-common/AGENTS.md](packages/dtos-common/AGENTS.md) | [packages/dtos-common/CLAUDE.md](packages/dtos-common/CLAUDE.md) |
-| Shared enums | [packages/enums-common/AGENTS.md](packages/enums-common/AGENTS.md) | [packages/enums-common/CLAUDE.md](packages/enums-common/CLAUDE.md) |
+| Shared value sets | [packages/enums-common/AGENTS.md](packages/enums-common/AGENTS.md) | [packages/enums-common/CLAUDE.md](packages/enums-common/CLAUDE.md) |
 | TS presets | [packages/typescript-config/AGENTS.md](packages/typescript-config/AGENTS.md) | [packages/typescript-config/CLAUDE.md](packages/typescript-config/CLAUDE.md) |
 | Agent hooks | [hooks/AGENTS.md](hooks/AGENTS.md) | [hooks/CLAUDE.md](hooks/CLAUDE.md) |
 
@@ -158,7 +181,7 @@ Extend this table when adding a new app or package with its own guide.
 ## Decision Checklist
 
 1. Schema already in `@repo/dtos-common`? Import it — don't redefine.
-2. Enum already in `@repo/enums-common`? Import it — don't duplicate literals.
+2. Constrained value already in `@repo/enums-common`? Import it — don't duplicate literals.
 3. Worker-to-Worker call? Service binding, not HTTP.
 4. Filename follows kebab-case? (PascalCase only for React `.tsx` components in `front-app`.)
 5. Worker function under 100 lines? Extract helpers if not.

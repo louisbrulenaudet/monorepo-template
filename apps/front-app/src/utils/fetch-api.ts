@@ -1,9 +1,11 @@
+import { HttpMethod } from "@repo/enums-common";
+
 type SchemaLike<T> = {
   parse: (value: unknown) => T;
 };
 
 type FetchJsonOptions = {
-  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  method?: Exclude<HttpMethod, typeof HttpMethod.OPTIONS>;
   headers?: HeadersInit;
   body?: BodyInit | null;
   signal?: AbortSignal;
@@ -32,15 +34,19 @@ async function fetchJsonRaw(
   url: string,
   options?: FetchJsonOptions,
 ): Promise<unknown> {
-  const method = options?.method ?? "GET";
+  const method = options?.method ?? HttpMethod.GET;
   const signal = resolveSignal(options);
 
-  const res = await fetch(url, {
+  const init: RequestInit = {
     method,
-    headers: options?.headers,
     body: options?.body ?? null,
-    signal,
-  });
+    signal: signal ?? null,
+  };
+  if (options?.headers !== undefined) {
+    init.headers = options.headers;
+  }
+
+  const res = await fetch(url, init);
 
   if (!res.ok) {
     throw new Error(`Request failed: ${res.status} ${res.statusText}`);
@@ -54,8 +60,8 @@ export async function fetchJsonWithSchema<T>(
   schema: SchemaLike<T>,
   options?: FetchJsonOptions,
 ): Promise<T> {
-  const method = options?.method ?? "GET";
-  const dedupe = options?.dedupe ?? method === "GET";
+  const method = options?.method ?? HttpMethod.GET;
+  const dedupe = options?.dedupe ?? method === HttpMethod.GET;
 
   const dedupeKey = dedupe ? (options?.dedupeKey ?? `${method} ${url}`) : null;
   if (dedupeKey && inflightGetRequests.has(dedupeKey)) {

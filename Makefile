@@ -1,9 +1,14 @@
 include make/variables.mk
+include make/turbo.mk
 
 # Include specific command groups
 include make/help.mk
-include make/dev.mk
+include make/deps.mk
+include make/quality.mk
+include make/build.mk
+include make/deploy.mk
 include make/husky.mk
+include make/skills.mk
 
 # Default target
 .DEFAULT_GOAL := help

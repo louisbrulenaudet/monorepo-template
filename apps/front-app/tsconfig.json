@@ -1,17 +1,8 @@
 {
-  "extends": "@repo/typescript-config/vite-react.json",
-  "compilerOptions": {
-    "paths": {
-      "@/*": ["./src/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@enums/*": ["./src/enums/*"],
-      "@components/*": ["./src/components/*"],
-      "@ui/*": ["./src/components/ui/*"],
-      "@routes/*": ["./src/routes/*"],
-      "@pages/*": ["./src/pages/*"],
-      "@hooks/*": ["./src/hooks/*"],
-      "@services/*": ["./src/services/*"],
-      "@config/*": ["./src/config/*"]
-    }
-  }
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
 }

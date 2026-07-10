@@ -1,0 +1,10 @@
+# Purpose: Codex skill metadata and invocation policy for locked skills updates.
+# Target tool: OpenAI Codex.
+# Date reviewed: June 2026.
+# Reference: https://developers.openai.com/codex/skills
+interface:
+  display_name: "Skills Update"
+  short_description: "Update locked skills one at a time via skills-lock.json"
+  default_prompt: "Use $skills-update to refresh skills listed in skills-lock.json without running a bare npx skills update."
+policy:
+  allow_implicit_invocation: false

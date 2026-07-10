@@ -95,11 +95,11 @@ Package tasks enable Turborepo to:
 
 ```json
 {
-  "$schema": "https://v2-9-7-canary-13.turborepo.dev/schema.json",
+  "$schema": "https://v2-10-5-canary-4.turborepo.dev/schema.json",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
     "lint": {},
     "test": {
@@ -117,7 +117,7 @@ With `futureFlags.globalConfiguration`, global settings move under a `global` ke
 
 ```json
 {
-  "$schema": "https://v2-9-7-canary-13.turborepo.dev/schema.json",
+  "$schema": "https://v2-10-5-canary-4.turborepo.dev/schema.json",
   "futureFlags": { "globalConfiguration": true },
   "global": {
     "inputs": ["tsconfig.json"],
@@ -126,7 +126,7 @@ With `futureFlags.globalConfiguration`, global settings move under a `global` ke
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
     "lint": {},
     "test": {
@@ -214,13 +214,13 @@ Create a shared TypeScript config package:
 packages/
 └── typescript-config/
     ├── package.json
-    ├── base.json
+    ├── strict.json
     ├── nextjs.json
     └── library.json
 ```
 
 ```json
-// packages/typescript-config/base.json
+// packages/typescript-config/strict.json
 {
   "compilerOptions": {
     "strict": true,

@@ -1,3 +1,10 @@
+import {
+  CORS_ALLOWED_HEADERS,
+  CORS_ALLOWED_HTTP_METHODS,
+  HttpMethod,
+  isUnsafeHttpMethod,
+  parseHttpMethod,
+} from "@repo/enums-common";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
@@ -15,9 +22,6 @@ const app = new Hono<{ Bindings: WorkerApiBindings }>();
 
 app.use(secureHeaders());
 
-const allowedHeaders = ["Content-Type", "Authorization"];
-const allowedMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
-
 /** `null` means permissive mode (any origin). */
 function parseCorsOrigins(value: string | undefined): string[] | null {
   if (value === undefined || value.trim() === "") {
@@ -34,25 +38,20 @@ app.use("/api/*", (c, next) => {
   const allowedOrigins = parseCorsOrigins(c.env.CORS_ORIGINS);
   return cors({
     origin: allowedOrigins ?? "*",
-    allowHeaders: allowedHeaders,
-    allowMethods: allowedMethods,
+    allowHeaders: [...CORS_ALLOWED_HEADERS],
+    allowMethods: [...CORS_ALLOWED_HTTP_METHODS],
     maxAge: 600,
   })(c, next);
 });
 
 // CSRF should not block CORS preflight, and only applies to unsafe methods.
 app.use("/api/*", async (c, next) => {
-  if (c.req.method === "OPTIONS") {
-    return await next();
-  }
-
-  const method = c.req.method.toUpperCase();
-  const isUnsafe =
-    method === "POST" ||
-    method === "PUT" ||
-    method === "PATCH" ||
-    method === "DELETE";
-  if (!isUnsafe) {
+  const method = parseHttpMethod(c.req.method);
+  if (
+    method === undefined ||
+    method === HttpMethod.OPTIONS ||
+    !isUnsafeHttpMethod(method)
+  ) {
     return await next();
   }
 
@@ -91,6 +90,9 @@ app.get("/", (c) =>
       version: "1.0.0",
     },
     200,
+    {
+      "Cache-Control": "public, max-age=3600",
+    },
   ),
 );
 

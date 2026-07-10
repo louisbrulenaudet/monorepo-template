@@ -4,8 +4,6 @@ alwaysApply: false
 globs: apps/**/*.{ts,tsx},packages/**/*.ts
 ---
 
-<!-- Synced with .claude/rules/code-style.md — update both when changing. -->
-
 # Code Style
 
 OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format). Do not restyle to match personal habits — match the surrounding file and let `oxfmt` decide layout. These rules run with `denyWarnings: true` / `maxWarnings: 0`, so any warning fails CI.

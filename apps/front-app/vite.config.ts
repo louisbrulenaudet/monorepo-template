@@ -10,10 +10,10 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { visualizer } from "rollup-plugin-visualizer";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, type PluginOption } from "vite";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
-const analyzeBundle = process.env.ANALYZE === "true";
+const analyzeBundle = process.env["ANALYZE"] === "true";
 const repoRoot = path.resolve(appDir, "../..");
 const productionEnvKeys = ["VITE_API_BASE_URL"] as const;
 
@@ -94,7 +94,7 @@ function generatedHeadersPlugin(mode: string, command: string) {
       }
 
       const env = loadEnv(mode, appDir, "VITE_");
-      const apiBaseUrl = env.VITE_API_BASE_URL;
+      const apiBaseUrl = env["VITE_API_BASE_URL"];
       if (!apiBaseUrl) {
         return;
       }
@@ -111,32 +111,39 @@ function generatedHeadersPlugin(mode: string, command: string) {
 export default defineConfig(({ command, mode }) => {
   assertProductionOriginEnv(mode, command);
 
+  const plugins: PluginOption[] = [
+    devtools(),
+    tanstackRouter({
+      autoCodeSplitting: true,
+      generatedRouteTree: "./src/routeTree.gen.ts",
+      routeFileIgnorePattern: "routeTree\\.gen\\.ts",
+      routesDirectory: "./src/routes",
+      target: "react",
+    }),
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+    tailwindcss(),
+    cloudflare(),
+    generatedHeadersPlugin(mode, command),
+  ];
+
+  if (analyzeBundle) {
+    const bundleAnalyzePlugins = visualizer({
+      filename: "dist/stats.html",
+      gzipSize: true,
+      brotliSize: true,
+      open: false,
+    });
+
+    if (Array.isArray(bundleAnalyzePlugins)) {
+      plugins.push(...bundleAnalyzePlugins);
+    } else {
+      plugins.push(bundleAnalyzePlugins);
+    }
+  }
+
   return {
-    plugins: [
-      devtools(),
-      tanstackRouter({
-        autoCodeSplitting: true,
-        generatedRouteTree: "./src/routeTree.gen.ts",
-        routeFileIgnorePattern: "routeTree\\.gen\\.ts",
-        routesDirectory: "./src/routes",
-        target: "react",
-      }),
-      react(),
-      babel({ presets: [reactCompilerPreset()] }),
-      tailwindcss(),
-      cloudflare(),
-      generatedHeadersPlugin(mode, command),
-      ...(analyzeBundle
-        ? [
-            visualizer({
-              filename: "dist/stats.html",
-              gzipSize: true,
-              brotliSize: true,
-              open: false,
-            }),
-          ]
-        : []),
-    ],
+    plugins,
 
     resolve: {
       alias: {

@@ -4,8 +4,6 @@ alwaysApply: false
 globs: apps/front-*/src/**/*.{ts,tsx}
 ---
 
-<!-- Synced with .claude/rules/tanstack-router.md — update both when changing. -->
-
 # TanStack Router (v1) Rules
 
 TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route data, and URL state. This is a client SPA — ignore all TanStack Start / SSR / server-function / streaming features. For deep guidance load the **`tanstack-router`** skill.

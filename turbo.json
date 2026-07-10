@@ -10,6 +10,9 @@
     ".npmrc"
   ],
   "globalPassThroughEnv": ["CI", "NODE_ENV"],
+  "remoteCache": {
+    "enabled": true
+  },
   "concurrency": "20",
   "tasks": {
     "transit": {
@@ -43,9 +46,9 @@
       "outputs": []
     },
     "check-types": {
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.json"],
-      "outputs": []
+      "outputs": ["*.tsbuildinfo"]
     },
     "types": {
       "dependsOn": ["^transit"],

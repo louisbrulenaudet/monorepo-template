@@ -4,8 +4,6 @@ alwaysApply: false
 globs: apps/orm-*/src/**
 ---
 
-<!-- Synced with .claude/rules/drizzle-orm.md — update both when changing. -->
-
 # Drizzle ORM Naming
 
 `orm-*` workers hold **schema and migrations only** — no business logic, no HTTP routing.

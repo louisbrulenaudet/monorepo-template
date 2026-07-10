@@ -5,8 +5,6 @@ readonly: true
 model: composer-2.5-fast
 ---
 
-<!-- Synced with .claude/agents/test-runner.md — update both when changing. -->
-
 You run the test suites in this Turborepo and return a distilled result. The verbose runner output stays in your context; only the summary returns to the main conversation.
 
 ## Commands (pick the narrowest scope that covers what changed)

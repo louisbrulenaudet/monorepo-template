@@ -21,9 +21,9 @@ A shape has exactly one owner. Its home is the **narrowest scope that still cont
 
 The test for "shared vs local" is reach, not similarity: two shapes that happen to look alike but never cross the same boundary stay separate; a shape consumed on both sides of a boundary moves up to the shared package.
 
-## Enums
+## Constrained string sets (`@repo/enums-common`)
 
-Same reach test as DTOs, applied to constrained string values. Put an enum in the shared enum package (`@repo/enums-common`) when **any** of these is true:
+Same reach test as DTOs, applied to fixed wire-safe string values. Put a value set in `@repo/enums-common` when **any** of these is true:
 
 - more than one app or package uses it;
 - it is part of a serialized API contract (a value that travels over the wire);
@@ -32,7 +32,7 @@ Same reach test as DTOs, applied to constrained string values. Put an enum in th
 
 Keep it app-local when it is used inside a single app only, or is UI-only state with no API meaning. **Default to local; promote on the second consumer.**
 
-Mechanics: one enum per file, kebab-case filename; re-export up the barrel chain to the package root; when you introduce a new public subpath, add the matching `package.json` export. Reference the enum from schemas with `z.enum(SomeEnum)` — never re-type its string literals. Import enum members, not raw strings or parallel string-literal unions.
+Mechanics: one constrained-value set per file, kebab-case filename; re-export up the barrel chain to the package root; when you introduce a new public subpath, add the matching `package.json` export. Define wire-safe values as a `const` object with `as const` plus a derived type (not `export enum` — `erasableSyntaxOnly` is enabled). Reference values from schemas with `z.enum(ValueSet)` for the full `as const` object, or `z.enum([...] as const)` for a subset — never re-type string literals. Import members from the const object, not raw strings or parallel string-literal unions.
 
 ## Schema authoring
 

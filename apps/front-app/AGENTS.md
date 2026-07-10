@@ -7,7 +7,7 @@
 - **Dev**: `http://localhost:5174`
 - **API**: `worker-api` at `http://localhost:8725` (via `src/config/env.ts`)
 
-React, routing, and query patterns load from `.claude/rules/` when editing `src/**` (`react.md`, `tanstack-router.md`, `tanstack-query.md`, `frontend-architecture.md`). Use skills for depth.
+React, routing, and query patterns load from `.claude/rules/` when editing `src/**` (`react.md`, `tanstack-router.md`, `tanstack-query.md`, `frontend-architecture.md`). Use **`ui-ux-design-best-practices`** for Tailwind motion depth.
 
 ## Tech Stack
 
@@ -24,7 +24,7 @@ apps/front-app/src/
 ├── components/ui/   # Reusable primitives
 ├── config/          # env.ts, query-client.ts
 ├── utils/           # fetch-api.ts
-└── enums/           # Frontend-only enums
+└── enums/           # Frontend-only value sets (`as const`)
 ```
 
 ## Where to Change Things
@@ -37,8 +37,8 @@ apps/front-app/src/
 | UI primitive | `src/components/ui/<Name>.tsx` |
 | Data hook | `src/hooks/use-<feature>.ts` |
 | API base URL | `src/config/env.ts` (`VITE_API_BASE_URL`) |
-| Frontend-only enum | `src/enums/<feature>.ts` |
-| Shared enum | `packages/enums-common/src/index.ts` |
+| Frontend-only value set | `src/enums/<feature>.ts` |
+| Shared value set | `packages/enums-common/src/index.ts` |
 | SPA / deploy config | `wrangler.jsonc`, `vite.config.ts` |
 
 ## Integration Flow
@@ -117,7 +117,7 @@ Query keys: `["worker-api", "<feature>", ...]` — colocate `queryOptions` next 
 - Never duplicate Zod wire schemas — use `@repo/dtos-common`.
 - Never hardcode API origins outside `env.ts`.
 - Lazy-load page UI via `*.lazy.tsx` + `src/pages/`; loaders stay in eager route files.
-- Shared enums in `@repo/enums-common`; UI-only enums in `src/enums/`.
+- Shared value sets in `@repo/enums-common`; UI-only value sets in `src/enums/` (same `as const` pattern).
 - Production builds need `VITE_API_BASE_URL` in `.env.production`.
 
 ## Commands

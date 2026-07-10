@@ -2,30 +2,43 @@
   "name": "front-app",
   "version": "0.0.0",
   "private": true,
+  "description": "React SPA (Vite + TanStack Router/Query) deployed on Cloudflare; talks to worker-api over HTTP only.",
+  "keywords": [
+    "cloudflare",
+    "frontend",
+    "react",
+    "spa",
+    "tailwindcss",
+    "tanstack-query",
+    "tanstack-router",
+    "vite"
+  ],
   "type": "module",
   "scripts": {
     "analyze": "ANALYZE=true vite build",
-    "build": "vite build",
-    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern --type-aware .",
-    "check-types": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -b && vite build",
+    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern .",
+    "check-types": "tsc -b",
     "deploy": "wrangler deploy --env production",
     "dev": "vite",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",
-    "lint": "oxlint --no-error-on-unmatched-pattern --type-aware .",
-    "lint:fix": "oxlint --no-error-on-unmatched-pattern --type-aware --fix .",
+    "lint": "oxlint --no-error-on-unmatched-pattern .",
+    "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
     "preview": "vite preview",
     "types": "wrangler types"
   },
   "dependencies": {
     "@repo/dtos-common": "workspace:*",
+    "@repo/enums-common": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.17",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.43.2",
+    "@cloudflare/vite-plugin": "^1.44.0",
+    "@repo/typescript-config": "workspace:*",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/devtools-vite": "^0.8.1",
@@ -37,10 +50,18 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "babel-plugin-react-compiler": "^1.0.0",
-    "oxfmt": "^0.58.0",
-    "oxlint": "^1.73.0",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "rollup-plugin-visualizer": "^7.0.1",
-    "tailwindcss": "^4.3.2",
-    "vite": "^8.1.3"
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^8.1.4"
+  },
+  "monorepo": {
+    "kind": "app",
+    "role": "frontend",
+    "prefix": "front-",
+    "devPort": 5174,
+    "agentGuide": "AGENTS.md"
   }
 }

@@ -1,10 +1,8 @@
 ---
-description: "Vite + React SPA architecture — directory layout, plugin order, Cloudflare deploy, bundle splitting."
+description: "Vite + React SPA architecture — directory layout, providers, bundle splitting, Tailwind v4."
 alwaysApply: false
-globs: apps/front-*/src/**/*.{ts,tsx},apps/front-*/vite.config.ts
+globs: apps/front-*/src/**/*.{ts,tsx,css},apps/front-*/index.html
 ---
-
-<!-- Synced with .claude/rules/frontend-architecture.md — update both when changing. -->
 
 # Frontend Architecture (Vite + React) Rules
 
@@ -14,19 +12,25 @@ Cross-cutting scaffolding for the React SPAs. Component/hook authoring is in [re
 
 - Thin route shells under `src/routes/` (file-based — see [tanstack-router.mdc](.cursor/rules/tanstack-router.mdc)) hold loaders, guards, and search validation; the code-split UI entry is the paired `src/routes/*.lazy.tsx`, and the actual screen lives in `src/pages/` (imported by the lazy route). Shared UI sits in `src/components/` (with primitives in `src/components/ui/`); non-render logic in `src/hooks/`, `src/services/`, `src/utils/`; frontend-only enums in `src/enums/`; runtime config in `src/config/` (`env.ts`, `query-client.ts`).
 - HTTP calls and their `queryOptions` live together under `src/services/worker-api/` (`<feature>.ts` + `<feature>-query-options.ts`). Wire schemas are **not** redefined here — they come from `@repo/dtos-common`.
-- Colocate feature code (route + its queries + its components) over deep global folders. Reuse the existing path aliases — `@/*` plus the app-specific ones (`@utils`, `@enums`, `@components`, `@ui`, `@routes`, `@pages`, `@hooks`, `@services`, `@config`) — declared in `tsconfig.json` **and** `vite.config.ts`; keep the two in sync.
+- Colocate feature code (route + its queries + its components) over deep global folders. Reuse the existing path aliases — `@/*` plus the app-specific ones (`@utils`, `@enums`, `@components`, `@ui`, `@routes`, `@pages`, `@hooks`, `@services`, `@config`) — declared in `tsconfig.json` **and** `vite.config.ts`; keep the two in sync (see [vite-config.mdc](.cursor/rules/vite-config.mdc) when editing aliases).
 - Filenames stay kebab-case; a React component file may be PascalCase to mirror its export. See [naming.mdc](.cursor/rules/naming.mdc).
 
-## Vite plugin order & the React Compiler
+## Vite config
 
-- Plugin order matters: `tanstackRouter({ target: "react", autoCodeSplitting: true })` must come **before** `@vitejs/plugin-react`. The working order in this repo (see `apps/front-app/vite.config.ts`) is: `devtools()` → `tanstackRouter(...)` → `react()` → `babel({ presets: [reactCompilerPreset()] })` → `tailwindcss()` → `cloudflare()` → generated-headers plugin (build-only) → optional `visualizer`.
-- Prefer enabling the **React Compiler**. This repo pins `@vitejs/plugin-react` v6 (Vite 8), which **removed the `babel` option** from `react()` — so add the compiler as a **separate Babel plugin entry** via `@rolldown/plugin-babel` with `reactCompilerPreset()` (both exported from `@vitejs/plugin-react`), placed right after `react()` as this app does. With the compiler on, drop manual memoization by default (see [react.mdc](.cursor/rules/react.mdc)). If you don't enable it, memoize manually where it matters.
+- When editing `vite.config.ts`, follow [vite-config.mdc](.cursor/rules/vite-config.mdc) — plugin order, Rolldown/Oxc build options, monorepo `fs.allow`, env guards, and generated `dist/_headers`.
 - Hook rules (`react/rules-of-hooks`, `react/exhaustive-deps`) are enforced by **oxlint**, not ESLint — they are configured for `apps/front-*/src/**` in `.oxlintrc.json`. Do not add an ESLint/`eslint-plugin-react-hooks` toolchain; `make ci` runs oxlint.
 
-## Cloudflare Workers deployment & build
+## Cloudflare Workers deployment
 
-- These SPAs deploy as **static assets + SPA routing on Cloudflare Workers**. Wire this with `@cloudflare/vite-plugin` and configure the deploy in `wrangler.jsonc`. Styling uses `@tailwindcss/vite` (Tailwind v4). Router/query devtools are mounted through `@tanstack/devtools-vite` and stay dev-only (see below).
-- Security headers (`Content-Security-Policy`, `Permissions-Policy`, etc.) are generated at **build time** into `dist/_headers` from `VITE_API_BASE_URL` by a small build-only Vite plugin — never hand-write `dist/_headers`. A build guard also fails the production build when `VITE_API_BASE_URL` is missing or a placeholder origin.
+- These SPAs deploy as **static assets + SPA routing on Cloudflare Workers** — `@cloudflare/vite-plugin` in `vite.config.ts`, deploy settings in `wrangler.jsonc`. Router/query devtools stay dev-only (see below).
+
+## Tailwind v4
+
+- Entry: `@import "tailwindcss"` in `src/index.css` — no `tailwind.config.js` (canonical: `apps/front-app/src/index.css`).
+- `@source "../index.html"` + `@source "./**/*.{ts,tsx}"`; add workspace package paths when consumed.
+- Tokens in `@theme` only; `bg-(--var)` shorthand. `@apply` in global CSS only — not per-feature `.css`.
+- Utilities in JSX; reuse via `src/components/ui/` + `cx()` (`Button.tsx`). Variants: `Record<Variant, string>` with **full static strings** — never `` `bg-${color}-500` `` (Tailwind scans plain text).
+- Runtime values: CSS var in `style` + static utilities. Motion/transitions → **`ui-ux-design-best-practices`** skill.
 
 ## App entry & providers
 

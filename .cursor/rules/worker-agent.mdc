@@ -4,8 +4,6 @@ alwaysApply: false
 globs: apps/**/src/agents/**,apps/**/src/workflows/**
 ---
 
-<!-- Synced with .claude/rules/worker-agent.md — update both when changing. -->
-
 # Agent Worker (Flue) Rules
 
 `apps/worker-agent` is a Cloudflare Worker built on the **Flue** framework (`@flue/runtime`, `@flue/sdk`, `@flue/cli`) plus the `agents` SDK. It is a *consumer* of this repo's MCP server, not part of it. For the framework itself, load the `flue` skill.

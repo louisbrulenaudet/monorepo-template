@@ -43,6 +43,10 @@ node_modules/
 **/.tsbuildinfo
 **/tsconfig.tsbuildinfo
 
+# Flue dev cache (flue dev --target cloudflare)
+**/.flue-vite/
+**/.flue-vite.wrangler.jsonc
+
 # Vite development cache - regenerated on each dev run
 .vite/
 

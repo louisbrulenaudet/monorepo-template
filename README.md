@@ -19,7 +19,7 @@ monorepo/
 │   └── front-app/           # React-based frontend application
 ├── packages/                # Shared packages
 │   ├── dtos-common/         # Shared data transfer objects
-│   ├── enums-common/        # Shared enumerations
+│   ├── enums-common/        # Shared constrained string values (`as const`)
 │   └── typescript-config/   # TypeScript configurations
 ├── make/                    # Makefile includes
 ├── package.json             # Root package configuration
@@ -376,8 +376,8 @@ The monorepo uses `@repo/*` packages for shared functionality across workers. Th
 ### Available Shared Packages
 
 - **`@repo/dtos-common`** - Shared data transfer objects and Zod validation schemas
-- **`@repo/enums-common`** - Shared enumerations and constants (error codes, status enumerations, GenAI-specific enums)
-- **`@repo/typescript-config`** - TypeScript configuration presets (base, workers, workers-lib)
+- **`@repo/enums-common`** - Shared constrained string values (`as const` objects) for HTTP methods, statuses, headers, etc.
+- **`@repo/typescript-config`** - TypeScript configuration presets (`strict.json`, `workers.json`, `workers-lib.json`, `vite-react.json`, `vite-node.json`)
 
 ### Benefits of Shared Packages
 - **Code sharing:** Eliminate duplication across workers
@@ -398,8 +398,8 @@ The monorepo uses `@repo/*` packages for shared functionality across workers. Th
 
 2. **Import and use in your code:**
    ```typescript
-   import { Subject } from "@repo/enums-common";
-   import { BaseRequestSchema } from "@repo/dtos-common/api";
+   import { HttpMethod } from "@repo/enums-common";
+   import { HealthResponseSchema } from "@repo/dtos-common/api";
    ```
 
 3. **Development workflow:**

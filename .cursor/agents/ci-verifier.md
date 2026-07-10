@@ -5,8 +5,6 @@ readonly: true
 model: composer-2.5-fast
 ---
 
-<!-- Synced with .claude/agents/ci-verifier.md — update both when changing. -->
-
 You close out the CI gate: absorb the mechanical fixes deterministically, then surface only what a human or the main agent must decide. Verbose tool output stays in your context.
 
 ## Step 1 — apply the safe auto-fixes (deterministic, semantics-preserving)

@@ -33,9 +33,9 @@ fi
 
 CONFIG="$ROOT/.oxlintrc.json"
 if [ -f "$CONFIG" ]; then
-  set -- --config "$CONFIG" --type-aware "$FILE"
+  set -- --config "$CONFIG" "$FILE"
 else
-  set -- --type-aware "$FILE"
+  set -- "$FILE"
 fi
 
 if OUT=$("$OXLINT" "$@" 2>&1); then

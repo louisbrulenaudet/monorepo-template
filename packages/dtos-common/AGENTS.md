@@ -108,7 +108,7 @@ Never redefine these shapes in apps.
 
 ## Zod Notes
 
-- Shared enum values: `z.enum(SomeEnum)` from `@repo/enums-common` — no duplicate literals.
+- Shared constrained values from `@repo/enums-common`: `z.enum(Status)` for the full set, or `z.enum([Status.A, Status.B] as const)` for a subset — never duplicate string literals. Plain `string[]` without `as const` widens inference to `string`.
 - Pick `.strict()` policy per file/feature and apply consistently.
 - `.safeParse()` at trust boundaries; `.parse()` only in controlled throw contexts.
 - No business logic in this package — shapes and validation only.

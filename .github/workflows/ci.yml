@@ -21,6 +21,9 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
     strategy:
       matrix:
         node-version: [22]
@@ -28,6 +31,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
@@ -42,17 +47,10 @@ jobs:
       - name: Install dependencies
         run: make install-frozen
 
-      - parallel:
-          - name: Lint
-            run: pnpm turbo run lint
-
-          - name: Format check
-            run: pnpm turbo run format
-
-      - name: Typecheck
-        run: pnpm turbo run check-types
+      - name: CI checks
+        run: make ci AFFECTED=1
 
       - name: Build
         env:
           VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
-        run: pnpm turbo run build
+        run: make build AFFECTED=1

@@ -57,4 +57,4 @@ flowchart TD
 
 ## Before finishing
 
-Run `make ci`. See [workers-config.md](workers-config.md) when editing `wrangler.jsonc`.
+Run `make ci`. See [workers-config.md](workers-config.md) when editing `wrangler.jsonc`. See [workers-cache.md](workers-cache.md) when setting `Cache-Control` on responses.

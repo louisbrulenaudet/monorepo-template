@@ -11,14 +11,28 @@
       "Bash(pnpm --filter * run check-types)",
       "Bash(pnpm --filter * test)",
       "Bash(pnpm --filter * exec tsc --noEmit)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(oxlint:*)",
+      "Bash(oxfmt:*)",
+      "Bash(turbo run:*)",
       "WebFetch(domain:code.claude.com)",
-      "WebFetch(domain:developers.cloudflare.com)"
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:oxc.rs)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:vitest.dev)",
+      "WebFetch(domain:hono.dev)"
     ],
     "deny": [
       "Edit(**/dist/**)",
       "Write(**/dist/**)",
       "Edit(**/worker-configuration.d.ts)",
-      "Write(**/worker-configuration.d.ts)"
+      "Write(**/worker-configuration.d.ts)",
+      "Read(**/.dev.vars)",
+      "Read(**/.prod.vars)",
+      "Read(**/.staging.vars)"
     ],
     "ask": []
   },
@@ -84,5 +98,9 @@
     "claude-md-management@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true
   },
-  "autoMemoryEnabled": true
+  "autoMemoryEnabled": true,
+  "enabledMcpjsonServers": [
+    "cloudflare-docs"
+  ],
+  "enableAllProjectMcpServers": true
 }

@@ -1,42 +1,59 @@
 {
   "name": "monorepo",
+  "version": "0.0.0",
   "private": true,
+  "description": "pnpm + Turborepo monorepo starter with Cloudflare Workers, Hono HTTP gateway, and React (Vite) frontend.",
+  "keywords": [
+    "cloudflare-workers",
+    "hono",
+    "monorepo",
+    "pnpm",
+    "react",
+    "turborepo",
+    "vite",
+    "zod"
+  ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
     "check": "turbo run lint format",
     "check-types": "turbo run check-types",
+    "check-types:solution": "tsc -b",
     "ci": "turbo run lint format check-types",
+    "dev": "turbo run dev",
     "format": "turbo run format:fix",
     "format:fix": "oxfmt .",
     "lint": "turbo run lint:fix",
-    "lint:fix": "oxlint --no-error-on-unmatched-pattern --type-aware --fix .",
+    "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
+    "prepare": "husky",
     "types": "turbo run types --filter='./apps/*'",
-    "update": "pnpm update --recursive",
-    "prepare": "husky"
+    "update": "pnpm update --recursive --latest"
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260708.1",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "26.1.0",
+    "@types/node": "26.1.1",
     "cloc": "2.6.0-cloc",
-    "cloudflare": "^6.5.0",
+    "cloudflare": "^7.0.0",
     "eslint-plugin-better-tailwindcss": "^4.6.1",
     "git-format-staged": "^4.0.1",
     "husky": "^9.1.7",
-    "oxfmt": "^0.58.0",
-    "oxlint": "^1.73.0",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "oxlint-tsgolint": "^0.24.0",
-    "tailwindcss": "^4.3.2",
+    "tailwindcss": "catalog:",
     "turbo": "^2.10.4",
-    "typescript": "7.0.1-rc",
-    "wrangler": "^4.108.0"
+    "typescript": "catalog:",
+    "wrangler": "^4.110.0"
   },
-  "packageManager": "pnpm@11.10.0",
   "engines": {
     "node": ">=22"
+  },
+  "packageManager": "pnpm@11.10.0",
+  "monorepo": {
+    "kind": "workspace",
+    "role": "root",
+    "agentGuide": "AGENTS.md"
   }
 }

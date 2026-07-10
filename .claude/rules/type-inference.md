@@ -19,11 +19,11 @@ Derive TypeScript types from the source of truth. Do not hand-write `interface` 
   export type ExampleInput = z.infer<typeof ExampleInputSchema>;
   ```
 - Never use a `Type` suffix on inferred exports (`ExampleInputType` is forbidden).
-- Shared enum values live in `@repo/enums-common`, not parallel string-literal unions.
+- Shared constrained values live in `@repo/enums-common` as `as const` objects — not parallel string-literal unions or `export enum`.
 
 ## Keep schemas lean
 
-- Enum values belong in `.enum(...)` (which becomes the JSON-schema `enum`) — do not also spell them out in `.describe()` prose.
+- Constrained value members belong in `z.enum(ValueSet)` or `z.enum([...] as const)` from `@repo/enums-common` — do not also spell them out in `.describe()` prose.
 - Per-corpus planning guidance goes inline in the tool `description` and input `.describe()` text; there is no separate discovery catalog.
 
 ## Do not

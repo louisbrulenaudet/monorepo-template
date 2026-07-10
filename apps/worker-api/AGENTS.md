@@ -11,7 +11,7 @@ Starter surface: `GET /api/v1/health`. Hono patterns load from `.claude/rules/ho
 ```
 apps/worker-api/src/
 ├── routes/<feature>.ts   # One route module per feature
-├── enums/              # Worker-local enums
+├── enums/              # Worker-local value sets (`as const`)
 └── index.ts            # Middleware stack + route mounts
 ```
 
@@ -22,7 +22,7 @@ apps/worker-api/src/
 | New endpoint | `src/routes/<feature>.ts` → mount in `src/index.ts` |
 | Middleware | `src/index.ts` (before route mounts) |
 | Shared schema | `packages/dtos-common/src/api/<feature>.ts` |
-| Worker-local enum | `src/enums/` |
+| Worker-local value set | `src/enums/` |
 | Service binding | `wrangler.jsonc` → `services` |
 | Secrets | `.dev.vars` (dev); document in `.dev.vars.example` |
 
@@ -94,6 +94,8 @@ const result = await env.EXAMPLE_SERVICE.getExample(exampleId);
 ```
 
 Run `make types` after adding bindings. Start bound workers before this one in local dev.
+
+Workers Cache policy: see path-scoped rule [`.claude/rules/workers-cache.md`](../../.claude/rules/workers-cache.md) (loads when editing this app).
 
 ## Best Practices
 

@@ -2,8 +2,6 @@
 alwaysApply: true
 ---
 
-<!-- Synced with .claude/rules/guardrails.md — update both when changing. -->
-
 # Guardrails
 
 These apply to every change, everywhere. They are hard "don'ts" — when one would be violated, stop and ask rather than proceed.

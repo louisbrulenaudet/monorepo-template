@@ -1,5 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@repo/typescript-config/workers.json",
+  "compilerOptions": {
+    "types": ["./worker-configuration.d.ts"]
+  },
   "include": ["worker-configuration.d.ts", "src/**/*.ts", "./types.d.ts"],
-  "exclude": ["node_modules/", "dist/", "container/**.ts"]
+  "exclude": ["node_modules/", "dist/", "container/**.ts"],
+  "references": [
+    { "path": "../../packages/dtos-common" },
+    { "path": "../../packages/enums-common" }
+  ]
 }

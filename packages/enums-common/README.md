@@ -3,26 +3,25 @@
 [![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-This package centralizes enum values that are reused across applications (frontend UI, API validation, and shared mappings) to avoid duplicating string literals.
+Shared **constrained string values** reused across apps and packages (HTTP methods, status codes, CORS headers, etc.). Implemented as `as const` objects — not TypeScript `enum`.
 
 ## Purpose
 
-Provide strongly typed enum values shared across `@repo/*` packages and apps.
+Provide strongly typed, wire-safe string literals so Zod schemas, Workers, and the frontend stay in sync without duplicating magic strings.
 
 ## Features
 
-- **Consistent values across the repo** (frontend + worker-api)
-- **Type-safe imports** so Zod schemas and UI labels stay compatible
+- **Consistent values across the repo** (frontend + worker-api + dtos-common)
+- **Type-safe imports** via `as const` objects and derived union types
+- **Erasable syntax** — compatible with `erasableSyntaxOnly` (no runtime enum emit)
 
 ## Tech Stack
 
-- **Language:** TypeScript (strict mode, ESNext)
+- **Language:** TypeScript 7.x (strict, via `@repo/typescript-config/workers-lib.json`)
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm
 
 ## Installation
-
-This package is part of the monorepo and is automatically available to other packages. To use it in a package:
 
 ```json
 {
@@ -32,70 +31,100 @@ This package is part of the monorepo and is automatically available to other pac
 }
 ```
 
-Then install dependencies:
-
 ```bash
 pnpm install
 ```
 
 ## Usage
 
-### Importing `Subject`
+### Import members
 
 ```typescript
-import { Subject } from "@repo/enums-common";
+import { HttpMethod } from "@repo/enums-common";
 
-const value: Subject = Subject.GENERAL;
+const method = HttpMethod.GET;
 ```
 
-### Using enum values in UI validation
+### Build UI options or allow-lists
 
 ```typescript
-import { Subject } from "@repo/enums-common";
+import { HttpMethod } from "@repo/enums-common";
 
-const allowed = Object.values(Subject);
-// Use `allowed` to build dropdown options or validate incoming values
+const allowed = Object.values(HttpMethod);
 ```
 
-## When to add enums here
+For APIs expecting `string[]` (e.g. Hono CORS), spread a readonly list:
 
-- Add an enum to `@repo/enums-common` when the value set is shared across **multiple apps/packages** (e.g. UI dropdown + API validation + DTO schemas).
-- Keep enums local to an app/package if they are **purely internal** and not part of a shared contract.
+```typescript
+import { CORS_ALLOWED_HEADERS } from "@repo/enums-common";
 
-## Safe usage notes
-
-- `Object.values(SomeEnum)` is convenient, but its inferred type is `string[]` in many cases. When you need stronger typing, prefer an explicit typed list (or a helper) so your UI options stay type-safe.
-
-## Common Commands
-
-| Command                | Description                                 |
-|------------------------|---------------------------------------------|
-| `make format`          | Format codebase using oxfmt                 |
-| `make lint`            | Lint codebase using oxlint                  |
-| `make check`           | Run full OXC check (oxfmt + oxlint)         |
-| `make check-types`     | Check TypeScript types                      |
-
-### Direct pnpm Commands
-
-```bash
-pnpm format          # Format with oxfmt
-pnpm lint            # Lint with oxlint
-pnpm check           # Full OXC check
-pnpm check-types     # Check TypeScript types
+allowHeaders: [...CORS_ALLOWED_HEADERS],
 ```
 
-## Project Structure
+### Use in Zod schemas (`@repo/dtos-common`)
+
+Pass the `as const` object directly when the schema allows every member:
+
+```typescript
+import { Status } from "@repo/enums-common";
+import { z } from "zod";
+
+export const JobStatusSchema = z.enum(Status);
+```
+
+For a **subset**, use a `as const` tuple:
+
+```typescript
+const statusValues = [Status.PENDING, Status.FAILED] as const;
+
+export const TerminalStatusSchema = z.enum(statusValues);
+```
+
+Avoid passing a plain `string[]` without `as const` — Zod will infer `string` instead of a literal union.
+
+## When to add values here
+
+- Shared across **multiple apps/packages** (e.g. CORS config + fetch client + DTO validation).
+- Part of a **serialized contract** on the wire.
+
+Keep value sets **app-local** (`apps/*/src/enums/`) when UI-only or single-consumer.
+
+## Definition template
+
+```typescript
+export const MyValueSet = {
+  FOO: "foo",
+  BAR: "bar",
+} as const;
+
+export type MyValueSet = (typeof MyValueSet)[keyof typeof MyValueSet];
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `make format` / `make lint` / `make check` | OXC |
+| `make check-types` | TypeScript (`tsc -b`) |
+
+## Project structure
 
 ```
 packages/enums-common/
 ├── src/
-│   └── index.ts      # Re-exports enums
-├── Makefile             # CLI shortcuts for common tasks
-├── make/                # Makefile includes
+│   ├── http-method.ts
+│   ├── status.ts
+│   ├── cors-allowed-header.ts
+│   └── index.ts
+├── Makefile
 └── package.json
 ```
 
-## Best Practices
+## Best practices
 
-1. **Never duplicate enum string literals** across apps; always import the enums from this package.
-2. **Treat enums as the source of truth** for constrained values used by Zod schemas and UI.
+1. **Never duplicate wire literals** — import from this package or promote here on second use.
+2. **Use `as const` objects**, not `export enum`.
+3. **String values only** on HTTP/JSON boundaries — no numeric enums.
+4. **Explicit `readonly` arrays** for exported lists when `isolatedDeclarations`-style clarity helps (e.g. CORS allow-lists).
+
+Agent-focused notes: [AGENTS.md](AGENTS.md).

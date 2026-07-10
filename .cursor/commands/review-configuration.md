@@ -14,7 +14,7 @@ This command is project-scoped and works with @ mentions and Rules. For a full r
 
 - **Secrets** — Never in repo or client bundle; use `.dev.vars` (workers) and wrangler env; document required vars in `.dev.vars.example`.
 - **Environment** — Clear split: client-exposed keys via Vite (`import.meta.env`, e.g. `VITE_*` if used); server-only secrets and config in Workers; build modes (development/production) consistent across tools.
-- **TypeScript** — Strict mode everywhere; shared configs from `@repo/typescript-config`; no conflicting compiler options between root and apps.
+- **TypeScript** — Strict mode everywhere; shared configs from `@repo/typescript-config` (`strict.json` core → runtime presets); root solution `tsconfig.json` with project references; no conflicting compiler options between packages.
 - **OXC (oxfmt / oxlint)** — Single source of truth for format and lint; consistent rules; no conflicting formatters (e.g. Prettier).
 - **Cloudflare** — Wrangler and Vite build aligned; compatibility date and flags documented; bindings and env match usage; `front-app` assets (SPA) and `worker-api` worker entry configured correctly.
 
@@ -36,13 +36,13 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 
 ### Vite (React frontend)
 
-- **Artifacts:** [apps/front-app/vite.config.ts](apps/front-app/vite.config.ts), [apps/front-app/tsconfig.json](apps/front-app/tsconfig.json).
+- **Artifacts:** [apps/front-app/vite.config.ts](apps/front-app/vite.config.ts), [apps/front-app/tsconfig.json](apps/front-app/tsconfig.json) (solution root), [apps/front-app/tsconfig.app.json](apps/front-app/tsconfig.app.json), [apps/front-app/tsconfig.node.json](apps/front-app/tsconfig.node.json).
 - **Checks:** Plugins order (e.g. React, Tailwind, `@cloudflare/vite-plugin`); build target and chunk strategy; no dev-only options in production build. Local dev parity with deployed behavior where relevant.
 
 ### TypeScript configuration
 
-- **Artifacts:** Root [tsconfig.json](tsconfig.json), [packages/typescript-config/](packages/typescript-config/) (base.json, workers.json, workers-lib.json, vite-react.json, vite-node.json), [apps/front-app/tsconfig.json](apps/front-app/tsconfig.json), [apps/worker-api/tsconfig.json](apps/worker-api/tsconfig.json), [packages/dtos-common/tsconfig.json](packages/dtos-common/tsconfig.json), [packages/enums-common/tsconfig.json](packages/enums-common/tsconfig.json).
-- **Checks:** All extend from `@repo/typescript-config` where appropriate. `strict` (or equivalent) enabled everywhere. No overrides that disable strictness without justification. Paths or project references consistent; no broken references. Workers use workers.json (or workers-lib); Vite React apps use vite-react.json; base.json is the shared strict base.
+- **Artifacts:** Root [tsconfig.json](tsconfig.json), [packages/typescript-config/](packages/typescript-config/) (`strict.json`, `workers.json`, `workers-lib.json`, `vite-react.json`, `vite-node.json`), [apps/front-app/tsconfig.json](apps/front-app/tsconfig.json) + `tsconfig.app.json` / `tsconfig.node.json`, [apps/worker-api/tsconfig.json](apps/worker-api/tsconfig.json), [packages/dtos-common/tsconfig.json](packages/dtos-common/tsconfig.json), [packages/enums-common/tsconfig.json](packages/enums-common/tsconfig.json).
+- **Checks:** All extend from `@repo/typescript-config` where appropriate. `strict` enabled via `strict.json` inheritance. Root tsconfig uses solution-style `references`; `dtos-common` references `enums-common`. Worker apps set `compilerOptions.types` for `worker-configuration.d.ts`. React apps use split layout: `vite-react.json` for `src/**`, `vite-node.json` for `vite.config.ts`. `workers-lib.json` keeps `isolatedDeclarations` off (schema-first `z.infer` in `@repo/dtos-common`). `erasableSyntaxOnly` on — no `export enum`; use `as const` objects in `@repo/enums-common`. Each package running `check-types` declares `typescript` in devDependencies.
 
 ### OXC (oxfmt / oxlint)
 

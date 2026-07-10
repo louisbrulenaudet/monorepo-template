@@ -1,5 +1,10 @@
 {
-  "extends": "@repo/typescript-config/base.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
   "files": [],
-  "include": []
+  "references": [
+    { "path": "./packages/enums-common" },
+    { "path": "./packages/dtos-common" },
+    { "path": "./apps/worker-api" },
+    { "path": "./apps/front-app" }
+  ]
 }

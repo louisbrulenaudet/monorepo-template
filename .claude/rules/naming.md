@@ -20,7 +20,7 @@ Match the casing of the surrounding code. The conventions below are enforced by 
 | Variables / functions | `camelCase`                                | `doSomething()`            |
 | Classes / types       | `PascalCase`                               | `SomeClass`, `SomeInput`   |
 | Constants             | `CONSTANT_CASE`                            | `MAX_SOMETHING`            |
-| Enums                 | `PascalCase` name, `CONSTANT_CASE` members | `SomeEnum.SOME_MEMBER`     |
+| Constrained string sets | `PascalCase` name, `CONSTANT_CASE` members | `SomeEnum.SOME_MEMBER` via `as const` object |
 
 ## Snake_case is the exception, not the norm
 

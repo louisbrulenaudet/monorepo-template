@@ -4,8 +4,6 @@ alwaysApply: false
 globs: apps/worker-*/src/**/*.ts,apps/webhook-*/src/**/*.ts
 ---
 
-<!-- Synced with .claude/rules/hono-gateway.md — update both when changing. -->
-
 # Hono Gateway (Workers) Rules
 
 `worker-api` and sibling `worker-*` / `webhook-*` apps use **Hono** on Cloudflare Workers. For deep patterns load the **`hono`** and **`workers-best-practices`** skills.
@@ -59,4 +57,4 @@ flowchart TD
 
 ## Before finishing
 
-Run `make ci`. See [workers-config.mdc](.cursor/rules/workers-config.mdc) when editing `wrangler.jsonc`.
+Run `make ci`. See [workers-config.mdc](workers-config.mdc) when editing `wrangler.jsonc`. See [workers-cache.mdc](workers-cache.mdc) when setting `Cache-Control` on responses.

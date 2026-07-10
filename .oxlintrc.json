@@ -25,7 +25,6 @@
   "options": {
     "typeAware": true,
     "denyWarnings": true,
-    "maxWarnings": 0,
     "reportUnusedDisableDirectives": "error"
   },
   "ignorePatterns": [
@@ -49,10 +48,10 @@
     ".vscode/**",
     ".cursor/**"
   ],
-  "globals": {
-    "console": "readonly"
-  },
   "settings": {
+    "react": {
+      "version": "19.2.7"
+    },
     "better-tailwindcss": {
       "entryPoint": "apps/front-app/src/index.css"
     }
@@ -80,6 +79,9 @@
     ],
     "typescript/no-explicit-any": "error",
     "typescript/no-non-null-assertion": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-call": "error",
     "typescript/parameter-properties": [
       "error",
       {
@@ -132,6 +134,11 @@
       ],
       "env": {
         "node": true
+      },
+      "rules": {
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-call": "off"
       }
     },
     {
@@ -204,7 +211,9 @@
         "react/rules-of-hooks": "error",
         "react/no-danger": "error",
         "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
-        "better-tailwindcss/enforce-canonical-classes": "error"
+        "better-tailwindcss/enforce-canonical-classes": "error",
+        "jsx-a11y/anchor-is-valid": "error",
+        "jsx-a11y/alt-text": "error"
       }
     },
     {
@@ -222,6 +231,9 @@
         "max-lines-per-function": "off",
         "typescript/no-explicit-any": "off",
         "typescript/no-non-null-assertion": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-call": "off",
         "vitest/require-to-throw-message": "off"
       }
     },
@@ -229,13 +241,10 @@
       "files": ["**/*.eval.ts"],
       "rules": {
         "typescript/no-explicit-any": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-call": "off",
         "vitest/no-standalone-expect": "off"
-      }
-    },
-    {
-      "files": ["**/worker-configuration.d.ts"],
-      "rules": {
-        "unicorn/filename-case": "off"
       }
     }
   ]

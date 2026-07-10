@@ -12,12 +12,12 @@ This command is project-scoped and works with @ mentions and Rules. For a full r
 
 ## Best practices alignment
 
-- **Naming** — Per root [AGENTS.md](AGENTS.md): variables and functions `camelCase`; constants `CONSTANT_CASE`; enum names `PascalCase`, enum members `CONSTANT_CASE`. No single-letter names except trivial loop indices; descriptive names for exports and public APIs.
+- **Naming** — Per root [AGENTS.md](AGENTS.md): variables and functions `camelCase`; constants `CONSTANT_CASE`; constrained string set names `PascalCase`, members `CONSTANT_CASE` via `as const` objects (not `export enum`). No single-letter names except trivial loop indices; descriptive names for exports and public APIs.
 - **TypeScript** — Strict mode; no `any` or unsafe `as` without justification; no `@ts-ignore` without comment. Explicit return types on exported functions; inferred where trivial. Zod schemas co-located with inferred types where used.
 - **OXC (oxfmt / oxlint)** — Format and lint applied; no disabled rules that hide real issues; consistent style (spaces, double quotes, line width 80).
 - **Structure** — Single responsibility per file/function; files under ~300 lines, functions under ~50 lines where practical; clear separation (DTOs in `@repo/dtos-common`, routes, handlers, utils).
 - **Errors** — Hono `HTTPException` and centralized `onError` where used; avoid leaking internals; safe logging (no sensitive data).
-- **Duplication and dead code** — No copy-paste blocks that should be shared; no dead imports or unreachable code; no string literals where enums or constants exist.
+- **Duplication and dead code** — No copy-paste blocks that should be shared; no dead imports or unreachable code; no string literals where shared `as const` value sets or constants exist.
 
 Align with root and app AGENTS.md for conventions and patterns.
 
@@ -27,8 +27,8 @@ Conduct a code-quality-only review. Inspect the following and call out violation
 
 ### Naming conventions
 
-- **Artifacts:** All [apps/front-app/src/](apps/front-app/src/) and [apps/worker-api/src/](apps/worker-api/src/) (variables, functions, constants, enums), [packages/dtos-common/src/](packages/dtos-common/src/), [packages/enums-common/src/](packages/enums-common/src/).
-- **Checks:** Variables: camelCase (e.g. `blogPostList`, `postId`). Functions: camelCase (e.g. `getPost()`, `validateEmail()`). Constants: CONSTANT_CASE (e.g. `MAX_RETRIES`, `DEFAULT_TIMEOUT`). Enum names: PascalCase (e.g. `BlogTag`, `ContentEncoding`). Enum members: CONSTANT_CASE (e.g. `BlogTag.TECHNOLOGY`). No `blogTag` for enum name or `technology` for member. File names: PascalCase for components/classes where project uses it; kebab or consistent pattern for utils/config. Exported types: PascalCase.
+- **Artifacts:** All [apps/front-app/src/](apps/front-app/src/) and [apps/worker-api/src/](apps/worker-api/src/) (variables, functions, constants, constrained value sets), [packages/dtos-common/src/](packages/dtos-common/src/), [packages/enums-common/src/](packages/enums-common/src/).
+- **Checks:** Variables: camelCase (e.g. `blogPostList`, `postId`). Functions: camelCase (e.g. `getPost()`, `validateEmail()`). Constants: CONSTANT_CASE (e.g. `MAX_RETRIES`, `DEFAULT_TIMEOUT`). Value set object names: PascalCase (e.g. `HttpMethod`, `Status`). Members: CONSTANT_CASE (e.g. `HttpMethod.GET`). Use `as const` objects + derived types — never `export enum`. File names: kebab-case for modules; PascalCase for React components in `front-app`. Exported types: PascalCase.
 
 ### TypeScript strictness and type safety
 
@@ -43,7 +43,7 @@ Conduct a code-quality-only review. Inspect the following and call out violation
 ### Duplication and DRY
 
 - **Artifacts:** [apps/worker-api/src/](apps/worker-api/src/) (routes, handlers, utils), [apps/front-app/src/](apps/front-app/src/) (utils, components).
-- **Checks:** Repeated logic (e.g. date formatting, URL building, error mapping) extracted to shared util or constant. No copy-paste blocks across files without extraction. Shared Zod schemas and types in `@repo/dtos-common`; enums in `@repo/enums-common`. Constants (URLs, limits) defined once and imported.
+- **Checks:** Repeated logic (e.g. date formatting, URL building, error mapping) extracted to shared util or constant. No copy-paste blocks across files without extraction. Shared Zod schemas and types in `@repo/dtos-common`; constrained value sets in `@repo/enums-common` (`as const`). Constants (URLs, limits) defined once and imported.
 
 ### Error handling patterns
 
@@ -63,35 +63,36 @@ Conduct a code-quality-only review. Inspect the following and call out violation
 ### Dead code and string literals
 
 - **Artifacts:** All source and config files in scope.
-- **Checks:** No unused exports, variables, or imports. No unreachable code after return/throw. No commented-out blocks that should be removed or restored. String literals for known finite sets (e.g. tag names, error codes) replaced by enums or constants from a single source of truth.
+- **Checks:** No unused exports, variables, or imports. No unreachable code after return/throw. No commented-out blocks that should be removed or restored. String literals for known finite sets replaced by `@repo/enums-common` value sets or named constants.
 
 ### Anti-patterns to flag
 
-- Enum named in camelCase or member in camelCase (per AGENTS.md).
+- Value set object named in camelCase or member in camelCase (per AGENTS.md).
+- `export enum` used instead of `as const` object (per `erasableSyntaxOnly`).
 - `any` or broad `as` without justification; @ts-ignore without comment.
 - console.log or debugger in production code paths.
 - Large files or functions that could be split; duplicated logic across files.
 - Throwing unhandled generic errors at API boundaries; swallowing errors.
-- Unused imports or variables; string literals that duplicate enum/constant values.
+- Unused imports or variables; string literals that duplicate shared value set or constant values.
 - Barrel files that re-export internals and blur public API.
 
 ## Steps
 
 1. **Gather scope** — Full codebase or specific app/area (e.g. worker-api, front-app). Default to both apps and packages.
 2. **Read conventions** — Root and app AGENTS.md for naming, structure, and error handling.
-3. **Inspect naming** — Variables, functions, constants, enums across key files; flag convention violations.
+3. **Inspect naming** — Variables, functions, constants, constrained value sets across key files; flag convention violations.
 4. **Inspect TypeScript** — any, as, @ts-ignore, return types, Zod usage; flag strictness issues.
 5. **Inspect OXC format and lint** — Lint/format consistency; unused code; console/debugger.
 6. **Inspect duplication and structure** — Repeated logic; file/function size; separation of concerns.
 7. **Inspect error handling** — Hono error handling; catch/rethrow; logging.
-8. **Inspect dead code and literals** — Unused exports/imports; string literals vs enums/constants.
+8. **Inspect dead code and literals** — Unused exports/imports; string literals vs shared value sets/constants.
 9. **Compose plan** — Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
 
 - [ ] Scope clear
 - [ ] Root and app AGENTS.md consulted for naming and patterns
-- [ ] Naming conventions (camelCase, CONSTANT_CASE, PascalCase enums) reviewed
+- [ ] Naming conventions (camelCase, CONSTANT_CASE, PascalCase value sets) reviewed
 - [ ] TypeScript strictness and type safety reviewed
 - [ ] OXC format and lint (including no dead code) reviewed
 - [ ] Duplication and structure (file/function size, DRY) reviewed
@@ -121,7 +122,7 @@ If context is insufficient, suggest which files or @ references to add.
 Respond with a **plan** only (no implementation unless the user asks):
 
 1. **Critical** – Must-fix (naming violations in public API, any without justification, swallowed errors, dead code that affects behavior).
-2. **Improvements** – Worthwhile (extract duplication, explicit return types, consistent HTTP errors, enum for literals).
+2. **Improvements** – Worthwhile (extract duplication, explicit return types, consistent HTTP errors, promote literals to `@repo/enums-common`).
 3. **Optional** – Nice-to-haves (shorter functions, barrel cleanup). Prefix with **Nit:** for non-blocking polish.
 
 For each item: **what** to change, **where** (file/area), and **why**. If a sub-area has no findings, state it in one line.
