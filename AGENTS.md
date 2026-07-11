@@ -203,3 +203,10 @@ Extend this table when adding a new app or package with its own guide.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
 - Never commit secrets or real environment values.
+
+## Cursor Cloud specific instructions
+
+- **Node version (critical gotcha).** The VM's default `node` on `PATH` is a `/exec-daemon/node` shim pinned to **v22.14.0**, which is too old for `@cloudflare/vite-plugin` (it needs `node:module`'s `registerHooks`, added in Node 22.15+). The repo pins **Node 24.18.0** in `.nvmrc`. This shim shadows nvm even when `nvm use` runs. Interactive/login shells are already fixed via a snippet in `~/.bashrc` that selects nvm's Node 24 and prepends it to `PATH` (also runs `corepack enable`), so `node`/`pnpm` resolve correctly out of the box. If you ever see `does not provide an export named 'registerHooks'`, you're on Node 22 — run `nvm use 24.18.0` and prepend its bin to `PATH`.
+- **Services.** Two dev servers, started together by `make dev` (see root `AGENTS.md` Quick Start / Port Allocation): `worker-api` (Hono on Cloudflare Workers, `wrangler dev`, port **8725**) and `front-app` (React + Vite, port **5174**). Verify with `GET http://localhost:8725/api/v1/health` (returns `{"status":"ok"}`) and open `http://localhost:5174` (the home page shows a green "healthy" API indicator that live-polls `worker-api`). No secrets or `.dev.vars` are required for the current health-only surface.
+- **Production build needs an env var.** `make build` runs the SPA production build, which fails closed with `Missing production frontend env: VITE_API_BASE_URL` by design. Dev (`make dev`) does **not** need it. To build locally, pass it like CI does, e.g. `VITE_API_BASE_URL=https://example.workers.dev make build`.
+- Standard commands (install/dev/build/lint/types) are in the root `AGENTS.md` Make Commands table — use those rather than raw `pnpm`/`turbo`.
