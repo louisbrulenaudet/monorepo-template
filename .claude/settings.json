@@ -100,7 +100,8 @@
   },
   "autoMemoryEnabled": true,
   "enabledMcpjsonServers": [
-    "cloudflare-docs"
+    "cloudflare-docs",
+    "context7"
   ],
   "enableAllProjectMcpServers": true
 }
