@@ -57,6 +57,15 @@ Generate types from your Wrangler config, then wire them in `tsconfig.json`:
 wrangler types -c ./wrangler.jsonc
 ```
 
+When the Worker has **service bindings** or **Durable Object** bindings, pass each bound Worker's `wrangler.jsonc` so RPC method stubs are typed on `Env`:
+
+```bash
+# Caller with bindings to worker-foo and orm-bar
+wrangler types -c ./wrangler.jsonc -c ../worker-foo/wrangler.jsonc -c ../orm-bar/wrangler.jsonc
+```
+
+Wire the same `-c` flags in the app's `package.json` `"types"` script. Generated `Env` will include entries like `Service<import("../worker-foo/src/index").default>`. See [Workers RPC — TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/).
+
 ```json
 // tsconfig.json
 {

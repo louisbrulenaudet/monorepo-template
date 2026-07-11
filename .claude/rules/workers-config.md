@@ -1,7 +1,8 @@
 ---
 paths:
   - "**/wrangler.jsonc"
-  - "apps/**/src/types/*.d.ts"
+  - "apps/worker-*/package.json"
+  - "apps/worker-*/src/**/*.ts"
   - "**/.dev.vars.example"
 ---
 
@@ -39,6 +40,46 @@ Uncomment `routes` under `env.staging` / `env.production` before go-live.
 - `logpush` - enable with an account Logpush destination for long-term log retention.
 - `observability.logs.invocation_logs: false` - trim per-request logs at high traffic.
 - Assets-only `front-app`: perf comes from `dist/_headers` cache/security headers; `run_worker_first` + `assets.binding` only apply once a `main` Worker entry exists.
+
+## Fail-closed expectations
+
+Missing required config must fail predictably, not degrade. Preserve application-level 503 guards (see [guardrails.md](guardrails.md)).
+
+## RPC TypeScript (service bindings)
+
+### Type generation (caller)
+
+[Workers RPC — TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/): `wrangler types` generates `Service` / `DurableObjectNamespace` with a type parameter for the callee's `WorkerEntrypoint` or `DurableObject`, and **forces client methods to be async** (always `await` at the call site).
+
+When `wrangler.jsonc` has `services` (or DO) bindings, pass **every** bound Worker's config — one `-c` per distinct bound worker:
+
+```json
+"types": "wrangler types -c ./wrangler.jsonc -c ../worker-foo/wrangler.jsonc"
+```
+
+Expected output shape (from Cloudflare docs): `SUM_SERVICE: Service<import("../sum-worker/src/index").SumService>`. Never hand-edit `worker-configuration.d.ts` or add manual `Service<…>` on `Env`.
+
+### RPC provider (callee)
+
+[RPC (WorkerEntrypoint)](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/): **extend** `WorkerEntrypoint` from `cloudflare:workers` and add **public methods** — those methods are what bound callers invoke via `env.BINDING.method()`. RPC methods cannot live on a plain `export default { fetch }` handler alone.
+
+- Default-export the entrypoint class, or export a named class and set `"entrypoint": "ClassName"` in the caller's `services` binding.
+- Bindings on a `WorkerEntrypoint`: **`this.env`** — Cloudflare docs state *« The env object is exposed as a class property of the WorkerEntrypoint class »* (`this.env.GREETING`, `this.env.D1`, `this.env.ASSETS`, etc.). RPC methods take only their own args (no `request` / `env` parameters).
+
+### Never
+
+- Run `wrangler types -c ./wrangler.jsonc` only when `services` / DO bindings exist.
+- Use `env.BINDING.fetch()` when typed RPC methods are the goal (exception: cache via binding `fetch` → [workers-cache.md](workers-cache.md)).
+- Redefine RPC payloads locally instead of `@repo/dtos-common/rpc`.
+- Omit `entrypoint` when binding to a named `WorkerEntrypoint` class.
+
+### After a binding change
+
+1. Callee: `WorkerEntrypoint` + exported class + public RPC methods.
+2. Caller: `services` in `wrangler.jsonc`.
+3. Caller: extend `package.json` `"types"` with bound worker `-c` paths.
+4. Shared schemas in `dtos-common/rpc` if needed.
+5. `make types` → `make check-types`.
 
 ## Discipline
 

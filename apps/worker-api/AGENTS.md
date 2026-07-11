@@ -84,16 +84,7 @@ Import schemas from `@repo/dtos-common/api` - never redefine wire shapes locally
 
 ## Service Bindings
 
-```jsonc
-// wrangler.jsonc
-{ "services": [{ "binding": "EXAMPLE_SERVICE", "service": "example" }] }
-```
-
-```typescript
-const result = await env.EXAMPLE_SERVICE.getExample(exampleId);
-```
-
-Run `make types` after adding bindings. Start bound workers before this one in local dev.
+Worker-to-Worker only (never from `front-app`). Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()` in a route handler or service module. RPC typing (`WorkerEntrypoint`, multi `-c` `wrangler types`) → [`.cursor/rules/workers-config.mdc`](../../.cursor/rules/workers-config.mdc) (RPC section). Run `make types` after adding bindings.
 
 Workers Cache policy: see path-scoped rule [`.claude/rules/workers-cache.md`](../../.claude/rules/workers-cache.md) (loads when editing this app).
 

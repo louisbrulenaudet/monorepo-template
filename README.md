@@ -454,16 +454,36 @@ Add service bindings to your worker's `wrangler.jsonc`:
 
 ### RPC Method Invocation
 
-Workers can call methods directly on other workers:
+RPC requires the **callee** to extend `WorkerEntrypoint` and expose public methods. The **caller** gets typed `env.BINDING.method()` stubs from `wrangler types` when you pass every bound Worker's config (see [Workers RPC — TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/)).
+
+**Callee** (`worker-name`):
 
 ```typescript
-// In a business logic worker
-export default {
-  async fetch(request: Request, env: Env) {
-    // Call ORM service directly
-    const result = await env.BUSINESS_LOGIC_SERVICE.doSomething(request);
+import { WorkerEntrypoint } from "cloudflare:workers";
 
-    return new Response(JSON.stringify(result));
+export default class extends WorkerEntrypoint {
+  async fetch() {
+    return new Response("ok");
+  }
+  doSomething(input: string) {
+    return { input, ok: true };
   }
 }
+```
+
+**Caller** (e.g. `worker-api`):
+
+```typescript
+export default {
+  async fetch(_request: Request, env: Env): Promise<Response> {
+    const result = await env.BUSINESS_LOGIC_SERVICE.doSomething("payload");
+    return Response.json(result);
+  },
+} satisfies ExportedHandler<Env>;
+```
+
+Regenerate types on the caller after adding bindings:
+
+```bash
+wrangler types -c ./wrangler.jsonc -c ../worker-name/wrangler.jsonc
 ```
