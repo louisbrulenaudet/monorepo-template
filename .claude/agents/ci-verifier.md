@@ -1,5 +1,4 @@
 ---
-# schema per https://code.claude.com/docs/en/sub-agents
 name: ci-verifier
 description: Use PROACTIVELY before opening a PR or after a batch of edits to run the repository CI gate and report ONLY failures that need a decision. Runs read-only checks, never auto-fixes or edits files, and keeps verbose OXC/TypeScript output out of the main context.
 tools: Read, Grep, Glob, Bash
