@@ -4,7 +4,7 @@
 
 `worker-api` is the **public HTTP gateway**: **Cloudflare Workers** + **Hono**, port **8725** in dev. Entry point for `front-app` (HTTP) and coordinator for internal Workers (service bindings).
 
-Starter surface: `GET /api/v1/health`. Hono patterns load from `.claude/rules/hono-gateway.md` when editing `src/**`.
+Starter surface: `GET /api/v1/health`. Hono patterns load from `.claude/rules/backend/hono-gateway.md` or `.cursor/rules/backend/hono-gateway.mdc` when editing `src/**`.
 
 ## Structure
 
@@ -84,9 +84,9 @@ Import schemas from `@repo/dtos-common/api` - never redefine wire shapes locally
 
 ## Service Bindings
 
-Worker-to-Worker only (never from `front-app`). Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()` in a route handler or service module. RPC typing (`WorkerEntrypoint`, multi `-c` `wrangler types`) → [`.cursor/rules/workers-config.mdc`](../../.cursor/rules/workers-config.mdc) (RPC section). Run `make types` after adding bindings.
+Worker-to-Worker only (never from `front-app`). Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()` in a route handler or service module. RPC typing (`WorkerEntrypoint`, multi `-c` `wrangler types`) → [`.cursor/rules/backend/workers-config.mdc`](../../.cursor/rules/backend/workers-config.mdc) (RPC section). Run `make types` after adding bindings.
 
-Workers Cache policy: see path-scoped rule [`.claude/rules/workers-cache.md`](../../.claude/rules/workers-cache.md) (loads when editing this app).
+Workers Cache policy: see path-scoped rules [`.claude/rules/backend/workers-cache.md`](../../.claude/rules/backend/workers-cache.md) and [`.cursor/rules/backend/workers-cache.mdc`](../../.cursor/rules/backend/workers-cache.mdc).
 
 ## Best Practices
 

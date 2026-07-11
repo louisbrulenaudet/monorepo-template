@@ -47,6 +47,9 @@ jobs:
       - name: Install dependencies
         run: make install-frozen
 
+      - name: Validate AI agent configuration
+        run: make ai-config-check
+
       - name: CI checks
         run: make ci AFFECTED=1
 

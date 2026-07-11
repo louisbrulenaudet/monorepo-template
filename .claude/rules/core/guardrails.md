@@ -25,7 +25,7 @@ A task scoped to configuration, rules, docs, or agent setup must not drift into 
 
 ## One source of truth
 
-Never duplicate a shared DTO schema or a shared enum value inside an app. See [contracts.md](contracts.md).
+Never duplicate a shared DTO schema or a shared enum value inside an app. See [contracts.md](../contracts/contracts.md).
 
 ## Respect the boundaries
 

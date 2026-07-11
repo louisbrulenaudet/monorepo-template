@@ -10,8 +10,8 @@ TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route da
 
 ## Setup & the generated tree
 
-- Use **file-based routing** via the Vite plugin - `import { tanstackRouter } from "@tanstack/router-plugin/vite"`, configured as `tanstackRouter({ target: "react", autoCodeSplitting: true })` and placed **before** `@vitejs/plugin-react` in `plugins` (Vite wiring lives in [frontend-architecture.mdc](.cursor/rules/frontend-architecture.mdc)). Reserve code-based routing for programmatic/virtual trees only.
-- **`routeTree.gen.ts` is a generated artifact** - the plugin regenerates it on dev/build. Never hand-edit it. In this repo it is **committed** and excluded from lint/format (`.oxlintrc.json` / `.oxfmtrc.json`); a hand-authored change to it is a build-config bug, not a source change (see [guardrails.mdc](.cursor/rules/guardrails.mdc)).
+- Use **file-based routing** via the Vite plugin - `import { tanstackRouter } from "@tanstack/router-plugin/vite"`, configured as `tanstackRouter({ target: "react", autoCodeSplitting: true })` and placed **before** `@vitejs/plugin-react` in `plugins` (Vite wiring lives in [frontend-architecture.mdc](frontend-architecture.mdc)). Reserve code-based routing for programmatic/virtual trees only.
+- **`routeTree.gen.ts` is a generated artifact** - the plugin regenerates it on dev/build. Never hand-edit it. In this repo it is **committed** and excluded from lint/format (`.oxlintrc.json` / `.oxfmtrc.json`); a hand-authored change to it is a build-config bug, not a source change (see [guardrails.mdc](../core/guardrails.mdc)).
 - Register the router type once for global inference - without this, all `to`/`params`/`search` type safety silently degrades:
   ```ts
   declare module "@tanstack/react-router" {
@@ -59,7 +59,7 @@ TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route da
 ## TanStack Query integration (canonical)
 
 - Put `queryClient` in root context: `createRootRouteWithContext<{ queryClient: QueryClient }>()` + `createRouter({ context: { queryClient } })`, and wrap the app in `<QueryClientProvider>`.
-- In loaders, warm the cache: `context.queryClient.ensureQueryData(queryOptions(...))`. In components, read the **same** `queryOptions` object with `useSuspenseQuery(...)` so the loader guarantees warm data and the component stays reactive. See [tanstack-query.mdc](.cursor/rules/tanstack-query.mdc).
+- In loaders, warm the cache: `context.queryClient.ensureQueryData(queryOptions(...))`. In components, read the **same** `queryOptions` object with `useSuspenseQuery(...)` so the loader guarantees warm data and the component stays reactive. See [tanstack-query.mdc](tanstack-query.mdc).
   ```tsx
   export const Route = createFileRoute("/posts/$id")({
     loader: ({ context: { queryClient }, params: { id } }) =>

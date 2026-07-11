@@ -32,7 +32,7 @@ paths:
 
 - `target: "esnext"`; `sourcemap`: inline (dev) / hidden (prod); `reportCompressedSize: false`; `cssCodeSplit: true`; `modulePreload.polyfill: false`.
 - Chunk vendors: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`. HTML `Cache-Control: no-cache` via generated `_headers`.
-- Only `VITE_*` in client bundle - no secrets. Fail production `build` on missing/placeholder required vars; skip under static analysis (`knip`). Generate `dist/_headers` in a build plugin - never hand-edit ([guardrails.md](guardrails.md)). Deploy in `wrangler.jsonc`.
+- Only `VITE_*` in client bundle - no secrets. Fail production `build` on missing/placeholder required vars; skip under static analysis (`knip`). Generate `dist/_headers` in a build plugin - never hand-edit ([guardrails.md](../core/guardrails.md)). Deploy in `wrangler.jsonc`.
 - `optimizeDeps.entries` + `include` for heavy deps - dev pre-bundler only, not production bundle size.
 
 ## Verification

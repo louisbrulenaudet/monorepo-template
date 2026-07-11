@@ -1,6 +1,7 @@
 ---
-paths:
-  - "apps/front-*/src/**/*.{ts,tsx}"
+description: "TanStack Query v5 rules - queryOptions, key factories, mutations, router integration."
+alwaysApply: false
+globs: apps/front-*/src/**/*.{ts,tsx}
 ---
 
 # TanStack Query (v5) Rules
@@ -18,7 +19,7 @@ TanStack Query (`@tanstack/react-query` v5) owns **all server state** - anything
 
 - Define every query with the **`queryOptions()` helper** in the feature's colocated module - in this repo that is `src/services/worker-api/<feature>-query-options.ts`, next to the HTTP call in `src/services/worker-api/<feature>.ts`. Consume the same object everywhere: `useQuery(opts)`, `useSuspenseQuery(opts)`, `queryClient.ensureQueryData(opts)`, `setQueryData(opts.queryKey, …)`. This is the canonical pattern - do not inline `{ queryKey, queryFn }` at call sites.
 - Structure keys hierarchically, generic → specific, under the backend namespace so prefix invalidation cascades: `['worker-api','health']`, `['worker-api','users',userId]`. A single query can use a literal `as const` key (as `healthQueryOptions` does); once a feature has several related queries, promote them to a **query key factory** object (`['todos']` → `['todos','list',filters]` → `['todos','detail',id]`). Keys must be JSON-serializable.
-- Keep `queryFn` pure and typed: delegate the fetch to the service module's `fetchJsonWithSchema` helper (it forwards the `signal` for auto-cancel, throws a real `Error` on non-OK, and **validates the response** with the shared Zod schema - never `as T`). See [contracts.md](contracts.md) / [type-inference.md](type-inference.md).
+- Keep `queryFn` pure and typed: delegate the fetch to the service module's `fetchJsonWithSchema` helper (it forwards the `signal` for auto-cancel, throws a real `Error` on non-OK, and **validates the response** with the shared Zod schema - never `as T`). See [contracts.mdc](../contracts/contracts.mdc) / [type-inference.mdc](../contracts/type-inference.mdc).
 
 ```ts
 export const todoKeys = {
@@ -43,7 +44,7 @@ export const todoDetailQuery = (id: number) =>
 
 ## Client & defaults
 
-- Create **one** `QueryClient` as a module singleton and pass it to a single `<QueryClientProvider>` (wiring lives in [frontend-architecture.md](frontend-architecture.md)). Never `new QueryClient()` in a component body, and never run multiple clients (it splits the cache and defeats dedup).
+- Create **one** `QueryClient` as a module singleton and pass it to a single `<QueryClientProvider>` (wiring lives in [frontend-architecture.mdc](frontend-architecture.mdc)). Never `new QueryClient()` in a component body, and never run multiple clients (it splits the cache and defeats dedup).
 - Set sensible `defaultOptions.queries` (e.g. `staleTime: 60_000`, `gcTime: 5 * 60_000`, `retry: 2`, `refetchOnWindowFocus` per product need). Never set `staleTime > gcTime`.
 - Mount `<ReactQueryDevtools>` **dev-only** (`import.meta.env.DEV`) so it is tree-shaken from production.
 
@@ -61,8 +62,8 @@ export const todoDetailQuery = (id: number) =>
 
 ## Router integration
 
-- In a route `loader`, warm the cache with `context.queryClient.ensureQueryData(someQuery(...))`; render with `useSuspenseQuery(someQuery(...))` in the component - same `queryOptions` object, one cache entry. Full pattern (context wiring, `defaultPreloadStaleTime: 0`) in [tanstack-router.md](tanstack-router.md).
+- In a route `loader`, warm the cache with `context.queryClient.ensureQueryData(someQuery(...))`; render with `useSuspenseQuery(someQuery(...))` in the component - same `queryOptions` object, one cache entry. Full pattern (context wiring, `defaultPreloadStaleTime: 0`) in [tanstack-router.mdc](tanstack-router.mdc).
 
 ## Before finishing
 
-Run `make ci`. Keep responses validated at the boundary and every Oxc rule green - don't cast through `any` (see [guardrails.md](guardrails.md)).
+Run `make ci`. Keep responses validated at the boundary and every Oxc rule green - don't cast through `any` (see [guardrails.mdc](../core/guardrails.mdc)).

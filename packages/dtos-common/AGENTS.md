@@ -11,7 +11,7 @@
 | **Queue** | `@repo/dtos-common/queue` | Queue producer/consumer message bodies |
 | **Webhook** | `@repo/dtos-common/webhook` | Inbound webhook payloads (`webhook-*` workers) |
 
-Schema changes are **contract changes** for that layer. Rules load from `.claude/rules/contracts.md` when editing `src/**`.
+Schema changes are **contract changes** for that layer. Rules load from `.claude/rules/contracts/` or `.cursor/rules/contracts/` when editing `src/**`.
 
 ## Structure
 

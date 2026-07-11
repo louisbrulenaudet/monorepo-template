@@ -4,7 +4,7 @@
 
 The `hooks/` directory holds **shared agent hook scripts** for Cursor and Claude Code. Hooks observe or control the agent loop: block unsafe git commands, format/lint after edits, and log debug events. Scripts are tool-agnostic; wiring lives in [`.cursor/hooks.json`](../.cursor/hooks.json) and [`.claude/settings.json`](../.claude/settings.json).
 
-Guardrails enforced here mirror [`.cursor/rules/guardrails.mdc`](../.cursor/rules/guardrails.mdc) and [`.claude/rules/guardrails.md`](../.claude/rules/guardrails.md).
+Guardrails enforced here mirror [`.cursor/rules/core/guardrails.mdc`](../.cursor/rules/core/guardrails.mdc) and [`.claude/rules/core/guardrails.md`](../.claude/rules/core/guardrails.md).
 
 ## Structure
 
@@ -14,11 +14,13 @@ hooks/
 │   ├── guard-destructive-git.sh
 │   └── guard-secret-commit.sh
 ├── quality/                # Post-edit format + lint (postToolUse)
+│   ├── check-changed.sh         # Sequential entry point
 │   ├── format-changed.sh
 │   └── lint-changed.sh
 ├── logging/                # Debug logs (fire-and-forget)
 │   ├── session-start.sh        # Cursor sessionStart
 │   └── instructions-loaded.sh  # Claude InstructionsLoaded
+├── tests/                  # Parity validation and hook smoke tests
 └── logs/                   # Git-ignored runtime output
 ```
 
@@ -31,6 +33,7 @@ hooks/
 | Add Cursor hook wiring | [`.cursor/hooks.json`](../.cursor/hooks.json) |
 | Add Claude hook wiring | [`.claude/settings.json`](../.claude/settings.json) → `hooks` |
 | Session / instruction logs | `logging/*.sh` → `hooks/logs/` |
+| Validate both tool setups | `tests/validate-ai-config.sh` and `tests/test-hooks.sh` |
 | Human overview | [README.md](README.md) |
 
 ## Wiring
@@ -61,9 +64,10 @@ Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-s
 - **Shebang**: `#!/usr/bin/env sh` - POSIX shell; `jq` optional with `sed` fallback.
 - **Project root**: `ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"`
 - **JSON input**: read stdin; support both `.tool_input.command` (Claude) and `.command` (Cursor).
-- **Blocking**: exit `2` to deny; message on stderr.
-- **Non-blocking** (format, logging): always exit `0`.
-- **Fail open** on parse errors or missing tools - hooks must not wedge normal workflows.
+- **Blocking**: a pre-tool hook exits `2` to deny and writes the reason to stderr.
+- **Post-tool feedback**: exit `2` reports lint problems but cannot undo an edit that already succeeded.
+- **Security failures**: Cursor pre-tool guards set `failClosed: true`; Claude Code also retains permission denies.
+- **Quality/logging failures**: fail open so unavailable developer tooling does not wedge normal workflows.
 - **Filenames**: kebab-case under category folders.
 
 ## Hook Behavior Summary
@@ -72,8 +76,9 @@ Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-s
 |--------|---------|-------------|
 | `git/guard-secret-commit.sh` | git add / git commit | Secret path named or in staged set |
 | `git/guard-destructive-git.sh` | any git command | reset --hard, push --force, checkout --, etc. |
-| `quality/format-changed.sh` | after Write/Edit | never (always 0) |
-| `quality/lint-changed.sh` | after Write/Edit | oxlint reports problems on `.ts`/`.tsx` |
+| `quality/check-changed.sh` | after Write/Edit | delegates sequentially to format, then lint |
+| `quality/format-changed.sh` | called by `check-changed.sh` | never (always 0) |
+| `quality/lint-changed.sh` | called by `check-changed.sh` | oxlint reports problems on `.ts`/`.tsx` |
 | `logging/session-start.sh` | Cursor sessionStart | never |
 | `logging/instructions-loaded.sh` | Claude InstructionsLoaded | never |
 
@@ -89,6 +94,7 @@ Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-s
 
 - Edit scripts only under `hooks/` - do not duplicate under `.cursor/hooks/` or `.claude/hooks/`.
 - When adding a hook, update [`.cursor/hooks.json`](../.cursor/hooks.json), [`.claude/settings.json`](../.claude/settings.json) (if applicable), [README.md](README.md), and this file.
-- Align new guards with [guardrails](../.cursor/rules/guardrails.mdc); never weaken secret or destructive-git protection without explicit user approval.
+- Align new guards with [guardrails](../.cursor/rules/core/guardrails.mdc); never weaken secret or destructive-git protection without explicit user approval.
 - `chmod +x` new scripts before committing.
+- Run `make ai-config-check` after changing rules, agents, skills, or hooks.
 - Follow conventions in the root [AGENTS.md](../AGENTS.md).

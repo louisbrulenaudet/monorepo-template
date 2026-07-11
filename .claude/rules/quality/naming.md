@@ -1,7 +1,7 @@
 ---
-description: "Filename and identifier naming - kebab-case files, camelCase/PascalCase/CONSTANT_CASE in code."
-alwaysApply: false
-globs: apps/**/*.{ts,tsx},packages/**/*.ts
+paths:
+  - "apps/**/*.{ts,tsx}"
+  - "packages/**/*.ts"
 ---
 
 # Naming
@@ -29,4 +29,4 @@ The only place snake_case appears is an identifier that must match an external c
 ## DTOs
 
 - Schema exports end in `Schema` (or a `…RequestSchema` / `…ResponseSchema` / `…InputSchema` / `…PayloadSchema` variant).
-- Inferred types drop the `Schema` suffix; never use a `Type` suffix. See [type-inference.mdc](.cursor/rules/type-inference.mdc) and [contracts.mdc](.cursor/rules/contracts.mdc).
+- Inferred types drop the `Schema` suffix; never use a `Type` suffix. See [type-inference.md](../contracts/type-inference.md) and [contracts.md](../contracts/contracts.md).

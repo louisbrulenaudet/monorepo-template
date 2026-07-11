@@ -3,7 +3,7 @@
 # Target: Cursor preToolUse (Shell) and Claude Code PreToolUse (Bash).
 # Canonical location: hooks/git/ - wired from .cursor/hooks.json and .claude/settings.json.
 #
-# Enforces "Never commit secrets" (.cursor/rules/guardrails.mdc).
+# Enforces "Never commit secrets" (.cursor/rules/core/guardrails.mdc).
 
 INPUT=$(cat 2>/dev/null || true)
 ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"
@@ -24,7 +24,7 @@ esac
 set -f
 
 SECRET_RE='(\.env|\.dev\.vars|\.prod\.vars|\.staging\.vars|\.pem|\.key|\.p12|\.pfx|id_rsa|credentials)'
-BLOCK_MSG="Blocked: this command looks like it would stage/commit a secret file (.env / .dev.vars / *.pem / *.key / credentials). Never commit secrets - see .cursor/rules/guardrails.mdc. Confirm the file is git-ignored and stage only non-secret files."
+BLOCK_MSG="Blocked: this command looks like it would stage/commit a secret file (.env / .dev.vars / *.pem / *.key / credentials). Never commit secrets - see .cursor/rules/core/guardrails.mdc. Confirm the file is git-ignored and stage only non-secret files."
 
 for tok in $CMD; do
   case "$tok" in

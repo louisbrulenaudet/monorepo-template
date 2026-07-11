@@ -3,7 +3,7 @@
 # Target: Cursor preToolUse (Shell) and Claude Code PreToolUse (Bash).
 # Canonical location: hooks/git/ - wired from .cursor/hooks.json and .claude/settings.json.
 #
-# Mirrors .cursor/rules/guardrails.mdc and .claude/rules/guardrails.md.
+# Mirrors .cursor/rules/core/guardrails.mdc and .claude/rules/core/guardrails.md.
 
 INPUT=$(cat 2>/dev/null || true)
 
@@ -44,5 +44,5 @@ fi
 
 [ -z "$REASON" ] && exit 0
 
-echo "Blocked: $REASON. Per .cursor/rules/guardrails.mdc, destructive/irreversible git operations must not run autonomously. Ask the user to confirm this exact command, and let them run it themselves if they approve." >&2
+echo "Blocked: $REASON. Per .cursor/rules/core/guardrails.mdc, destructive/irreversible git operations must not run autonomously. Ask the user to confirm this exact command, and let them run it themselves if they approve." >&2
 exit 2

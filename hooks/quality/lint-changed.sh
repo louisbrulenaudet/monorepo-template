@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 # Purpose: Lint a TypeScript file right after an agent edits it and feed problems back.
-# Target: Cursor postToolUse (Write) and Claude Code PostToolUse (Write|Edit|MultiEdit).
+# Target: called by check-changed.sh after Cursor Write or Claude Code Edit|Write.
 # Canonical location: hooks/quality/ - wired from .cursor/hooks.json and .claude/settings.json.
 #
-# Exits 2 with oxlint output on stderr when the file has problems.
+# Exits 2 with oxlint output on stderr when the file has problems. Post-tool
+# callers receive feedback, but the completed edit is not rolled back.
 
 INPUT=$(cat 2>/dev/null || true)
 ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"

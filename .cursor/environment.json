@@ -1,0 +1,14 @@
+{
+  "name": "Monorepo development",
+  "install": "make install-frozen",
+  "ports": [
+    {
+      "name": "Front app",
+      "port": 5174
+    },
+    {
+      "name": "Worker API",
+      "port": 8725
+    }
+  ]
+}

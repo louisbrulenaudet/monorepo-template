@@ -32,7 +32,11 @@
       "Write(**/worker-configuration.d.ts)",
       "Read(**/.dev.vars)",
       "Read(**/.prod.vars)",
-      "Read(**/.staging.vars)"
+      "Read(**/.staging.vars)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)"
     ],
     "ask": []
   },
@@ -43,12 +47,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/git/guard-secret-commit.sh\"",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/git/guard-secret-commit.sh"
+            ],
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/git/guard-destructive-git.sh\"",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/git/guard-destructive-git.sh"
+            ],
             "timeout": 10
           }
         ]
@@ -56,21 +66,14 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/quality/format-changed.sh\"",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/quality/lint-changed.sh\"",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/quality/check-changed.sh"
+            ],
             "timeout": 30
           }
         ]
@@ -81,7 +84,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/logging/instructions-loaded.sh\"",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/logging/instructions-loaded.sh"
+            ],
             "timeout": 10
           }
         ]
@@ -98,10 +104,15 @@
     "claude-md-management@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true
   },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false
+  },
   "autoMemoryEnabled": true,
   "enabledMcpjsonServers": [
     "cloudflare-docs",
     "context7"
   ],
-  "enableAllProjectMcpServers": true
+  "enableAllProjectMcpServers": false
 }
