@@ -114,5 +114,5 @@
     "cloudflare-docs",
     "context7"
   ],
-  "enableAllProjectMcpServers": false
+  "enableAllProjectMcpServers": true
 }

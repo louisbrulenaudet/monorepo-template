@@ -8,8 +8,6 @@ model: haiku
 color: yellow
 ---
 
-<!-- Synced with .cursor/agents/ci-verifier.md - update both when changing. -->
-
 You independently verify the CI gate and surface only what a human or the main agent must decide. Verbose tool output stays in your context.
 
 ## Commands
