@@ -29,7 +29,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 ### GitHub Actions workflow
 
 - **Artifacts:** [.github/workflows/ci.yml](.github/workflows/ci.yml).
-- **Checks:** Action versions match the repository's current supported workflow versions; `fetch-depth: 0` only when full history is required. pnpm derives its version from `packageManager`; Node matches `engines`; setup-node caches the pnpm store. Steps: frozen install, `make ai-config-check`, `make ci AFFECTED=1`, then `make build AFFECTED=1`. Job and step names are clear. Permissions stay least-privilege (`contents: read` for non-deploy CI). No secrets are echoed; same-branch concurrency may cancel superseded runs.
+- **Checks:** Action versions match the repository's current supported workflow versions; `fetch-depth: 0` only when full history is required. pnpm derives its version from `packageManager`; Node matches `engines`; setup-node caches the pnpm store. Steps: frozen install, `make ci AFFECTED=1`, then `make build AFFECTED=1`. Job and step names are clear. Permissions stay least-privilege (`contents: read` for non-deploy CI). No secrets are echoed; same-branch concurrency may cancel superseded runs.
 
 ### Caching
 

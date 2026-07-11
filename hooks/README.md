@@ -16,7 +16,6 @@ hooks/
 ├── logging/
 │   ├── session-start.sh           # Cursor sessionStart
 │   └── instructions-loaded.sh     # Claude Code InstructionsLoaded
-├── tests/                          # Config parity + hook smoke tests
 ├── logs/                          # Debug output (git-ignored)
 ├── AGENTS.md                      # Agent guide (Cursor + nested AGENTS.md)
 ├── CLAUDE.md                      # Claude Code entry
@@ -63,6 +62,5 @@ tail -f hooks/logs/instructions-loaded.log
 2. `chmod +x hooks/<category>/<script>.sh`
 3. Register in **both** [`.cursor/hooks.json`](../.cursor/hooks.json) and [`.claude/settings.json`](../.claude/settings.json) when the hook applies to both tools.
 4. Update [AGENTS.md](AGENTS.md) and this README.
-5. Run `make ai-config-check`.
 
 See [AGENTS.md](AGENTS.md) for authoring conventions and guardrail alignment.

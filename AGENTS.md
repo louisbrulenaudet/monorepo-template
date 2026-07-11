@@ -17,8 +17,6 @@ Verify: `GET http://localhost:8725/api/v1/health` and `http://localhost:5174`.
 
 After scaffolding a new worker under `apps/`, run `make install` before turbo commands.
 
-Cursor Cloud Agents use [`.cursor/environment.json`](.cursor/environment.json): the idempotent update command installs the frozen lockfile, and ports 5174/8725 are exposed. Store credentials in Cursor Secrets, never in that file.
-
 ## Architecture
 
 ```mermaid
@@ -132,7 +130,6 @@ TypeScript presets: see [packages/typescript-config/AGENTS.md](packages/typescri
 | `make types` | Generate `worker-configuration.d.ts` in apps |
 | `make build` / `make deploy` | Build or deploy via Turborepo |
 | `make format` / `make lint` | Fix formatting / lint issues |
-| `make ai-config-check` | Validate Cursor/Claude parity and hook behavior |
 
 ### Scoping (pnpm / Turborepo)
 

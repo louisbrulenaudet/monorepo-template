@@ -8,7 +8,6 @@ This folder holds Cursor-specific agent configuration. Shared hook **scripts** l
 |------|---------|
 | [`rules/`](rules/) | Recursive category tree of project rules (`.mdc`) - parallel to [`.claude/rules/`](../.claude/rules/) |
 | [`hooks.json`](hooks.json) | Agent hook wiring → scripts under [`hooks/`](../hooks/) |
-| [`environment.json`](environment.json) | Shared Cloud Agent install command and exposed dev ports |
 | [`agents/`](agents/) | Custom subagents (`ci-verifier`, `docs-researcher`, `test-runner`) |
 | [`commands/`](commands/) | Slash commands for structured reviews (`/review`, `/review-ci`, …) |
 
@@ -30,6 +29,4 @@ Invoke explicitly with `/ci-verifier`, `/docs-researcher`, or `/test-runner`, or
 
 ## Hooks
 
-Wiring is in [`hooks.json`](hooks.json); scripts are grouped under [`hooks/git/`](../hooks/git/), [`hooks/quality/`](../hooks/quality/), and [`hooks/logging/`](../hooks/logging/). Debug logs: `hooks/logs/`.
-
-Cloud Agents load supported command hooks from `.cursor/hooks.json`; local-only lifecycle hooks such as `sessionStart` do not run there. See [Cursor hooks docs](https://cursor.com/docs/hooks).
+Wiring is in [`hooks.json`](hooks.json); scripts are grouped under [`hooks/git/`](../hooks/git/), [`hooks/quality/`](../hooks/quality/), and [`hooks/logging/`](../hooks/logging/). Debug logs: `hooks/logs/`. See [Cursor hooks docs](https://cursor.com/docs/hooks).

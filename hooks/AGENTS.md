@@ -20,7 +20,6 @@ hooks/
 ├── logging/                # Debug logs (fire-and-forget)
 │   ├── session-start.sh        # Cursor sessionStart
 │   └── instructions-loaded.sh  # Claude InstructionsLoaded
-├── tests/                  # Parity validation and hook smoke tests
 └── logs/                   # Git-ignored runtime output
 ```
 
@@ -33,7 +32,6 @@ hooks/
 | Add Cursor hook wiring | [`.cursor/hooks.json`](../.cursor/hooks.json) |
 | Add Claude hook wiring | [`.claude/settings.json`](../.claude/settings.json) → `hooks` |
 | Session / instruction logs | `logging/*.sh` → `hooks/logs/` |
-| Validate both tool setups | `tests/validate-ai-config.sh` and `tests/test-hooks.sh` |
 | Human overview | [README.md](README.md) |
 
 ## Wiring
@@ -96,5 +94,4 @@ Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-s
 - When adding a hook, update [`.cursor/hooks.json`](../.cursor/hooks.json), [`.claude/settings.json`](../.claude/settings.json) (if applicable), [README.md](README.md), and this file.
 - Align new guards with [guardrails](../.cursor/rules/core/guardrails.mdc); never weaken secret or destructive-git protection without explicit user approval.
 - `chmod +x` new scripts before committing.
-- Run `make ai-config-check` after changing rules, agents, skills, or hooks.
 - Follow conventions in the root [AGENTS.md](../AGENTS.md).
