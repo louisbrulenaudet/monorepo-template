@@ -36,6 +36,22 @@ normalize_agent() {
 
 cd "$ROOT"
 
+for json_file in \
+  .cursor/environment.json \
+  .cursor/hooks.json \
+  .cursor/mcp.json \
+  .cursor/settings.json \
+  .claude/settings.json \
+  .mcp.json \
+  skills-lock.json; do
+  if ! node -e '
+    const fs = require("node:fs");
+    JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  ' "$json_file"; then
+    fail "$json_file is not valid JSON"
+  fi
+done
+
 git ls-files '.cursor/rules/**' |
   grep -E '\.mdc$' >"$TMP_DIR/cursor-rules"
 git ls-files '.claude/rules/**' |
@@ -57,7 +73,7 @@ while IFS= read -r cursor_rule; do
 
   normalize_rule "$cursor_rule" >"$TMP_DIR/cursor-rule"
   normalize_rule "$claude_rule" >"$TMP_DIR/claude-rule"
-  if ! cmp -s "$TMP_DIR/cursor-rule" "$TMP_DIR/claude-rule"; then
+  if ! diff -w -B "$TMP_DIR/cursor-rule" "$TMP_DIR/claude-rule" >/dev/null; then
     fail "$cursor_rule and $claude_rule have different rule bodies"
   fi
 done <"$TMP_DIR/cursor-rules"
@@ -80,7 +96,7 @@ while IFS= read -r cursor_agent; do
 
   normalize_agent "$cursor_agent" >"$TMP_DIR/cursor-agent"
   normalize_agent "$claude_agent" >"$TMP_DIR/claude-agent"
-  if ! cmp -s "$TMP_DIR/cursor-agent" "$TMP_DIR/claude-agent"; then
+  if ! diff -w -B "$TMP_DIR/cursor-agent" "$TMP_DIR/claude-agent" >/dev/null; then
     fail "$cursor_agent and $claude_agent have different agent bodies"
   fi
 done <"$TMP_DIR/cursor-agents"
