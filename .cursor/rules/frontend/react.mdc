@@ -6,14 +6,14 @@ globs: apps/front-*/src/**/*.{ts,tsx}
 
 # React (19) Component & Hook Rules
 
-These apps are **client-only Vite SPAs** - no SSR, no React Server Components, no `"use server"`. Anything framed around those in general React guidance does not apply here. For deep guidance load the **`vercel-react-best-practices`** skill.
+These apps are **client-only Vite SPAs** - no SSR, no React Server Components, no `"use server"`. Anything framed around those in general React guidance does not apply here. Load **`vercel-react-best-practices`** only for a targeted performance audit, and apply only its browser/client guidance.
 
 Split of concerns (don't duplicate across files):
 
-- **Server/async state & data fetching** → [tanstack-query.mdc](.cursor/rules/tanstack-query.mdc). **Never** fetch in `useEffect`.
-- **Routing, route data, URL/search state** → [tanstack-router.mdc](.cursor/rules/tanstack-router.mdc).
-- **Vite config, providers, code-splitting mechanics, env** → [frontend-architecture.mdc](.cursor/rules/frontend-architecture.mdc).
-- Naming/filenames → [naming.mdc](.cursor/rules/naming.mdc); lint/format → [code-style.mdc](.cursor/rules/code-style.mdc) (`max-lines-per-function` is off in `apps/front-*`, but keep components small anyway).
+- **Server/async state & data fetching** → [tanstack-query.mdc](tanstack-query.mdc). **Never** fetch in `useEffect`.
+- **Routing, route data, URL/search state** → [tanstack-router.mdc](tanstack-router.mdc).
+- **Vite config, providers, code-splitting mechanics, env** → [frontend-architecture.mdc](frontend-architecture.mdc).
+- Naming/filenames → [naming.mdc](../quality/naming.mdc); lint/format → [code-style.mdc](../quality/code-style.mdc) (`max-lines-per-function` is off in `apps/front-*`, but keep components small anyway).
 
 ## Composition & purity
 
@@ -38,7 +38,7 @@ Split of concerns (don't duplicate across files):
 
 ## Memoization & the React Compiler
 
-- **If the React Compiler is enabled** (recommended for new apps - see [frontend-architecture.mdc](.cursor/rules/frontend-architecture.mdc)): do **not** hand-write `useMemo`/`useCallback`/`memo` by default; the compiler memoizes for you. Reach for them only as a precise escape hatch (e.g. stabilizing an effect dependency).
+- **If the React Compiler is enabled** (recommended for new apps - see [frontend-architecture.mdc](frontend-architecture.mdc)): do **not** hand-write `useMemo`/`useCallback`/`memo` by default; the compiler memoizes for you. Reach for them only as a precise escape hatch (e.g. stabilizing an effect dependency).
 - **If the compiler is off**: memoize only genuinely expensive computation, and wrap non-primitive props/callbacks passed to `memo()` children. Don't wrap cheap primitive expressions in `useMemo` (the dep check costs more).
 - For a `memo()` component with a non-primitive default prop, hoist the default to a module constant (`const NOOP = () => {}`) - an inline default defeats the memo every render.
 
@@ -61,9 +61,9 @@ Split of concerns (don't duplicate across files):
 
 ## Error handling & accessibility
 
-- Wrap the tree (and lazy route boundaries) in an **error boundary** (a class boundary or `react-error-boundary`); there is no hook form. Route-level errors are better handled by the router's `errorComponent` (see [tanstack-router.mdc](.cursor/rules/tanstack-router.mdc)).
+- Wrap the tree (and lazy route boundaries) in an **error boundary** (a class boundary or `react-error-boundary`); there is no hook form. Route-level errors are better handled by the router's `errorComponent` (see [tanstack-router.mdc](tanstack-router.mdc)).
 - Accessibility is partly linted (oxlint runs the `jsx-a11y` plugin on `apps/front-*/src/**`): use semantic elements (`<button>`, `<nav>`, headings), label every control (`<label htmlFor>` / `aria-label`), and manage focus on route change and dialog open/close.
 
 ## Before finishing
 
-Run `make ci` from the repo root. Keep every Oxc rule green (see [code-style.mdc](.cursor/rules/code-style.mdc)); do not reach for `any` or a disable directive to clear a warning (see [guardrails.mdc](.cursor/rules/guardrails.mdc)).
+Run `make ci` from the repo root. Keep every Oxc rule green (see [code-style.mdc](../quality/code-style.mdc)); do not reach for `any` or a disable directive to clear a warning (see [guardrails.mdc](../core/guardrails.mdc)).

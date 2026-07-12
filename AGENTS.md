@@ -115,7 +115,7 @@ Prefer **additive** changes. For breaking changes, version the route (e.g. `/api
 
 ## Code Quality
 
-Lint and format: `.oxlintrc.json` and `.oxfmtrc.json` at repo root (`make ci`). Naming, contracts, React, and Workers patterns load from **path-scoped** `.claude/rules/` when editing matching files. Unconditional guardrails: `.claude/rules/guardrails.md`.
+Lint and format: `.oxlintrc.json` and `.oxfmtrc.json` at repo root (`make ci`). File-specific guidance lives in mirrored rule trees: [`.claude/rules/`](.claude/rules/) and [`.cursor/rules/`](.cursor/rules/). Unconditional guardrails: [`.claude/rules/core/guardrails.md`](.claude/rules/core/guardrails.md) and [`.cursor/rules/core/guardrails.mdc`](.cursor/rules/core/guardrails.mdc).
 
 TypeScript presets: see [packages/typescript-config/AGENTS.md](packages/typescript-config/AGENTS.md) - apps **extend** a preset; do not fork compiler options.
 
@@ -164,13 +164,14 @@ Per-app command tables: see each app's `AGENTS.md`.
 | Hook scripts (shared) | [`hooks/`](hooks/) | [`hooks/`](hooks/) |
 | Subagents | [`.claude/agents/`](.claude/agents/) | [`.cursor/agents/`](.cursor/agents/) |
 | Slash commands | - | [`.cursor/commands/`](.cursor/commands/) |
-| Deep skills | [`.agents/skills/`](.agents/skills/) | same (shared) |
+| Deep skills | [`.claude/skills/`](.claude/skills/) | [`.agents/skills/`](.agents/skills/) |
 | Nested app guides | `CLAUDE.md` per app/package | `AGENTS.md` per app/package |
 
 - Claude Code: nested `CLAUDE.md` in apps/packages load on demand; debug instruction loading with `tail -f hooks/logs/instructions-loaded.log`.
-- Cursor: path-scoped rules attach by glob; debug hook activity in **Customize → Hooks** output channel; session logs in `hooks/logs/session-start.log`.
-- **Keeping Claude + Cursor in sync:** when you edit a path-scoped rule or subagent, update the parallel file in the other folder (`.claude/rules/*.md` ↔ `.cursor/rules/*.mdc`, `.claude/agents/*.md` ↔ `.cursor/agents/*.md`). Hook scripts are canonical in [`hooks/`](hooks/); both tools reference that directory via their config files.
-- **Vite 8 config:** [`.claude/rules/vite-config.md`](.claude/rules/vite-config.md) ↔ [`.cursor/rules/vite-config.mdc`](.cursor/rules/vite-config.mdc) - scoped to `apps/front-*/vite.config.ts` only.
+- Cursor: root and nested `AGENTS.md` files apply by directory; path-scoped `.mdc` rules attach by glob. Debug hook activity in **Customize → Hooks**.
+- Both rule engines recurse through category subfolders (`core`, `frontend`, `backend`, `contracts`, `quality`). Folder names organize rules but do not scope them; Cursor uses `globs` / `alwaysApply`, while Claude Code uses `paths` / no `paths`.
+- **Keeping Claude + Cursor in sync:** when you edit a path-scoped rule or subagent, update the same relative file in the other tree (`.claude/rules/**/*.md` ↔ `.cursor/rules/**/*.mdc`, `.claude/agents/*.md` ↔ `.cursor/agents/*.md`). Hook scripts are canonical in [`hooks/`](hooks/); both tools reference that directory via their config files.
+- **Vite 8 config:** [`.claude/rules/frontend/vite-config.md`](.claude/rules/frontend/vite-config.md) ↔ [`.cursor/rules/frontend/vite-config.mdc`](.cursor/rules/frontend/vite-config.mdc) - scoped to `apps/front-*/vite.config.ts` only.
 
 See [`.cursor/README.md`](.cursor/README.md) for a quick index of the Cursor setup.
 

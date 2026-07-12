@@ -345,9 +345,9 @@ This repository uses [Husky](https://typicode.github.io/husky/) to automate git 
 
 ### Pre-commit Hook
 
-The pre-commit hook automatically formats staged files using oxfmt before each commit. This ensures consistent code formatting across the repository without requiring manual intervention.
+The pre-commit hook automatically formats staged files using oxfmt and runs the repository-wide oxlint safe fixer before each commit. This ensures consistent code formatting and catches lint issues before CI.
 
-The hook uses `git-format-staged` to only format files that are staged for commit, making the process fast and efficient.
+The hook uses `git-format-staged` so formatting touches only staged files. The lint fixer checks the full repository.
 
 ### Setup
 
@@ -372,18 +372,19 @@ This will display all configured hooks and verify they are executable.
 ### How It Works
 
 1. **On commit:** Before a commit is finalized, Husky runs the pre-commit hook
-2. **Auto-formatting:** The hook formats all staged files using oxfmt
-3. **Automatic:** If formatting makes changes, the commit continues with the formatted files
+2. **Auto-formatting:** The hook formats staged files using oxfmt
+3. **Linting:** The hook runs the repository-wide oxlint safe fixer
 4. **No interruption:** The process is transparent and doesn't require additional steps
 
 This ensures that all committed code follows the project's formatting standards automatically.
 
 ## AI agent instructions
 
-- **[AGENTS.md](AGENTS.md)** - cross-tool project conventions (Cursor workspace rules, human onboarding).
+- **[AGENTS.md](AGENTS.md)** - cross-tool project conventions and Cursor's root instructions.
 - **[CLAUDE.md](CLAUDE.md)** - Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).
-- **Per-app/package** - each workspace has matching `AGENTS.md` and `CLAUDE.md` (nested files load on demand in Claude Code).
-- **Path-scoped rules** - `.claude/rules/*.md` apply when editing matching file paths; unconditional guardrails in `guardrails.md`.
+- **Per-app/package** - each workspace has matching `AGENTS.md` and `CLAUDE.md`; both tools apply nested instructions by directory.
+- **Rules** - mirrored category trees under `.cursor/rules/**/*.mdc` and `.claude/rules/**/*.md`. Categories organize rules; frontmatter (`globs`/`alwaysApply` for Cursor, `paths` for Claude Code) controls scope.
+- **Security** - `.cursorignore` reduces model context but is not an access-control boundary; permissions, sandboxing, hooks, and filesystem controls enforce sensitive operations.
 
 ## Shared Packages (`@repo/*`)
 

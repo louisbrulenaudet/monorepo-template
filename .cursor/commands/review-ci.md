@@ -29,7 +29,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 ### GitHub Actions workflow
 
 - **Artifacts:** [.github/workflows/ci.yml](.github/workflows/ci.yml).
-- **Checks:** Checkout: use `actions/checkout@v4` or newer; set `fetch-depth: 0` only if needed (e.g. for git history in versioning). pnpm: use `pnpm/action-setup@v2` or newer with version from packageManager or explicit. Node: use `actions/setup-node@v4` or newer; `node-version` matches engines (e.g. 22); `cache: 'pnpm'` for store cache. Steps: install (frozen lockfile), then lint/format (`make check`), then typecheck (`make check-types`), then build (`make build`). Job name and step names clear. Permissions: `contents: read` sufficient for non-deploy CI; add `permissions` block explicitly. No secrets echoed in run steps; use env for tokens if needed. Concurrency: optional cancel-in-progress for same branch to save minutes.
+- **Checks:** Action versions match the repository's current supported workflow versions; `fetch-depth: 0` only when full history is required. pnpm derives its version from `packageManager`; Node matches `engines`; setup-node caches the pnpm store. Steps: frozen install, `make ci AFFECTED=1`, then `make build AFFECTED=1`. Job and step names are clear. Permissions stay least-privilege (`contents: read` for non-deploy CI). No secrets are echoed; same-branch concurrency may cancel superseded runs.
 
 ### Caching
 

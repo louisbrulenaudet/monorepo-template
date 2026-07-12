@@ -139,7 +139,7 @@ Extends `workers.json` with:
 
 Set `include`/`exclude` in each library's own `tsconfig.json` (not in the preset).
 
-**`isolatedDeclarations` is intentionally off** - shared DTOs in `@repo/dtos-common` use schema-first inference (`z.infer<typeof Schema>`). Enabling it would require duplicate hand-written types on every exported Zod schema, conflicting with [type-inference rules](../../.cursor/rules/type-inference.mdc).
+**`isolatedDeclarations` is intentionally off** - shared DTOs in `@repo/dtos-common` use schema-first inference (`z.infer<typeof Schema>`). Enabling it would require duplicate hand-written types on every exported Zod schema, conflicting with [type-inference rules](../../.cursor/rules/contracts/type-inference.mdc).
 
 ### `vite-react.json` (React + Vite)
 

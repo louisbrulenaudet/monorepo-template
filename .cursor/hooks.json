@@ -5,22 +5,19 @@
       {
         "command": "hooks/git/guard-secret-commit.sh",
         "matcher": "Shell",
-        "timeout": 10
+        "timeout": 10,
+        "failClosed": true
       },
       {
         "command": "hooks/git/guard-destructive-git.sh",
         "matcher": "Shell",
-        "timeout": 10
+        "timeout": 10,
+        "failClosed": true
       }
     ],
     "postToolUse": [
       {
-        "command": "hooks/quality/format-changed.sh",
-        "matcher": "Write",
-        "timeout": 30
-      },
-      {
-        "command": "hooks/quality/lint-changed.sh",
+        "command": "hooks/quality/check-changed.sh",
         "matcher": "Write",
         "timeout": 30
       }

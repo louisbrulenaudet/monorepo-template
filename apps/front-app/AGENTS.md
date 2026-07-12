@@ -7,7 +7,7 @@
 - **Dev**: `http://localhost:5174`
 - **API**: `worker-api` at `http://localhost:8725` (via `src/config/env.ts`)
 
-React, routing, and query patterns load from `.claude/rules/` when editing `src/**` (`react.md`, `tanstack-router.md`, `tanstack-query.md`, `frontend-architecture.md`). Use **`ui-ux-design-best-practices`** for Tailwind motion depth.
+React, routing, and query patterns load from `.claude/rules/frontend/` or `.cursor/rules/frontend/` when editing `src/**`. Use **`ui-ux-design-best-practices`** for Tailwind motion depth.
 
 ## Tech Stack
 

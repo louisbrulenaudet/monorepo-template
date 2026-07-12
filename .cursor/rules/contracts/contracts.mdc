@@ -40,4 +40,4 @@ Mechanics: one constrained-value set per file, kebab-case filename; re-export up
 ## Discipline
 
 - Prefer additive contract changes. Version or migrate deliberately for breaking request/response shapes, and update every consumer in the same PR.
-- Keep schemas lean - see [type-inference.mdc](.cursor/rules/type-inference.mdc) for the full inference policy.
+- Keep schemas lean - see [type-inference.mdc](type-inference.mdc) for the full inference policy.

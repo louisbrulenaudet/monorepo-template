@@ -6,7 +6,7 @@ globs: packages/*-common/src/**,apps/**/src/dtos/**,apps/**/src/tools/**
 
 # Type Inference First
 
-Derive TypeScript types from the source of truth. Do not hand-write `interface` / `type` aliases for shapes a Zod schema already defines. See [contracts.mdc](.cursor/rules/contracts.mdc) for where each schema belongs.
+Derive TypeScript types from the source of truth. Do not hand-write `interface` / `type` aliases for shapes a Zod schema already defines. See [contracts.mdc](contracts.mdc) for where each schema belongs.
 
 ## Zod file layout
 

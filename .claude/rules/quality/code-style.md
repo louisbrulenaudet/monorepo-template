@@ -23,7 +23,7 @@ OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format)
 ## Discipline
 
 - Keep route/tool handlers thin: validate at the boundary, delegate I/O to a client or service module, then map the response. Business logic does not belong inline in the handler.
-- Prefer native type inference (see [type-inference.md](type-inference.md)) over hand-written shapes.
+- Prefer native type inference (see [type-inference.md](../contracts/type-inference.md)) over hand-written shapes.
 
 ## Before finishing
 

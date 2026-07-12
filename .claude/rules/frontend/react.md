@@ -5,14 +5,14 @@ paths:
 
 # React (19) Component & Hook Rules
 
-These apps are **client-only Vite SPAs** - no SSR, no React Server Components, no `"use server"`. Anything framed around those in general React guidance does not apply here. For deep guidance load the **`vercel-react-best-practices`** skill.
+These apps are **client-only Vite SPAs** - no SSR, no React Server Components, no `"use server"`. Anything framed around those in general React guidance does not apply here. Load **`vercel-react-best-practices`** only for a targeted performance audit, and apply only its browser/client guidance.
 
 Split of concerns (don't duplicate across files):
 
 - **Server/async state & data fetching** → [tanstack-query.md](tanstack-query.md). **Never** fetch in `useEffect`.
 - **Routing, route data, URL/search state** → [tanstack-router.md](tanstack-router.md).
 - **Vite config, providers, code-splitting mechanics, env** → [frontend-architecture.md](frontend-architecture.md).
-- Naming/filenames → [naming.md](naming.md); lint/format → [code-style.md](code-style.md) (`max-lines-per-function` is off in `apps/front-*`, but keep components small anyway).
+- Naming/filenames → [naming.md](../quality/naming.md); lint/format → [code-style.md](../quality/code-style.md) (`max-lines-per-function` is off in `apps/front-*`, but keep components small anyway).
 
 ## Composition & purity
 
@@ -65,4 +65,4 @@ Split of concerns (don't duplicate across files):
 
 ## Before finishing
 
-Run `make ci` from the repo root. Keep every Oxc rule green (see [code-style.md](code-style.md)); do not reach for `any` or a disable directive to clear a warning (see [guardrails.md](guardrails.md)).
+Run `make ci` from the repo root. Keep every Oxc rule green (see [code-style.md](../quality/code-style.md)); do not reach for `any` or a disable directive to clear a warning (see [guardrails.md](../core/guardrails.md)).

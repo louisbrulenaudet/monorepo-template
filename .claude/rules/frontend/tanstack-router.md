@@ -10,7 +10,7 @@ TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route da
 ## Setup & the generated tree
 
 - Use **file-based routing** via the Vite plugin - `import { tanstackRouter } from "@tanstack/router-plugin/vite"`, configured as `tanstackRouter({ target: "react", autoCodeSplitting: true })` and placed **before** `@vitejs/plugin-react` in `plugins` (Vite wiring lives in [frontend-architecture.md](frontend-architecture.md)). Reserve code-based routing for programmatic/virtual trees only.
-- **`routeTree.gen.ts` is a generated artifact** - the plugin regenerates it on dev/build. Never hand-edit it. In this repo it is **committed** and excluded from lint/format (`.oxlintrc.json` / `.oxfmtrc.json`); a hand-authored change to it is a build-config bug, not a source change (see [guardrails.md](guardrails.md)).
+- **`routeTree.gen.ts` is a generated artifact** - the plugin regenerates it on dev/build. Never hand-edit it. In this repo it is **committed** and excluded from lint/format (`.oxlintrc.json` / `.oxfmtrc.json`); a hand-authored change to it is a build-config bug, not a source change (see [guardrails.md](../core/guardrails.md)).
 - Register the router type once for global inference - without this, all `to`/`params`/`search` type safety silently degrades:
   ```ts
   declare module "@tanstack/react-router" {
