@@ -10,10 +10,10 @@ Guardrails enforced here mirror [`.cursor/rules/core/guardrails.mdc`](../.cursor
 
 ```
 hooks/
-├── git/                    # Shell command guards (preToolUse)
+├── git/                    # Shell command guards (beforeShellExecution / PreToolUse)
 │   ├── guard-destructive-git.sh
 │   └── guard-secret-commit.sh
-├── quality/                # Post-edit format + lint (postToolUse)
+├── quality/                # Post-edit format + lint (afterFileEdit / PostToolUse)
 │   ├── check-changed.sh         # Sequential entry point
 │   ├── format-changed.sh
 │   └── lint-changed.sh
@@ -61,10 +61,11 @@ Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-s
 
 - **Shebang**: `#!/usr/bin/env sh` - POSIX shell; `jq` optional with `sed` fallback.
 - **Project root**: `ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"`
-- **JSON input**: read stdin; support both `.tool_input.command` (Claude) and `.command` (Cursor).
-- **Blocking**: a pre-tool hook exits `2` to deny and writes the reason to stderr.
+- **JSON input**: read stdin; support both `.tool_input.command` (Claude) and `.command` (Cursor `beforeShellExecution`).
+- **Cursor allow/deny**: git guards always print `{"permission":"allow"}` or `{"permission":"deny",...}` on stdout so `failClosed: true` never sees empty output.
+- **Blocking**: exit `2` to deny (Claude + Cursor exit-code path); Cursor also honors the JSON `permission` field.
 - **Post-tool feedback**: exit `2` reports lint problems but cannot undo an edit that already succeeded.
-- **Security failures**: Cursor pre-tool guards set `failClosed: true`; Claude Code also retains permission denies.
+- **Security failures**: Cursor git guards set `failClosed: true` on `beforeShellExecution`; Claude Code retains permission denies via exit 2.
 - **Quality/logging failures**: fail open so unavailable developer tooling does not wedge normal workflows.
 - **Filenames**: kebab-case under category folders.
 
@@ -72,9 +73,9 @@ Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-s
 
 | Script | Trigger | Exit 2 when |
 |--------|---------|-------------|
-| `git/guard-secret-commit.sh` | git add / git commit | Secret path named or in staged set |
-| `git/guard-destructive-git.sh` | any git command | reset --hard, push --force, checkout --, etc. |
-| `quality/check-changed.sh` | after Write/Edit | delegates sequentially to format, then lint |
+| `git/guard-secret-commit.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash | Secret path named or in staged set |
+| `git/guard-destructive-git.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash | reset --hard, push --force, checkout --, etc. |
+| `quality/check-changed.sh` | Cursor `afterFileEdit`; Claude PostToolUse Edit\|Write | delegates sequentially to format, then lint |
 | `quality/format-changed.sh` | called by `check-changed.sh` | never (always 0) |
 | `quality/lint-changed.sh` | called by `check-changed.sh` | oxlint reports problems on `.ts`/`.tsx` |
 | `logging/session-start.sh` | Cursor sessionStart | never |

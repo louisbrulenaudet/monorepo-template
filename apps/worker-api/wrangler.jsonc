@@ -20,7 +20,7 @@
     },
   },
   "dev": {
-    "port": 8725,
+    "port": 8700,
     "inspector_port": 0,
   },
   "observability": {

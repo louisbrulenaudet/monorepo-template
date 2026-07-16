@@ -91,7 +91,7 @@ make dev
 
 Local URLs:
 - Frontend dev server: `http://localhost:5174`
-- API dependency: `http://localhost:8725` (see `apps/worker-api`)
+- API dependency: `http://localhost:8700` (see `apps/worker-api`)
 
 ## Make Commands
 
@@ -119,13 +119,13 @@ From this app directory (`apps/front-app/`):
 |---------|------|-----:|
 | Vite dev server | `vite.config.ts` (`server.port`) | 5174 |
 | Vite preview | `vite.config.ts` (`preview.port`) | 4174 |
-| Worker API (dependency) | `apps/worker-api/wrangler.jsonc` (`dev.port`) | 8725 |
+| Worker API (dependency) | `apps/worker-api/wrangler.jsonc` (`dev.port`) | 8700 |
 
 ## Environment Configuration
 
 ### Environment Variables
 
-The app calls `worker-api` using a base URL from `import.meta.env.VITE_API_BASE_URL`. In development it defaults to `http://localhost:8725` when unset (see `src/config/env.ts`).
+The app calls `worker-api` using a base URL from `import.meta.env.VITE_API_BASE_URL`. In development it defaults to `http://localhost:8700` when unset (see `src/config/env.ts`).
 
 | Goal | File |
 |------|------|
@@ -135,7 +135,7 @@ The app calls `worker-api` using a base URL from `import.meta.env.VITE_API_BASE_
 Vite loads `.env.production` only for `vite build` (not for `vite dev`), so you can keep a stable API URL for deploys without changing dev defaults.
 
 Examples:
-- **Development** (default): leave unset → `http://localhost:8725`
+- **Development** (default): leave unset → `http://localhost:8700`
 - **Production**: set `VITE_API_BASE_URL` in `.env.production` to your deployed `worker-api` origin before `make build` or `make deploy`
 
 Deploy only the frontend from the monorepo root: `pnpm turbo run deploy --filter=front-app`.

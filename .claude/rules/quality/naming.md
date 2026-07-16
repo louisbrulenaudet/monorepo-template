@@ -28,5 +28,5 @@ The only place snake_case appears is an identifier that must match an external c
 
 ## DTOs
 
-- Schema exports end in `Schema` (or a `…RequestSchema` / `…ResponseSchema` / `…InputSchema` / `…PayloadSchema` variant).
+- Schema exports end in `Schema` (or a `…RequestSchema` / `…ResponseSchema` / `…InputSchema` / `…PayloadSchema` / `…MessageSchema` / `…EventSchema` variant).
 - Inferred types drop the `Schema` suffix; never use a `Type` suffix. See [type-inference.md](../contracts/type-inference.md) and [contracts.md](../contracts/contracts.md).

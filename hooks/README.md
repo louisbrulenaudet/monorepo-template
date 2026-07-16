@@ -11,8 +11,8 @@ hooks/
 │   └── guard-secret-commit.sh     # Block staging/committing secret files
 ├── quality/
 │   ├── check-changed.sh           # Sequential format-then-lint entry point
-│   ├── format-changed.sh          # oxfmt after file writes (non-blocking)
-│   └── lint-changed.sh            # oxlint after TS writes (exit 2 on errors)
+│   ├── format-changed.sh          # oxfmt after file edits (non-blocking)
+│   └── lint-changed.sh            # oxlint after TS edits (exit 2 on errors)
 ├── logging/
 │   ├── session-start.sh           # Cursor sessionStart
 │   └── instructions-loaded.sh     # Claude Code InstructionsLoaded
@@ -29,19 +29,19 @@ hooks/
 | Cursor | [`.cursor/hooks.json`](../.cursor/hooks.json) | Project root |
 | Claude Code | [`.claude/settings.json`](../.claude/settings.json) | Project root |
 
-Both read JSON on **stdin** and support Claude (`tool_input.*`) and Cursor (flat `command` / `file_path`) shapes.
+Both read JSON on **stdin** and support Claude (`tool_input.*`) and Cursor (flat `command` / `file_path`) shapes. Git guards always emit Cursor permission JSON on stdout.
 
 ## When hooks run
 
 | Hook event | Script | Behavior |
 |------------|--------|-----------|
-| **preToolUse** / PreToolUse (Shell/Bash) | `git/guard-secret-commit.sh` | Exit 2 if secrets would be staged |
-| **preToolUse** / PreToolUse (Shell/Bash) | `git/guard-destructive-git.sh` | Exit 2 on destructive git |
-| **postToolUse** / PostToolUse (Write) | `quality/check-changed.sh` | Format, then lint edited JS/TS sequentially |
+| **beforeShellExecution** (Cursor) / PreToolUse Bash (Claude) | `git/guard-secret-commit.sh` | Exit 2 + deny JSON if secrets would be staged |
+| **beforeShellExecution** (Cursor) / PreToolUse Bash (Claude) | `git/guard-destructive-git.sh` | Exit 2 + deny JSON on destructive git |
+| **afterFileEdit** (Cursor) / PostToolUse Edit\|Write (Claude) | `quality/check-changed.sh` | Format, then lint edited JS/TS sequentially |
 | **sessionStart** (Cursor only) | `logging/session-start.sh` | Append to `logs/session-start.log` |
 | **InstructionsLoaded** (Claude only) | `logging/instructions-loaded.sh` | Append to `logs/instructions-loaded.log` |
 
-Exit code **2** blocks a pre-tool action. On a post-tool event it only feeds the error back to the agent; it cannot roll back the completed edit. Cursor security guards set `failClosed: true` so crashes, timeouts, and invalid output do not bypass them.
+Exit code **2** blocks a pre-shell action. On a post-edit event it only feeds the error back to the agent; it cannot roll back the completed edit. Cursor security guards set `failClosed: true` so crashes, timeouts, and invalid output do not bypass them - scripts therefore always print `{"permission":"allow"}` on the allow path.
 
 ## Debugging
 

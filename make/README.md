@@ -168,4 +168,4 @@ cd apps/worker-api && make help              # Per-package targets
 3. **Do not duplicate targets** in per-package Makefiles - extend [`app.mk`](app.mk) instead.
 4. **Keep fragments concern-separated** - deps stay in `deps.mk`, quality in `quality.mk`, etc.
 
-See [AGENTS.md](../AGENTS.md) for agent-oriented conventions and the full monorepo decision checklist.
+See [AGENTS.md](../AGENTS.md) for agent-oriented conventions and the architecture decision checklist. Port allocation for scaffolding: `.cursor/rules/backend/ports.mdc` / `.claude/rules/backend/ports.md` (human tables in [README.md](../README.md)).

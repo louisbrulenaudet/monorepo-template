@@ -89,7 +89,7 @@ turbo build --only  # skip running dependsOn tasks
 
 ### `--parallel` (Discouraged)
 
-Ignores task graph dependencies, runs all tasks simultaneously. **Avoid using this flag**—if tasks need to run in parallel, configure `dependsOn` correctly instead. Using `--parallel` bypasses Turborepo's dependency graph, which can cause race conditions and incorrect builds.
+Ignores task graph dependencies, runs all tasks simultaneously. **Avoid using this flag**-if tasks need to run in parallel, configure `dependsOn` correctly instead. Using `--parallel` bypasses Turborepo's dependency graph, which can cause race conditions and incorrect builds.
 
 ## Cache Control
 

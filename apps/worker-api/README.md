@@ -9,7 +9,7 @@ A REST API gateway providing secure HTTP endpoints for frontend applications and
 
 ## Current configuration (checked-in starter)
 
-The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev port **8725**, and a minimal set of `vars` (e.g. `ENVIRONMENT`).
+The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev port **8700**, and a minimal set of `vars` (e.g. `ENVIRONMENT`).
 
 What you can run today:
 - Health endpoint at `GET /api/v1/health`
@@ -17,7 +17,6 @@ What you can run today:
 
 What you can add as you grow the repo:
 - **Service bindings** to other Workers (configure under `services` in `wrangler.jsonc`)
-- Authentication/authorization layers (e.g. Clerk or any other provider)
 
 ## Purpose
 
@@ -54,12 +53,12 @@ The worker-api serves as the public-facing HTTP API gateway for monorepo. It pro
    make dev
    ```
 
-The Worker will be available at `http://localhost:8725`
+The Worker will be available at `http://localhost:8700`
 
 ### Verify it works
 
 ```bash
-curl -s "http://localhost:8725/api/v1/health"
+curl -s "http://localhost:8700/api/v1/health"
 ```
 
 Expected response:
@@ -72,7 +71,7 @@ Expected response:
 | Command | Description |
 |---------|-------------|
 | `make install` | Install dependencies for this app |
-| `make dev` | Start Wrangler dev server (port 8725) |
+| `make dev` | Start Wrangler dev server (port 8700) |
 | `make deploy` | Deploy to Cloudflare Workers |
 | `make format` | Format via Turborepo (`format:fix` per package) |
 | `make lint` | Lint via Turborepo (`lint:fix` per package) |
