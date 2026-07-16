@@ -6,7 +6,7 @@ paths:
 
 # Workers Cache Rules
 
-Tiered edge cache in front of Worker **`fetch()`** entrypoints only (eyeball, binding `fetch()`, `ctx.exports.fetch()`). Not `caches.default`. Control via `Cache-Control` / `Cache-Tag`; purge via `ctx.cache.purge()`. [Docs](https://developers.cloudflare.com/workers/cache/). Out of scope: `webhook-*`, `orm-*`, `front-app`. Load **`workers-best-practices`** for runtime limits.
+Tiered edge cache in front of Worker **`fetch()`** entrypoints only (eyeball, binding `fetch()`, `ctx.exports.fetch()`). Not `caches.default`. Control via `Cache-Control` / `Cache-Tag`; purge via `ctx.cache.purge()`. [Docs](https://developers.cloudflare.com/workers/cache/). Out of scope: `webhook-*`, `front-app`. Load **`workers-best-practices`** for runtime limits.
 
 ## Cache or not
 

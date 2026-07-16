@@ -75,4 +75,4 @@ When changing agent setup, keep both tools in sync:
 - **Subagents:** `ci-verifier`, `docs-researcher`, `test-runner`.
 - **Cursor hooks:** `beforeShellExecution` (git guards, `failClosed`), `afterFileEdit` (format/lint), `sessionStart`.
 - **Claude hooks:** PreToolUse Bash (same git guards), PostToolUse Edit\|Write (format/lint), InstructionsLoaded.
-- **MCP:** `cloudflare-docs`, `context7` (project); Cursor Cloudflare plugin for bindings - do not double-register Context7 via plugin.
+- **MCP:** `cloudflare-docs`, `context7` (project). Keep the Cursor Cloudflare **plugin** disabled unless you need account-scoped bindings/builds/observability MCP (those trigger OAuth login); do not double-register Context7 via plugin.

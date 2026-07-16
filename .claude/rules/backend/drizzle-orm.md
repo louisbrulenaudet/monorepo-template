@@ -1,11 +1,13 @@
 ---
 paths:
-  - "apps/orm-*/src/**"
+  - "apps/**/src/db/**"
 ---
 
 # Drizzle ORM Naming
 
-`orm-*` workers hold **schema and migrations only** - no business logic, no HTTP routing.
+Drizzle schema, migrations, and query helpers live under `apps/<app>/src/db/` in the **Worker that owns that database** — **never** a shared `packages/db-*` package.
+
+**One owner per DB binding.** Do not attach the same D1/Hyperdrive/etc. binding to multiple apps (that splits migrations and schema ownership). Other apps read or write that data only via **service-binding RPC** (or a queue) to the owning Worker.
 
 ## Database naming
 
@@ -28,5 +30,3 @@ const accountTable = pgTable("account", {
   hostname_ids: serial("hostname_ids"),
 });
 ```
-
-Migrations live under the `orm-*` worker only. Other workers access data via service bindings, not direct DB connections in route handlers.

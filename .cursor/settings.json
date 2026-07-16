@@ -1,7 +1,7 @@
 {
   "plugins": {
     "cloudflare": {
-      "enabled": true
+      "enabled": false
     }
   }
 }

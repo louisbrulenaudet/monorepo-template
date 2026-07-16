@@ -6,7 +6,7 @@
 [![pnpm](https://img.shields.io/static/v1?label=package%20manager&message=pnpm&color=blueviolet&logo=pnpm&logoColor=white)](https://pnpm.io/)
 [![Turborepo](https://img.shields.io/static/v1?label=build&message=Turborepo&color=blueviolet&logo=turborepo&logoColor=white)](https://turbo.build/repo/docs)
 
-A minimal, production-oriented monorepo starter built on pnpm workspaces with Turborepo, Cloudflare Workers, Hono, React, Vite, and Tailwind. Frontends and webhooks talk to the public HTTP gateway; Worker-to-Worker calls use service-binding RPC (no extra request fee on Workers Standard). Drizzle schema and the DB binding live in the Worker that owns the data - not in a shared `packages/db-*` package or a runtime `orm-*` Worker.
+A minimal, production-oriented monorepo starter built on pnpm workspaces with Turborepo, Cloudflare Workers, Hono, React, Vite, and Tailwind. Frontends and webhooks talk to the public HTTP gateway; Worker-to-Worker calls use service-binding RPC (no extra request fee on Workers Standard).
 
 ## Architecture Overview
 
@@ -83,12 +83,12 @@ flowchart TB
 Cloudflare Workers are organized by runtime role:
 
 - **`worker-api`** - Public HTTP gateway (Hono): CORS, validation, routing; coordinates internal Workers via RPC.
-- **`worker-*`** - Business logic over **service-binding RPC** only (no public routes in production). Own Drizzle schema/migrations and the DB binding.
+- **`worker-*`** - Business logic over **service-binding RPC** only (no public routes in production). May own Drizzle schema under `src/db/` and that database’s binding (exclusive owner).
 - **`queue-*`** - Queue-only consumers (`queue()` handler). Messages can be produced by `worker-api`, `worker-*`, or `webhook-*`. Use dual-handler layout when a local HTTP debug path is useful.
 - **`webhook-*`** - Public HTTP ingress for external provider callbacks; forward work via RPC or queues.
 - **`mcp-*`** - Public HTTP MCP servers; thin tools that call `worker-*` over RPC.
 
-Do **not** create runtime `orm-*` Workers or shared `packages/db-*` schema packages. Other apps reach data via **RPC** (or a queue), never by importing another Worker’s schema or sharing a DB binding.
+Do **not** create shared `packages/db-*` schema packages. Put Drizzle schema under the owning app’s `src/db/` and keep **one DB binding owner**. Other apps reach that data via **service-binding RPC** (or a queue) — do not attach the same DB binding to multiple apps.
 
 #### Frontend Applications
 
@@ -192,12 +192,12 @@ Notes:
 ### Key Distinctions
 
 - **Gateway (`worker-api`):** Public HTTP only; validates requests and calls `worker-*` over RPC.
-- **Business Workers (`worker-*`):** RPC-only in production (`WorkerEntrypoint`); own Drizzle schema/migrations and the DB binding. If they also consume queues, keep this prefix and use the dual-handler layout.
+- **Business Workers (`worker-*`):** RPC-only in production (`WorkerEntrypoint`); may own Drizzle schema under `src/db/` and that database’s binding (exclusive). If they also consume queues, keep this prefix and use the dual-handler layout.
 - **Queue-only (`queue-*`):** `queue()` consumers with no public HTTP in production; may own schema when they are the sole writer for that data.
 - **Webhook Workers (`webhook-*`):** Public HTTP for external callbacks; forward via RPC or queues.
 - **MCP Servers (`mcp-*`):** Public HTTP MCP transport; thin tools that call `worker-*` over RPC - never rotate long-lived credentials on this surface.
 - **Frontends (`front-*`):** React + Vite; HTTP to the gateway only - never service bindings.
-- **Do not** create runtime `orm-*` Workers or shared `packages/db-*` schema packages.
+- **Do not** create shared `packages/db-*` schema packages.
 
 **After creating a new worker, always run:**
 ```sh
@@ -327,7 +327,7 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ### Architecture Best Practices
 
-- **Colocate schema with the owning Worker:** Drizzle schema, migrations, and the DB binding live in that `worker-*` / `queue-*` - never share schema packages or DB bindings across apps
+- **Colocate schema under the owning Worker’s `src/db/`:** never a shared `packages/db-*` package; never share the same DB binding across apps — other apps use RPC (or a queue)
 - **Implement dual-handler pattern:** For queue consumers, separate message handling from optional local HTTP debug handlers
 - **Use service bindings (RPC):** For inter-worker communication instead of HTTP calls
 - **Maintain clear separation of concerns:** Each Worker has a specific runtime role (gateway, business, queue, webhook, MCP, frontend)
@@ -336,7 +336,7 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 - **Always run `make install`** after adding workers or dependencies
 - **Use `make dev`** for focused development on specific workers
-- **Follow naming conventions:** `worker-*`, `queue-*`, `webhook-*`, `mcp-*`, `front-*` (no `orm-*`)
+- **Follow naming conventions:** `worker-*`, `queue-*`, `webhook-*`, `mcp-*`, `front-*`
 - **Use appropriate port ranges:** see [Development ports](#development-ports)
 - **Test service bindings:** Verify connections between workers before deployment
 

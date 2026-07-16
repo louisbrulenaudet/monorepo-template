@@ -144,7 +144,6 @@
     {
       "files": [
         "apps/worker-*/**/*.{ts,js,mjs}",
-        "apps/orm-*/**/*.{ts,js,mjs}",
         "apps/webhook-*/**/*.{ts,js,mjs}",
         "apps/front-*/src/worker*.{ts,tsx}"
       ],

@@ -93,7 +93,7 @@ If a Worker is both RPC and a queue consumer, keep prefix **`worker-*`** (busine
 | Webhook payload schemas | `packages/dtos-common/src/webhook/<feature>.ts` |
 | Shared constrained value set | `packages/enums-common/src/index.ts` |
 | Worker-local value set | `apps/<worker>/src/enums/` |
-| DB schema / migrations / query helpers | `apps/<worker>/` (owning `worker-*` or `queue-*` only) |
+| DB schema / migrations / query helpers | `apps/<owner>/src/db/` (one owning Worker; never `packages/db-*`; no shared DB bindings) |
 | Frontend API service | `apps/front-app/src/services/worker-api/<feature>.ts` |
 | Frontend page | `apps/front-app/src/pages/` + `src/routes/` (TanStack file routes) |
 | Reusable UI / hooks | `apps/front-app/src/components/ui/`, `src/hooks/` |
@@ -148,7 +148,7 @@ Extend this table when adding a new app or package with its own guide.
 ## Decision Checklist
 
 1. Worker-to-Worker call? **Service binding RPC**, not HTTP (no extra request fee on Workers Standard).
-2. DB access? Schema + binding in the owning `worker-*` / `queue-*` - never a runtime `orm-*` Worker; never share schema or DB bindings across apps.
+2. DB access? Schema + binding in **one** owning `worker-*` / `queue-*` under `src/db/` — never `packages/db-*`, never the same DB binding on multiple apps. Other apps use **service-binding RPC** (or a queue).
 3. Public HTTP only for gateway, webhooks, MCP, and frontends - not for business RPC or queue-only workers.
 
 Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor/rules/` / `.claude/rules/` (`contracts`, `quality`).
