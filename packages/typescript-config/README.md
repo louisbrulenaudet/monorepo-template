@@ -64,7 +64,7 @@ When the Worker has **service bindings** or **Durable Object** bindings, pass ea
 wrangler types -c ./wrangler.jsonc -c ../worker-foo/wrangler.jsonc -c ../orm-bar/wrangler.jsonc
 ```
 
-Wire the same `-c` flags in the app's `package.json` `"types"` script. Generated `Env` will include entries like `Service<import("../worker-foo/src/index").default>`. See [Workers RPC — TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/).
+Wire the same `-c` flags in the app's `package.json` `"types"` script. Generated `Env` will include entries like `Service<import("../worker-foo/src/index").default>`. See [Workers RPC - TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/).
 
 ```json
 // tsconfig.json

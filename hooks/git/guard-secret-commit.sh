@@ -1,9 +1,31 @@
 #!/usr/bin/env sh
 # Purpose: Block shell git commands that would stage/commit a secret file.
-# Target: Cursor preToolUse (Shell) and Claude Code PreToolUse (Bash).
+# Target: Cursor beforeShellExecution and Claude Code PreToolUse (Bash).
 # Canonical location: hooks/git/ - wired from .cursor/hooks.json and .claude/settings.json.
 #
-# Enforces "Never commit secrets" (.cursor/rules/core/guardrails.mdc).
+# Enforces "Never commit secrets" (guardrails). Cursor failClosed expects JSON on stdout;
+# Claude uses exit 2 + stderr. Always emit allow JSON so empty output never fail-closes.
+
+set -u
+
+allow() {
+  trap - EXIT INT TERM HUP
+  printf '%s\n' '{"permission":"allow"}'
+  exit 0
+}
+
+deny() {
+  trap - EXIT INT TERM HUP
+  msg="$1"
+  printf '%s\n' "$msg" >&2
+  json_msg=$(printf '%s' "$msg" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n' ' ')
+  printf '%s\n' "{\"permission\":\"deny\",\"user_message\":\"$json_msg\",\"agent_message\":\"$json_msg\"}"
+  exit 2
+}
+
+# Unexpected failure → allow JSON (fail-open inside the script). Cursor failClosed then
+# only blocks on explicit deny or a true hook-runner crash - never on empty stdout.
+trap 'allow' EXIT INT TERM HUP
 
 INPUT=$(cat 2>/dev/null || true)
 ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"
@@ -14,25 +36,24 @@ else
   CMD=$(printf '%s' "$INPUT" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/p' 2>/dev/null || true)
 fi
 
-[ -z "$CMD" ] && exit 0
+[ -z "$CMD" ] && allow
 
 case "$CMD" in
   *git*add*|*git*commit*) ;;
-  *) exit 0 ;;
+  *) allow ;;
 esac
 
 set -f
 
 SECRET_RE='(\.env|\.dev\.vars|\.prod\.vars|\.staging\.vars|\.pem|\.key|\.p12|\.pfx|id_rsa|credentials)'
-BLOCK_MSG="Blocked: this command looks like it would stage/commit a secret file (.env / .dev.vars / *.pem / *.key / credentials). Never commit secrets - see .cursor/rules/core/guardrails.mdc. Confirm the file is git-ignored and stage only non-secret files."
+BLOCK_MSG="Blocked: this command looks like it would stage/commit a secret file (.env / .dev.vars / *.pem / *.key / credentials). Never commit secrets - see .cursor/rules/core/guardrails.mdc and .claude/rules/core/guardrails.md. Confirm the file is git-ignored and stage only non-secret files."
 
 for tok in $CMD; do
   case "$tok" in
     *.example|*.example[!a-z]*) continue ;;
   esac
   if printf '%s' "$tok" | grep -Eiq "$SECRET_RE"; then
-    echo "$BLOCK_MSG" >&2
-    exit 2
+    deny "$BLOCK_MSG"
   fi
 done
 
@@ -48,9 +69,8 @@ if is_bulk; then
        | sed -E 's/^...//; s/^.* -> //' \
        | grep -vE '\.example([^a-z]|$)' \
        | grep -Eiq "$SECRET_RE"; then
-    echo "$BLOCK_MSG" >&2
-    exit 2
+    deny "$BLOCK_MSG"
   fi
 fi
 
-exit 0
+allow

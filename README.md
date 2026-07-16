@@ -6,7 +6,7 @@
 [![pnpm](https://img.shields.io/static/v1?label=package%20manager&message=pnpm&color=blueviolet&logo=pnpm&logoColor=white)](https://pnpm.io/)
 [![Turborepo](https://img.shields.io/static/v1?label=build&message=Turborepo&color=blueviolet&logo=turborepo&logoColor=white)](https://turbo.build/repo/docs)
 
-A minimal, production-oriented monorepo starter built on pnpm workspaces with Turborepo, Cloudflare Workers, Hono, React, Vite, and Tailwind. It supports a service-oriented backend architecture (Workers can communicate via service bindings) alongside frontend applications that call backend services over HTTP.
+A minimal, production-oriented monorepo starter built on pnpm workspaces with Turborepo, Cloudflare Workers, Hono, React, Vite, and Tailwind. Frontends and webhooks talk to the public HTTP gateway; Worker-to-Worker calls use service-binding RPC (no extra request fee on Workers Standard). Drizzle schema and the DB binding live in the Worker that owns the data - not in a shared `packages/db-*` package or a runtime `orm-*` Worker.
 
 ## Architecture Overview
 
@@ -33,47 +33,66 @@ monorepo/
 The monorepo is organized into two main categories: **Backend Services** and **Frontend Applications**, plus **Shared Packages** for common functionality.
 
 ```mermaid
-flowchart TD
-  subgraph frontend [Frontend]
-    FrontApp["front-app (React + Vite)"]
+flowchart TB
+  subgraph entry [Public entry]
+    direction LR
+    Front["front-* :517x"]
+    Ext["External providers"]
+    McpClients["MCP clients"]
   end
 
-  subgraph backend [Backend Workers]
-    WorkerApi["worker-api (Hono gateway)"]
-    OrmWorker["orm-* (Drizzle ORM only)"]
-    BizWorker["worker-* (business logic)"]
-    WebhookWorker["webhook-* (event processing)"]
+  subgraph publicWorkers [Public Workers]
+    direction LR
+    Gateway["worker-api :8700"]
+    Webhook["webhook-* :876x"]
+    Mcp["mcp-* :878x"]
   end
 
-  subgraph shared [Shared Packages]
-    DTOs["@repo/dtos-common"]
+  subgraph privateWorkers [Private Workers]
+    direction LR
+    Biz["worker-* (RPC only)"]
+    Queue["queue-*"]
+  end
+
+  subgraph shared [Shared packages]
+    direction LR
     Enums["@repo/enums-common"]
-    TSConfig["@repo/typescript-config"]
+    DTOs["@repo/dtos-common"]
+    Enums --> DTOs
   end
 
-  FrontApp -->|"HTTP REST"| WorkerApi
-  WorkerApi -->|"service binding"| OrmWorker
-  WorkerApi -->|"service binding"| BizWorker
-  DTOs --> WorkerApi
-  DTOs --> FrontApp
-  Enums --> DTOs
-  TSConfig --> WorkerApi
-  TSConfig --> FrontApp
+  Front -->|HTTP| Gateway
+  Ext -->|HTTP| Webhook
+  McpClients -->|HTTP MCP| Mcp
+
+  Gateway -->|RPC| Biz
+  Webhook -->|RPC| Biz
+  Mcp -->|RPC| Biz
+
+  Gateway -->|queue| Queue
+  Webhook -->|queue| Queue
+  Biz -->|queue| Queue
+
+  Front -.->|imports| shared
+  publicWorkers -.->|imports| shared
+  privateWorkers -.->|imports| shared
 ```
 
 #### Backend Services
 
-The backend consists of Cloudflare Workers organized by responsibility:
+Cloudflare Workers are organized by runtime role:
 
-**API Gateway**
-- **`worker-api`** - REST API gateway built with Hono and Cloudflare Workers (CORS, compression, body limits, secure headers, request validation, error handling, etc.)
+- **`worker-api`** - Public HTTP gateway (Hono): CORS, validation, routing; coordinates internal Workers via RPC.
+- **`worker-*`** - Business logic over **service-binding RPC** only (no public routes in production). Own Drizzle schema/migrations and the DB binding.
+- **`queue-*`** - Queue-only consumers (`queue()` handler). Messages can be produced by `worker-api`, `worker-*`, or `webhook-*`. Use dual-handler layout when a local HTTP debug path is useful.
+- **`webhook-*`** - Public HTTP ingress for external provider callbacks; forward work via RPC or queues.
+- **`mcp-*`** - Public HTTP MCP servers; thin tools that call `worker-*` over RPC.
+
+Do **not** create runtime `orm-*` Workers or shared `packages/db-*` schema packages. Other apps reach data via **RPC** (or a queue), never by importing another Worker’s schema or sharing a DB binding.
 
 #### Frontend Applications
 
-The frontend provides user interfaces built with React and deployed on Cloudflare Workers:
-
-**Frontend Application**
-- **`front-app`** - React-based frontend application built with Vite 8 and deployed on Cloudflare Workers (static asset serving, code splitting, lazy loading, etc.). Communicates with backend services via REST APIs.
+- **`front-app`** - React SPA (Vite 8) deployed on Cloudflare Workers. Talks to `worker-api` over HTTP only - never via service bindings.
 
 ## Getting Started
 
@@ -105,7 +124,7 @@ This installs Husky git hooks to ensure code quality standards are enforced on c
    make dev
    ```
 2. Verify the API is running:
-   - `GET` `http://localhost:8725/api/v1/health`
+   - `GET` `http://localhost:8700/api/v1/health`
 3. Open the frontend dev server:
    - `http://localhost:5174`
 
@@ -132,40 +151,53 @@ This installs Husky git hooks to ensure code quality standards are enforced on c
 
 ## Development ports
 
-| Service | Path | port |
-|---|---|---:|
-| worker-api | `apps/worker-api/wrangler.jsonc` | 8725 |
-| front-app | `apps/front-app/package.json` (Vite dev) | 5174 |
+Mnemonic: **87xx = Workers** (gateway → business → queue → webhook → MCP → reserve). Frontends use Vite’s **51xx / 41xx**.
+
+| Role | Prefix | Local HTTP ports |
+|------|--------|------------------|
+| HTTP gateway | `worker-api` | **8700–8709** |
+| Business worker (RPC) | `worker-*` | **8710–8739** |
+| Queue-only consumer | `queue-*` | **8740–8759** |
+| Webhook ingress | `webhook-*` | **8760–8779** |
+| MCP server | `mcp-*` | **8780–8789** |
+| Growth reserve | - | **8790–8799** |
+| Frontend (Vite) | `front-*` | **5170–5199** (dev), **4170–4199** (preview) |
+
+### Assigned registry
+
+| Service | Path | Dev | Preview |
+|---------|------|----:|--------:|
+| worker-api | `apps/worker-api/wrangler.jsonc` | **8700** | - |
+| front-app | `apps/front-app/vite.config.ts` | **5174** | **4174** |
 
 Notes:
-- These are development ports defined in each app's `dev` block in `wrangler.jsonc` (for workers) or Vite configuration (for frontend apps).
-- The repository reserves the 8700–8799 range for local development ports to keep services grouped and avoid accidental collisions with common system ports.
-Rule of thumb:
-- **Workers**: `wrangler.jsonc` → `dev.port`
-- **Frontend**: Vite dev server port (typically in `package.json` scripts / Vite config)
-Port convention:
-- 8700–8710: core ORMs and database services
-- 8720–8729: application workers (business logic)
-- 8760–8769: external integrations and webhooks
-- 5170–5179: frontend applications (Vite dev servers)
+- Workers: set `dev.port` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`. Use `inspector_port: 0`.
+- Frontends: set Vite `server.port` / `preview.port` with `strictPort: true`.
+- Assign the next free port in the role’s range. RPC and queue-only apps still get a local port for standalone `wrangler dev`, but have no public URL in production.
+- Prefer multi-config local runs when testing bindings (first `-c` is HTTP-primary).
 
 ## 1. Create a New Cloudflare Worker
 
 ### App Naming Nomenclature
 
-| Purpose                | Prefix   | Example Name           |
-|------------------------|----------|------------------------|
-| ORM (database access)  | orm-     | orm-account           |
-| Business logic worker  | worker-  | worker-crawling       |
-| Webhook worker         | webhook- | webhook-clerk         |
-| Frontend application   | front-   | front-app             |
+| Purpose | Prefix | Example |
+|---------|--------|---------|
+| HTTP gateway | `worker-api` (sticky) | `worker-api` |
+| Business logic (RPC) | `worker-` | `worker-account` |
+| Queue-only consumer | `queue-` | `queue-email` |
+| Webhook ingress | `webhook-` | `webhook-example` |
+| MCP server | `mcp-` | `mcp-tools` |
+| Frontend application | `front-` | `front-app` |
 
 ### Key Distinctions
 
-- **ORM Workers (`orm-*`):** Handle ONLY database schemas, migrations, and SQL operations using Drizzle ORM. No business logic.
-- **Business Logic Workers (`worker-*`):** Implement business logic, call ORM workers via service bindings for data operations.
-- **Webhook Workers (`webhook-*`):** Handle webhook events from external services.
-- **Frontend Applications (`front-*`):** React-based applications using Vite for development and Cloudflare Workers for edge deployment. They communicate with backend workers via REST APIs, not service bindings.
+- **Gateway (`worker-api`):** Public HTTP only; validates requests and calls `worker-*` over RPC.
+- **Business Workers (`worker-*`):** RPC-only in production (`WorkerEntrypoint`); own Drizzle schema/migrations and the DB binding. If they also consume queues, keep this prefix and use the dual-handler layout.
+- **Queue-only (`queue-*`):** `queue()` consumers with no public HTTP in production; may own schema when they are the sole writer for that data.
+- **Webhook Workers (`webhook-*`):** Public HTTP for external callbacks; forward via RPC or queues.
+- **MCP Servers (`mcp-*`):** Public HTTP MCP transport; thin tools that call `worker-*` over RPC - never rotate long-lived credentials on this surface.
+- **Frontends (`front-*`):** React + Vite; HTTP to the gateway only - never service bindings.
+- **Do not** create runtime `orm-*` Workers or shared `packages/db-*` schema packages.
 
 **After creating a new worker, always run:**
 ```sh
@@ -197,39 +229,29 @@ pnpm turbo dev --filter=worker-name
 
 ### Testing Service Bindings Between Workers
 
-1. **Start the target worker (e.g., ORM service):**
-   ```bash
-   cd apps/orm-example
-   make dev
-   ```
+Prefer a single multi-config `wrangler dev` (first `-c` is HTTP-primary):
 
-2. **Start the calling worker in another terminal:**
-   ```bash
-   cd apps/worker-api
-   make dev
-   ```
+```sh
+wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-account/wrangler.jsonc
+```
 
-3. **Verify bindings:** Check that service bindings show as "connected" in the wrangler output
+Or run each Worker in its own terminal (`cd apps/worker-account && make dev`, then `cd apps/worker-api && make dev`) and confirm service bindings show as connected in the wrangler output.
 
 ### Dual-Handler Pattern
 
-Workers that implement queue consumption follow a dual-handler architecture:
+Use this layout for **`queue-*`** apps and for **`worker-*`** apps that also consume queues:
 
 ```
 src/
 ├── handlers/
-│   ├── request.ts    # HTTP request processing (dev/testing)
-│   └── message.ts    # Queue message consumption (production)
+│   ├── request.ts    # Optional HTTP (local debug only)
+│   └── message.ts    # Queue message consumption
 ├── services/         # Shared business logic
 └── index.ts         # Minimal delegation entry point
 ```
 
-This pattern provides:
-- **Separation of Concerns:** Each handler focuses on specific request types
-- **Code Reusability:** Shared services eliminate duplication
-- **Testability:** Handlers can be unit tested independently
-- **Maintainability:** Business logic centralized in services
-
+- **`queue-*`:** queue-only in production (no public HTTP).
+- **`worker-*` with queues:** keep the business prefix; expose RPC and optionally dual-handler HTTP for local testing.
 ## 4. Environment Configuration
 
 Each worker uses environment-specific configuration:
@@ -273,9 +295,8 @@ Each worker uses environment-specific configuration:
 When service bindings connect Workers, run each in a separate terminal, or use multiple `-c` flags (first config is HTTP-primary):
 
 ```sh
-wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/orm-example/wrangler.jsonc
+wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.jsonc
 ```
-
 ### Service Binding Configuration
 
 ```jsonc
@@ -306,17 +327,17 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/orm-example/wrangler.json
 
 ### Architecture Best Practices
 
-- **Keep ORM workers schema-only:** No business logic, only database schemas, migrations, and SQL operations
-- **Implement dual-handler pattern:** For queue-consuming workers, separate HTTP and message handlers
-- **Use service bindings:** For inter-worker communication instead of HTTP calls
-- **Maintain clear separation of concerns:** Each worker has a specific responsibility
+- **Colocate schema with the owning Worker:** Drizzle schema, migrations, and the DB binding live in that `worker-*` / `queue-*` - never share schema packages or DB bindings across apps
+- **Implement dual-handler pattern:** For queue consumers, separate message handling from optional local HTTP debug handlers
+- **Use service bindings (RPC):** For inter-worker communication instead of HTTP calls
+- **Maintain clear separation of concerns:** Each Worker has a specific runtime role (gateway, business, queue, webhook, MCP, frontend)
 
 ### Development Best Practices
 
 - **Always run `make install`** after adding workers or dependencies
 - **Use `make dev`** for focused development on specific workers
-- **Follow naming conventions:** `orm-*` for data layer, `worker-*` for business logic
-- **Use appropriate port ranges:** 8700-8710 for ORMs, 8720-8729 for workers, 8760-8769 for integrations
+- **Follow naming conventions:** `worker-*`, `queue-*`, `webhook-*`, `mcp-*`, `front-*` (no `orm-*`)
+- **Use appropriate port ranges:** see [Development ports](#development-ports)
 - **Test service bindings:** Verify connections between workers before deployment
 
 ### Code Quality Best Practices
@@ -325,20 +346,19 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/orm-example/wrangler.json
 - **Validate all data with Zod schemas:** Ensure data integrity and type safety
 - **Implement comprehensive error handling:** Use CoreError-based system for structured error management
 - **Follow OXC formatting standards:** Consistent code style across the monorepo (oxfmt + oxlint)
-- **Use shared packages:** Leverage `@repo/*` packages for common functionality
+- **Use shared packages:** Leverage `@repo/*` packages for wire contracts and configs
 
 ### Service Communication
 
 Workers communicate via service bindings:
 
 ```typescript
-// Call ORM service
+// Call a business Worker over RPC
 const result = await env.ACCOUNT_SERVICE.getAccount(userId);
 
-// Call AI service
+// Call another business Worker
 const completion = await env.WORKER_GENAI.completion(request);
 ```
-
 ## Git Hooks
 
 This repository uses [Husky](https://typicode.github.io/husky/) to automate git hooks and ensure code quality standards are enforced before commits.
@@ -455,7 +475,7 @@ Add service bindings to your worker's `wrangler.jsonc`:
 
 ### RPC Method Invocation
 
-RPC requires the **callee** to extend `WorkerEntrypoint` and expose public methods. The **caller** gets typed `env.BINDING.method()` stubs from `wrangler types` when you pass every bound Worker's config (see [Workers RPC — TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/)).
+RPC requires the **callee** to extend `WorkerEntrypoint` and expose public methods. The **caller** gets typed `env.BINDING.method()` stubs from `wrangler types` when you pass every bound Worker's config (see [Workers RPC - TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/)).
 
 **Callee** (`worker-name`):
 

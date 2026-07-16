@@ -1,24 +1,21 @@
 {
   "version": 1,
   "hooks": {
-    "preToolUse": [
+    "beforeShellExecution": [
       {
         "command": "hooks/git/guard-secret-commit.sh",
-        "matcher": "Shell",
         "timeout": 10,
         "failClosed": true
       },
       {
         "command": "hooks/git/guard-destructive-git.sh",
-        "matcher": "Shell",
         "timeout": 10,
         "failClosed": true
       }
     ],
-    "postToolUse": [
+    "afterFileEdit": [
       {
         "command": "hooks/quality/check-changed.sh",
-        "matcher": "Write",
         "timeout": 30
       }
     ],

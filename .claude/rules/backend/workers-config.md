@@ -49,9 +49,9 @@ Missing required config must fail predictably, not degrade. Preserve application
 
 ### Type generation (caller)
 
-[Workers RPC — TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/): `wrangler types` generates `Service` / `DurableObjectNamespace` with a type parameter for the callee's `WorkerEntrypoint` or `DurableObject`, and **forces client methods to be async** (always `await` at the call site).
+[Workers RPC - TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/): `wrangler types` generates `Service` / `DurableObjectNamespace` with a type parameter for the callee's `WorkerEntrypoint` or `DurableObject`, and **forces client methods to be async** (always `await` at the call site).
 
-When `wrangler.jsonc` has `services` (or DO) bindings, pass **every** bound Worker's config — one `-c` per distinct bound worker:
+When `wrangler.jsonc` has `services` (or DO) bindings, pass **every** bound Worker's config - one `-c` per distinct bound worker:
 
 ```json
 "types": "wrangler types -c ./wrangler.jsonc -c ../worker-foo/wrangler.jsonc"
@@ -61,10 +61,10 @@ Expected output shape (from Cloudflare docs): `SUM_SERVICE: Service<import("../s
 
 ### RPC provider (callee)
 
-[RPC (WorkerEntrypoint)](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/): **extend** `WorkerEntrypoint` from `cloudflare:workers` and add **public methods** — those methods are what bound callers invoke via `env.BINDING.method()`. RPC methods cannot live on a plain `export default { fetch }` handler alone.
+[RPC (WorkerEntrypoint)](https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/rpc/): **extend** `WorkerEntrypoint` from `cloudflare:workers` and add **public methods** - those methods are what bound callers invoke via `env.BINDING.method()`. RPC methods cannot live on a plain `export default { fetch }` handler alone.
 
 - Default-export the entrypoint class, or export a named class and set `"entrypoint": "ClassName"` in the caller's `services` binding.
-- Bindings on a `WorkerEntrypoint`: **`this.env`** — Cloudflare docs state *« The env object is exposed as a class property of the WorkerEntrypoint class »* (`this.env.GREETING`, `this.env.D1`, `this.env.ASSETS`, etc.). RPC methods take only their own args (no `request` / `env` parameters).
+- Bindings on a `WorkerEntrypoint`: **`this.env`** - Cloudflare docs state *« The env object is exposed as a class property of the WorkerEntrypoint class »* (`this.env.GREETING`, `this.env.D1`, `this.env.ASSETS`, etc.). RPC methods take only their own args (no `request` / `env` parameters).
 
 ### Never
 
@@ -85,4 +85,4 @@ Expected output shape (from Cloudflare docs): `SUM_SERVICE: Service<import("../s
 
 - After editing any `wrangler.jsonc`, run `make types` and `make check-types`.
 - Workers Cache (`cache.enabled`, per-entrypoint `exports`): see [workers-cache.md](workers-cache.md).
-- Multi-worker local dev: `wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/<other>/wrangler.jsonc` (first config is HTTP-primary).
+- Multi-worker local dev: `wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/<other>/wrangler.jsonc` (first config is HTTP-primary). Port ranges and `inspector_port`: see [ports.md](ports.md).

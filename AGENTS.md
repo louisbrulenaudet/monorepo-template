@@ -13,34 +13,54 @@ make prepare    # Husky pre-commit hooks
 make dev        # all dev servers
 ```
 
-Verify: `GET http://localhost:8725/api/v1/health` and `http://localhost:5174`.
-
 After scaffolding a new worker under `apps/`, run `make install` before turbo commands.
 
 ## Architecture
 
 ```mermaid
-flowchart TD
-  subgraph frontend [Frontend]
-    FrontApp["front-app (React + Vite)"]
+flowchart TB
+  subgraph entry [Public entry]
+    direction LR
+    Front["front-* :517x"]
+    Ext["External providers"]
+    McpClients["MCP clients"]
   end
-  subgraph backend [Backend Workers]
-    WorkerApi["worker-api (Hono gateway)"]
-    OrmWorker["orm-* (Drizzle ORM only)"]
-    BizWorker["worker-* (business logic)"]
-    WebhookWorker["webhook-* (event processing)"]
+
+  subgraph publicWorkers [Public Workers]
+    direction LR
+    Gateway["worker-api :8700"]
+    Webhook["webhook-* :876x"]
+    Mcp["mcp-* :878x"]
   end
-  subgraph shared [Shared Packages]
-    DTOs["@repo/dtos-common"]
+
+  subgraph privateWorkers [Private Workers]
+    direction LR
+    Biz["worker-* RPC only"]
+    Queue["queue-*"]
+  end
+
+  subgraph shared [Shared packages]
+    direction LR
     Enums["@repo/enums-common"]
-    TSConfig["@repo/typescript-config"]
+    DTOs["@repo/dtos-common"]
+    Enums --> DTOs
   end
-  FrontApp -->|"HTTP REST"| WorkerApi
-  WorkerApi -->|"service binding"| OrmWorker
-  WorkerApi -->|"service binding"| BizWorker
-  DTOs --> WorkerApi
-  DTOs --> FrontApp
-  Enums --> DTOs
+
+  Front -->|HTTP| Gateway
+  Ext -->|HTTP| Webhook
+  McpClients -->|HTTP MCP| Mcp
+
+  Gateway -->|RPC| Biz
+  Webhook -->|RPC| Biz
+  Mcp -->|RPC| Biz
+
+  Gateway -->|queue| Queue
+  Webhook -->|queue| Queue
+  Biz -->|queue| Queue
+
+  shared -.->|imports| Front
+  shared -.->|imports| publicWorkers
+  shared -.->|imports| privateWorkers
 ```
 
 | Package | Purpose |
@@ -51,12 +71,16 @@ flowchart TD
 
 ## Worker Prefixes
 
-| Prefix | Example | Role |
-|--------|---------|------|
-| `orm-` | `orm-account` | Drizzle schema + migrations only |
-| `worker-` | `worker-crawling` | Business logic; calls ORM via bindings |
-| `webhook-` | `webhook-clerk` | External webhook processing |
-| `front-` | `front-app` | React SPA; HTTP to backend only |
+| Prefix | Example | Role | Production surface |
+|--------|---------|------|--------------------|
+| `worker-api` | `worker-api` | HTTP gateway (sticky name) | Public HTTP only |
+| `worker-` | `worker-account` | Business logic | **RPC only** via service bindings |
+| `queue-` | `queue-email` | Queue-only consumer | `queue()` handler; no public HTTP |
+| `webhook-` | `webhook-example` | External webhook ingress | Public HTTP for provider callbacks |
+| `mcp-` | `mcp-tools` | MCP server | Public HTTP MCP (SSE / streamable HTTP); tools call `worker-*` via RPC |
+| `front-` | `front-app` | React SPA | Vite → gateway over HTTP only |
+
+If a Worker is both RPC and a queue consumer, keep prefix **`worker-*`** (business range) and use the dual-handler layout. Use **`queue-*`** only for queue-only consumers.
 
 ## Where to Put Things
 
@@ -69,55 +93,18 @@ flowchart TD
 | Webhook payload schemas | `packages/dtos-common/src/webhook/<feature>.ts` |
 | Shared constrained value set | `packages/enums-common/src/index.ts` |
 | Worker-local value set | `apps/<worker>/src/enums/` |
+| DB schema / migrations / query helpers | `apps/<worker>/` (owning `worker-*` or `queue-*` only) |
 | Frontend API service | `apps/front-app/src/services/worker-api/<feature>.ts` |
 | Frontend page | `apps/front-app/src/pages/` + `src/routes/` (TanStack file routes) |
 | Reusable UI / hooks | `apps/front-app/src/components/ui/`, `src/hooks/` |
 | Worker bindings / config | `apps/<worker>/wrangler.jsonc` |
 | Local dev secrets | `apps/<worker>/.dev.vars` (from `.dev.vars.example`) |
 
-Queue-consuming workers use a dual-handler layout: `handlers/request.ts`, `handlers/message.ts`, shared `services/`, minimal `index.ts`.
-
-## Port Allocation
-
-| Service | Dev port | Config |
-|---------|----------|--------|
-| `worker-api` | **8725** | `apps/worker-api/wrangler.jsonc` |
-| `front-app` | **5174** | Vite / `package.json` |
-
-Reserved ranges: ORM 8700–8710, app workers 8720–8729, webhooks 8760–8769, frontends 5170–5179.
+Queue-only apps (`queue-*`) and dual-handler `worker-*` use: `handlers/request.ts`, `handlers/message.ts`, shared `services/`, minimal `index.ts`.
 
 ## Environment
 
-Copy `.dev.vars.example` → `.dev.vars` per app before local runs. Never commit `.dev.vars` or real secrets - update `.dev.vars.example` when adding keys.
-
-## Service Bindings
-
-Worker-to-Worker calls use bindings in `wrangler.jsonc` (`services` array) and `env.BINDING` - zero latency, no public URL. **Do not** use bindings from `front-app`.
-
-## Wrangler environments
-
-| Environment | Deploy | Config block |
-|-------------|--------|--------------|
-| Local dev | `wrangler dev` | Root-level `vars`, `dev` |
-| Staging | `wrangler deploy --env staging` | `env.staging` |
-| Production | `wrangler deploy --env production` | `env.production` |
-
-After any `wrangler.jsonc` edit: `make types` then `make check-types`.
-
-## Contract Change Workflow
-
-1. Edit schemas in `packages/dtos-common/src/<layer>/` (`api`, `rpc`, `queue`, or `webhook`).
-2. Update `worker-api` route validation.
-3. Update `front-app` parsing / forms.
-4. Run `make check-types`.
-
-Prefer **additive** changes. For breaking changes, version the route (e.g. `/api/v2/`) and migrate deliberately.
-
-## Code Quality
-
-Lint and format: `.oxlintrc.json` and `.oxfmtrc.json` at repo root (`make ci`). File-specific guidance lives in mirrored rule trees: [`.claude/rules/`](.claude/rules/) and [`.cursor/rules/`](.cursor/rules/). Unconditional guardrails: [`.claude/rules/core/guardrails.md`](.claude/rules/core/guardrails.md) and [`.cursor/rules/core/guardrails.mdc`](.cursor/rules/core/guardrails.mdc).
-
-TypeScript presets: see [packages/typescript-config/AGENTS.md](packages/typescript-config/AGENTS.md) - apps **extend** a preset; do not fork compiler options.
+Copy `.dev.vars.example` → `.dev.vars` per app before local runs. Secrets and wrangler vars: path-scoped rule `backend/workers-config`. Local ports when scaffolding: `backend/ports` (human tables in [README.md](README.md)).
 
 ## Make Commands (root)
 
@@ -129,7 +116,6 @@ TypeScript presets: see [packages/typescript-config/AGENTS.md](packages/typescri
 | `make check-types` | TypeScript across all packages |
 | `make types` | Generate `worker-configuration.d.ts` in apps |
 | `make build` / `make deploy` | Build or deploy via Turborepo |
-| `make format` / `make lint` | Fix formatting / lint issues |
 
 ### Scoping (pnpm / Turborepo)
 
@@ -141,39 +127,9 @@ Pass optional variables to any turbo-backed root target:
 | `FILTER` | Raw turbo filter expression | `make build FILTER=...front-app...` |
 | `AFFECTED` | `--affected` (changed packages vs base) | `make ci AFFECTED=1` |
 
-CI uses `make ci AFFECTED=1` and `make build AFFECTED=1`.
+## Agent tooling
 
-### Per-package commands
-
-Each app/package has a minimal `Makefile` that includes [`make/app.mk`](make/app.mk) - targets are auto-scoped to that workspace package (resolved from `package.json` `name`):
-
-```bash
-cd apps/worker-api && make dev    # turbo run dev --filter=worker-api
-cd packages/dtos-common && make ci  # turbo run lint format check-types --filter=@repo/dtos-common
-```
-
-Per-app command tables: see each app's `AGENTS.md`.
-
-## Memory Layout (Claude Code + Cursor)
-
-| Layer | Claude Code | Cursor |
-|-------|-------------|--------|
-| Global instructions | [CLAUDE.md](CLAUDE.md) (imports this file) | [AGENTS.md](AGENTS.md) (workspace rules) |
-| Path-scoped rules | [`.claude/rules/`](.claude/rules/) (`*.md`) | [`.cursor/rules/`](.cursor/rules/) (`*.mdc`) |
-| Hooks | [`.claude/settings.json`](.claude/settings.json) | [`.cursor/hooks.json`](.cursor/hooks.json) |
-| Hook scripts (shared) | [`hooks/`](hooks/) | [`hooks/`](hooks/) |
-| Subagents | [`.claude/agents/`](.claude/agents/) | [`.cursor/agents/`](.cursor/agents/) |
-| Slash commands | - | [`.cursor/commands/`](.cursor/commands/) |
-| Deep skills | [`.claude/skills/`](.claude/skills/) | [`.agents/skills/`](.agents/skills/) |
-| Nested app guides | `CLAUDE.md` per app/package | `AGENTS.md` per app/package |
-
-- Claude Code: nested `CLAUDE.md` in apps/packages load on demand; debug instruction loading with `tail -f hooks/logs/instructions-loaded.log`.
-- Cursor: root and nested `AGENTS.md` files apply by directory; path-scoped `.mdc` rules attach by glob. Debug hook activity in **Customize → Hooks**.
-- Both rule engines recurse through category subfolders (`core`, `frontend`, `backend`, `contracts`, `quality`). Folder names organize rules but do not scope them; Cursor uses `globs` / `alwaysApply`, while Claude Code uses `paths` / no `paths`.
-- **Keeping Claude + Cursor in sync:** when you edit a path-scoped rule or subagent, update the same relative file in the other tree (`.claude/rules/**/*.md` ↔ `.cursor/rules/**/*.mdc`, `.claude/agents/*.md` ↔ `.cursor/agents/*.md`). Hook scripts are canonical in [`hooks/`](hooks/); both tools reference that directory via their config files.
-- **Vite 8 config:** [`.claude/rules/frontend/vite-config.md`](.claude/rules/frontend/vite-config.md) ↔ [`.cursor/rules/frontend/vite-config.mdc`](.cursor/rules/frontend/vite-config.mdc) - scoped to `apps/front-*/vite.config.ts` only.
-
-See [`.cursor/README.md`](.cursor/README.md) for a quick index of the Cursor setup.
+Cursor / Claude dual-tree layout, sync policy, hooks, skills, and slash commands: skill `monorepo-agent-setup`. Quick Cursor index: [`.cursor/README.md`](.cursor/README.md).
 
 ## Agent Guides
 
@@ -191,16 +147,14 @@ Extend this table when adding a new app or package with its own guide.
 
 ## Decision Checklist
 
-1. Schema already in `@repo/dtos-common`? Import it - don't redefine.
-2. Constrained value already in `@repo/enums-common`? Import it - don't duplicate literals.
-3. Worker-to-Worker call? Service binding, not HTTP.
-4. Filename follows kebab-case? (PascalCase only for React `.tsx` components in `front-app`.)
-5. Worker function under 100 lines? Extract helpers if not.
-6. All imports used? oxlint errors on unused vars.
+1. Worker-to-Worker call? **Service binding RPC**, not HTTP (no extra request fee on Workers Standard).
+2. DB access? Schema + binding in the owning `worker-*` / `queue-*` - never a runtime `orm-*` Worker; never share schema or DB bindings across apps.
+3. Public HTTP only for gateway, webhooks, MCP, and frontends - not for business RPC or queue-only workers.
+
+Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor/rules/` / `.claude/rules/` (`contracts`, `quality`).
 
 ## Contribution
 
 - Run `make ci` before opening a PR.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
-- Never commit secrets or real environment values.

@@ -25,7 +25,7 @@ paths:
 
 ## Dev server
 
-- Ports per app in [AGENTS.md](../../AGENTS.md) (frontends **5170–5179**); set `server.port` / `preview.port` + `strictPort: true` in each app's config.
+- Ports per app in [ports.md](../backend/ports.md) (frontends **5170–5199**); set `server.port` / `preview.port` + `strictPort: true` in each app's config.
 - `server.warmup.clientFiles` for hot entry files only. Keep `server.forwardConsole` (or `{ unhandledErrors: true, logLevels: ["warn", "error"] }`) for agentic dev.
 
 ## Build, env, deps

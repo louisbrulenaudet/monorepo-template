@@ -1,9 +1,29 @@
 #!/usr/bin/env sh
 # Purpose: Block history-rewriting / working-tree-destroying git commands.
-# Target: Cursor preToolUse (Shell) and Claude Code PreToolUse (Bash).
+# Target: Cursor beforeShellExecution and Claude Code PreToolUse (Bash).
 # Canonical location: hooks/git/ - wired from .cursor/hooks.json and .claude/settings.json.
 #
-# Mirrors .cursor/rules/core/guardrails.mdc and .claude/rules/core/guardrails.md.
+# Mirrors guardrails. Cursor failClosed expects JSON on stdout; Claude uses exit 2 + stderr.
+# Always emit allow JSON so empty output never fail-closes.
+
+set -u
+
+allow() {
+  trap - EXIT INT TERM HUP
+  printf '%s\n' '{"permission":"allow"}'
+  exit 0
+}
+
+deny() {
+  trap - EXIT INT TERM HUP
+  msg="$1"
+  printf '%s\n' "$msg" >&2
+  json_msg=$(printf '%s' "$msg" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n' ' ')
+  printf '%s\n' "{\"permission\":\"deny\",\"user_message\":\"$json_msg\",\"agent_message\":\"$json_msg\"}"
+  exit 2
+}
+
+trap 'allow' EXIT INT TERM HUP
 
 INPUT=$(cat 2>/dev/null || true)
 
@@ -13,11 +33,11 @@ else
   CMD=$(printf '%s' "$INPUT" | sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/p' 2>/dev/null || true)
 fi
 
-[ -z "$CMD" ] && exit 0
+[ -z "$CMD" ] && allow
 
 case "$CMD" in
   *git*) ;;
-  *) exit 0 ;;
+  *) allow ;;
 esac
 
 word() { printf '%s' "$CMD" | grep -Eq "(^|[[:space:]])$1([[:space:]]|\$)"; }
@@ -42,7 +62,6 @@ elif word 'restore' && ! word '\-\-staged'; then
   REASON="git restore <path> discards uncommitted changes"
 fi
 
-[ -z "$REASON" ] && exit 0
+[ -z "$REASON" ] && allow
 
-echo "Blocked: $REASON. Per .cursor/rules/core/guardrails.mdc, destructive/irreversible git operations must not run autonomously. Ask the user to confirm this exact command, and let them run it themselves if they approve." >&2
-exit 2
+deny "Blocked: $REASON. Per .cursor/rules/core/guardrails.mdc and .claude/rules/core/guardrails.md, destructive/irreversible git operations must not run autonomously. Ask the user to confirm this exact command, and let them run it themselves if they approve."
