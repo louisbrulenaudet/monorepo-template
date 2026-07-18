@@ -29,7 +29,7 @@ Canonical layout and sync policy for **Cursor** and **Claude Code** in this repo
 - Ports rule: `.claude/rules/backend/ports.md` ↔ `.cursor/rules/backend/ports.mdc` - `wrangler.jsonc`, app `package.json`, `front-*/vite.config.ts`.
 - TSConfig rule: `.claude/rules/quality/typescript-config.md` ↔ `.cursor/rules/quality/typescript-config.mdc` - `packages/typescript-config/**`, `**/tsconfig*.json`.
 
-See [`.cursor/README.md`](../../../.cursor/README.md) and [`hooks/AGENTS.md`](../../../hooks/AGENTS.md).
+See [`hooks/AGENTS.md`](../../../hooks/AGENTS.md) for hook authoring. Full layout and sync policy: this skill.
 
 ## Content taxonomy (what belongs where)
 

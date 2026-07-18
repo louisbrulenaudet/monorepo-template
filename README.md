@@ -103,7 +103,7 @@ Do **not** create shared `packages/db-*` schema packages. Put Drizzle schema und
 |------|----------|
 | New API route | `apps/worker-api/src/routes/<feature>.ts` → mount in `src/index.ts` |
 | HTTP Zod schemas | `packages/dtos-common/src/api/<feature>.ts` |
-| RPC / queue / webhook schemas | `packages/dtos-common/src/rpc|queue|webhook/<feature>.ts` |
+| RPC / queue / webhook schemas | `packages/dtos-common/src/<layer>/<feature>.ts` (layer: `rpc`, `queue`, or `webhook`) |
 | Shared string value set | `packages/enums-common/src/` |
 | Worker-local value set | `apps/<worker>/src/enums/` |
 | DB schema (one owner) | `apps/<owner>/src/db/` - never `packages/db-*` |
@@ -116,7 +116,7 @@ Do **not** create shared `packages/db-*` schema packages. Put Drizzle schema und
 
 ### Prerequisites
 
-- **Node.js** `>=22` (see root `package.json` `engines`), we recommend using the fnm node version manager for ease of use and cross-platform compatibility
+- **Node.js** 22+ (see root `package.json` `engines`); we recommend [fnm](https://github.com/Schniz/fnm) for version management
 - **pnpm** via the root `packageManager` field (Corepack recommended)
 - **Cloudflare account** only if you need `make login` / deploy / remote Worker features
 
@@ -442,15 +442,14 @@ make husky-status  # verify hooks are executable
 - **[AGENTS.md](AGENTS.md)** - cross-tool project conventions and Cursor's root instructions.
 - **[CLAUDE.md](CLAUDE.md)** - Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).
 - **Per-app/package** - each workspace has matching `AGENTS.md` and `CLAUDE.md`.
-- **[.cursor/README.md](.cursor/README.md)** / **[.claude/README.md](.claude/README.md)** - tool-specific layout and sync policy.
 - **[hooks/README.md](hooks/README.md)** - shared agent hook scripts (not Husky).
-- **[.agents/README.md](.agents/README.md)** - skills source of truth.
 - **Rules** - mirrored trees under `.cursor/rules/**/*.mdc` and `.claude/rules/**/*.md`.
+- **Skills** - source of truth under `.agents/skills/` (see skill `monorepo-agent-setup`).
 - **Security** - `.cursorignore` reduces model context but is not an access-control boundary.
 
 ## Shared Packages (`@repo/*`)
 
-Local packages under [`packages/`](packages/README.md) (index + consumption diagram).
+Local packages under `packages/`. Each package has its own README.
 
 ### Available Shared Packages
 

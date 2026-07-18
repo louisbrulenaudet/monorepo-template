@@ -129,7 +129,7 @@ Pass optional variables to any turbo-backed root target:
 
 ## Agent tooling
 
-Cursor / Claude dual-tree layout, sync policy, hooks, skills, and slash commands: skill `monorepo-agent-setup`. Quick Cursor index: [`.cursor/README.md`](.cursor/README.md).
+Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md).
 
 ## Agent Guides
 

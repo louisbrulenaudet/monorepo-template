@@ -16,7 +16,7 @@ hooks/
 ├── quality/                # Post-edit format + lint (afterFileEdit / PostToolUse)
 │   ├── check-changed.sh         # Sequential entry point
 │   ├── format-changed.sh
-│   └── lint-changed.sh
+│   ├── lint-changed.sh
 ├── logging/                # Debug logs (fire-and-forget)
 │   ├── session-start.sh        # Cursor sessionStart
 │   └── instructions-loaded.sh  # Claude InstructionsLoaded
