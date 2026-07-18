@@ -12,14 +12,14 @@ A minimal, production-oriented monorepo starter built on pnpm workspaces with Tu
 
 ### Monorepo Structure
 
-Starter apps today (`worker-api`, `front-app`). Prefixes below describe how the repo grows - see [apps/README.md](apps/README.md) and [packages/README.md](packages/README.md).
+Starter apps today (`worker-api`, `front-app`). Prefixes below describe how the repo grows.
 
 ```
 monorepo/
-├── apps/                    # Workers and frontends (see apps/README.md)
+├── apps/                    # Workers and frontends
 │   ├── worker-api/          # REST API gateway
 │   └── front-app/           # React SPA (Vite + TanStack)
-├── packages/                # Shared @repo/* packages (see packages/README.md)
+├── packages/                # Shared @repo/* packages
 │   ├── dtos-common/         # Zod wire contracts (api / rpc / queue / webhook)
 │   ├── enums-common/        # Shared constrained string values (`as const`)
 │   └── typescript-config/   # TypeScript configuration presets
@@ -149,8 +149,6 @@ Notes:
 Focused work on one package: `make dev SCOPE=worker-api` (see [Scoping](#scoping-pnpm--turborepo)).
 
 ## Make Commands
-
-Deep reference: [make/README.md](make/README.md). CI workflow: [.github/README.md](.github/README.md).
 
 | Command         | Description                                         |
 |-----------------|-----------------------------------------------------|
@@ -435,7 +433,7 @@ make husky-status  # verify hooks are executable
 
 ## Contribution
 
-- Run **`make ci`** before opening a PR (lint + format + check-types). GitHub CI also runs an affected build - see [.github/README.md](.github/README.md).
+- Run **`make ci`** before opening a PR (lint + format + check-types). GitHub CI also runs an affected build.
 - Wire-format changes: update `@repo/dtos-common` and every producer/consumer in the **same PR** (HTTP → `worker-api` + `front-app`).
 - When you add endpoints, bindings, or env vars, update the relevant app/package **README** and **AGENTS.md**.
 
