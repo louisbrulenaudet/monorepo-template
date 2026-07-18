@@ -1,7 +1,7 @@
 # front-app
 
 [![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
-[![TypeScript](https://img.shields.io/badge/language-typescript-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/static/v1?label=framework&message=React&color=blue&logo=react&logoColor=white)](https://react.dev/)
 [![Vite](https://img.shields.io/static/v1?label=build&message=Vite&color=blue&logo=vite&logoColor=white)](https://vite.dev/)
 [![Tailwind](https://img.shields.io/static/v1?label=styling&message=Tailwind%20CSS&color=blue&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
@@ -75,7 +75,7 @@ More detail for agents: [AGENTS.md](AGENTS.md).
 
 ## Prerequisites
 
-- Node.js 18+ (see root `package.json` `engines`)
+- Node.js **22+** (see root `package.json` `engines`)
 - pnpm (repo pins `pnpm` in root `package.json` `packageManager`)
 - Cloudflare account + Wrangler login (only needed for deployment)
 
@@ -86,12 +86,17 @@ From the monorepo root:
 ```sh
 make install
 make prepare
+cp apps/front-app/.env.example apps/front-app/.env.local   # optional overrides
 make dev
 ```
 
 Local URLs:
 - Frontend dev server: `http://localhost:5174`
 - API dependency: `http://localhost:8700` (see `apps/worker-api`)
+
+### Path aliases
+
+Imports use aliases defined in both `vite.config.ts` and `tsconfig.app.json` (keep them in sync): `@`, `@utils`, `@enums`, `@components`, `@ui`, `@routes`, `@pages`, `@hooks`, `@services`, `@config`. Example: `import { fetchJsonWithSchema } from "@utils/fetch-api"`.
 
 ## Make Commands
 
@@ -125,11 +130,11 @@ From this app directory (`apps/front-app/`):
 
 ### Environment Variables
 
-The app calls `worker-api` using a base URL from `import.meta.env.VITE_API_BASE_URL`. In development it defaults to `http://localhost:8700` when unset (see `src/config/env.ts`).
+The app calls `worker-api` using a base URL from `import.meta.env.VITE_API_BASE_URL`. In development it defaults to `http://localhost:8700` when unset (see `src/config/env.ts`). Always read the API origin from `src/config/env.ts` - never hardcode it elsewhere.
 
 | Goal | File |
 |------|------|
-| Local dev overrides | Copy [`.env.example`](.env.example) to `.env` or `.env.local` |
+| Local dev overrides | Copy [`.env.example`](.env.example) to **`.env.local`** (or `.env`) |
 | Production build / deploy | Copy [`.env.production.example`](.env.production.example) to `.env.production` |
 
 Vite loads `.env.production` only for `vite build` (not for `vite dev`), so you can keep a stable API URL for deploys without changing dev defaults.
@@ -138,7 +143,7 @@ Examples:
 - **Development** (default): leave unset → `http://localhost:8700`
 - **Production**: set `VITE_API_BASE_URL` in `.env.production` to your deployed `worker-api` origin before `make build` or `make deploy`
 
-Deploy only the frontend from the monorepo root: `pnpm turbo run deploy --filter=front-app`.
+Deploy only the frontend from the monorepo root: `make deploy SCOPE=front-app`.
 
 Important: `VITE_*` variables are inlined during build. Changing `VITE_API_BASE_URL` requires rebuilding/redeploying the frontend assets.
 

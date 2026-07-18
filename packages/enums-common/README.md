@@ -89,6 +89,13 @@ Avoid passing a plain `string[]` without `as const` - Zod will infer `string` in
 
 Keep value sets **app-local** (`apps/*/src/enums/`) when UI-only or single-consumer.
 
+```mermaid
+flowchart TD
+  Start["Need a constrained string set?"] --> Shared{"Used by 2+ apps or a DTO?"}
+  Shared --> Repo["Add to @repo/enums-common"]
+  Shared --> Local["Keep in apps/*/src/enums"]
+```
+
 ## Definition template
 
 ```typescript
@@ -106,6 +113,7 @@ export type MyValueSet = (typeof MyValueSet)[keyof typeof MyValueSet];
 |---------|-------------|
 | `make format` / `make lint` / `make check` | OXC |
 | `make check-types` | TypeScript (`tsc -b`) |
+| `make ci` | Lint + format + check-types |
 
 ## Project structure
 

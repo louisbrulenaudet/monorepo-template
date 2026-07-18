@@ -46,21 +46,21 @@ flowchart TB
     Enums --> DTOs
   end
 
-  Front -->|HTTP| Gateway
-  Ext -->|HTTP| Webhook
-  McpClients -->|HTTP MCP| Mcp
+  Front --> Gateway
+  Ext --> Webhook
+  McpClients --> Mcp
 
-  Gateway -->|RPC| Biz
-  Webhook -->|RPC| Biz
-  Mcp -->|RPC| Biz
+  Gateway --> Biz
+  Webhook --> Biz
+  Mcp --> Biz
 
-  Gateway -->|queue| Queue
-  Webhook -->|queue| Queue
-  Biz -->|queue| Queue
+  Gateway --> Queue
+  Webhook --> Queue
+  Biz --> Queue
 
-  shared -.->|imports| Front
-  shared -.->|imports| publicWorkers
-  shared -.->|imports| privateWorkers
+  shared -.-> Front
+  shared -.-> publicWorkers
+  shared -.-> privateWorkers
 ```
 
 | Package | Purpose |
@@ -148,7 +148,7 @@ Extend this table when adding a new app or package with its own guide.
 ## Decision Checklist
 
 1. Worker-to-Worker call? **Service binding RPC**, not HTTP (no extra request fee on Workers Standard).
-2. DB access? Schema + binding in **one** owning `worker-*` / `queue-*` under `src/db/` — never `packages/db-*`, never the same DB binding on multiple apps. Other apps use **service-binding RPC** (or a queue).
+2. DB access? Schema + binding in **one** owning `worker-*` / `queue-*` under `src/db/` - never `packages/db-*`, never the same DB binding on multiple apps. Other apps use **service-binding RPC** (or a queue).
 3. Public HTTP only for gateway, webhooks, MCP, and frontends - not for business RPC or queue-only workers.
 
 Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor/rules/` / `.claude/rules/` (`contracts`, `quality`).

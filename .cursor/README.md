@@ -1,6 +1,6 @@
 # Cursor project setup
 
-This folder holds Cursor-specific agent configuration. Shared hook **scripts** live in [`hooks/`](../hooks/) at the repo root.
+Cursor-specific agent configuration. Shared hook **scripts** live in [`hooks/`](../hooks/) at the repo root.
 
 ## Layout
 
@@ -9,11 +9,13 @@ This folder holds Cursor-specific agent configuration. Shared hook **scripts** l
 | [`rules/`](rules/) | Recursive category tree of project rules (`.mdc`) - parallel to [`.claude/rules/`](../.claude/rules/) |
 | [`hooks.json`](hooks.json) | Agent hook wiring → scripts under [`hooks/`](../hooks/) |
 | [`agents/`](agents/) | Custom subagents (`ci-verifier`, `docs-researcher`, `test-runner`) |
-| [`commands/`](commands/) | Thin slash wrappers → [`.agents/skills/review*/SKILL.md`](../.agents/skills/) (`/review`, `/review-ci`, …) |
+| [`mcp.json`](mcp.json) | Project MCP servers (aligned with root [`.mcp.json`](../.mcp.json)) |
+
+There is **no** `commands/` folder in this repo; invoke review workflows via skills under [`.agents/skills/review*`](../.agents/skills/).
 
 ## Global instructions
 
-Cursor loads root and nested `AGENTS.md` files by directory. Rules under `rules/**` add guidance according to their `globs` or `alwaysApply` frontmatter. Subfolders organize rules but do not scope them. Hook authoring guide: [hooks/AGENTS.md](../hooks/AGENTS.md).
+Cursor loads root and nested `AGENTS.md` files by directory. Rules under `rules/**` apply via `globs` or `alwaysApply` frontmatter. Hook authoring: [`hooks/AGENTS.md`](../hooks/AGENTS.md).
 
 ## Sync policy
 
@@ -21,16 +23,44 @@ When changing rules or subagents, keep Claude Code and Cursor in sync:
 
 - `.cursor/rules/**/*.mdc` ↔ `.claude/rules/**/*.md` (same category and basename)
 - `.cursor/agents/*.md` ↔ `.claude/agents/*.md`
-- Hook scripts: edit only [`hooks/`](../hooks/) (see [hooks/README.md](../hooks/README.md))
-- Skills: source of truth under [`.agents/skills/`](../.agents/skills/); `.claude/skills/<name>` are symlinks (except Cursor-only `skills-update`)
-- Review skills: edit [`.agents/skills/review*/SKILL.md`](../.agents/skills/); Cursor commands are thin wrappers to those skills
+- Hook scripts: edit only [`hooks/`](../hooks/) (see [`hooks/README.md`](../hooks/README.md))
+- Skills: source of truth under [`.agents/skills/`](../.agents/skills/); `.claude/skills/<name>` are symlinks
+- MCP: keep [`.cursor/mcp.json`](mcp.json) and [`.mcp.json`](../.mcp.json) server lists aligned
 
-Full inventory: skill `monorepo-agent-setup`.
-
-## Subagents
-
-Invoke explicitly with `/ci-verifier`, `/docs-researcher`, or `/test-runner`, or let Agent delegate when descriptions match (they include "Use PROACTIVELY").
+Full inventory: skill `monorepo-agent-setup`. Claude mirror: [`.claude/README.md`](../.claude/README.md).
 
 ## Hooks
 
-Wiring is in [`hooks.json`](hooks.json): `beforeShellExecution` (git guards, `failClosed`), `afterFileEdit` (format/lint), `sessionStart` (logging). Scripts live under [`hooks/git/`](../hooks/git/), [`hooks/quality/`](../hooks/quality/), and [`hooks/logging/`](../hooks/logging/). Debug logs: `hooks/logs/`. See [Cursor hooks docs](https://cursor.com/docs/hooks).
+Wiring in [`hooks.json`](hooks.json): `beforeShellExecution` (git guards, `failClosed`), `afterFileEdit` (format/lint), `sessionStart` (logging). Scripts: [`hooks/git/`](../hooks/git/), [`hooks/quality/`](../hooks/quality/), [`hooks/logging/`](../hooks/logging/). Debug: `hooks/logs/`.
+
+## MCP
+
+Project MCP is documentation-only: **cloudflare-docs** and **context7** (see [`mcp.json`](mcp.json)).
+
+**Cloudflare login popups** usually come from the Cursor **Cloudflare marketplace plugin**, which registers account-scoped MCPs (bindings, builds, observability OAuth). For day-to-day work in this repo, keep that plugin disabled or turn off its account MCPs; rely on project `cloudflare-docs` only. Do not register Context7 twice (plugin + project).
+
+```mermaid
+flowchart TB
+  subgraph cursor [".cursor"]
+    Rules["rules/"]
+    HooksJ["hooks.json"]
+    AgentsDir["agents/"]
+    MCP["mcp.json"]
+  end
+  subgraph shared ["repo root"]
+    Hooks["hooks/"]
+    AgentsSkills[".agents/skills/"]
+    Claude[".claude/"]
+  end
+  HooksJ --> Hooks
+  Rules --> Claude
+  AgentsDir --> Claude
+  MCP --> RootMCP[".mcp.json"]
+  AgentsSkills -.-> Rules
+```
+
+## Related
+
+- [`hooks/`](../hooks/)
+- [`.agents/`](../.agents/)
+- [`.claude/`](../.claude/)

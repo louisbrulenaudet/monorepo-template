@@ -12,7 +12,7 @@ paths:
 
 ```mermaid
 flowchart TD
-  Client["Client / front-app"] -->|"HTTP"| HonoApp["Hono app"]
+  Client["Client / front-app"] --> HonoApp["Hono app"]
   HonoApp --> CORS["CORS first"]
   CORS --> Limits["Compression / body limits"]
   Limits --> Auth["Auth optional"]

@@ -1,7 +1,7 @@
 # TypeScript Config
 
 [![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
-[![TypeScript](https://img.shields.io/badge/language-typescript-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 Shared TypeScript configuration presets for the monorepo, providing consistent TypeScript settings across all applications and workers. This package ensures type safety, modern ES features, and optimal compiler settings for Cloudflare Workers, React (Vite) frontends, and library packages.
 
@@ -143,6 +143,12 @@ Agent-focused notes: [AGENTS.md](AGENTS.md).
 ## Root solution tsconfig
 
 The repo root `tsconfig.json` references all packages for IDE navigation. Use `make check-types` for CI (Turborepo) or `make types && pnpm check-types:solution` for `tsc -b` (requires `composite: true` on referenced projects).
+
+| Command | Description |
+|---------|-------------|
+| `make check-types` | TypeScript across packages (Turborepo) |
+| `make ci` | Lint + format + check-types |
+| `pnpm check-types:solution` | Solution build via `tsc -b` (after `make types`) |
 
 ## Best Practices
 

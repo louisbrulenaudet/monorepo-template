@@ -5,7 +5,7 @@
 [![Zod](https://img.shields.io/static/v1?label=validation&message=Zod&color=blue&logo=zod&logoColor=white)](https://github.com/colinhacks/zod)
 [![Cloudflare](https://img.shields.io/static/v1?label=runtime&message=Cloudflare%20Workers&color=blue&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/workers/)
 
-A REST API gateway providing secure HTTP endpoints for frontend applications and external clients.
+Public HTTP API gateway for the monorepo. `front-app` and external clients call this Worker over HTTP; business Workers join later via service-binding RPC.
 
 ## Current configuration (checked-in starter)
 
@@ -16,23 +16,56 @@ What you can run today:
 - CORS allows any origin by default. To restrict browsers to specific origins, set the `CORS_ORIGINS` var (comma-separated list, e.g. `http://localhost:5174,https://app.example.com`) in `wrangler.jsonc` or `.dev.vars`.
 
 What you can add as you grow the repo:
-- **Service bindings** to other Workers (configure under `services` in `wrangler.jsonc`)
+- Auth / session middleware
+- **Service bindings** to `worker-*` (configure under `services` in `wrangler.jsonc`)
 
 ## Purpose
 
-The worker-api serves as the public-facing HTTP API gateway for monorepo. It provides secure, authenticated endpoints for business logic operations. Built on Cloudflare Workers with Hono framework, it ensures type-safe API interactions while maintaining high performance and security standards.
+`worker-api` is the public-facing HTTP gateway: validate requests with shared Zod schemas, apply CORS and security middleware, and return typed JSON. The starter ships a health check with open CORS; authentication and RPC bindings are extension points, not current defaults.
 
 ## Tech Stack
 
 - **Language:** TypeScript (strict mode, ESNext)
 - **Framework:** Hono (for Cloudflare Workers)
-- **Validation:** Zod schemas for request/response validation
+- **Validation:** Zod schemas from `@repo/dtos-common/api`
 - **Middleware:** CORS, compression, body limits, secure headers
 - **Runtime:** Cloudflare Workers
-- **Service bindings:** BUSINESS_LOGIC_SERVICE - add under `services` in `wrangler.jsonc` when integrating
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
-- **Build Tools:** tsx, Wrangler
 - **Package Manager:** pnpm
+
+## Project Structure
+
+```
+apps/worker-api/
+├── src/
+│   ├── routes/           # One route module per feature
+│   │   └── health.ts
+│   ├── enums/            # Worker-local value sets (`as const`)
+│   └── index.ts          # Middleware stack + route mounts
+├── wrangler.jsonc
+├── .dev.vars.example
+├── Makefile
+└── README.md
+```
+
+## Request path
+
+```mermaid
+flowchart LR
+  Client["Client_or_front-app"] --> Mw["CORS_and_middleware"]
+  Mw --> Routes["Route_handlers"]
+  Routes --> Zod["Zod_zValidator"]
+  Zod --> Handler["Handler"]
+  Handler -.-> Rpc["worker-*_RPC"]
+  Handler --> JSON["JSON_response"]
+```
+
+## Development Ports
+
+| Service | Path | Port |
+|---------|------|-----:|
+| worker-api (this app) | `wrangler.jsonc` (`dev.port`) | **8700** |
+| front-app (caller) | `apps/front-app/vite.config.ts` | 5174 |
 
 ## Setup & Development
 
@@ -47,8 +80,8 @@ The worker-api serves as the public-facing HTTP API gateway for monorepo. It pro
    Copy `.dev.vars.example` to `.dev.vars`. The current code does not require secrets; if you add any, document keys in `.dev.vars.example` and set real values in `.dev.vars` (never commit secrets).
 
 3. **Start development server**:
-   - From the monorepo root: `make dev` (starts all `dev` tasks via Turborepo), or `pnpm turbo dev --filter=worker-api`
-   - From this app folder: `make dev` (runs only `worker-api`)
+   - From the monorepo root: `make dev` (all apps) or `make dev SCOPE=worker-api`
+   - From this app folder: `make dev`
    ```bash
    make dev
    ```
@@ -66,6 +99,15 @@ Expected response:
 { "status": "ok" }
 ```
 
+### Adding an endpoint
+
+1. Contract in `packages/dtos-common/src/api/<feature>.ts` (export from `api/index.ts`).
+2. Route module `src/routes/<feature>.ts` with `zValidator` on every input.
+3. Mount the route in `src/index.ts`.
+4. Call business logic locally or via `env.BINDING` once a service binding exists.
+5. Update `.dev.vars.example` for any new secrets.
+6. Run `make ci`.
+
 ### Available Commands
 
 | Command | Description |
@@ -77,54 +119,20 @@ Expected response:
 | `make lint` | Lint via Turborepo (`lint:fix` per package) |
 | `make check` | Lint + format check via Turborepo |
 | `make check-types` | Typecheck |
-| `make types` | Generate Wrangler types |
+| `make types` | Generate Wrangler types (run after binding changes) |
 | `make update` | Update dependencies |
 | `make ci` | Full CI via Turborepo: lint + format + check-types |
 
 ## Deployment
 
-### Deployment (from this app directory)
-
 ```bash
-make deploy
+make deploy                 # from this directory
+make deploy SCOPE=worker-api  # from repo root
 ```
-
-### Deployment (from the monorepo root)
-
-```bash
-make deploy
-```
-
-## Architecture
-
-The worker follows a modular architecture with:
-
-- **Route Handlers** - Organized by feature (health check)
-- **DTOs** - Type-safe request/response validation with Zod
-- **Middleware Stack** - Security, performance, and error handling
-- **Service Bindings** - Integration with backend microservices
-
-### Architecture (diagram)
-
-```mermaid
-flowchart TD
-  Client[Client_or_front-app] -->|"HTTP"| Hono[Hono_worker-api]
-  Hono --> Routes[Route_handlers]
-  Routes --> Zod[Zod_validation]
-  Zod --> Handler[Handler]
-  Handler -->|optional| Bindings[Service_bindings]
-  Handler --> JSON[JSON_response]
-```
-
-Agent-focused detail: [AGENTS.md](AGENTS.md).
 
 ## Request Validation with Zod
 
-The API uses `@hono/zod-validator` middleware for type-safe request validation. All API DTOs are shared from `@repo/dtos-common/api` to ensure consistent validation between frontend and backend.
-
-### Shared API DTOs
-
-The API uses shared DTOs from `@repo/dtos-common/api`:
+All HTTP DTOs live in `@repo/dtos-common/api` so the frontend and gateway stay aligned:
 
 ```typescript
 import { HealthResponseSchema } from "@repo/dtos-common/api";
@@ -136,11 +144,12 @@ health.get("/", (c) => {
 });
 ```
 
+Worker-local constrained strings belong in `src/enums/`. Promote to `@repo/enums-common` when a second app needs them.
+
 ## Development Guidelines
 
 - Use strict TypeScript with proper type annotations
-- Validate all requests/responses with Zod schemas using `zValidator` middleware
-- Implement proper error handling with HTTP status codes
+- Validate all requests/responses with Zod schemas using `zValidator`
+- Keep handlers thin; put business logic behind services or RPC
 - Follow RESTful API design principles
-- Use Makefile commands for consistency
-- Run lint and format before committing changes
+- Run `make ci` before opening a PR

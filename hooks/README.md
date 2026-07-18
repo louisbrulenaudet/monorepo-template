@@ -2,6 +2,8 @@
 
 Shared shell hooks for **Cursor** and **Claude Code**. Scripts live here; wiring stays in tool-specific config files.
 
+These hooks run in the **AI agent loop** only. They do **not** run on a normal human `git commit` - that is [Husky](../README.md#git-hooks) (`.husky/pre-commit`). See the root README diagram that contrasts both systems.
+
 ## Layout
 
 ```
@@ -29,6 +31,25 @@ hooks/
 | Cursor | [`.cursor/hooks.json`](../.cursor/hooks.json) | Project root |
 | Claude Code | [`.claude/settings.json`](../.claude/settings.json) | Project root |
 
+```mermaid
+flowchart LR
+  subgraph config [Tool_config]
+    Cursor[".cursor/hooks.json"]
+    Claude[".claude/settings.json"]
+  end
+  subgraph scripts [hooks]
+    Git["git/"]
+    Quality["quality/"]
+    Logging["logging/"]
+  end
+  Cursor --> Git
+  Cursor --> Quality
+  Cursor --> Logging
+  Claude --> Git
+  Claude --> Quality
+  Claude --> Logging
+```
+
 Both read JSON on **stdin** and support Claude (`tool_input.*`) and Cursor (flat `command` / `file_path`) shapes. Git guards always emit Cursor permission JSON on stdout.
 
 ## When hooks run
@@ -42,6 +63,16 @@ Both read JSON on **stdin** and support Claude (`tool_input.*`) and Cursor (flat
 | **InstructionsLoaded** (Claude only) | `logging/instructions-loaded.sh` | Append to `logs/instructions-loaded.log` |
 
 Exit code **2** blocks a pre-shell action. On a post-edit event it only feeds the error back to the agent; it cannot roll back the completed edit. Cursor security guards set `failClosed: true` so crashes, timeouts, and invalid output do not bypass them - scripts therefore always print `{"permission":"allow"}` on the allow path.
+
+## Manual test (before wiring)
+
+```bash
+# Should deny (exit 2) and print permission JSON
+echo '{"command":"git push --force"}' | hooks/git/guard-destructive-git.sh
+
+# Should allow
+echo '{"command":"git status"}' | hooks/git/guard-destructive-git.sh
+```
 
 ## Debugging
 

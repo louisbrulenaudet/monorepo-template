@@ -18,7 +18,7 @@ Canonical layout and sync policy for **Cursor** and **Claude Code** in this repo
 | Hooks wiring | [`.claude/settings.json`](../../../.claude/settings.json) | [`.cursor/hooks.json`](../../../.cursor/hooks.json) |
 | Hook scripts | [`hooks/`](../../../hooks/) (shared) | [`hooks/`](../../../hooks/) (shared) |
 | Subagents | [`.claude/agents/`](../../../.claude/agents/) | [`.cursor/agents/`](../../../.cursor/agents/) |
-| Review workflows | Skills under `.agents/skills/review*` (symlinked for Claude); Cursor [`.cursor/commands/`](../../../.cursor/commands/) wrappers |
+| Review workflows | Skills under `.agents/skills/review*` (symlink) | Same skills under `.agents/skills/review*` |
 | Deep skills | Symlinks → [`.agents/skills/`](../../) | [`.agents/skills/`](../../) (source of truth) |
 | Nested app guides | `CLAUDE.md` per app/package | `AGENTS.md` per app/package |
 
@@ -41,7 +41,7 @@ Put instructions in the layer that matches how often agents need them. Path-scop
 | Path-scoped rules (mirrored `.cursor` / `.claude`) | Only when editing matching files | Ports / `inspector_port` / `strictPort`, wrangler secrets, contract workflow, oxlint style, TSConfig presets |
 | Nested app/package `AGENTS.md` | Package-local workflows | `apps/front-app`, `worker-api`, `dtos-common` |
 | Skills | Deep / on-demand procedures | `monorepo-agent-setup`, `turborepo`, `hono`, review skills |
-| [`README.md`](../../../README.md) | Human-facing docs | Full port registry, scaffolding tutorials |
+| [`README.md`](../../../README.md) | Human-facing docs | Full port registry, copy-from-existing scaffold checklist |
 
 Do **not** duplicate path-scoped or linter detail in root `AGENTS.md`. Prefer a one-line pointer to the owning rule, skill, or README.
 
@@ -52,8 +52,8 @@ When changing agent setup, keep both tools in sync:
 1. **Rules:** edit both `.cursor/rules/<cat>/<name>.mdc` and `.claude/rules/<cat>/<name>.md` (remap frontmatter: Cursor `description`/`globs`/`alwaysApply` ↔ Claude `paths`).
 2. **Agents:** edit both `.cursor/agents/<name>.md` and `.claude/agents/<name>.md` (keep product-native keys: `model`, `tools`, `readonly`, `color`).
 3. **Hooks:** edit scripts only under `hooks/`; update both `.cursor/hooks.json` and `.claude/settings.json` when wiring changes.
-4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json`. Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `review-*`) live once under `.agents/skills/`.
-5. **Review skills:** edit `.agents/skills/review*/SKILL.md` (self-contained; Claude via symlink). Cursor [`.cursor/commands/`](../../../.cursor/commands/) stay thin wrappers to those skills.
+4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json` (when present). Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `review-*`) live once under `.agents/skills/`.
+5. **Review skills:** edit `.agents/skills/review*/SKILL.md` (self-contained; Claude via symlink).
 6. **MCP:** keep [`.mcp.json`](../../../.mcp.json) and [`.cursor/mcp.json`](../../../.cursor/mcp.json) server lists aligned (`type: "http"` on HTTP servers).
 7. **Nested guides:** update `AGENTS.md`; keep `CLAUDE.md` as `@AGENTS.md` + Claude-only bullets.
 

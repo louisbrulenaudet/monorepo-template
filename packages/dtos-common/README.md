@@ -4,18 +4,31 @@
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Zod](https://img.shields.io/static/v1?label=validation&message=Zod&color=blue&logo=zod&logoColor=white)](https://github.com/colinhacks/zod)
 
-Shared data transfer objects (DTOs) and validation schemas for the monorepo.
+Shared Zod wire contracts for **HTTP, RPC, queue, and webhook** boundaries across the monorepo.
 
-This package is the single source of truth for the data transfer objects and validation schemas used by:
-
-- `apps/front-app` (frontend form validation)
-- `apps/worker-api` (API request validation)
+This package is the single source of truth for validated payload shapes. Schema changes are **contract changes** - update every producer and consumer in the same PR.
 
 ## Purpose
 
-Provide type-safe DTO schemas backed by Zod so all apps validate the same payload shape.
+Provide type-safe DTO schemas so apps validate the same wire shape at each boundary:
 
-This is the “contract” layer of the repo: schema changes happen here first, and apps/workers consume those schemas to stay aligned.
+| Layer | Subpath | Boundary |
+|-------|---------|----------|
+| HTTP REST | `@repo/dtos-common/api` | `front-app` ↔ `worker-api` |
+| RPC | `@repo/dtos-common/rpc` | Worker-to-Worker service bindings |
+| Queue | `@repo/dtos-common/queue` | Queue producer / consumer messages |
+| Webhook | `@repo/dtos-common/webhook` | Inbound payloads on `webhook-*` |
+
+```mermaid
+flowchart LR
+  Front["front-app"] --> Api["dtos-common/api"]
+  Gateway["worker-api"] --> Api
+  Workers["worker-*"] --> Rpc["dtos-common/rpc"]
+  Producers["producers"] --> Queue["dtos-common/queue"]
+  Webhooks["webhook-*"] --> Webhook["dtos-common/webhook"]
+```
+
+Do **not** mix layers in one file. Prefer additive changes (new optional fields, new endpoints) over breaking edits.
 
 ## Tech Stack
 
@@ -26,8 +39,6 @@ This is the “contract” layer of the repo: schema changes happen here first, 
 
 ## Installation
 
-This package is part of the monorepo and is automatically available to other packages. To use it in a package:
-
 ```json
 {
   "dependencies": {
@@ -36,17 +47,13 @@ This package is part of the monorepo and is automatically available to other pac
 }
 ```
 
-Then install dependencies:
-
 ```bash
 pnpm install
 ```
 
 ## Usage
 
-### Frontend (React)
-
-Validate the form payload before calling the API using the shared validation schemas:
+### HTTP (`/api`) - frontend
 
 ```typescript
 import { HealthResponseSchema } from "@repo/dtos-common/api";
@@ -55,51 +62,51 @@ const parsed = HealthResponseSchema.safeParse(rawPayload);
 if (!parsed.success) {
   // parsed.error contains Zod issues
 }
-
-// parsed.data is now correctly typed
 ```
 
-### Worker API (Hono)
-
-Validate requests at the route boundary using `@hono/zod-validator`:
+### HTTP (`/api`) - worker-api (Hono)
 
 ```typescript
 import { zValidator } from "@hono/zod-validator";
 import { SomeRequestSchema } from "@repo/dtos-common/api";
 
 app.post("/some-endpoint", zValidator("json", SomeRequestSchema), async (c) => {
-  const data = c.req.valid("json"); // fully typed + validated
-
+  const data = c.req.valid("json");
   return c.json({ ok: true, received: data });
 });
 ```
 
-For responses, you can also validate at the boundary before returning:
+### RPC / queue / webhook
+
+Subpaths are exported and ready. Barrels under `src/rpc/`, `src/queue/`, and `src/webhook/` are empty stubs until you add the first schema:
 
 ```typescript
-import { HealthResponseSchema } from "@repo/dtos-common/api";
-
-const response = HealthResponseSchema.parse({ status: "ok" });
-return c.json(response);
+import { /* YourRpcSchema */ } from "@repo/dtos-common/rpc";
+import { /* YourQueueMessageSchema */ } from "@repo/dtos-common/queue";
+import { /* YourWebhookPayloadSchema */ } from "@repo/dtos-common/webhook";
 ```
+
+1. Add `src/<layer>/<feature>.ts` with Zod schemas.
+2. Re-export from `src/<layer>/index.ts`.
+3. Update producers and consumers in the same PR.
+4. Run `make check-types`.
+
+The package root (`@repo/dtos-common`) re-exports `api/` only until other layers grow.
+
+## Contract change workflow
+
+1. Edit the schema in `src/<layer>/<feature>.ts`.
+2. Export from `src/<layer>/index.ts`.
+3. Update every producer and consumer of that layer in the **same PR** (`api/` → `worker-api` + `front-app`).
+4. Prefer additive changes; breaking changes need a deliberate versioned path or migration.
 
 ## Common Commands
 
-| Command                | Description                                 |
-|------------------------|---------------------------------------------|
-| `make format`          | Format codebase using oxfmt                 |
-| `make lint`            | Lint codebase using oxlint                  |
-| `make check`           | Run full OXC check (oxfmt + oxlint)         |
-| `make check-types`     | Check TypeScript types                      |
-
-### Direct pnpm Commands
-
-```bash
-pnpm format          # Format with oxfmt
-pnpm lint            # Lint with oxlint
-pnpm check           # Full OXC check
-pnpm check-types     # Check TypeScript types
-```
+| Command | Description |
+|---------|-------------|
+| `make format` / `make lint` / `make check` | OXC |
+| `make check-types` | TypeScript |
+| `make ci` | Lint + format + check-types |
 
 ## Project Structure
 
@@ -109,9 +116,14 @@ packages/dtos-common/
 │   ├── api/
 │   │   ├── health.ts     # Health check response schema
 │   │   └── index.ts
-│   └── index.ts
+│   ├── rpc/
+│   │   └── index.ts      # Stub barrel (add schemas here)
+│   ├── queue/
+│   │   └── index.ts      # Stub barrel
+│   ├── webhook/
+│   │   └── index.ts      # Stub barrel
+│   └── index.ts          # Re-exports api/ for now
 ├── Makefile
-├── make/
 └── package.json
 ```
 
@@ -119,9 +131,5 @@ packages/dtos-common/
 
 1. **Use DTOs from this package** instead of re-implementing Zod schemas in apps.
 2. **Treat Zod schemas as source of truth** - infer types with `z.infer<typeof Schema>`; do not hand-write parallel interfaces.
-3. **Reference shared wire values** from `@repo/enums-common` via `z.enum(ValueSet)` or `z.enum([...] as const)` - never duplicate string literals.
-
-### Compatibility / versioning
-
-- Prefer **additive changes** (new optional fields, new endpoints) to avoid breaking existing consumers.
-- When you need a breaking contract change, introduce it under a new route/version on the API side (e.g. a new path under `/api/v1/...` or a new version) and migrate consumers deliberately.
+3. **Reference shared wire values** from `@repo/enums-common` via `z.enum(ValueSet)` - never duplicate string literals.
+4. **One feature file per concern** within a layer (kebab-case filenames).

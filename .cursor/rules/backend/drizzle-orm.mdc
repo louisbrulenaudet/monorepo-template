@@ -6,7 +6,7 @@ globs: apps/**/src/db/**
 
 # Drizzle ORM Naming
 
-Drizzle schema, migrations, and query helpers live under `apps/<app>/src/db/` in the **Worker that owns that database** — **never** a shared `packages/db-*` package.
+Drizzle schema, migrations, and query helpers live under `apps/<app>/src/db/` in the **Worker that owns that database** - **never** a shared `packages/db-*` package.
 
 **One owner per DB binding.** Do not attach the same D1/Hyperdrive/etc. binding to multiple apps (that splits migrations and schema ownership). Other apps read or write that data only via **service-binding RPC** (or a queue) to the owning Worker.
 

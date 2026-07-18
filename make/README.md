@@ -1,5 +1,7 @@
 # Make Commands
 
+Human quick-start lives in the root [README.md](../README.md). This file is the deep Make / Turborepo reference.
+
 Shared Makefile fragments for the monorepo. The root [Makefile](../Makefile) and per-package `Makefile` files include these modules so developers and CI use one consistent entrypoint over **pnpm workspaces** and **Turborepo**.
 
 ## Purpose
@@ -61,16 +63,21 @@ make deploy            # Deploy via turbo
 
 | Command | Description |
 |---------|-------------|
+| `make help` | List all root targets |
 | `make install` | Install and link workspace packages |
 | `make install-frozen` | CI install with `--frozen-lockfile` |
 | `make update` | Update all deps to latest (`--latest`; rewrites catalog in `pnpm-workspace.yaml`) |
+| `make login` | Cloudflare login via repo-pinned Wrangler |
 | `make dev` | Start all dev servers |
+| `make preview` | Preview production builds locally |
+| `make check` | Lint + format check (no typecheck) |
 | `make ci` | Lint + format + check-types |
 | `make check-types` | TypeScript across all packages |
 | `make types` | Generate `worker-configuration.d.ts` in apps |
 | `make build` / `make deploy` | Build or deploy via Turborepo |
 | `make format` / `make lint` | Fix formatting / lint issues |
 | `make prepare` | Install Husky git hooks |
+| `make husky-status` | Show Husky hooks status |
 | `make skills-update` | Refresh locked agent skills |
 
 ## Scoping (pnpm / Turborepo)
@@ -132,6 +139,7 @@ make build AFFECTED=1
 | `deploy.mk` | `login`, `deploy` | wrangler / turbo |
 | `husky.mk` | `prepare`, `husky-status` | pnpm / shell |
 | `skills.mk` | `skills-update` | bash script |
+| `help.mk` | `help` (via `##` comments) | awk |
 | `turbo.mk` | (no targets - shared `TURBO_FILTER`) | - |
 | `app.mk` | All turbo targets, scoped to `PKG` | turbo `--filter=$(PKG)` |
 
