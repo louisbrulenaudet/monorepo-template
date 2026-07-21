@@ -100,11 +100,6 @@
   "explorer.compactFolders": true,
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
-  "explorer.fileNesting.patterns": {
-    "wrangler.jsonc": "wrangler.*.jsonc, worker-configuration.d.ts, .dev.vars, .dev.vars.*, .env, .env.*",
-    ".oxlintrc.json": ".oxfmtrc.json",
-    "vite.config.ts": "vite.config.*.ts, vitest.config.ts, vitest.*.config.ts, vitest.workspace.ts"
-  },
   "files.exclude": {
     "**/node_modules": true,
     "**/package-lock.json": true,
