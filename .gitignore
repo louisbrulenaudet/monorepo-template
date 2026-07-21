@@ -166,6 +166,9 @@ CLAUDE.local.md
 .claude/settings.local.json
 .cursor/settings.local.json
 
+# Claude Code git worktrees (claude --worktree) - never commit worktree checkouts
+.claude/worktrees/
+
 # Agent debug logs (hooks)
 hooks/logs/
 

@@ -1,0 +1,15 @@
+# .worktreeinclude - files copied into new `claude --worktree` checkouts.
+# https://code.claude.com/docs/en/worktrees
+#
+# Uses .gitignore syntax. Only files that BOTH match a pattern here AND are
+# git-ignored are copied, so tracked files (e.g. .dev.vars.example) are never
+# duplicated. This lets a fresh worktree run `make dev` without hand-copying
+# local Cloudflare Workers secrets.
+
+# Cloudflare Workers local secrets
+**/.dev.vars
+**/.dev.vars.*
+
+# Global environment files
+**/.env
+**/.env.*

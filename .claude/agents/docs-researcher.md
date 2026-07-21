@@ -1,7 +1,7 @@
 ---
 name: docs-researcher
 description: Use PROACTIVELY to look up external library / framework / SDK / API documentation (Cloudflare Workers, wrangler, Hono, Zod, Flue) via Context7 and the web, and return ONLY the distilled answer with citations. Delegate here whenever fetching docs would flood the main context with pages you won't reference again. Returns the exact API/config snippet + source URL. Never edits code.
-tools: Read, Grep, Glob, WebFetch, WebSearch, mcp__plugin_context7_context7__resolve-library-id, mcp__plugin_context7_context7__query-docs
+tools: Read, Grep, Glob, WebFetch, WebSearch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 # sonnet: fetched docs need comprehension + synthesis into a correct snippet, not just extraction - still cheaper than running the main Opus session for verbose page fetches.
 model: sonnet
 color: blue
