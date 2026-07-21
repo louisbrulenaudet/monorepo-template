@@ -106,7 +106,15 @@
       "Edit(**/credentials.json)",
       "Edit(**/secrets.json)"
     ],
-    "ask": [],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(make deploy:*)",
+      "Bash(wrangler deploy:*)",
+      "Bash(wrangler delete:*)",
+      "Bash(wrangler secret:*)",
+      "Bash(npm publish:*)",
+      "Bash(pnpm publish:*)"
+    ],
     "defaultMode": "acceptEdits",
     "disableBypassPermissionsMode": "disable"
   },
@@ -177,6 +185,10 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
     "allowUnsandboxedCommands": false,
+    "excludedCommands": ["gh *"],
+    "network": {
+      "allowedDomains": ["registry.npmjs.org"]
+    },
     "credentials": {
       "files": [
         { "path": "~/.ssh", "mode": "deny" },
