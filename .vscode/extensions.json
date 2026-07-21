@@ -2,17 +2,15 @@
   "recommendations": [
     "TypeScriptTeam.native-preview",
     "oxc.oxc-vscode",
+    "Vercel.turbo-vsc",
     "bradlc.vscode-tailwindcss",
+    "vitest.explorer",
     "streetsidesoftware.code-spell-checker",
-    "editorconfig.editorconfig",
-    "usernamehw.errorlens",
-    "yoavbls.pretty-ts-errors"
   ],
   "unwantedRecommendations": [
     "esbenp.prettier-vscode",
     "biomejs.biome",
     "dbaeumer.vscode-eslint",
-    "github.vscode-github-actions",
-    "vitest.explorer"
+    "github.vscode-github-actions"
   ]
 }

@@ -4,9 +4,7 @@
   "editor.formatOnSaveMode": "file",
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
-  "editor.rulers": [
-    80
-  ],
+  "editor.rulers": [80],
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "always"
   },
@@ -18,6 +16,7 @@
   "oxc.requireConfig": true,
   "oxc.typeAware": true,
   "oxc.unusedDisableDirectives": "deny",
+  "oxc.fixKind": "safe_fix",
   "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode",
     "editor.codeActionsOnSave": {
@@ -40,7 +39,8 @@
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[markdown]": {
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
+    "files.trimTrailingWhitespace": false
   },
   "[yaml]": {
     "editor.formatOnSave": false
@@ -48,6 +48,25 @@
   "[jsonc]": {
     "editor.formatOnSave": false
   },
+  "editor.stickyScroll.enabled": true,
+  "editor.stickyScroll.maxLineCount": 5,
+  "editor.linkedEditing": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.renderWhitespace": "trailing",
+  "js/ts.experimental.useTsgo": true,
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+  "js/ts.preferences.preferTypeOnlyAutoImports": true,
+  "js/ts.preferences.autoImportFileExcludePatterns": [
+    "**/worker-configuration.d.ts",
+    "**/*.gen.ts",
+    "**/dist/**",
+    "**/.wrangler/**"
+  ],
+  // Low-noise inlay hints (helps read Zod/Hono/TanStack inferred types).
+  "js/ts.inlayHints.parameterNames.enabled": "literals",
+  "js/ts.inlayHints.functionLikeReturnTypes.enabled": true,
+  "js/ts.inlayHints.enumMemberValues.enabled": true,
   "tailwindCSS.experimental.configFile": {
     "apps/front-app/src/index.css": "apps/front-app/src/**"
   },
@@ -59,16 +78,33 @@
     "*.css": "tailwindcss",
     "wrangler.jsonc": "jsonc"
   },
-  "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,*.d.ts,**/vite.config.ts,**/vitest.config.ts,**/vitest.*.config.ts}",
   "json.schemas": [
     {
-      "fileMatch": [
-        "apps/*/wrangler.jsonc",
-        "apps/*/wrangler.json"
-      ],
+      "fileMatch": ["apps/*/wrangler.jsonc", "apps/*/wrangler.json"],
       "url": "./node_modules/wrangler/config-schema.json"
     }
   ],
+  "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,*.d.ts,**/vite.config.ts,**/vitest.config.ts,**/vitest.*.config.ts,**/dist/**,**/build/**}",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.eol": "\n",
+  "files.readonlyInclude": {
+    "**/worker-configuration.d.ts": true,
+    "**/routeTree.gen.ts": true,
+    "**/route-tree.gen.ts": true,
+    "**/*.gen.ts": true,
+    "pnpm-lock.yaml": true
+  },
+  "explorer.sortOrder": "foldersNestsFiles",
+  "explorer.compactFolders": true,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "wrangler.jsonc": "wrangler.*.jsonc, worker-configuration.d.ts, .dev.vars, .dev.vars.*, .env, .env.*",
+    ".oxlintrc.json": ".oxfmtrc.json",
+    "vite.config.ts": "vite.config.*.ts, vitest.config.ts, vitest.*.config.ts, vitest.workspace.ts"
+  },
   "files.exclude": {
     "**/node_modules": true,
     "**/package-lock.json": true,
@@ -94,10 +130,6 @@
     "**/CLAUDE.local.md": true,
     "**/.staging.vars": true
   },
-  "explorer.sortOrder": "foldersNestsFiles",
-  "explorer.compactFolders": true,
-  "cSpell.enabled": true,
-  "cSpell.language": "en",
   "files.watcherExclude": {
     "**/node_modules/**": true,
     "**/.turbo/**": true,
@@ -136,8 +168,11 @@
   "search.useIgnoreFiles": true,
   "search.useGlobalIgnoreFiles": true,
   "search.followSymlinks": false,
+  "search.smartCase": true,
   "npm.autoDetect": "off",
   "npm.packageManager": "pnpm",
+  "cSpell.enabled": true,
+  "cSpell.language": "en",
   "cSpell.words": [
     "adsense",
     "agentic",
@@ -157,6 +192,7 @@
     "crossfades",
     "csrf",
     "cursorignore",
+    "cursorindexingignore",
     "Cves",
     "decomp",
     "dedup",
@@ -274,7 +310,5 @@
     "youtube",
     "yusukebe",
     "zstd"
-  ],
-  "js/ts.experimental.useTsgo": true,
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true
+  ]
 }

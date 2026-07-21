@@ -1,13 +1,49 @@
 {
+  // Run with: Terminal → Run Task…  (Ctrl/Cmd+Shift+B runs the default build: "ci: full gate")
+  // Tests run through the Vitest Test Explorer (extension) until a `turbo run test`
+  // pipeline is wired up; there is intentionally no shell "test" task yet.
   "version": "2.0.0",
   "tasks": [
     {
       "label": "dev: full stack",
-      "detail": "turbo run dev - wrangler (mcp) + vite (login-ui) + flue (worker-agent)",
+      "detail": "turbo run dev — worker-api (wrangler :8700) + front-app (vite :5174)",
       "type": "shell",
       "command": "make dev",
       "isBackground": true,
       "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "dev: front-app",
+      "detail": "make dev SCOPE=front-app — Vite dev server on http://localhost:5174",
+      "type": "shell",
+      "command": "make dev SCOPE=front-app",
+      "isBackground": true,
+      "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "dev: worker-api",
+      "detail": "make dev SCOPE=worker-api — wrangler dev on http://localhost:8700",
+      "type": "shell",
+      "command": "make dev SCOPE=worker-api",
+      "isBackground": true,
+      "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 1
+      },
       "presentation": {
         "reveal": "always",
         "panel": "dedicated"
@@ -15,16 +51,14 @@
     },
     {
       "label": "ci: full gate",
-      "detail": "make ci - types + format + lint + check-types (pre-PR gate)",
+      "detail": "make ci — turbo run lint format check-types (pre-PR gate)",
       "type": "shell",
       "command": "make ci",
       "group": {
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": [
-        "$tsc"
-      ],
+      "problemMatcher": ["$tsc"],
       "presentation": {
         "reveal": "always",
         "panel": "shared"
@@ -32,13 +66,11 @@
     },
     {
       "label": "check-types",
-      "detail": "turbo run check-types - tsc --noEmit across every workspace",
+      "detail": "make check-types — tsc -b across every workspace",
       "type": "shell",
       "command": "make check-types",
       "group": "build",
-      "problemMatcher": [
-        "$tsc"
-      ],
+      "problemMatcher": ["$tsc"],
       "presentation": {
         "reveal": "always",
         "panel": "shared"
@@ -46,7 +78,7 @@
     },
     {
       "label": "check: format + lint",
-      "detail": "oxfmt . && oxlint --fix at the repo root",
+      "detail": "make check — oxlint + oxfmt --check across all workspaces (OXC)",
       "type": "shell",
       "command": "make check",
       "group": "build",
@@ -58,7 +90,7 @@
     },
     {
       "label": "types: regenerate wrangler types",
-      "detail": "turbo run types - wrangler types for every Worker",
+      "detail": "make types — wrangler types (worker-configuration.d.ts) for every Worker",
       "type": "shell",
       "command": "make types",
       "group": "build",
@@ -70,31 +102,14 @@
     },
     {
       "label": "build",
-      "detail": "turbo run build - mcp dry-run deploy + vite build + flue build",
+      "detail": "make build — turbo run build (front-app: tsc -b + vite build; workspace packages)",
       "type": "shell",
       "command": "make build",
       "group": "build",
-      "problemMatcher": [
-        "$tsc"
-      ],
+      "problemMatcher": ["$tsc"],
       "presentation": {
         "reveal": "always",
         "panel": "shared"
-      }
-    },
-    {
-      "label": "test",
-      "detail": "turbo run test - Vitest suites across workspaces",
-      "type": "shell",
-      "command": "pnpm test",
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
       }
     }
   ]

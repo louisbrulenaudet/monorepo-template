@@ -162,6 +162,10 @@ out/
 # Claude Code personal project overrides (see code.claude.com/docs/en/memory)
 CLAUDE.local.md
 
+# Personal, per-developer agent settings (allowlist / tokens / paths) - never committed
+.claude/settings.local.json
+.cursor/settings.local.json
+
 # Agent debug logs (hooks)
 hooks/logs/
 
@@ -169,5 +173,12 @@ hooks/logs/
 wrangler.toml.bak
 wrangler.jsonc.bak
 
-# Security keys (PEM files)
+# Security keys & certificates (private keys must never be committed; the agent
+# commit-guard and .cursorignore already block these — this closes the human-commit path too)
 *.pem
+*.key
+id_rsa
+id_ed25519
+id_ecdsa
+*.p12
+*.pfx

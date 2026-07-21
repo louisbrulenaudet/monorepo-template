@@ -1,21 +1,31 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Attach: mcp Worker (:9229)",
-            "type": "node",
-            "request": "attach",
-            "port": 9229,
-            "cwd": "${workspaceFolder}",
-            "resolveSourceMapLocations": null,
-            "sourceMaps": true,
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "restart": true,
-            "continueOnAttach": true,
-            "attachExistingChildren": false,
-            "autoAttachChildProcesses": false
-        }
-    ]
+  // Debugging
+  // • front-app (React/Vite SPA): use the Chrome/Edge configs below. Start the dev
+  //   server first (`make dev` or `make dev SCOPE=front-app`), then pick a config in
+  //   Run and Debug (F5).
+  // • worker-api (wrangler dev): this repo keeps `inspector_port: 0` (ephemeral, per
+  //   .claude/rules/backend/ports.md), so a fixed-port attach cannot target it. Debug
+  //   it with VS Code's JavaScript Debug Terminal instead:
+  //     Ctrl/Cmd+Shift+P → "Debug: JavaScript Debug Terminal" → run `make dev SCOPE=worker-api`.
+  //   VS Code auto-attaches and discovers the ephemeral inspector port; set breakpoints
+  //   as usual. (Alternatively, press `d` in the running `wrangler dev` terminal.)
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch front-app (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5174",
+      "webRoot": "${workspaceFolder}/apps/front-app",
+      "sourceMaps": true
+    },
+    {
+      "name": "Launch front-app (Edge)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:5174",
+      "webRoot": "${workspaceFolder}/apps/front-app",
+      "sourceMaps": true
+    }
+  ]
 }

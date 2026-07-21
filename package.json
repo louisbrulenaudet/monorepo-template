@@ -36,7 +36,7 @@
     "@types/node": "26.1.1",
     "cloc": "2.6.0-cloc",
     "cloudflare": "^7.0.0",
-    "eslint-plugin-better-tailwindcss": "^4.6.1",
+    "eslint-plugin-better-tailwindcss": "^4.7.0",
     "git-format-staged": "^4.0.1",
     "husky": "^9.1.7",
     "oxfmt": "catalog:",
@@ -50,7 +50,7 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@11.10.0",
+  "packageManager": "pnpm@11.15.0",
   "monorepo": {
     "kind": "workspace",
     "role": "root",

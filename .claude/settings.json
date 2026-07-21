@@ -23,20 +23,71 @@
       "WebFetch(domain:oxc.rs)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:vitest.dev)",
-      "WebFetch(domain:hono.dev)"
+      "WebFetch(domain:hono.dev)",
+      "WebFetch(domain:cursor.com)",
+      "WebFetch(domain:docs.cursor.com)",
+      "WebFetch(domain:claude.com)",
+      "WebFetch(domain:developer.mozilla.org)",
+      "WebFetch(domain:turbo.build)",
+      "WebFetch(domain:tanstack.com)",
+      "WebFetch(domain:react.dev)",
+      "WebFetch(domain:zod.dev)",
+      "WebFetch(domain:orm.drizzle.team)",
+      "WebFetch(domain:tailwindcss.com)",
+      "WebFetch(domain:vite.dev)",
+      "WebFetch(domain:pnpm.io)"
     ],
     "deny": [
       "Edit(**/dist/**)",
-      "Write(**/dist/**)",
+      "Edit(**/build/**)",
       "Edit(**/worker-configuration.d.ts)",
-      "Write(**/worker-configuration.d.ts)",
+      "Edit(**/drizzle/migrations/**)",
+      "Edit(**/pnpm-lock.yaml)",
+      "Edit(pnpm-lock.yaml)",
       "Read(**/.dev.vars)",
+      "Read(**/.dev.vars.local)",
+      "Read(**/.dev.vars.staging)",
+      "Read(**/.dev.vars.production)",
       "Read(**/.prod.vars)",
+      "Read(**/.prod.vars.*)",
       "Read(**/.staging.vars)",
+      "Read(**/.staging.vars.*)",
       "Read(**/.env)",
       "Read(**/.env.local)",
+      "Read(**/.env.development)",
+      "Read(**/.env.staging)",
+      "Read(**/.env.test)",
+      "Read(**/.env.production)",
       "Read(**/*.pem)",
-      "Read(**/*.key)"
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Read(**/id_rsa)",
+      "Read(**/id_ed25519)",
+      "Read(**/credentials.json)",
+      "Read(**/secrets.json)",
+      "Edit(**/.dev.vars)",
+      "Edit(**/.dev.vars.local)",
+      "Edit(**/.dev.vars.staging)",
+      "Edit(**/.dev.vars.production)",
+      "Edit(**/.prod.vars)",
+      "Edit(**/.prod.vars.*)",
+      "Edit(**/.staging.vars)",
+      "Edit(**/.staging.vars.*)",
+      "Edit(**/.env)",
+      "Edit(**/.env.local)",
+      "Edit(**/.env.development)",
+      "Edit(**/.env.staging)",
+      "Edit(**/.env.test)",
+      "Edit(**/.env.production)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.key)",
+      "Edit(**/*.p12)",
+      "Edit(**/*.pfx)",
+      "Edit(**/id_rsa)",
+      "Edit(**/id_ed25519)",
+      "Edit(**/credentials.json)",
+      "Edit(**/secrets.json)"
     ],
     "ask": []
   },
@@ -107,12 +158,20 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "allowUnsandboxedCommands": false
+    "allowUnsandboxedCommands": false,
+    "credentials": {
+      "files": [
+        { "path": "~/.ssh", "mode": "deny" },
+        { "path": "~/.aws", "mode": "deny" },
+        { "path": "~/.config/.wrangler", "mode": "deny" },
+        { "path": "~/.wrangler", "mode": "deny" }
+      ]
+    }
   },
   "autoMemoryEnabled": true,
   "enabledMcpjsonServers": [
     "cloudflare-docs",
     "context7"
   ],
-  "enableAllProjectMcpServers": true
+  "enableAllProjectMcpServers": false
 }
