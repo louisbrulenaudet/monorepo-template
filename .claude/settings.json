@@ -29,6 +29,7 @@
       "WebFetch(domain:developers.cloudflare.com)",
       "WebFetch(domain:oxc.rs)",
       "WebFetch(domain:github.com)",
+      "WebFetch(domain:*.githubusercontent.com)",
       "WebFetch(domain:vitest.dev)",
       "WebFetch(domain:hono.dev)",
       "WebFetch(domain:cursor.com)",
