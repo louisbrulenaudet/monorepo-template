@@ -28,19 +28,6 @@
     "reportUnusedDisableDirectives": "error"
   },
   "ignorePatterns": [
-    "**/worker-configuration.d.ts",
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/.turbo/**",
-    "**/.wrangler/**",
-    "**/.flue-vite/**",
-    "**/.flue-vite.wrangler.jsonc",
-    "**/.vite/**",
-    "**/.tanstack/**",
-    "**/.cache/**",
-    "**/coverage/**",
-    "**/.vitest/**",
     "**/*.gen.ts",
     ".claude/**",
     ".agents/**",
@@ -81,6 +68,7 @@
     "typescript/no-unsafe-assignment": "error",
     "typescript/no-unsafe-member-access": "error",
     "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-return": "error",
     "typescript/parameter-properties": [
       "error",
       {
@@ -110,15 +98,26 @@
       }
     ],
     "typescript/await-thenable": "error",
+    "typescript/require-await": "error",
+    "typescript/only-throw-error": "error",
+    "typescript/prefer-promise-reject-errors": "error",
+    "typescript/use-unknown-in-catch-callback-variable": "error",
     "typescript/no-unnecessary-type-assertion": "error",
     "typescript/restrict-template-expressions": "error",
+    "typescript/restrict-plus-operands": "error",
     "typescript/prefer-nullish-coalescing": "error",
     "typescript/prefer-optional-chain": "error",
     "typescript/no-unnecessary-condition": "error",
     "typescript/strict-void-return": "error",
     "import/no-cycle": ["error", { "maxDepth": 10 }],
+    "import/no-duplicates": "error",
+    "import/no-mutable-exports": "error",
+    "promise/prefer-await-to-then": "error",
+    "promise/no-return-wrap": "error",
+    "promise/spec-only": "error",
     "unicorn/no-empty-file": "off",
     "unicorn/no-useless-spread": "off",
+    "unicorn/prefer-node-protocol": "error",
     "unicorn/filename-case": [
       "error",
       {
@@ -141,7 +140,8 @@
       "rules": {
         "typescript/no-unsafe-assignment": "off",
         "typescript/no-unsafe-member-access": "off",
-        "typescript/no-unsafe-call": "off"
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-return": "off"
       }
     },
     {
@@ -211,10 +211,10 @@
         "react/exhaustive-deps": "error",
         "react/no-array-index-key": "error",
         "react/rules-of-hooks": "error",
+        "react/react-compiler": "error",
         "react/no-danger": "error",
         "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
         "better-tailwindcss/enforce-canonical-classes": "error",
-        "better-tailwindcss/enforce-consistent-class-order": "error",
         "better-tailwindcss/no-concatenated-classes": "error",
         "better-tailwindcss/no-conflicting-classes": "error",
         "better-tailwindcss/no-deprecated-classes": "error",
@@ -242,6 +242,7 @@
         "typescript/no-unsafe-assignment": "off",
         "typescript/no-unsafe-member-access": "off",
         "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-return": "off",
         "vitest/require-to-throw-message": "off"
       }
     },
@@ -252,6 +253,7 @@
         "typescript/no-unsafe-assignment": "off",
         "typescript/no-unsafe-member-access": "off",
         "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-return": "off",
         "vitest/no-standalone-expect": "off"
       }
     }

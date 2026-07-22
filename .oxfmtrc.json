@@ -25,42 +25,24 @@
     "newlinesBetween": false,
     "groups": [
       "type-import",
-      [
-        "value-builtin",
-        "value-external"
-      ],
+      ["value-builtin", "value-external"],
       "type-internal",
       "value-internal",
-      [
-        "type-parent",
-        "type-sibling",
-        "type-index"
-      ],
-      [
-        "value-parent",
-        "value-sibling",
-        "value-index"
-      ],
+      ["type-parent", "type-sibling", "type-index"],
+      ["value-parent", "value-sibling", "value-index"],
       "unknown"
     ]
   },
+  "sortTailwindcss": {
+    "stylesheet": "apps/front-app/src/index.css"
+  },
   "ignorePatterns": [
-    "**/worker-configuration.d.ts",
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/.turbo/**",
-    "**/.wrangler/**",
-    "**/.flue-vite/**",
-    "**/.flue-vite.wrangler.jsonc",
-    "**/.vite/**",
-    "**/.cache/**",
-    "**/coverage/**",
-    "**/.vitest/**",
     "**/*.gen.ts",
     "**/*.md",
     "**/*.markdown",
     "**/*.mdx",
+    "**/*.yaml",
+    "**/*.yml",
     ".claude/**",
     ".agents/**",
     ".vscode/**",

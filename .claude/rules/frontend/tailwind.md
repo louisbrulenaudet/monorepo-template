@@ -65,8 +65,8 @@ Styling for the React SPAs. Tailwind **v4**, CSS-first (no `tailwind.config.js`)
 ## Enforced linting (oxlint + better-tailwindcss)
 
 - `eslint-plugin-better-tailwindcss` runs as an oxlint JS plugin on `apps/front-*/src/**/*.{ts,tsx}` (config in `.oxlintrc.json`; `settings.better-tailwindcss.entryPoint` points at `apps/front-app/src/index.css` so the theme is known). `pnpm lint:fix` auto-fixes the fixable ones.
-- Enabled (all `error`): `enforce-canonical-classes`, `enforce-consistent-class-order`, `no-deprecated-classes` (catches v3 names in v4), `no-duplicate-classes`, `no-unnecessary-whitespace`, `no-concatenated-classes`, `no-conflicting-classes`.
-- **Target:** also enable `no-unknown-classes` - it rejects typo'd / hallucinated class names against the theme, the strongest guard for AI-authored markup. It requires JSX to contain **no raw non-Tailwind class names**; remove any (e.g. Vite-starter `logo` / `read-the-docs`) before turning it on.
+- Enabled (all `error`): `enforce-canonical-classes`, `enforce-consistent-class-order`, `no-concatenated-classes`, `no-conflicting-classes`, `no-deprecated-classes` (catches v3 names in v4), `no-duplicate-classes`, `no-unknown-classes`, `no-unnecessary-whitespace`.
+- `no-unknown-classes` rejects any class not registered in the theme (typos, hallucinated utilities, stray hand-written CSS class names) - the strongest guard for AI-authored markup. Consequence: **every `className` token must be a Tailwind utility or a `@theme` token**; introduce a semantic token or an `@utility` instead of a raw CSS class.
 - `enforce-consistent-line-wrapping` stays **off** - `oxfmt` owns JS/JSX layout; the two would fight over `className` wrapping.
 
 ## Before finishing

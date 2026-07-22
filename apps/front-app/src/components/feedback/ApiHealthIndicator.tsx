@@ -32,7 +32,7 @@ export function ApiHealthIndicator({ status }: ApiHealthIndicatorProps) {
         className={getApiHealthDotClassName(status)}
         label={label}
       />
-      <span className="text-[0.95rem] text-slate-200/90">{label}</span>
+      <span className="text-[0.95rem] text-muted-foreground">{label}</span>
     </div>
   );
 }

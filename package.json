@@ -42,11 +42,11 @@
     "husky": "^9.1.7",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "oxlint-tsgolint": "^7.0.2000",
+    "oxlint-tsgolint": "catalog:",
     "tailwindcss": "catalog:",
     "turbo": "^2.10.5",
     "typescript": "catalog:",
-    "wrangler": "^4.112.0"
+    "wrangler": "^4.113.0"
   },
   "engines": {
     "node": ">=22"

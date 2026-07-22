@@ -29,10 +29,10 @@ export class ErrorBoundary extends Component<
       return (
         <div
           role="alert"
-          className="flex min-h-dvh flex-col items-center justify-center gap-2 text-slate-200"
+          className="flex min-h-dvh flex-col items-center justify-center gap-2 text-foreground"
         >
           <p className="font-medium">The application crashed.</p>
-          <p className="text-sm text-slate-400">{error.message}</p>
+          <p className="text-sm text-muted-foreground">{error.message}</p>
         </div>
       );
     }

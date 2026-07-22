@@ -10,8 +10,8 @@ function cx(...parts: Array<string | false | null | undefined>): string {
 
 export function Card({ className, variant = "default", ...props }: CardProps) {
   const variants: Record<NonNullable<CardProps["variant"]>, string> = {
-    default: "bg-white/5 ring-1 ring-white/10",
-    subtle: "bg-transparent ring-1 ring-white/10",
+    default: "bg-card ring-1 ring-border",
+    subtle: "bg-transparent ring-1 ring-border",
   };
 
   return (

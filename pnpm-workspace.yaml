@@ -3,8 +3,9 @@ packages:
   - packages/*
 
 catalog:
-  oxfmt: ^0.59.0
-  oxlint: ^1.74.0
+  oxfmt: ^0.60.0
+  oxlint: ^1.75.0
+  oxlint-tsgolint: ^7.0.2001
   typescript: ^7.0.2
   tailwindcss: ^4.3.3
   zod: ^4.4.3

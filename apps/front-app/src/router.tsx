@@ -5,7 +5,7 @@ import { routeTree } from "./routeTree.gen";
 function RouterPending() {
   return (
     <div
-      className="flex min-h-dvh items-center justify-center text-slate-300"
+      className="flex min-h-dvh items-center justify-center text-muted-foreground"
       aria-busy="true"
     >
       Loading…
@@ -17,10 +17,10 @@ function RouterError({ error }: ErrorComponentProps) {
   return (
     <div
       role="alert"
-      className="flex min-h-dvh flex-col items-center justify-center gap-2 text-slate-200"
+      className="flex min-h-dvh flex-col items-center justify-center gap-2 text-foreground"
     >
       <p className="font-medium">Something went wrong.</p>
-      <p className="text-sm text-slate-400">{error.message}</p>
+      <p className="text-sm text-muted-foreground">{error.message}</p>
     </div>
   );
 }

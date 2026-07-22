@@ -76,7 +76,8 @@
   },
   "files.associations": {
     "*.css": "tailwindcss",
-    "wrangler.jsonc": "jsonc"
+    "wrangler.jsonc": "jsonc",
+    ".oxlintrc.json": "jsonc"
   },
   "json.schemas": [
     {
@@ -171,6 +172,7 @@
   "cSpell.words": [
     "adsense",
     "agentic",
+    "Avenir",
     "basenames",
     "bezier",
     "biomejs",
@@ -252,6 +254,7 @@
     "nosniff",
     "ntvs",
     "oklab",
+    "oklch",
     "openai",
     "oxfmt",
     "oxfmtrc",
@@ -276,6 +279,7 @@
     "stripable",
     "Stripable",
     "stylelintcache",
+    "stylesheet",
     "subdocument",
     "Subfolders",
     "subpaths",
