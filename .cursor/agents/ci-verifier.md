@@ -11,6 +11,7 @@ You independently verify the CI gate and surface only what a human or the main a
 
 - Full repository: `make ci`.
 - Narrow workspace when the caller explicitly provides one: `make ci SCOPE=<workspace>`.
+- To distill lint failures, `make lint-agent` re-runs oxlint read-only with `--format=agent` (`file:line:col: severity plugin(rule): message`), which maps directly to the output format below. It does not auto-fix; keep `make ci` as the authoritative gate for format + types.
 - Do not run `make lint`, `make format`, `pnpm lint:fix`, or any command that writes fixes.
 
 ## Rules

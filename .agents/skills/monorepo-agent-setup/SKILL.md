@@ -26,6 +26,7 @@ Canonical layout and sync policy for **Cursor** and **Claude Code** in this repo
 - Cursor: nested `AGENTS.md` by directory; `.mdc` rules attach via `globs` / `alwaysApply`. Debug: **Customize → Hooks**.
 - Rule folders (`core`, `frontend`, `backend`, `contracts`, `quality`) organize only; scoping is frontmatter (`paths` vs `globs`/`alwaysApply`).
 - Vite config rule: `.claude/rules/frontend/vite-config.md` ↔ `.cursor/rules/frontend/vite-config.mdc` - `apps/front-*/vite.config.ts` only.
+- Tailwind rule: `.claude/rules/frontend/tailwind.md` ↔ `.cursor/rules/frontend/tailwind.mdc` - `apps/front-*/src/**/*.{ts,tsx,css}`, `apps/front-*/index.html`.
 - Ports rule: `.claude/rules/backend/ports.md` ↔ `.cursor/rules/backend/ports.mdc` - `wrangler.jsonc`, app `package.json`, `front-*/vite.config.ts`.
 - TSConfig rule: `.claude/rules/quality/typescript-config.md` ↔ `.cursor/rules/quality/typescript-config.mdc` - `packages/typescript-config/**`, `**/tsconfig*.json`.
 
@@ -71,7 +72,7 @@ When changing agent setup, keep both tools in sync:
 
 ## Inventory (quick)
 
-- **Rules:** 17 mirrored basenames (only `core/guardrails` always-on).
+- **Rules:** 18 mirrored basenames (only `core/guardrails` always-on).
 - **Subagents:** `ci-verifier`, `docs-researcher`, `test-runner`.
 - **Cursor hooks:** `beforeShellExecution` (git guards, `failClosed`), `afterFileEdit` (format/lint), `sessionStart`.
 - **Claude hooks:** PreToolUse Bash (same git guards), PostToolUse Edit\|Write (format/lint), InstructionsLoaded.

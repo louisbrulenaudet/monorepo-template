@@ -1,5 +1,5 @@
 ---
-description: "Vite + React SPA architecture - directory layout, providers, bundle splitting, Tailwind v4."
+description: "Vite + React SPA architecture - directory layout, providers, bundle splitting. Tailwind styling in tailwind.mdc."
 alwaysApply: false
 globs: apps/front-*/src/**/*.{ts,tsx,css},apps/front-*/index.html
 ---
@@ -26,11 +26,7 @@ Cross-cutting scaffolding for the React SPAs. Component/hook authoring is in [re
 
 ## Tailwind v4
 
-- Entry: `@import "tailwindcss"` in `src/index.css` - no `tailwind.config.js` (canonical: `apps/front-app/src/index.css`).
-- `@source "../index.html"` + `@source "./**/*.{ts,tsx}"`; add workspace package paths when consumed.
-- Tokens in `@theme` only; `bg-(--var)` shorthand. `@apply` in global CSS only - not per-feature `.css`.
-- Utilities in JSX; reuse via `src/components/ui/` + `cx()` (`Button.tsx`). Variants: `Record<Variant, string>` with **full static strings** - never `` `bg-${color}-500` `` (Tailwind scans plain text).
-- Runtime values: CSS var in `style` + static utilities. Motion/transitions → **`ui-ux-design-best-practices`** skill.
+Styling has its own path-scoped rule: [tailwind.mdc](tailwind.mdc) - engine/entry, `@source` detection, `@theme` vs `:root` tokens, semantic dark-mode tokens, `@apply`/`@utility`, static-string classes, and the enforced `better-tailwindcss` lint set. Motion/transitions → **`ui-ux-design-best-practices`** skill.
 
 ## App entry & providers
 

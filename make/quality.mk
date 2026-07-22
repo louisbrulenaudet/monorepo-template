@@ -1,4 +1,4 @@
-.PHONY: check lint format check-types ci
+.PHONY: check lint lint-agent format check-types ci
 
 check: ## Check the codebase using OXC
 	@echo "🔍 Checking codebase..."
@@ -7,6 +7,10 @@ check: ## Check the codebase using OXC
 lint: ## Lint the codebase using OXC (auto-fix)
 	@echo "🔍 Running code analysis..."
 	$(TURBO) lint:fix $(TURBO_FILTER)
+
+lint-agent: ## Lint with AI-agent output (machine-readable file:line:col, no auto-fix)
+	@echo "🤖 Linting (agent format)..."
+	@pnpm run lint:agent
 
 format: ## Format the codebase using OXC (write)
 	@echo "📝 Formatting code..."

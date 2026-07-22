@@ -1,0 +1,74 @@
+---
+description: "Tailwind CSS v4 - CSS-first config, @source detection, @theme tokens, semantic dark-mode tokens, static-string classes, and the enforced better-tailwindcss lint set."
+alwaysApply: false
+globs: apps/front-*/src/**/*.{ts,tsx,css},apps/front-*/index.html
+---
+
+# Tailwind CSS v4 Rules
+
+Styling for the React SPAs. Tailwind **v4**, CSS-first (no `tailwind.config.js`). Component/hook authoring is in [react.mdc](react.mdc); Vite plugin wiring in [vite-config.mdc](vite-config.mdc); cross-cutting layout in [frontend-architecture.mdc](frontend-architecture.mdc). Motion/interaction depth → **`ui-ux-design-best-practices`** skill.
+
+## Engine & entry
+
+- Single entry: `@import "tailwindcss";` in `src/index.css` (canonical: `apps/front-app/src/index.css`). There is **no** `tailwind.config.js` / `postcss.config.js` - v4 configures in CSS.
+- The build runs through `@tailwindcss/vite` (Lightning CSS is built in - no separate Autoprefixer/PostCSS step). Plugin order lives in [vite-config.mdc](vite-config.mdc): `tailwindcss()` after `react()`/`babel`, before `cloudflare()`.
+- Docs: https://tailwindcss.com/docs/installation/using-vite
+
+## Source detection (`@source`)
+
+- v4 detects templates **automatically**, scanning from the build's working directory (per-app here, so `apps/front-app/**`) and skipping `.gitignore`, `node_modules`, binaries, CSS, and lockfiles. The current `@source "../index.html"` + `@source "./**/*.{ts,tsx}"` are a **defensive** restatement of that default - keep them so detection stays cwd-independent.
+- Register a **workspace package** only when it ships Tailwind classes this app renders. Point at the real source (`@source "../../../packages/<pkg>/src";`), not the `node_modules` symlink. `@repo/dtos-common` / `@repo/enums-common` are class-free - do not add sources for them.
+- `@source not "<path>";` excludes a large non-Tailwind directory from scanning. `@source inline("...")` safelists classes that never appear as literals - a **last resort**; prefer static strings (below).
+- Docs: https://tailwindcss.com/docs/detecting-classes-in-source-files
+
+## Design tokens: `@theme` vs `:root`
+
+- Put a value in **`@theme`** only when it must generate a utility/variant - i.e. it uses a Tailwind namespace (`--color-*`, `--spacing-*`, `--font-*`, `--radius-*`, `--shadow-*`, `--ease-*`, `--animate-*`, `--breakpoint-*`). `@theme` is top-level only (no nesting under selectors/media).
+- Every other custom property stays in plain **`:root`** (e.g. `--health-glow-color`, `--health-shake-distance` - not a namespace, correctly outside `@theme`).
+- Keyframes for an `--animate-*` token: **nest the `@keyframes` inside `@theme`** so they travel with the token (idiomatic v4). Top-level keyframes also emit correctly but drift from their token.
+- Use **`@theme inline`** when a token's value is itself a `var(...)` (semantic theming, below) so the utility resolves per-scope instead of baking in one value.
+- Docs: https://tailwindcss.com/docs/theme , https://tailwindcss.com/docs/colors
+
+## Theming & dark mode (semantic tokens)
+
+- **Do not hardcode a single-theme palette.** Utilities like `text-slate-200` / `bg-white/5` assume one background; on the opposite scheme they become unreadable. When the app declares `color-scheme: light dark`, colors must adapt in both.
+- Canonical pattern: raw values in `:root` + a dark scope, re-exposed as semantic `@theme inline` tokens; components use the semantic utility in both themes:
+  ```css
+  :root { --color-background: oklch(1 0 0); --color-foreground: oklch(0.145 0 0); }
+  [data-theme="dark"] { --color-background: oklch(0.145 0 0); --color-foreground: oklch(0.985 0 0); }
+  @theme inline {
+    --color-background: var(--color-background);
+    --color-foreground: var(--color-foreground);
+  }
+  ```
+  → `<body class="bg-background text-foreground">`; add `--color-card` / `--color-border` / `--color-muted` / `--color-primary` the same way.
+- `dark:` defaults to `prefers-color-scheme`. For a manual class/attribute toggle, declare the strategy once:
+  ```css
+  @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+  ```
+- Docs: https://tailwindcss.com/docs/dark-mode
+
+## Custom styles: `@apply`, `@layer`, `@utility`
+
+- `@apply` lives in the **global `index.css` only** - base element styles go in `@layer base`. Do not scatter per-feature `.css` files that `@apply`.
+- New reusable utilities → `@utility name { ... }` (participates with variants). New variants → `@custom-variant`.
+- A separately-bundled stylesheet (CSS module, framework scoped `<style>`) that uses `@apply`/`@variant` must first `@reference "<entry>.css";` - but prefer plain `var(--color-*)` there; `@reference` reprocesses the file and slows builds.
+- Docs: https://tailwindcss.com/docs/functions-and-directives , https://tailwindcss.com/docs/adding-custom-styles
+
+## Writing classes in components
+
+- Utilities in JSX; factor repetition into `src/components/ui/` primitives composed with `cx()` (see `Button.tsx` / `Card.tsx`).
+- Variants are a `Record<Variant, string>` of **complete, static class strings**. Never build a class by interpolation (`` `bg-${color}-500` ``) - the scanner reads source as plain text and won't emit interpolated classes. Enforced by `no-concatenated-classes`.
+- A **runtime** value goes in `style` as a CSS variable, consumed by an arbitrary-value utility using v4 **parentheses** shorthand: `className="bg-(--brand)"` (not v3 `bg-[--brand]`). `bg-(--brand)` == `bg-[var(--brand)]`.
+- Prefer the shorthand utilities the linter enforces (`size-2.5`, not `h-2.5 w-2.5`). Motion/transition patterns → `ui-ux-design-best-practices`.
+
+## Enforced linting (oxlint + better-tailwindcss)
+
+- `eslint-plugin-better-tailwindcss` runs as an oxlint JS plugin on `apps/front-*/src/**/*.{ts,tsx}` (config in `.oxlintrc.json`; `settings.better-tailwindcss.entryPoint` points at `apps/front-app/src/index.css` so the theme is known). `pnpm lint:fix` auto-fixes the fixable ones.
+- Enabled (all `error`): `enforce-canonical-classes`, `enforce-consistent-class-order`, `no-deprecated-classes` (catches v3 names in v4), `no-duplicate-classes`, `no-unnecessary-whitespace`, `no-concatenated-classes`, `no-conflicting-classes`.
+- **Target:** also enable `no-unknown-classes` - it rejects typo'd / hallucinated class names against the theme, the strongest guard for AI-authored markup. It requires JSX to contain **no raw non-Tailwind class names**; remove any (e.g. Vite-starter `logo` / `read-the-docs`) before turning it on.
+- `enforce-consistent-line-wrapping` stays **off** - `oxfmt` owns JS/JSX layout; the two would fight over `className` wrapping.
+
+## Before finishing
+
+Run `make ci`, then `pnpm --filter front-app run build` to confirm CSS compiles and chunks resolve. Keep every Oxc rule green (see [code-style.mdc](../quality/code-style.mdc)); never silence a rule to pass (see [guardrails.mdc](../core/guardrails.mdc)).

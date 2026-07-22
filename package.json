@@ -23,6 +23,7 @@
     "format": "turbo run format:fix",
     "format:fix": "oxfmt .",
     "lint": "turbo run lint:fix",
+    "lint:agent": "oxlint --no-error-on-unmatched-pattern --format=agent .",
     "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
     "prepare": "husky",
     "types": "turbo run types --filter='./apps/*'",
@@ -41,7 +42,7 @@
     "husky": "^9.1.7",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "oxlint-tsgolint": "^0.25.0",
+    "oxlint-tsgolint": "^7.0.2000",
     "tailwindcss": "catalog:",
     "turbo": "^2.10.5",
     "typescript": "catalog:",
@@ -50,7 +51,7 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@11.15.0",
+  "packageManager": "pnpm@11.15.1",
   "monorepo": {
     "kind": "workspace",
     "role": "root",

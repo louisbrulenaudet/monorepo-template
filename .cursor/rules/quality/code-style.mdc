@@ -27,4 +27,4 @@ OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format)
 
 ## Before finishing
 
-Run `make ci` from the repo root (`turbo run lint format check-types`). Pre-commit uses root `oxfmt` on staged files and `pnpm lint:fix` for incremental fixes.
+Run `make ci-` from the repo root (`turbo run lint format check-types`). Pre-commit uses root `oxfmt` on staged files and `pnpm lint:fix` for incremental fixes.
