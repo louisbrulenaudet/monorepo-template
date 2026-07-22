@@ -16,7 +16,6 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern .",
     "check-types": "tsc -b",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",

@@ -6,9 +6,6 @@
     },
     "lint:fix": {
       "dependsOn": ["transit", "types"]
-    },
-    "check-types": {
-      "dependsOn": ["transit", "types"]
     }
   }
 }

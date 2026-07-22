@@ -1,11 +1,11 @@
 {
   "extends": ["//"],
   "tasks": {
-    "check-types": {
-      "dependsOn": ["transit", "types"]
+    "build": {
+      "inputs": ["$TURBO_EXTENDS$", ".env", ".env.*"]
     },
     "deploy": {
-      "dependsOn": ["build", "^build"]
+      "dependsOn": ["build"]
     }
   }
 }

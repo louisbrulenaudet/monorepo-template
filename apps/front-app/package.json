@@ -17,7 +17,6 @@
   "scripts": {
     "analyze": "ANALYZE=true vite build",
     "build": "tsc -b && vite build",
-    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern .",
     "check-types": "tsc -b",
     "deploy": "wrangler deploy --env production",
     "dev": "vite",

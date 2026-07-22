@@ -24,7 +24,6 @@
     "access": "public"
   },
   "scripts": {
-    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern .",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",
     "lint": "oxlint --no-error-on-unmatched-pattern .",

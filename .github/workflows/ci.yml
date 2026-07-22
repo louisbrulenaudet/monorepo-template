@@ -13,6 +13,7 @@ env:
   DO_NOT_TRACK: "1"
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
+  TURBO_UI: "false"
 
 jobs:
   ci:

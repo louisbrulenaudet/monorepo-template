@@ -14,65 +14,73 @@
     "enabled": true
   },
   "concurrency": "20",
+  "cacheMaxAge": "7d",
+  "cacheMaxSize": "10GB",
   "tasks": {
     "transit": {
+      "description": "Internal no-op graph edge (transit-node pattern): propagates dependency source changes for correct cache invalidation while letting lint/type tasks run in parallel.",
       "dependsOn": ["^transit"]
     },
     "lint": {
+      "description": "Lint with oxlint (read-only, cached).",
       "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "lint:fix": {
+      "description": "Lint with oxlint and apply --fix (uncached, writes source).",
       "dependsOn": ["transit"],
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "format": {
+      "description": "Check formatting with oxfmt (read-only, cached).",
       "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "format:fix": {
+      "description": "Format with oxfmt and write changes (uncached, writes source).",
       "dependsOn": ["transit"],
       "cache": false,
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
-    "check": {
-      "dependsOn": ["transit"],
-      "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": []
-    },
     "check-types": {
+      "description": "Type-check with tsc -b across project references; emits declarations and incremental build info under dist/ (apps) or node_modules/.tmp/ (libs).",
       "dependsOn": ["transit", "types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.json"],
-      "outputs": ["*.tsbuildinfo"]
+      "outputs": ["dist/**", "node_modules/.tmp/tsconfig.tsbuildinfo"]
     },
     "types": {
+      "description": "Generate worker-configuration.d.ts from wrangler.jsonc (wrangler types).",
       "dependsOn": ["^transit"],
       "inputs": ["$TURBO_DEFAULT$", "wrangler.jsonc"],
       "outputs": ["worker-configuration.d.ts"]
     },
     "build": {
+      "description": "Build production output to dist/; gated on the package's own check-types and upstream builds.",
       "dependsOn": ["^build", "check-types"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["dist/**"],
       "env": ["NODE_ENV", "VITE_API_BASE_URL"]
     },
     "dev": {
+      "description": "Run the local dev server (persistent, uncached).",
       "cache": false,
       "persistent": true,
       "passThroughEnv": ["VITE_API_BASE_URL"]
     },
     "preview": {
+      "description": "Serve the production build locally (persistent, uncached).",
       "dependsOn": ["build"],
       "cache": false,
       "persistent": true,
       "passThroughEnv": ["VITE_API_BASE_URL", "NODE_ENV"]
     },
     "deploy": {
+      "description": "Deploy to Cloudflare Workers via wrangler (uncached).",
       "dependsOn": ["^build"],
       "cache": false,
       "outputLogs": "new-only",

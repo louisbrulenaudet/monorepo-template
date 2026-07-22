@@ -13,7 +13,6 @@
   ],
   "main": "src/index.ts",
   "scripts": {
-    "check": "oxfmt --check . && oxlint --no-error-on-unmatched-pattern .",
     "check-types": "tsc -b",
     "deploy": "wrangler deploy --env production",
     "dev": "wrangler dev",
