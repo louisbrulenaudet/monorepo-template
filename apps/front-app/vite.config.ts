@@ -112,7 +112,7 @@ export default defineConfig(({ command, mode }) => {
   assertProductionOriginEnv(mode, command);
 
   const plugins: PluginOption[] = [
-    devtools(),
+    devtools({ consolePiping: { enabled: false } }),
     tanstackRouter({
       autoCodeSplitting: true,
       generatedRouteTree: "./src/routeTree.gen.ts",
@@ -165,42 +165,47 @@ export default defineConfig(({ command, mode }) => {
     },
 
     build: {
-      target: "esnext",
+      // `target` intentionally unset - inherit Vite 8's default
+      // `baseline-widely-available` (Chrome/Edge 111, Firefox 114, Safari 16.4):
+      // modern output with safe global reach for a CDN-distributed SPA. Leaving
+      // `modulePreload.polyfill` at its default (true) keeps preload hints
+      // working on browsers that predate native `<link rel="modulepreload">`.
       minify: "oxc",
-      sourcemap: mode === "development" ? "inline" : "hidden",
+      sourcemap: mode === "development" ? "inline" : false,
       cssCodeSplit: true,
       assetsInlineLimit: 4096,
       reportCompressedSize: false,
       chunkSizeWarningLimit: 500,
-      modulePreload: {
-        polyfill: false,
-      },
       rolldownOptions: {
         output: {
-          manualChunks(id) {
-            if (id.includes("/packages/dtos-common/")) {
-              return "repo-dtos-common";
-            }
-
-            if (!id.includes("node_modules")) {
-              return undefined;
-            }
-            if (
-              id.includes("node_modules/react/") ||
-              id.includes("node_modules/react-dom/")
-            ) {
-              return "react-vendor";
-            }
-
-            if (id.includes("node_modules/@tanstack/react-router")) {
-              return "tanstack-router-vendor";
-            }
-
-            if (id.includes("node_modules/@tanstack/")) {
-              return "tanstack-query-vendor";
-            }
-
-            return "vendor";
+          codeSplitting: {
+            groups: [
+              {
+                name: "react-vendor",
+                test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+                priority: 30,
+              },
+              {
+                name: "tanstack-router-vendor",
+                test: /node_modules[\\/]@tanstack[\\/]react-router[\\/]/,
+                priority: 20,
+              },
+              {
+                name: "tanstack-vendor",
+                test: /node_modules[\\/]@tanstack[\\/]/,
+                priority: 10,
+              },
+              {
+                name: "repo-dtos-common",
+                test: /packages[\\/]dtos-common[\\/]/,
+                priority: 10,
+              },
+              {
+                name: "vendor",
+                test: /node_modules/,
+                priority: 0,
+              },
+            ],
           },
         },
       },
@@ -213,8 +218,19 @@ export default defineConfig(({ command, mode }) => {
       hmr: {
         overlay: true,
       },
+      // Forward browser warnings/errors (and unhandled exceptions, with
+      // source-mapped stack traces) to the terminal so agentic dev loops can
+      // read runtime failures without a screenshot.
+      forwardConsole: {
+        unhandledErrors: true,
+        logLevels: ["warn", "error"],
+      },
       warmup: {
-        clientFiles: ["./src/main.tsx", "./src/routes/__root.tsx"],
+        clientFiles: [
+          "./src/main.tsx",
+          "./src/router.tsx",
+          "./src/routes/__root.tsx",
+        ],
       },
       fs: {
         allow: [repoRoot],

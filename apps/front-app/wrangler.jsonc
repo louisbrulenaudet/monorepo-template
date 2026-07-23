@@ -4,7 +4,6 @@
   "compatibility_date": "2026-07-08",
   "compatibility_flags": ["nodejs_compat"],
   "send_metrics": false,
-  "upload_source_maps": true,
   // workers.dev deploys for template; set workers_dev: false when using custom domains only.
   "workers_dev": true,
   "preview_urls": false,

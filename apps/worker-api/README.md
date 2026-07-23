@@ -13,7 +13,9 @@ The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev por
 
 What you can run today:
 - Health endpoint at `GET /api/v1/health`
-- CORS allows any origin by default. To restrict browsers to specific origins, set the `CORS_ORIGINS` var (comma-separated list, e.g. `http://localhost:5174,https://app.example.com`) in `wrangler.jsonc` or `.dev.vars`.
+- Every response carries an `X-Request-Id` header, and error responses return `{ error, requestId }`. Per-request access logging comes from native Workers observability; failures log structured JSON with the request id for correlation.
+- CORS allows any origin by default (and exposes `X-Request-Id`). To restrict browsers to specific origins, set the `CORS_ORIGINS` var (comma-separated list, e.g. `http://localhost:5174,https://app.example.com`) in `wrangler.jsonc` or `.dev.vars`.
+- A 15 s request timeout returns `504`, and a `Server-Timing` header is added in non-production for local profiling.
 
 What you can add as you grow the repo:
 - Auth / session middleware
@@ -28,7 +30,7 @@ What you can add as you grow the repo:
 - **Language:** TypeScript (strict mode, ESNext)
 - **Framework:** Hono (for Cloudflare Workers)
 - **Validation:** Zod schemas from `@repo/dtos-common/api`
-- **Middleware:** CORS, compression, body limits, secure headers
+- **Middleware:** request id, secure headers, CORS, CSRF, timeout, body limits, timing + pretty JSON (dev)
 - **Runtime:** Cloudflare Workers
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm

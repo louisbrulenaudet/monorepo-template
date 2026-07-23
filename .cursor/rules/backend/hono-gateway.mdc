@@ -1,5 +1,5 @@
 ---
-description: "Hono gateway Worker rules - middleware order, zValidator, thin handlers, service bindings."
+description: "Hono gateway Worker rules - middleware order, observability, zValidator, thin handlers, service bindings."
 alwaysApply: false
 globs: apps/worker-*/src/**/*.ts,apps/webhook-*/src/**/*.ts
 ---
@@ -12,40 +12,72 @@ globs: apps/worker-*/src/**/*.ts,apps/webhook-*/src/**/*.ts
 
 ```mermaid
 flowchart TD
-  Client["Client / front-app"] --> HonoApp["Hono app"]
-  HonoApp --> CORS["CORS first"]
-  CORS --> Limits["Compression / body limits"]
-  Limits --> Auth["Auth optional"]
-  Auth --> Validation["zValidator at boundary"]
-  Validation --> Handler["Thin route handler"]
-  Handler --> Binding["Service binding optional"]
+  Client["Client / front-app"] --> ReqId["request-id"]
+  ReqId --> Sec["secure headers"]
+  Sec --> CORS["CORS (/api/*)"]
+  CORS --> CSRF["CSRF (unsafe methods)"]
+  CSRF --> Timing["timing (dev only)"]
+  Timing --> Timeout["timeout"]
+  Timeout --> Body["body limit"]
+  Body --> Validation["zValidator at boundary"]
+  Validation --> Handler["thin route handler"]
+  Handler --> Binding["service binding (optional)"]
   Handler --> Response["c.json()"]
 ```
 
 ## Middleware order (`src/index.ts`)
 
-1. **CORS** - first (preflight `OPTIONS` before auth/routes).
-2. **Secure headers** - production (`X-Content-Type-Options`, etc.).
-3. **Compression / body limits** - e.g. 3 MB body cap.
-4. **Pretty JSON** - development only.
+Register in this order. The onion model runs "before" logic top-down and "after" logic (response mutation) bottom-up.
+
+**Root app (every route):**
+
+1. **`requestId()`** (`hono/request-id`) - **first**, so every error log and response can reference it. Sets `c.get("requestId")` and echoes the `X-Request-Id` response header. Add `RequestIdVariables` to the Hono generic's `Variables` so `c.get("requestId")` is typed.
+2. **`secureHeaders()`** (`hono/secure-headers`) - HSTS, `nosniff`, `no-referrer`, COOP/CORP on by default (and `X-Powered-By` removed). Add a locked-down `contentSecurityPolicy` (`default-src 'none'; frame-ancestors 'none'`) - harmless for JSON, hardening if a response is ever rendered.
+3. **`cors()`** on `/api/*` - preflight `OPTIONS` must clear before auth/routes. Read the allowlist from `c.env.CORS_ORIGINS` **per request** (env is not available at module scope on Workers). Put `X-Request-Id` in `exposeHeaders` so browsers can read the id.
+4. **`csrf()`** on `/api/*` - unsafe methods only; must not block CORS preflight. Combines the `Origin` check with a `Sec-Fetch-Site` check.
+
+**API sub-app (`/api/v1`):**
+
+5. **`timing()`** (`hono/timing`) - Server-Timing header, **dev only** (gate on `c.env.ENVIRONMENT`). Workers timer metrics are inaccurate (timers advance only on I/O) and internal timings should not leak to clients.
+6. **`timeout(ms)`** (`hono/timeout`) - safety net returning `504`. Read the caveat below before adding routes.
+7. **`bodyLimit()`** - e.g. 3 MB cap; return `413` on overflow.
+8. **`prettyJSON()`** - dev only.
+
+## Observability
+
+- **Native first.** With `observability.enabled` in `wrangler.jsonc`, Workers emits an invocation log per request (method, path, status, CPU/wall time, outcome) with no code. Do **not** re-implement a per-request access log in middleware - it only duplicates that data and doubles log ingest cost.
+- **Correlate failures by request id.** `requestId()` sets `c.get("requestId")` and the `X-Request-Id` response header; `onError` logs structured JSON that includes it, and `onError` / `notFound` echo it in the response body. A client can quote the id, and you can grep logs for it on a failure.
+- **Reserve `console.error` for real failures** - Workers observability indexes `console` output, so error dashboards stay signal-heavy when success is left to invocation logs.
+- Sampling and retention live in `wrangler.jsonc` (`observability`, `head_sampling_rate`, `logs.invocation_logs`) - see [workers-config.mdc](workers-config.mdc).
+
+## Timeout caveat (read before adding routes)
+
+`hono/timeout` is `Promise.race([next(), timer])`: on fire it returns `504`, but **does not cancel the handler** - downstream work (including any `fetch`) keeps running and, on Workers, is only guaranteed to finish under `c.executionCtx.waitUntil()`. It also **cannot wrap streaming / SSE responses**. For a streaming route, mount it outside the timeout (a separate sub-app) or carve it out with `except` from `hono/combine`; for true cancellation, pass `AbortSignal.timeout(ms)` to your subrequests.
 
 ## Validation
 
 - Validate every input at the route boundary with `@hono/zod-validator`.
 - Import schemas from `@repo/dtos-common/api` - never redefine wire shapes locally.
-- Targets: `zValidator("json" | "param" | "query", Schema)`.
+- Targets: `zValidator("json" | "param" | "query" | "header", Schema)`.
 
 ## Handlers
 
-- **Thin handlers**: validate → call service module or `env.BINDING` → `c.json()`.
+- **Thin handlers**: validate → call a service module or `env.BINDING` → `c.json()`.
 - No business logic inline in route files.
-- HTTP status codes: `400` validation, `401` unauthenticated, `403` forbidden, `404` not found, `500` internal.
+- HTTP status codes: `400` validation, `401` unauthenticated, `403` forbidden, `404` not found, `413` body too large, `500` internal, `504` timeout.
 - RESTful paths: plural nouns (`/items`), verbs via HTTP method.
+
+## Typing & structure
+
+- Type the app **inline** with the Hono generic - `new Hono<{ Bindings: WorkerApiBindings; Variables: RequestIdVariables }>()` (the Cloudflare / Hono pattern; neither recommends a separate env-type file). Reuse a local `type AppEnv` alias for sub-apps in the **same file** rather than repeating the generic; promote the env type to its own module only once several route files import it.
+- Keep small custom middleware inline in `index.ts`. Extract to `src/middleware/<name>.ts` (`createMiddleware<AppEnv>`, `hono/factory`) only when it grows or is reused across workers.
+- Broad-with-carve-outs scoping: prefer `except` / `some` / `every` from `hono/combine` over duplicating `app.use()` per sub-route.
+- `hono/context-storage` (`getContext()`) is available (`nodejs_compat` is already set) for deep call stacks, but a thin gateway should pass `c` explicitly - don't reach for it by default.
 
 ## Workers runtime
 
 - **No global mutable state** for per-request data - use Hono context (`c.get` / `c.set`).
-- **No floating promises** - always `await` or return async work.
+- **No floating promises** - always `await` or return async work. Background work after a response needs `c.executionCtx.waitUntil()`.
 - **No `setInterval` / long-lived timers** - CPU time limits apply.
 - Respect Workers constraints for streams, WebSockets, and subrequests.
 
