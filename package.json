@@ -44,7 +44,7 @@
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "tailwindcss": "catalog:",
-    "turbo": "^2.10.5",
+    "turbo": "^2.10.6",
     "typescript": "catalog:",
     "wrangler": "^4.113.0"
   },
