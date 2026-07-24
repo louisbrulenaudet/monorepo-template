@@ -46,7 +46,7 @@
     "tailwindcss": "catalog:",
     "turbo": "^2.10.6",
     "typescript": "catalog:",
-    "wrangler": "^4.113.0"
+    "wrangler": "^4.114.0"
   },
   "engines": {
     "node": ">=22"

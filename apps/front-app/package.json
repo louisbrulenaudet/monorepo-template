@@ -36,7 +36,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.46.0",
+    "@cloudflare/vite-plugin": "^1.47.0",
     "@repo/typescript-config": "workspace:*",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "^4.3.3",
