@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="https://github.com/louisbrulenaudet/monorepo-template">
+    <img src="https://github.com/louisbrulenaudet/monorepo-template/blob/main/assets/logo.png?raw=true" alt="Monorepo Template" width="200"/>
+  </a>
+</p>
+
+
 # Monorepo starter based on pnpm with Cloudflare, Hono, React, Vite and Tailwind 🚚⛅
 
 [![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
