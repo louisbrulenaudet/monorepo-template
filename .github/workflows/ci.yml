@@ -33,7 +33,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          # `--affected` diffs base..HEAD via git. A shallow checkout cannot
+          # resolve that range, so Turborepo falls back to "everything changed".
+          # Full history with blobless fetch keeps it correct and still fast.
+          fetch-depth: 0
+          filter: blob:none
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5

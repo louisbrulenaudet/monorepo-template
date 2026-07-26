@@ -135,6 +135,8 @@ make login     # optional - Cloudflare auth for remote Wrangler features
 make prepare   # Husky pre-commit hooks
 ```
 
+No type-generation step: `worker-configuration.d.ts` is **committed**, per Cloudflare's recommendation, so a fresh clone lints and type-checks immediately. After editing a Worker's `wrangler.jsonc`, run `make types` and commit the regenerated file - `make ci` runs `make types-check` (`wrangler types --check`), which fails if it has drifted. `wrangler types` runs entirely locally: no Cloudflare auth or network.
+
 Copy env templates before the first run:
 
 - Workers: `apps/<worker>/.dev.vars.example` → `.dev.vars`
@@ -164,14 +166,17 @@ Focused work on one package: `make dev SCOPE=worker-api` (see [Scoping](#scoping
 | login           | Login to Cloudflare (repo-pinned Wrangler)          |
 | update          | Update dependencies to latest (rewrites pnpm catalog) |
 | check           | Lint + format check (no typecheck)                  |
-| ci              | Lint + format + check-types (local PR gate)         |
+| ci              | Lint + format + check-types + types-check + boundaries (local PR gate) |
+| boundaries      | Check package dependency tags against `turbo.json`  |
 | deploy          | Deploy all apps/workers (via Turborepo)             |
 | build           | Build all packages and apps (via Turborepo)         |
 | format          | Auto-fix formatting with oxfmt                    |
 | lint            | Auto-fix lint issues with oxlint                  |
+| lint-agent      | Lint with machine-readable `--format=agent` output (no auto-fix) |
 | dev             | Start all dev servers (via Turborepo)               |
 | preview         | Preview production builds locally (via Turborepo)   |
-| types           | Generate `worker-configuration.d.ts` in apps        |
+| types           | Regenerate `worker-configuration.d.ts` (commit it)  |
+| types-check     | Verify committed Worker types match `wrangler.jsonc` |
 | check-types     | TypeScript across all workers and packages          |
 | prepare         | Install or reinstall Husky git hooks                |
 | husky-status    | Show Husky hooks status                             |
@@ -246,7 +251,7 @@ There is no generator CLI. Copy the closest sibling under `apps/` and wire it in
 3. **Assign ports** from the [Development ports](#development-ports) registry - set `dev.port` / `inspector_port: 0` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`.
 4. **Keep** the 4-line `Makefile` that includes `make/app.mk` (see [make/README.md](make/README.md)).
 5. **Extend** `@repo/typescript-config/workers.json` (or the matching preset); add `.dev.vars.example`.
-6. **Install and typegen:**
+6. **Install and typegen** (commit the generated `worker-configuration.d.ts` with the new Worker):
    ```sh
    make install
    make types
@@ -445,6 +450,9 @@ make husky-status  # verify hooks are executable
 - When you add endpoints, bindings, or env vars, update the relevant app/package **README** and **AGENTS.md**.
 
 ## AI agent instructions
+
+> [!IMPORTANT]
+> **Start Claude Code from the repository root.** `CLAUDE.md` files are inherited from parent directories, but `.claude/settings.json` is **not** - [it loads only from the directory you start in](https://code.claude.com/docs/en/large-codebases). A session started in `apps/worker-api/` still loads every instruction file, but none of the permission denies, hooks, or sandbox config in the root `.claude/settings.json`. The session looks correctly configured while the enforcement layer is absent. For package-scoped work, start at the root and use `SCOPE=` instead.
 
 - **[AGENTS.md](AGENTS.md)** - cross-tool project conventions and Cursor's root instructions.
 - **[CLAUDE.md](CLAUDE.md)** - Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).

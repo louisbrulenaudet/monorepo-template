@@ -1,0 +1,27 @@
+---
+paths:
+  - "**/turbo.json"
+---
+
+# Package Boundaries
+
+`turbo.json` under `boundaries.tags` is the **source of truth** and it is already commented - read it rather than trusting a copy. `make boundaries` (inside `make ci`) enforces it: a violation **fails CI**, it is not a convention. This file carries only what the config cannot say about itself.
+
+## Tag map
+
+| Tag | Packages |
+|-----|----------|
+| `app` | every `front-*` / `worker-*` / `queue-*` / `webhook-*` / `mcp-*` |
+| `contracts` | `@repo/dtos-common` |
+| `contracts-base` | `@repo/enums-common` |
+| `config` | `@repo/typescript-config` |
+
+## Invariants
+
+- **Nothing may depend on an `app`.** `app.dependents.deny` lists all four tags, so apps are entry points and never installable dependencies. Worker-to-Worker calls go through service-binding RPC declared in `wrangler.jsonc` - never a package import.
+- **The contract chain cannot invert.** `contracts` → `contracts-base` → `config` are declared as allow-lists, so the documented `enums → dtos` direction is genuinely enforced and cannot become a cycle.
+- **A new package must declare its tag.** Add `turbo.json` with `"extends": ["//"]` and a `tags` entry, or `make boundaries` reports it as untagged.
+
+## Known gap - do not over-trust `config`
+
+`contracts` and `contracts-base` use `dependencies.allow`, which is closed: only the listed tags are permitted. `config` instead uses `dependencies.deny: ["app", "contracts", "contracts-base"]`, which is open: an internal package carrying **no tag, or any tag outside those three, would pass**. So "`config` depends on nothing internal" is the intent, not the guarantee. Treat it as a rule to uphold by hand when editing `packages/typescript-config`, and prefer `"allow": []` if you tighten it.

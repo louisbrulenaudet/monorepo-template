@@ -12,6 +12,6 @@ preview: ## Preview the production build locally
 	@echo "👀 Previewing production build..."
 	$(TURBO) preview $(TURBO_FILTER)
 
-types: ## Generate worker-configuration.d.ts files recursively
-	@echo "📄 Generating TypeScript type definitions..."
+types: ## Regenerate worker-configuration.d.ts in apps (commit the result)
+	@echo "📄 Regenerating Worker types..."
 	$(TURBO) types --filter='./apps/*' $(TURBO_FILTER)

@@ -11,14 +11,22 @@ if [[ ! -f "${LOCKFILE}" ]]; then
   exit 1
 fi
 
-mapfile -t SKILL_NAMES < <(
+# No `mapfile`: macOS ships bash 3.2, where it does not exist. Command substitution
+# also propagates a node failure under `set -e`, which process substitution would swallow.
+SKILL_NAMES_RAW="$(
   node -e "
     const lock = require('${LOCKFILE}');
     for (const name of Object.keys(lock.skills ?? {})) {
       console.log(name);
     }
   "
-)
+)"
+
+SKILL_NAMES=()
+while IFS= read -r name; do
+  [[ -n "${name}" ]] || continue
+  SKILL_NAMES+=("${name}")
+done <<<"${SKILL_NAMES_RAW}"
 
 if [[ "${#SKILL_NAMES[@]}" -eq 0 ]]; then
   echo "error: no skills found in skills-lock.json" >&2

@@ -11,7 +11,9 @@ if [[ ! -f "${LOCKFILE}" ]]; then
   exit 1
 fi
 
-mapfile -t LEGACY_SKILLS < <(
+# No `mapfile`: macOS ships bash 3.2, where it does not exist. Command substitution
+# also propagates a node failure under `set -e`, which process substitution would swallow.
+LEGACY_SKILLS_RAW="$(
   node -e "
     const lock = require('${LOCKFILE}');
     for (const [name, entry] of Object.entries(lock.skills ?? {})) {
@@ -20,7 +22,13 @@ mapfile -t LEGACY_SKILLS < <(
       }
     }
   "
-)
+)"
+
+LEGACY_SKILLS=()
+while IFS= read -r row; do
+  [[ -n "${row}" ]] || continue
+  LEGACY_SKILLS+=("${row}")
+done <<<"${LEGACY_SKILLS_RAW}"
 
 if [[ "${#LEGACY_SKILLS[@]}" -eq 0 ]]; then
   echo "No legacy skills without skillPath in skills-lock.json."

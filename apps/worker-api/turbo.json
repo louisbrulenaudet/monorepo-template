@@ -1,11 +1,5 @@
 {
+  "$schema": "../../node_modules/turbo/schema.json",
   "extends": ["//"],
-  "tasks": {
-    "lint": {
-      "dependsOn": ["transit", "types"]
-    },
-    "lint:fix": {
-      "dependsOn": ["transit", "types"]
-    }
-  }
+  "tags": ["app"]
 }

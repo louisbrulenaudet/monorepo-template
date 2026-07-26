@@ -38,6 +38,7 @@
   },
   "ignorePatterns": [
     "**/*.gen.ts",
+    "**/worker-configuration.d.ts",
     "**/*.md",
     "**/*.markdown",
     "**/*.mdx",

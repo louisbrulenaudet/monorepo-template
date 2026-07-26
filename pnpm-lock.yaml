@@ -28,10 +28,6 @@ catalogs:
 importers:
 
   .:
-    dependencies:
-      zod:
-        specifier: 'catalog:'
-        version: 4.4.3
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -159,7 +155,7 @@ importers:
     dependencies:
       '@hono/zod-validator':
         specifier: ^0.9.0
-        version: 0.9.0(hono@4.12.31)(zod@4.4.3)
+        version: 0.9.0(hono@4.12.32)(zod@4.4.3)
       '@repo/dtos-common':
         specifier: workspace:*
         version: link:../../packages/dtos-common
@@ -167,8 +163,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/enums-common
       hono:
-        specifier: ^4.12.31
-        version: 4.12.31
+        specifier: ^4.12.32
+        version: 4.12.32
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -1973,8 +1969,8 @@ packages:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
 
-  hono@4.12.31:
-    resolution: {integrity: sha512-zJIHFrl6bq3RDd2YusFNCDlM8qUprxKswyi/OPzPyzKDdyBXDqWx8bZlZ7R+saTdSTatUmb3O7K4SspGPaEOQg==}
+  hono@4.12.32:
+    resolution: {integrity: sha512-XcuyW9qE2kJn07PkecMOBd5Vq/hMy7mmGw+idz1yblbg9N17ijJODrvPkn7/dwL3Kulj8LcRJ69DLOWf91dRUg==}
     engines: {node: '>=16.9.0'}
 
   husky@9.1.7:
@@ -2933,9 +2929,9 @@ snapshots:
       mdn-data: 2.29.0
       source-map-js: 1.2.1
 
-  '@hono/zod-validator@0.9.0(hono@4.12.31)(zod@4.4.3)':
+  '@hono/zod-validator@0.9.0(hono@4.12.32)(zod@4.4.3)':
     dependencies:
-      hono: 4.12.31
+      hono: 4.12.32
       zod: 4.4.3
 
   '@img/colour@1.1.0': {}
@@ -3948,7 +3944,7 @@ snapshots:
 
   has-flag@4.0.0: {}
 
-  hono@4.12.31: {}
+  hono@4.12.32: {}
 
   husky@9.1.7: {}
 

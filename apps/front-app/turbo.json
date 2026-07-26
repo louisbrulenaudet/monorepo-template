@@ -1,10 +1,13 @@
 {
+  "$schema": "../../node_modules/turbo/schema.json",
   "extends": ["//"],
+  "tags": ["app"],
   "tasks": {
     "build": {
       "inputs": ["$TURBO_EXTENDS$", ".env", ".env.*"]
     },
     "deploy": {
+      "description": "Uploads ./dist as Cloudflare assets, so it needs this app's own build (not just upstream builds) before deploying.",
       "dependsOn": ["build"]
     }
   }

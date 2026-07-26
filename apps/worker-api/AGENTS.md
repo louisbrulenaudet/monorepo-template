@@ -55,7 +55,8 @@ Workers Cache: [`.cursor/rules/backend/workers-cache.mdc`](../../.cursor/rules/b
 | Command | Description |
 |---------|-------------|
 | `make dev` | Dev server on :8700 |
-| `make types` | Regenerate `worker-configuration.d.ts` |
+| `make types` | Regenerate `worker-configuration.d.ts` (commit the result) |
+| `make types-check` | Verify the committed types match `wrangler.jsonc` |
 | `make deploy` | Deploy to Cloudflare |
 | `make ci` | Lint + format + check-types |
 

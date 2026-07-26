@@ -25,10 +25,12 @@
   "options": {
     "typeAware": true,
     "denyWarnings": true,
-    "reportUnusedDisableDirectives": "error"
+    "reportUnusedDisableDirectives": "error",
+    "respectEslintDisableDirectives": false
   },
   "ignorePatterns": [
     "**/*.gen.ts",
+    "**/worker-configuration.d.ts",
     ".claude/**",
     ".agents/**",
     ".vscode/**",
@@ -54,6 +56,13 @@
     ],
     "no-new-func": "error",
     "no-script-url": "error",
+    "no-unreachable-loop": "error",
+    // Workers bill CPU time and cap request duration: a serial `await` inside a
+    // loop turns N independent I/O calls into N round trips. Batch with
+    // `Promise.all` / a queue instead. Genuinely sequential work (ordered
+    // writes, rate-limited providers) is the one case worth an explicit
+    // `oxlint-disable-next-line no-await-in-loop` with a reason.
+    "no-await-in-loop": "error",
     "no-unused-vars": [
       "error",
       {
@@ -109,6 +118,18 @@
     "typescript/prefer-optional-chain": "error",
     "typescript/no-unnecessary-condition": "error",
     "typescript/strict-void-return": "error",
+    "typescript/no-deprecated": "error",
+    "typescript/no-base-to-string": "error",
+    "typescript/no-duplicate-type-constituents": "error",
+    "typescript/no-redundant-type-constituents": "error",
+    "typescript/no-unnecessary-type-parameters": "error",
+    "typescript/non-nullable-type-assertion-style": "error",
+    "typescript/consistent-type-assertions": "error",
+    "typescript/no-meaningless-void-operator": "error",
+    "typescript/prefer-reduce-type-parameter": "error",
+    "typescript/prefer-find": "error",
+    "typescript/prefer-includes": "error",
+    "typescript/prefer-string-starts-ends-with": "error",
     "import/no-cycle": ["error", { "maxDepth": 10 }],
     "import/no-duplicates": "error",
     "import/no-mutable-exports": "error",
@@ -118,6 +139,7 @@
     "unicorn/no-empty-file": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/prefer-node-protocol": "error",
+    "unicorn/explicit-timer-delay": "error",
     "unicorn/filename-case": [
       "error",
       {
@@ -213,12 +235,20 @@
         "react/rules-of-hooks": "error",
         "react/react-compiler": "error",
         "react/no-danger": "error",
+        "react/function-component-definition": [
+          "error",
+          {
+            "namedComponents": "function-declaration",
+            "unnamedComponents": "arrow-function"
+          }
+        ],
         "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
         "better-tailwindcss/enforce-canonical-classes": "error",
         "better-tailwindcss/no-concatenated-classes": "error",
         "better-tailwindcss/no-conflicting-classes": "error",
         "better-tailwindcss/no-deprecated-classes": "error",
         "better-tailwindcss/no-duplicate-classes": "error",
+        "better-tailwindcss/no-unknown-classes": "error",
         "better-tailwindcss/no-unnecessary-whitespace": "error",
         "jsx-a11y/anchor-is-valid": "error",
         "jsx-a11y/alt-text": "error"

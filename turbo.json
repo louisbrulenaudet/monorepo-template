@@ -1,63 +1,85 @@
 {
-  "$schema": "https://v2-10-6.turborepo.dev/schema.json",
-  "ui": "tui",
-  "envMode": "strict",
-  "globalDependencies": [
-    ".oxfmtrc.json",
-    ".oxlintrc.json",
-    "tsconfig.json",
-    "pnpm-workspace.yaml",
-    ".npmrc"
-  ],
-  "globalPassThroughEnv": ["CI", "NODE_ENV"],
-  "remoteCache": {
-    "enabled": true
+  "$schema": "./node_modules/turbo/schema.json",
+  "futureFlags": {
+    "globalConfiguration": true
   },
-  "concurrency": "20",
-  "cacheMaxAge": "7d",
-  "cacheMaxSize": "10GB",
+  "global": {
+    "ui": "tui",
+    "envMode": "strict",
+    "concurrency": "100%",
+    "cacheMaxAge": "7d",
+    "cacheMaxSize": "10GB",
+    "remoteCache": {
+      "enabled": true
+    },
+    // Prepended to every task's `inputs` (not folded into a single global hash), so a
+    // task can drop a specific entry with a negation glob. OXC configs are deliberately
+    // absent: lint and format do not run through Turborepo, so .oxlintrc.json and
+    // .oxfmtrc.json must not invalidate check-types or build. See make/quality.mk.
+    "inputs": [".npmrc", "pnpm-workspace.yaml", "tsconfig.json"],
+    "passThroughEnv": ["CI", "NODE_ENV"]
+  },
+  // Machine-enforced version of the architecture in AGENTS.md. Run via `make boundaries`
+  // (part of `make ci`). Tags are assigned in each package's own turbo.json.
+  "boundaries": {
+    "tags": {
+      // Deployable entry points: front-*, worker-*, queue-*, webhook-*, mcp-*.
+      // Apps are never installable dependencies - Worker-to-Worker calls go through
+      // service-binding RPC declared in wrangler.jsonc, never a package import.
+      "app": {
+        "dependencies": {
+          "allow": ["contracts", "contracts-base", "config"]
+        },
+        "dependents": {
+          "deny": ["app", "contracts", "contracts-base", "config"]
+        }
+      },
+      // Shared wire contracts (@repo/dtos-common): may build on the enum base, never on an app.
+      "contracts": {
+        "dependencies": {
+          "allow": ["contracts-base", "config"]
+        }
+      },
+      // Leaf of the contract chain (@repo/enums-common). Depends on nothing internal,
+      // so the documented `enums -> dtos` direction can never invert into a cycle.
+      "contracts-base": {
+        "dependencies": {
+          "allow": ["config"]
+        }
+      },
+      // Build-time presets (@repo/typescript-config): consumed by everything, depends on nothing internal.
+      "config": {
+        "dependencies": {
+          "deny": ["app", "contracts", "contracts-base"]
+        }
+      }
+    }
+  },
+  // No lint / format tasks by design: OXC runs as a single whole-repo pass outside
+  // Turborepo (make/quality.mk explains why). Keep it that way - a per-package
+  // `oxlint .` breaks the context-aware Tailwind rules.
   "tasks": {
     "transit": {
-      "description": "Internal no-op graph edge (transit-node pattern): propagates dependency source changes for correct cache invalidation while letting lint/type tasks run in parallel.",
+      "description": "Internal no-op graph edge (transit-node pattern). Retained for `types`: a Worker bound to another Worker over RPC generates types that embed the callee's source types (Service<import('../other/src/index').Foo>), so upstream source changes must invalidate `wrangler types` even though it reads only wrangler.jsonc.",
       "dependsOn": ["^transit"]
     },
-    "lint": {
-      "description": "Lint with oxlint (read-only, cached).",
-      "dependsOn": ["transit"],
-      "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": []
-    },
-    "lint:fix": {
-      "description": "Lint with oxlint and apply --fix (uncached, writes source).",
-      "dependsOn": ["transit"],
-      "cache": false,
-      "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": []
-    },
-    "format": {
-      "description": "Check formatting with oxfmt (read-only, cached).",
-      "dependsOn": ["transit"],
-      "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": []
-    },
-    "format:fix": {
-      "description": "Format with oxfmt and write changes (uncached, writes source).",
-      "dependsOn": ["transit"],
-      "cache": false,
-      "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": []
-    },
     "check-types": {
-      "description": "Type-check with tsc -b across project references; emits declarations and incremental build info under dist/ (apps) or node_modules/.tmp/ (libs).",
-      "dependsOn": ["transit", "types"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.json"],
-      "outputs": ["dist/**", "node_modules/.tmp/tsconfig.tsbuildinfo"]
+      "description": "Type-check with tsc -b. Uses ^check-types (NOT the transit node): every package sets composite:true, so `tsc -b` also builds its referenced projects. Running these in parallel makes several packages emit the same declarations and .tsbuildinfo concurrently, which races. Ordering along the dependency graph is required for correctness. Declaration emit is a byproduct of composite (all `exports` resolve to source .ts), so nothing is cached. No `types` edge: worker-configuration.d.ts is committed, so it is a tracked $TURBO_DEFAULT$ input and hashes directly - regenerating it here would dirty the tree mid-CI.",
+      "dependsOn": ["^check-types"],
+      "outputs": []
     },
     "types": {
-      "description": "Generate worker-configuration.d.ts from wrangler.jsonc (wrangler types).",
+      "description": "Regenerate the committed worker-configuration.d.ts (wrangler types). Writes a tracked source file, so it is uncached like the other write-mode tasks - run it after editing wrangler.jsonc, then commit the result. CI verifies freshness with types:check instead of running this.",
       "dependsOn": ["^transit"],
-      "inputs": ["$TURBO_DEFAULT$", "wrangler.jsonc"],
-      "outputs": ["worker-configuration.d.ts"]
+      "cache": false,
+      "inputs": ["wrangler.jsonc"],
+      "outputs": []
+    },
+    "types:check": {
+      "description": "Verify the committed worker-configuration.d.ts still matches wrangler.jsonc (wrangler types --check). Read-only and cached; fails when the file has drifted, prompting `make types` + commit. Unlike `types`, --check does not start workerd, so it is cheap in CI.",
+      "dependsOn": ["^transit"],
+      "inputs": ["wrangler.jsonc", "worker-configuration.d.ts"],
+      "outputs": []
     },
     "build": {
       "description": "Build production output to dist/; gated on the package's own check-types and upstream builds.",
@@ -80,8 +102,8 @@
       "passThroughEnv": ["VITE_API_BASE_URL", "NODE_ENV"]
     },
     "deploy": {
-      "description": "Deploy to Cloudflare Workers via wrangler (uncached).",
-      "dependsOn": ["^build"],
+      "description": "Deploy to Cloudflare Workers via wrangler (uncached). `check-types` gates workers that have no build step of their own (wrangler bundles from source); apps that upload build output add their own `build` edge in their package turbo.json.",
+      "dependsOn": ["^build", "check-types"],
       "cache": false,
       "outputLogs": "new-only",
       "passThroughEnv": [

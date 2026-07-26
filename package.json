@@ -15,22 +15,19 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "check": "turbo run lint format",
+    "check": "pnpm run lint:check && pnpm run format:check",
     "check-types": "turbo run check-types",
     "check-types:solution": "tsc -b",
-    "ci": "turbo run lint format check-types",
+    "ci": "pnpm run lint:check && pnpm run format:check && turbo run check-types",
     "dev": "turbo run dev",
-    "format": "turbo run format:fix",
+    "format:check": "oxfmt --check .",
     "format:fix": "oxfmt .",
-    "lint": "turbo run lint:fix",
     "lint:agent": "oxlint --no-error-on-unmatched-pattern --format=agent .",
+    "lint:check": "oxlint --no-error-on-unmatched-pattern .",
     "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
     "prepare": "husky",
     "types": "turbo run types --filter='./apps/*'",
     "update": "pnpm update --recursive --latest"
-  },
-  "dependencies": {
-    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
@@ -51,7 +48,7 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@11.15.1",
+  "packageManager": "pnpm@11.17.0",
   "monorepo": {
     "kind": "workspace",
     "role": "root",

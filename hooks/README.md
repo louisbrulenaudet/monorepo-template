@@ -9,8 +9,12 @@ These hooks run in the **AI agent loop** only. They do **not** run on a normal h
 ```
 hooks/
 ├── git/
+│   ├── lib/
+│   │   └── parse-command.sh       # Quote-aware command parser (sourced, not run)
 │   ├── guard-destructive-git.sh   # Block reset --hard, push --force, etc.
 │   └── guard-secret-commit.sh     # Block staging/committing secret files
+├── security/
+│   └── guard-secret-content.sh    # Block writes whose CONTENT holds a credential
 ├── quality/
 │   ├── check-changed.sh           # Sequential format-then-lint entry point
 │   ├── format-changed.sh          # oxfmt after file edits (non-blocking)
@@ -18,7 +22,7 @@ hooks/
 ├── logging/
 │   ├── session-start.sh           # Cursor sessionStart
 │   └── instructions-loaded.sh     # Claude Code InstructionsLoaded
-├── logs/                          # Debug output (git-ignored)
+├── logs/                          # Debug output (git-ignored, size-capped)
 ├── AGENTS.md                      # Agent guide (Cursor + nested AGENTS.md)
 ├── CLAUDE.md                      # Claude Code entry
 └── README.md                      # This file
@@ -50,28 +54,36 @@ flowchart LR
   Claude --> Logging
 ```
 
-Both read JSON on **stdin** and support Claude (`tool_input.*`) and Cursor (flat `command` / `file_path`) shapes. Git guards always emit Cursor permission JSON on stdout.
+Both read JSON on **stdin** and support Claude (`tool_input.*`) and Cursor (flat `command` / `file_path`) shapes. `jq` is **required**, not optional.
+
+Permission JSON on stdout is emitted **only for Cursor**, gated on `CURSOR_PROJECT_DIR`. Claude Code ignores stdout on exit 2 and never injects it on `PreToolUse`, so the guards keep stdout silent there - see [AGENTS.md](AGENTS.md#output-contract) for why that matters.
 
 ## When hooks run
 
 | Hook event | Script | Behavior |
 |------------|--------|-----------|
-| **beforeShellExecution** (Cursor) / PreToolUse Bash (Claude) | `git/guard-secret-commit.sh` | Exit 2 + deny JSON if secrets would be staged |
-| **beforeShellExecution** (Cursor) / PreToolUse Bash (Claude) | `git/guard-destructive-git.sh` | Exit 2 + deny JSON on destructive git |
+| **beforeShellExecution** (Cursor) / PreToolUse Bash (Claude) | `git/guard-secret-commit.sh` | Exit 2 if secrets would be staged |
+| **beforeShellExecution** (Cursor) / PreToolUse Bash (Claude) | `git/guard-destructive-git.sh` | Exit 2 on destructive git |
+| **PreToolUse Edit\|Write** (Claude only) | `security/guard-secret-content.sh` | Exit 2 if the written content holds a credential |
 | **afterFileEdit** (Cursor) / PostToolUse Edit\|Write (Claude) | `quality/check-changed.sh` | Format, then lint edited JS/TS sequentially |
 | **sessionStart** (Cursor only) | `logging/session-start.sh` | Append to `logs/session-start.log` |
-| **InstructionsLoaded** (Claude only) | `logging/instructions-loaded.sh` | Append to `logs/instructions-loaded.log` |
+| **InstructionsLoaded** (Claude only, async) | `logging/instructions-loaded.sh` | Append to `logs/instructions-loaded.log` |
 
-Exit code **2** blocks a pre-shell action. On a post-edit event it only feeds the error back to the agent; it cannot roll back the completed edit. Cursor security guards set `failClosed: true` so crashes, timeouts, and invalid output do not bypass them - scripts therefore always print `{"permission":"allow"}` on the allow path.
+Exit code **2** blocks a pre-shell action. On a post-edit event it only feeds the error back to the agent; it cannot roll back the completed edit. **Exit 1 never blocks anything** - the guards are written so that every failure path reaches exit 2.
+
+The guards **fail closed**: a missing `jq`/`awk`, an unreadable parser library, a crash or a signal denies the command with a `guard fault:` reason rather than silently allowing it. Cursor additionally sets `failClosed: true`.
 
 ## Manual test (before wiring)
 
 ```bash
-# Should deny (exit 2) and print permission JSON
-echo '{"command":"git push --force"}' | hooks/git/guard-destructive-git.sh
+# Should deny (exit 2), reason on stderr, stdout silent
+echo '{"tool_input":{"command":"git push --force"}}' | sh hooks/git/guard-destructive-git.sh; echo "exit=$?"
 
-# Should allow
-echo '{"command":"git status"}' | hooks/git/guard-destructive-git.sh
+# Should allow (exit 0)
+echo '{"tool_input":{"command":"git status"}}' | sh hooks/git/guard-destructive-git.sh; echo "exit=$?"
+
+# Cursor mode additionally prints a JSON verdict on stdout
+echo '{"command":"git push --force"}' | CURSOR_PROJECT_DIR=$PWD sh hooks/git/guard-destructive-git.sh
 ```
 
 ## Debugging

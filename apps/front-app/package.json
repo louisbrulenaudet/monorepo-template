@@ -16,7 +16,7 @@
   "type": "module",
   "scripts": {
     "analyze": "ANALYZE=true vite build",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "check-types": "tsc -b",
     "deploy": "wrangler deploy --env production",
     "dev": "vite",
@@ -24,8 +24,7 @@
     "format:fix": "oxfmt .",
     "lint": "oxlint --no-error-on-unmatched-pattern .",
     "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
-    "preview": "vite preview",
-    "types": "wrangler types"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@repo/dtos-common": "workspace:*",
