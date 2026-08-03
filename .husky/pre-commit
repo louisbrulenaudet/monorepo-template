@@ -1,3 +1,5 @@
 set -e
-npx git-format-staged --formatter 'pnpm exec oxfmt {{path}}' '*.{ts,tsx,js,jsx,json}'
+# oxfmt also formats CSS, JSONC, mjs and cjs - keep this glob in sync with the
+# extension list in hooks/quality/format-changed.sh.
+npx git-format-staged --formatter 'pnpm exec oxfmt {{path}}' '*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,css}'
 pnpm lint:fix

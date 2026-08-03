@@ -46,7 +46,7 @@
       "source": "vercel/turborepo",
       "sourceType": "github",
       "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "4f3937d6463890e607ad015d8256e4c27766f0eacaaf87eed1c6454239746694"
+      "computedHash": "c34cdc86e98c1063cf802b09edbafa40d0236d5e57a48fe16d871c75cb87e4fd"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",

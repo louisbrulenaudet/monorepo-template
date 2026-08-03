@@ -45,7 +45,7 @@ packages/typescript-config/
 }
 ```
 
-Run `make types` after changing `wrangler.jsonc` to regenerate `worker-configuration.d.ts` - do not hand-edit it. If the Worker uses `nodejs_compat`, add `"node"` to `compilerOptions.types` and install `@types/node`.
+Run `make types` after changing `wrangler.jsonc` to regenerate `worker-configuration.d.ts`, and commit the result - it is a committed generated file, verified in CI by `make types-check`. Do not hand-edit it. If the Worker uses `nodejs_compat`, add `"node"` to `compilerOptions.types` and install `@types/node`.
 
 ## Commands
 

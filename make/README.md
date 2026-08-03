@@ -53,9 +53,10 @@ Run from the repo root:
 make help              # List all targets
 make install           # pnpm install
 make dev               # Start all dev servers (turbo)
-make ci                # lint + format + check-types (all packages)
+make ci                # lint + format (root OXC pass) + check-types + types-check + boundaries
 make build             # Build all packages and apps
-make types             # Generate worker-configuration.d.ts in apps
+make types             # Regenerate worker-configuration.d.ts in apps (commit it)
+make types-check       # Verify committed Worker types match wrangler.jsonc
 make deploy            # Deploy via turbo
 ```
 
@@ -71,9 +72,11 @@ make deploy            # Deploy via turbo
 | `make dev` | Start all dev servers |
 | `make preview` | Preview production builds locally |
 | `make check` | Lint + format check (no typecheck) |
-| `make ci` | Lint + format + check-types |
+| `make lint-agent` | Lint read-only with `--format=agent` (one line per diagnostic, for AI agents) |
+| `make ci` | Lint + format + check-types + types-check + boundaries |
 | `make check-types` | TypeScript across all packages |
-| `make types` | Generate `worker-configuration.d.ts` in apps |
+| `make types` | Regenerate `worker-configuration.d.ts` in apps (commit the result) |
+| `make types-check` | Verify committed Worker types match `wrangler.jsonc` |
 | `make build` / `make deploy` | Build or deploy via Turborepo |
 | `make format` / `make lint` | Fix formatting / lint issues |
 | `make prepare` | Install Husky git hooks |
@@ -82,7 +85,7 @@ make deploy            # Deploy via turbo
 
 ## Scoping (pnpm / Turborepo)
 
-Optional variables apply to any **turbo-backed** root target (`dev`, `build`, `ci`, `lint`, …). Defined in [`turbo.mk`](turbo.mk).
+Optional variables apply to any **turbo-backed** root target (`dev`, `build`, `check-types`, `deploy`). Defined in [`turbo.mk`](turbo.mk).
 
 | Variable | Effect | Example |
 |----------|--------|---------|
@@ -92,10 +95,12 @@ Optional variables apply to any **turbo-backed** root target (`dev`, `build`, `c
 
 ```bash
 make dev SCOPE=worker-api           # Only worker-api dev server
-make ci SCOPE=@repo/dtos-common     # CI checks for one package
+make ci SCOPE=@repo/dtos-common     # Narrows the check-types leg only
 make build AFFECTED=1               # Build only changed packages (CI)
-make lint FILTER=...front-app...   # Advanced turbo filter syntax
+make build FILTER=...front-app...   # Advanced turbo filter syntax
 ```
+
+`lint`, `lint-agent`, `format`, and `check` are **not** turbo-backed: OXC runs as one pass from the repo root and ignores these variables. `make ci SCOPE=…` therefore narrows only its `check-types` leg. The header comment in [`quality.mk`](quality.mk) explains why a per-package `oxlint .` is wrong here (CWD-relative Tailwind `entryPoint`, one `tsgolint` spawn per package). To narrow OXC, pass a path: `pnpm exec oxlint apps/front-app`, or `cd apps/front-app && make lint`.
 
 `install`, `update`, `login`, and `prepare` are **not** turbo-scoped - they operate at the workspace or tool level.
 
@@ -114,8 +119,10 @@ include ../../make/help.mk
 ```bash
 cd apps/worker-api && make dev       # turbo run dev --filter=worker-api
 cd apps/front-app && make build      # turbo run build --filter=front-app
-cd packages/dtos-common && make ci   # turbo run lint format check-types --filter=@repo/dtos-common
+cd packages/dtos-common && make ci   # OXC scoped to this path, then turbo check-types
 ```
+
+Per-package `lint` / `format` / `check` still run OXC **from the repo root**, scoped to the package path via `git rev-parse --show-prefix`. That keeps diagnostics identical to `make ci` at the root.
 
 Turbo skips tasks when a package has no matching script (e.g. `build` on a types-only package), so one `app.mk` works for apps and libraries.
 
@@ -134,14 +141,14 @@ make build AFFECTED=1
 | Fragment | Targets | Backed by |
 |----------|---------|-----------|
 | `deps.mk` | `install`, `install-frozen`, `update` | pnpm |
-| `quality.mk` | `check`, `lint`, `format`, `check-types`, `ci` | turbo (+ OXC via package scripts) |
+| `quality.mk` | `check`, `lint`, `lint-agent`, `format`, `boundaries`, `check-types`, `ci` | OXC direct from repo root; turbo for `check-types` / `boundaries` |
 | `build.mk` | `build`, `dev`, `preview`, `types` | turbo |
 | `deploy.mk` | `login`, `deploy` | wrangler / turbo |
 | `husky.mk` | `prepare`, `husky-status` | pnpm / shell |
 | `skills.mk` | `skills-update` | bash script |
 | `help.mk` | `help` (via `##` comments) | awk |
 | `turbo.mk` | (no targets - shared `TURBO_FILTER`) | - |
-| `app.mk` | All turbo targets, scoped to `PKG` | turbo `--filter=$(PKG)` |
+| `app.mk` | All targets scoped to `PKG` | turbo `--filter=$(PKG)`; OXC from `REPO_ROOT` scoped to `PKG_PATH` |
 
 ## Adding a new app or package
 

@@ -20,13 +20,14 @@
     "format:fix": "oxfmt .",
     "lint": "oxlint --no-error-on-unmatched-pattern .",
     "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
-    "types": "wrangler types -c ./wrangler.jsonc"
+    "types": "wrangler types -c ./wrangler.jsonc",
+    "types:check": "wrangler types -c ./wrangler.jsonc --check"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.9.0",
     "@repo/dtos-common": "workspace:*",
     "@repo/enums-common": "workspace:*",
-    "hono": "^4.12.31"
+    "hono": "^4.12.34"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

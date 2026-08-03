@@ -21,6 +21,9 @@ Ground answers in fetched sources; do not answer library-API questions from memo
 
 ## Output format
 
+**≤ 200 words total**, excluding the code snippet. A long summary re-consumes the context the
+delegation was meant to protect, so cut prose before cutting the snippet or the source.
+
 - **Answer**: the concrete API/config/snippet that resolves the question (minimal, correct, version-appropriate).
 - **Source(s)**: URL(s) or Context7 library id backing each claim.
 - **Caveats**: version constraints, deprecations, or "not found in docs" notes.

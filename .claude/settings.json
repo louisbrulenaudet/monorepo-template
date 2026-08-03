@@ -48,6 +48,12 @@
       "mcp__context7__*"
     ],
     "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(rm -fr:*)",
+      "Bash(rm -Rf:*)",
+      "Bash(rm -r -f:*)",
+      "Bash(rm -f -r:*)",
+      "Bash(sudo rm:*)",
       "Edit(**/dist/**)",
       "Edit(**/build/**)",
       "Edit(**/worker-configuration.d.ts)",
@@ -105,7 +111,10 @@
       "Edit(**/id_rsa)",
       "Edit(**/id_ed25519)",
       "Edit(**/credentials.json)",
-      "Edit(**/secrets.json)"
+      "Edit(**/secrets.json)",
+      "Agent(statusline-setup)",
+      "Agent(ci-verifier)",
+      "Agent(test-runner)"
     ],
     "ask": [
       "Bash(git push:*)",
@@ -130,7 +139,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/hooks/git/guard-secret-commit.sh"
             ],
-            "timeout": 10
+            "timeout": 10,
+            "statusMessage": "Checking git command for secret paths"
           },
           {
             "type": "command",
@@ -138,7 +148,22 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/hooks/git/guard-destructive-git.sh"
             ],
-            "timeout": 10
+            "timeout": 10,
+            "statusMessage": "Checking git command for destructive operations"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/security/guard-secret-content.sh"
+            ],
+            "timeout": 10,
+            "statusMessage": "Scanning content for credentials"
           }
         ]
       }
@@ -153,7 +178,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/hooks/quality/check-changed.sh"
             ],
-            "timeout": 30
+            "timeout": 30,
+            "statusMessage": "Formatting and linting the edited file"
           }
         ]
       }
@@ -167,7 +193,8 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/hooks/logging/instructions-loaded.sh"
             ],
-            "timeout": 10
+            "timeout": 10,
+            "async": true
           }
         ]
       }
@@ -204,5 +231,20 @@
     "cloudflare-docs",
     "context7"
   ],
-  "enableAllProjectMcpServers": false
+  "enableAllProjectMcpServers": false,
+  "worktree": {
+    "sparsePaths": [
+      ".claude",
+      "make",
+      "hooks",
+      "apps",
+      "packages"
+    ],
+    "symlinkDirectories": [
+      "node_modules"
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION": "40"
+  }
 }

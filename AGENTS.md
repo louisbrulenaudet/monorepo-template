@@ -63,12 +63,6 @@ flowchart TB
   shared -.-> privateWorkers
 ```
 
-| Package | Purpose |
-|---------|---------|
-| `@repo/dtos-common` | Shared Zod schemas - `src/api/*` (HTTP), `src/rpc/*`, `src/queue/*`, `src/webhook/*` |
-| `@repo/enums-common` | Shared constrained string values (`as const` objects) across apps/packages |
-| `@repo/typescript-config` | TypeScript presets for Workers and Vite React |
-
 ## Worker Prefixes
 
 | Prefix | Example | Role | Production surface |
@@ -108,14 +102,15 @@ Copy `.dev.vars.example` → `.dev.vars` per app before local runs. Secrets and 
 
 ## Make Commands (root)
 
+`make help` lists every target with its description. The ones that are not guessable:
+
 | Command | Description |
 |---------|-------------|
-| `make install` | Install and link workspace packages |
-| `make dev` | Start all dev servers |
-| `make ci` | Lint + format + check-types (run before PRs) |
-| `make check-types` | TypeScript across all packages |
-| `make types` | Generate `worker-configuration.d.ts` in apps |
-| `make build` / `make deploy` | Build or deploy via Turborepo |
+| `make ci` | lint + format + check-types + **types-check + boundaries** (run before PRs) |
+| `make lint-agent` | Lint with `--format=agent` - one machine-readable line per diagnostic, no auto-fix |
+| `make types` | Regenerate `worker-configuration.d.ts` in apps (**commit the result**) |
+| `make types-check` | Verify committed Worker types still match `wrangler.jsonc` (inside `make ci`) |
+| `make boundaries` | Check package dependency tags against `turbo.json` (inside `make ci`) |
 
 ### Scoping (pnpm / Turborepo)
 
@@ -127,23 +122,48 @@ Pass optional variables to any turbo-backed root target:
 | `FILTER` | Raw turbo filter expression | `make build FILTER=...front-app...` |
 | `AFFECTED` | `--affected` (changed packages vs base) | `make ci AFFECTED=1` |
 
+**Lint and format are not turbo-backed.** OXC runs as a single pass from the repo root, so `SCOPE` / `FILTER` / `AFFECTED` narrow `check-types`, `build`, and `deploy` only. This is deliberate: oxlint resolves `settings.better-tailwindcss.entryPoint` against the process CWD, so a per-package `oxlint .` silently breaks the context-aware Tailwind rules, and it re-spawns `tsgolint` once per package. A whole-repo pass is ~2.0s. To narrow it, pass a path instead: `pnpm exec oxlint apps/front-app`, or `cd apps/front-app && make lint`.
+
 ## Agent tooling
 
 Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md).
 
+### Subagent roster
+
+Three - `verifier`, `bundle-analyzer`, `docs-researcher` - each read-only in the sense that matters: none can edit a file. Their descriptions load automatically from `.claude/agents/*.md`; do not restate them here.
+
+Not installed, and why: templates for `code-reviewer`, `security-reviewer`, `refactorer` and `db-reader` live in [`docs/agent-templates/`](docs/agent-templates/) with the trigger that should make each one real. None has anything to act on yet - there is no database, no client-data surface, and no test suite.
+
+### When to delegate
+
+| Reach for | When |
+|-----------|------|
+| **Main thread** | Iterative work; phases sharing context; a small targeted change; anything latency-sensitive (a subagent starts cold). |
+| **Plan mode** | The approach is uncertain, or the change spans files. Skip it if you could describe the diff in one sentence. |
+| **Skill** | A reusable procedure that needs the *current* context - the nine `/review-*` commands, `/git-commit`. |
+| **Subagent** | The work emits output you will never re-read (CI logs, a build dump, doc pages, a broad sweep); **or** you need a tool restriction the main thread cannot express; **or** you need a fresh context so the reviewer is not the author. |
+| **Never a subagent** | A trivial or strictly sequential step, or work sharing mutable state with the main thread. |
+
+Three things that are easy to get wrong:
+
+- **`tools` is the only real least-privilege gate.** `permissions.defaultMode` is `acceptEdits`, and a parent `acceptEdits` takes precedence over any subagent `permissionMode`, so a `permissionMode: plan` line on an agent is silently ignored. Omit `Edit`/`Write`/`Bash` to make an agent read-only; do not rely on the mode.
+- **`Explore` and `Plan` do not load `CLAUDE.md` or `.claude/rules/`.** Every other subagent does, including always-on `guardrails.md` and this file. Restate any binding constraint in the delegation prompt for those two.
+- **Agents never write scratch files, reports, or notes into the working tree.** Findings come back in the reply.
+
 ## Agent Guides
 
-| Focus | Guide | Claude entry |
-|-------|-------|--------------|
-| pnpm workspaces | [.agents/skills/pnpm/SKILL.md](.agents/skills/pnpm/SKILL.md) | [.claude/skills/pnpm/SKILL.md](.claude/skills/pnpm/SKILL.md) |
-| React SPA | [apps/front-app/AGENTS.md](apps/front-app/AGENTS.md) | [apps/front-app/CLAUDE.md](apps/front-app/CLAUDE.md) |
-| HTTP gateway | [apps/worker-api/AGENTS.md](apps/worker-api/AGENTS.md) | [apps/worker-api/CLAUDE.md](apps/worker-api/CLAUDE.md) |
-| Zod DTOs | [packages/dtos-common/AGENTS.md](packages/dtos-common/AGENTS.md) | [packages/dtos-common/CLAUDE.md](packages/dtos-common/CLAUDE.md) |
-| Shared value sets | [packages/enums-common/AGENTS.md](packages/enums-common/AGENTS.md) | [packages/enums-common/CLAUDE.md](packages/enums-common/CLAUDE.md) |
-| TS presets | [packages/typescript-config/AGENTS.md](packages/typescript-config/AGENTS.md) | [packages/typescript-config/CLAUDE.md](packages/typescript-config/CLAUDE.md) |
-| Agent hooks | [hooks/AGENTS.md](hooks/AGENTS.md) | [hooks/CLAUDE.md](hooks/CLAUDE.md) |
+Every workspace carries its own `AGENTS.md` + `CLAUDE.md` pair (`apps/*`, `packages/*`, `hooks/`). Claude Code loads a subdirectory's pair automatically the first time it reads a file in that subtree, so there is no index to consult or maintain - open the code and the local conventions arrive with it. Give a new app or package the same pair.
 
-Extend this table when adding a new app or package with its own guide.
+## Enforced Boundaries
+
+Package dependency rules are **machine-checked** by `make boundaries` (part of `make ci`) - a violation fails CI, it is not a convention. The tag rules live in root `turbo.json` under `boundaries.tags` (self-documenting, with comments); each package declares its tag in its own `turbo.json`.
+
+Two invariants worth knowing before you add a dependency:
+
+- Apps are entry points, never installable dependencies: **nothing may import an `app`**. Worker-to-Worker calls go through service-binding RPC declared in `wrangler.jsonc` - never a package import.
+- A new app or package needs its own `turbo.json` with `"extends": ["//"]` and a `tags` entry, or `make boundaries` reports it as untagged.
+
+Detail loads from `.claude/rules/core/boundaries.md` / `.cursor/rules/core/boundaries.mdc` when you touch a `turbo.json`.
 
 ## Decision Checklist
 

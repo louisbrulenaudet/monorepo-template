@@ -53,8 +53,14 @@ When changing agent setup, keep both tools in sync:
 1. **Rules:** edit both `.cursor/rules/<cat>/<name>.mdc` and `.claude/rules/<cat>/<name>.md` (remap frontmatter: Cursor `description`/`globs`/`alwaysApply` ↔ Claude `paths`).
 2. **Agents:** edit both `.cursor/agents/<name>.md` and `.claude/agents/<name>.md` (keep product-native keys: `model`, `tools`, `readonly`, `color`).
 3. **Hooks:** edit scripts only under `hooks/`; update both `.cursor/hooks.json` and `.claude/settings.json` when wiring changes.
-4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json` (when present). Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `review-*`) live once under `.agents/skills/`.
+4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json` (when present). Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `privileged-legal-data`, `review-*`) live once under `.agents/skills/`.
 5. **Review skills:** edit `.agents/skills/review*/SKILL.md` (self-contained; Claude via symlink).
+   `review-*` and `pnpm` set `disable-model-invocation: true`, so **only a human can run them** -
+   they cannot be preloaded into a subagent's `skills:` field or invoked through the Skill tool.
+   Keep it that way for the whole-repo review deep dives; do not add it to a skill an agent needs.
+   `privileged-legal-data` is deliberately **model-invocable** for exactly that reason: it is the
+   preloadable checklist behind `guardrails.md` → "Privileged client data", and the
+   `security-reviewer` template in `docs/agent-templates/` preloads it rather than copying it.
 6. **MCP:** keep [`.mcp.json`](../../../.mcp.json) and [`.cursor/mcp.json`](../../../.cursor/mcp.json) server lists aligned (`type: "http"` on HTTP servers).
 7. **Nested guides:** update `AGENTS.md`; keep `CLAUDE.md` as `@AGENTS.md` + Claude-only bullets.
 

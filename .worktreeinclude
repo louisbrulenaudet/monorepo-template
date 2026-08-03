@@ -5,6 +5,23 @@
 # git-ignored are copied, so tracked files (e.g. .dev.vars.example) are never
 # duplicated. This lets a fresh worktree run `make dev` without hand-copying
 # local Cloudflare Workers secrets.
+#
+# ── Accepted trade-off: this copies REAL secrets, and not only for you ────────
+# These patterns apply to every worktree Claude Code creates with git - which
+# includes SUBAGENT worktrees (`isolation: worktree`) and desktop parallel
+# sessions, not just your own `claude --worktree`. So a subagent's throwaway
+# checkout gets a real copy of every .dev.vars / .env on disk.
+#
+# What keeps that safe is the `Read`/`Edit` deny rules in the repository root's
+# .claude/settings.json, which are only present inside a worktree if `.claude`
+# is checked out there. Sparse checkout writes root-level FILES but NOT
+# root-level DIRECTORIES, so `worktree.sparsePaths` in .claude/settings.json
+# MUST keep ".claude" in its list (alongside "make" and "hooks", which `make ci`
+# and the PreToolUse guards need). Shortening that list silently strips the deny
+# rules from every worktree and leaves these secrets in it unprotected.
+#
+# Do not "fix" this by deleting the patterns below: that breaks `make dev` in a
+# worktree, which is the entire reason this file exists.
 
 # Cloudflare Workers local secrets
 **/.dev.vars

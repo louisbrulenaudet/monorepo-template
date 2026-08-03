@@ -16,7 +16,7 @@
   "type": "module",
   "scripts": {
     "analyze": "ANALYZE=true vite build",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "check-types": "tsc -b",
     "deploy": "wrangler deploy --env production",
     "dev": "vite",
@@ -24,8 +24,7 @@
     "format:fix": "oxfmt .",
     "lint": "oxlint --no-error-on-unmatched-pattern .",
     "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
-    "preview": "vite preview",
-    "types": "wrangler types"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@repo/dtos-common": "workspace:*",
@@ -36,7 +35,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.47.0",
+    "@cloudflare/vite-plugin": "^1.50.0",
     "@repo/typescript-config": "workspace:*",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "^4.3.3",
@@ -45,16 +44,16 @@
     "@tanstack/react-query-devtools": "^5.101.4",
     "@tanstack/react-router-devtools": "^1.167.0",
     "@tanstack/router-plugin": "^1.168.23",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.4",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
     "babel-plugin-react-compiler": "^1.0.0",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "^8.1.5"
+    "vite": "^8.2.0"
   },
   "monorepo": {
     "kind": "app",

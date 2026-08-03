@@ -51,7 +51,7 @@
     },
     {
       "label": "ci: full gate",
-      "detail": "make ci - turbo run lint format check-types (pre-PR gate)",
+      "detail": "make ci - oxlint + oxfmt (single root pass), then turbo check-types + boundaries (pre-PR gate)",
       "type": "shell",
       "command": "make ci",
       "group": {
@@ -78,7 +78,7 @@
     },
     {
       "label": "check: format + lint",
-      "detail": "make check - oxlint + oxfmt --check across all workspaces (OXC)",
+      "detail": "make check - oxlint + oxfmt --check in one pass from the repo root (OXC)",
       "type": "shell",
       "command": "make check",
       "group": "build",
