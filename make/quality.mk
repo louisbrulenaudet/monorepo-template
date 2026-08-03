@@ -47,8 +47,5 @@ ci: ## Run full checks before committing for CI/CD pipeline
 	@pnpm run lint:check
 	@pnpm run format:check
 	$(TURBO) check-types $(TURBO_FILTER)
-# worker-configuration.d.ts is committed, so lint/typecheck above just read it.
-# This verifies it has not drifted from wrangler.jsonc - the failure mode the
-# commit-the-types approach trades for the old "missing on a fresh clone" one.
 	@$(MAKE) types-check
 	@$(MAKE) boundaries

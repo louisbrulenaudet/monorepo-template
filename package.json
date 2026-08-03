@@ -31,19 +31,18 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "26.1.1",
-    "cloc": "2.6.0-cloc",
+    "@types/node": "26.1.2",
     "cloudflare": "^7.0.0",
     "eslint-plugin-better-tailwindcss": "^4.7.0",
-    "git-format-staged": "^4.0.1",
+    "git-format-staged": "^4.0.2",
     "husky": "^9.1.7",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "tailwindcss": "catalog:",
-    "turbo": "^2.10.6",
+    "turbo": "^2.10.8",
     "typescript": "catalog:",
-    "wrangler": "^4.114.0"
+    "wrangler": "^4.118.0"
   },
   "engines": {
     "node": ">=22"
