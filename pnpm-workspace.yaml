@@ -24,12 +24,10 @@ minimumReleaseAgeExclude:
 
 blockExoticSubdeps: true
 
+trustPolicy: no-downgrade
+trustPolicyIgnoreAfter: 525600 # 365 days — skip trust checks for older publishes lacking provenance
+
 allowBuilds:
-  "@google/genai": true
-  "@mongodb-js/zstd": true
-  core-js-pure: true
   esbuild: true
-  node-liblzma: true
-  protobufjs: true
   sharp: true
   workerd: true
