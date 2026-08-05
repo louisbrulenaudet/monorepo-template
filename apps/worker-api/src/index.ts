@@ -11,6 +11,7 @@ import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
 import { HTTPException } from "hono/http-exception";
+import { methodNotAllowed } from "hono/method-not-allowed";
 import { prettyJSON } from "hono/pretty-json";
 import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
@@ -33,6 +34,16 @@ type AppEnv = {
 const app = new Hono<AppEnv>();
 
 app.use(requestId());
+
+app.use(
+  methodNotAllowed({
+    app,
+    onMethodNotAllowed: (c, methods) =>
+      c.json({ error: "Method Not Allowed" }, 405, {
+        Allow: methods.join(", "),
+      }),
+  }),
+);
 
 app.use(
   secureHeaders({

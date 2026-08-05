@@ -44,8 +44,8 @@ types-check: ## Verify committed worker-configuration.d.ts matches wrangler.json
 
 ci: ## Run full checks before committing for CI/CD pipeline
 	@echo "🔍 Running CI checks..."
+	@$(MAKE) boundaries
 	@pnpm run lint:check
 	@pnpm run format:check
 	$(TURBO) check-types $(TURBO_FILTER)
 	@$(MAKE) types-check
-	@$(MAKE) boundaries
