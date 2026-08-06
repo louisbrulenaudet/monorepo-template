@@ -79,7 +79,7 @@ Update all consumers in the same PR.
 2. Export from `src/<layer>/index.ts`.
 3. Update every producer and consumer of that layer in the **same PR**.
 4. For `api/` changes: also update `worker-api` route validation and `front-app` parsing / forms.
-5. Run `make check-types`.
+5. Run `pnpm check-types`.
 
 Prefer **additive** changes. For breaking changes, version deliberately (new route, queue message version field, or new RPC method) and migrate. Update every consumer in the same PR.
 

@@ -5,9 +5,5 @@
     "types": ["./worker-configuration.d.ts"]
   },
   "include": ["worker-configuration.d.ts", "src/**/*.ts", "./types.d.ts"],
-  "exclude": ["node_modules/", "dist/", "container/**.ts"],
-  "references": [
-    { "path": "../../packages/dtos-common" },
-    { "path": "../../packages/enums-common" }
-  ]
+  "exclude": ["node_modules/", "dist/", "container/**.ts"]
 }

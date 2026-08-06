@@ -70,4 +70,4 @@ TanStack Router (`@tanstack/react-router` v1) owns client-side routing, route da
 
 ## Before finishing
 
-Run `make ci`. Confirm `routeTree.gen.ts` is regenerated (not hand-edited) and committed, and keep every Oxc rule green.
+Run `pnpm run ci`. Confirm `routeTree.gen.ts` is regenerated (not hand-edited) and committed, and keep every Oxc rule green.

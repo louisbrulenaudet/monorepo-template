@@ -12,13 +12,13 @@ Cross-cutting scaffolding for the React SPAs. Component/hook authoring is in [re
 
 - Thin route shells under `src/routes/` (file-based - see [tanstack-router.mdc](tanstack-router.mdc)) hold loaders, guards, and search validation; the code-split UI entry is the paired `src/routes/*.lazy.tsx`, and the actual screen lives in `src/pages/` (imported by the lazy route). Shared UI sits in `src/components/` (with primitives in `src/components/ui/`); non-render logic in `src/hooks/`, `src/services/`, `src/utils/`; frontend-only enums in `src/enums/`; runtime config in `src/config/` (`env.ts`, `query-client.ts`).
 - HTTP calls and their `queryOptions` live together under `src/services/worker-api/` (`<feature>.ts` + `<feature>-query-options.ts`). Wire schemas are **not** redefined here - they come from `@repo/dtos-common`.
-- Colocate feature code (route + its queries + its components) over deep global folders. Reuse the existing path aliases - `@/*` plus the app-specific ones (`@utils`, `@enums`, `@components`, `@ui`, `@routes`, `@pages`, `@hooks`, `@services`, `@config`) - declared in `tsconfig.json` **and** `vite.config.ts`; keep the two in sync (see [vite-config.mdc](vite-config.mdc) when editing aliases).
+- Colocate feature code (route + its queries + its components) over deep global folders. Use package.json `"imports"` (`#/*` → `./src/*`) for in-app absolute imports (e.g. `#/components/ui/Button`); see [vite-config.mdc](vite-config.mdc) and the TypeScript config rule.
 - Filenames stay kebab-case; a React component file may be PascalCase to mirror its export. See [naming.mdc](../quality/naming.mdc).
 
 ## Vite config
 
 - When editing `vite.config.ts`, follow [vite-config.mdc](vite-config.mdc) - plugin order, Rolldown/Oxc build options, monorepo `fs.allow`, env guards, and generated `dist/_headers`.
-- Hook rules (`react/rules-of-hooks`, `react/exhaustive-deps`) are enforced by **oxlint**, not ESLint - they are configured for `apps/front-*/src/**` in `.oxlintrc.json`. Do not add an ESLint/`eslint-plugin-react-hooks` toolchain; `make ci` runs oxlint.
+- Hook rules (`react/rules-of-hooks`, `react/exhaustive-deps`) are enforced by **oxlint**, not ESLint - they are configured for `apps/front-*/src/**` in `.oxlintrc.json`. Do not add an ESLint/`eslint-plugin-react-hooks` toolchain; `pnpm run ci` runs oxlint.
 
 ## Cloudflare Workers deployment
 
@@ -49,4 +49,4 @@ Styling has its own path-scoped rule: [tailwind.mdc](tailwind.mdc) - engine/entr
 
 ## Before finishing
 
-Run `make ci`, then build the app (`pnpm --filter front-app run build`, or `make build` from the repo root) to confirm the bundle compiles and chunks resolve. Keep every Oxc rule green (see [code-style.mdc](../quality/code-style.mdc)).
+Run `pnpm run ci`, then build the app (`pnpm --filter front-app run build`, or `pnpm build` from the repo root) to confirm the bundle compiles and chunks resolve. Keep every Oxc rule green (see [code-style.mdc](../quality/code-style.mdc)).

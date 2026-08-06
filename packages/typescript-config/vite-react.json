@@ -8,11 +8,9 @@
     "moduleResolution": "bundler",
     "exactOptionalPropertyTypes": false,
     "allowImportingTsExtensions": true,
-    "composite": true,
     "incremental": true,
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "outDir": "${configDir}/dist",
+    "noEmit": true,
+    "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.tsbuildinfo",
     "jsx": "react-jsx",
     "types": ["vite/client"]
   }

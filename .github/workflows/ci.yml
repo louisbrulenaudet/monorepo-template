@@ -1,13 +1,21 @@
 name: CI
 
 on:
+  # Unfiltered push is intentional: branch filters on a PR-only rewrite of
+  # this workflow did not fire (main still has the old push-only triggers),
+  # which left the ruleset check pending forever. pull_request covers PRs
+  # once this lands on main; push covers branch heads in the meantime.
   push:
-    branches:
-      - "**"
+  pull_request:
+  workflow_dispatch:
+
+# Deny by default; every job re-grants exactly `contents: read`.
+permissions: {}
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Pull requests only - never a push to `main`.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   DO_NOT_TRACK: "1"
@@ -18,44 +26,56 @@ env:
 jobs:
   ci:
     name: Lint, typecheck, and build
-    runs-on: ubuntu-latest
+    # Pinned, not `ubuntu-latest`; Dependabot does not manage runner labels.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-    strategy:
-      matrix:
-        node-version: [22]
 
     steps:
+      # Every `uses:` is pinned to a full-length commit SHA with the tag in a trailing comment, and
+      # every checkout sets `persist-credentials: false`. Both are load-bearing.
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           # `--affected` diffs base..HEAD via git. A shallow checkout cannot
           # resolve that range, so Turborepo falls back to "everything changed".
           # Full history with blobless fetch keeps it correct and still fast.
           fetch-depth: 0
           filter: blob:none
 
-      - name: Install pnpm
-        uses: pnpm/setup@v1
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v7
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "pnpm"
+          runtime: node@24
+          cache: true
           cache-dependency-path: pnpm-lock.yaml
+          # Default install is not `--frozen-lockfile`; keep reproducibility explicit.
+          install: false
 
       - name: Install dependencies
-        run: make install-frozen
+        run: pnpm install --frozen-lockfile
 
-      - name: CI checks
-        run: make ci AFFECTED=1
+      - parallel:
+          - name: Boundaries
+            run: pnpm run boundaries
+
+          - name: Lint
+            run: pnpm run lint:check
+
+          - name: Format
+            run: pnpm run format:check
+
+          - name: Typecheck
+            run: |
+              pnpm turbo run check-types --affected
+              pnpm run types:check
 
       - name: Build
         env:
           VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
-        run: make build AFFECTED=1
+        run: pnpm turbo run build --affected

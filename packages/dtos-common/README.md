@@ -89,7 +89,7 @@ import { /* YourWebhookPayloadSchema */ } from "@repo/dtos-common/webhook";
 1. Add `src/<layer>/<feature>.ts` with Zod schemas.
 2. Re-export from `src/<layer>/index.ts`.
 3. Update producers and consumers in the same PR.
-4. Run `make check-types`.
+4. Run `pnpm check-types`.
 
 The package root (`@repo/dtos-common`) re-exports `api/` only until other layers grow.
 
@@ -104,9 +104,9 @@ The package root (`@repo/dtos-common`) re-exports `api/` only until other layers
 
 | Command | Description |
 |---------|-------------|
-| `make format` / `make lint` / `make check` | OXC |
-| `make check-types` | TypeScript |
-| `make ci` | Lint + format + check-types |
+| `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
+| `pnpm check-types` | TypeScript |
+| `pnpm run ci` | Lint + format + check-types |
 
 ## Project Structure
 
@@ -123,7 +123,6 @@ packages/dtos-common/
 │   ├── webhook/
 │   │   └── index.ts      # Stub barrel
 │   └── index.ts          # Re-exports api/ for now
-├── Makefile
 └── package.json
 ```
 

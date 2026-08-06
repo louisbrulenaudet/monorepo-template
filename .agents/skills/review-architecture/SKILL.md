@@ -21,7 +21,7 @@ Text after the slash command is additional scope/focus - narrow the review accor
 - **Single responsibility** - Each package has one clear purpose (e.g. `@repo/dtos-common`, `@repo/enums-common`, `@repo/typescript-config`).
 - **Public API surface** - Packages expose a minimal, stable API via barrel exports; internal modules are not re-exported unless intentional.
 - **Turborepo** - Task graph is acyclic; cache boundaries and `dependsOn` are correct; no redundant or missing tasks.
-- **Makefile** - Single entry point for common operations; app-specific Makefiles delegate to root or extend cleanly; port allocation is documented and consistent.
+- **Root scripts** - Single pnpm entry point for common operations; package scripts + turbo filters for scoped work; port allocation is documented and consistent.
 
 Align with root [AGENTS.md](../../../AGENTS.md) and app-level AGENTS.md for stated architecture and naming.
 
@@ -42,12 +42,12 @@ Conduct an architecture-only review. Inspect the following and call out violatio
 ### Turborepo task graph and caching
 
 - **Artifacts:** [turbo.json](../../../turbo.json), root and app [package.json](../../../package.json) scripts.
-- **Checks:** Tasks `lint`, `format`, `check`, `check-types`, `types`, `build`, `dev`, `preview`, `deploy` are defined; `build` has correct `dependsOn` (e.g. no missing dependency on type generation if applicable). Global dependency files (e.g. `.oxfmtrc.json`, `.oxlintrc.json`, `tsconfig.json`, `pnpm-workspace.yaml`) are listed where they affect cache validity. No task cycles. Caching is beneficial (e.g. `build` cacheable, `dev` not cacheable).
+- **Checks:** Turbo package tasks include `transit`, `check-types`, `types`, `types:check`, `build`, `dev`, `preview`, `deploy` (no turbo `lint`/`format` — OXC is whole-repo outside Turborepo by design). `check-types` uses the transit-node pattern (`dependsOn: ["transit"]`), not `^check-types`. `build` depends on `^build` + `check-types`. `global.inputs` should stay lean (currently `pnpm-workspace.yaml`; pnpm 11 ignores non-auth project `.npmrc` settings) — do **not** expect OXC configs or a root `tsconfig.json` in the global hash (there is no root solution tsconfig; packages extend `@repo/typescript-config`). Package-level `turbo.json` tags every workspace for `boundaries`. No task cycles. Caching is beneficial (e.g. `build` cacheable, `dev`/`deploy` not cacheable).
 
-### Makefile and port allocation
+### Root scripts and port allocation
 
-- **Artifacts:** Root [Makefile](../../../Makefile), [make/](../../../make/) includes (e.g. [make/variables.mk](../../../make/variables.mk), [make/dev.mk](../../../make/dev.mk)), app Makefiles under [apps/front-app/Makefile](../../../apps/front-app/Makefile), [apps/worker-api/Makefile](../../../apps/worker-api/Makefile).
-- **Checks:** Root `make install`, `make dev`, `make check`, `make check-types`, `make deploy` behave as documented in AGENTS.md. Port allocation is consistent (e.g. 5174 for front-app, 8725 for worker-api) and documented. No duplicated logic that should live in root makefiles.
+- **Artifacts:** Root [package.json](../../../package.json) scripts, [turbo.json](../../../turbo.json), app/package [package.json](../../../package.json) scripts under apps/ and packages/.
+- **Checks:** Root pnpm install / pnpm dev / pnpm check / pnpm check-types / pnpm deploy behave as documented in AGENTS.md. Port allocation is consistent (e.g. 5174 for front-app, 8700 for worker-api) and documented. No duplicated orchestration that should live in root scripts.
 
 ### Package public API and barrel exports
 
@@ -63,7 +63,7 @@ Conduct an architecture-only review. Inspect the following and call out violatio
 
 - Packages depending on apps or on each other in a cycle.
 - Turborepo tasks that can run in parallel but are serialized unnecessarily, or cache keys that ignore critical inputs.
-- Makefile targets that duplicate root behavior or use inconsistent env (e.g. different Node version).
+- Package scripts that duplicate root behavior or use inconsistent env (e.g. different Node version).
 - Barrel exports that re-export everything (e.g. wildcard re-exports from internals), making the public API unclear.
 - Apps importing from package paths that are not part of the package’s declared exports (brittle, may break on publish).
 
@@ -73,7 +73,7 @@ Conduct an architecture-only review. Inspect the following and call out violatio
 2. **Read conventions** - Root [AGENTS.md](../../../AGENTS.md) and app AGENTS.md for stated architecture, workspace layout, and port allocation.
 3. **Inspect workspace and dependencies** - Open pnpm-workspace.yaml, root and app/package package.json files; trace `@repo/*` and cross-workspace dependencies; reason about or run cycle detection.
 4. **Inspect Turborepo** - Open turbo.json and script definitions; verify task graph and cache configuration.
-5. **Inspect Makefile** - Root Makefile and make/*.mk; app Makefiles; verify targets and port usage.
+5. **Inspect root scripts** - Root package.json scripts and turbo.json; package scripts; verify tasks and port usage.
 6. **Inspect package APIs** - packages/dtos-common, packages/enums-common, and packages/typescript-config entry points and exports; ensure minimal, stable public API.
 7. **Review app structure** - worker-api layers (routes, handlers); front-app React tree and boundaries with worker-api; alignment with AGENTS.md.
 8. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. If a sub-area has no findings, say so in one line.
@@ -85,14 +85,14 @@ Conduct an architecture-only review. Inspect the following and call out violatio
 - [ ] pnpm-workspace.yaml and all package.json dependency lists reviewed
 - [ ] Circular or reverse dependency direction checked
 - [ ] turbo.json task graph and cache deps reviewed
-- [ ] Makefile and make includes reviewed; ports consistent
+- [ ] Root package.json scripts and turbo tasks reviewed; ports consistent
 - [ ] Package public APIs (dtos-common, enums-common, typescript-config) reviewed
 - [ ] worker-api and front-app internal structure reviewed
 - [ ] Plan structured as Critical / Improvements / Optional with what/where/why
 
 ## Context usage
 
-- Use `@file` for package.json, turbo.json, Makefile, and AGENTS.md when reviewing structure.
+- Use `@file` for package.json, turbo.json, and AGENTS.md when reviewing structure.
 - Use `@code` for specific dependency or export snippets when suggesting changes.
 - Use `@git` when reviewing recent architectural changes in commits or PRs.
 
@@ -102,7 +102,7 @@ If context is insufficient, suggest which files or @ references to add.
 
 - **Correctness:** Dependency direction and task graph are logically correct; no cycles.
 - **Conventions:** Matches AGENTS.md layout and naming (apps vs packages, port allocation).
-- **Quality:** Clear boundaries, minimal and stable package APIs, reproducible builds via Makefile/turbo.
+- **Quality:** Clear boundaries, minimal and stable package APIs, reproducible builds via pnpm/turbo.
 - **Actionability:** Every suggestion is implementable (e.g. "move X to package Y", "add task Z to turbo.json").
 - **Trade-offs:** If a suggestion has trade-offs (e.g. splitting a package), state them briefly.
 - **Scope:** Limit to architecture; call out config, security, or performance as separate follow-ups if needed.

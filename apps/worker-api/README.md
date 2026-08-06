@@ -46,7 +46,6 @@ apps/worker-api/
 │   └── index.ts          # Middleware stack + route mounts
 ├── wrangler.jsonc
 ├── .dev.vars.example
-├── Makefile
 └── README.md
 ```
 
@@ -75,17 +74,17 @@ flowchart LR
 
 1. **Install dependencies** (from the monorepo root):
    ```bash
-   make install
+   pnpm install
    ```
 
 2. **Configure environment (optional):**
    Copy `.dev.vars.example` to `.dev.vars`. The current code does not require secrets; if you add any, document keys in `.dev.vars.example` and set real values in `.dev.vars` (never commit secrets).
 
 3. **Start development server**:
-   - From the monorepo root: `make dev` (all apps) or `make dev SCOPE=worker-api`
-   - From this app folder: `make dev`
+   - All apps: `pnpm dev` from the monorepo root
+   - Worker only: `pnpm -w turbo run dev --filter=worker-api`
    ```bash
-   make dev
+   pnpm -w turbo run dev --filter=worker-api
    ```
 
 The Worker will be available at `http://localhost:8700`
@@ -108,28 +107,30 @@ Expected response:
 3. Mount the route in `src/index.ts`.
 4. Call business logic locally or via `env.BINDING` once a service binding exists.
 5. Update `.dev.vars.example` for any new secrets.
-6. Run `make ci`.
+6. Run `pnpm run ci`.
 
 ### Available Commands
 
+Run orchestration from the repository root, or use `pnpm -w` here. Raw package scripts bypass Turbo dependencies.
+
 | Command | Description |
 |---------|-------------|
-| `make install` | Install dependencies for this app |
-| `make dev` | Start Wrangler dev server (port 8700) |
-| `make deploy` | Deploy to Cloudflare Workers |
-| `make format` | Format via Turborepo (`format:fix` per package) |
-| `make lint` | Lint via Turborepo (`lint:fix` per package) |
-| `make check` | Lint + format check via Turborepo |
-| `make check-types` | Typecheck |
-| `make types` | Generate Wrangler types (run after binding changes) |
-| `make update` | Update dependencies |
-| `make ci` | Full CI via Turborepo: lint + format + check-types |
+| `pnpm -w install` | Install and link the workspace |
+| `pnpm -w turbo run dev --filter=worker-api` | Start Wrangler on port 8700 |
+| `pnpm -w turbo run build --filter=worker-api` | Typecheck and dry-run the production bundle |
+| `pnpm -w turbo run deploy --filter=worker-api` | Typecheck and deploy this Worker |
+| `pnpm -w format:fix` | Format the repository with OXC |
+| `pnpm -w lint:fix` | Apply repository-wide lint fixes |
+| `pnpm -w check` | Run repository lint and format checks |
+| `pnpm -w check-types` | Typecheck the workspace |
+| `pnpm -w types` | Generate committed Wrangler types after binding changes |
+| `pnpm -w update` | Update workspace dependencies |
+| `pnpm -w run ci` | Full repository PR gate |
 
 ## Deployment
 
 ```bash
-make deploy                 # from this directory
-make deploy SCOPE=worker-api  # from repo root
+pnpm -w turbo run deploy --filter=worker-api
 ```
 
 ## Request Validation with Zod
@@ -154,4 +155,4 @@ Worker-local constrained strings belong in `src/enums/`. Promote to `@repo/enums
 - Validate all requests/responses with Zod schemas using `zValidator`
 - Keep handlers thin; put business logic behind services or RPC
 - Follow RESTful API design principles
-- Run `make ci` before opening a PR
+- Run `pnpm run ci` before opening a PR

@@ -85,8 +85,8 @@ Register in this order. The onion model runs "before" logic top-down and "after"
 
 - Worker-to-Worker only - never from `front-app` (HTTP only for browsers).
 - Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()`.
-- Run `make types` after adding bindings to regenerate `worker-configuration.d.ts`.
+- Run `pnpm types` after adding bindings to regenerate `worker-configuration.d.ts`.
 
 ## Before finishing
 
-Run `make ci`. See [workers-config.md](workers-config.md) when editing `wrangler.jsonc`. See [workers-cache.md](workers-cache.md) when setting `Cache-Control` on responses.
+Run `pnpm run ci`. See [workers-config.md](workers-config.md) when editing `wrangler.jsonc`. See [workers-cache.md](workers-cache.md) when setting `Cache-Control` on responses.

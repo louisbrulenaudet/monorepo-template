@@ -1,0 +1,19 @@
+# CODEOWNERS — last matching pattern wins.
+# Auto-requests review when these paths change. Enforcement needs a branch
+# protection / ruleset rule with "Require review from Code Owners" on `main`.
+# Prefer this over Dependabot `reviewers:` (deprecated).
+
+# Default owner for the whole tree.
+* @louisbrulenaudet
+
+# High-leverage surfaces — explicit so intent stays readable as the tree grows.
+/.github/ @louisbrulenaudet
+/hooks/ @louisbrulenaudet
+/apps/ @louisbrulenaudet
+/packages/ @louisbrulenaudet
+pnpm-lock.yaml @louisbrulenaudet
+package.json @louisbrulenaudet
+pnpm-workspace.yaml @louisbrulenaudet
+turbo.json @louisbrulenaudet
+AGENTS.md @louisbrulenaudet
+CLAUDE.md @louisbrulenaudet

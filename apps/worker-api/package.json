@@ -13,27 +13,26 @@
   ],
   "main": "src/index.ts",
   "scripts": {
-    "check-types": "tsc -b",
+    "build": "wrangler deploy --dry-run --outdir dist --env production",
+    "check-types": "tsc --noEmit",
     "deploy": "wrangler deploy --env production",
     "dev": "wrangler dev",
-    "format": "oxfmt --check .",
-    "format:fix": "oxfmt .",
-    "lint": "oxlint --no-error-on-unmatched-pattern .",
-    "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
+    "format": "pnpm -w exec oxfmt --check apps/worker-api",
+    "format:fix": "pnpm -w exec oxfmt apps/worker-api",
+    "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern apps/worker-api",
+    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix apps/worker-api",
     "types": "wrangler types -c ./wrangler.jsonc",
     "types:check": "wrangler types -c ./wrangler.jsonc --check"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.9.0",
     "@repo/dtos-common": "workspace:*",
     "@repo/enums-common": "workspace:*",
-    "hono": "^4.13.0"
+    "hono": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "oxfmt": "catalog:",
-    "oxlint": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
   },
   "monorepo": {
     "kind": "app",

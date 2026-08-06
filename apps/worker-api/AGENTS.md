@@ -29,8 +29,8 @@ apps/worker-api/src/
 ## Local Development
 
 ```bash
-make dev                              # repo root
-pnpm turbo dev --filter=worker-api   # this worker only
+pnpm dev                              # repo root
+pnpm turbo run dev --filter=worker-api   # this worker only
 ```
 
 Verify: `GET http://localhost:8700/api/v1/health`
@@ -42,11 +42,11 @@ Verify: `GET http://localhost:8700/api/v1/health`
 3. Mount in `src/index.ts`.
 4. Business logic in a service module or via `env.BINDING`.
 5. Update `.dev.vars.example` for new secrets.
-6. `make ci`.
+6. `pnpm run ci`.
 
 ## Service Bindings
 
-Worker-to-Worker only (never from `front-app`). Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()` in a route handler or service module. RPC typing (`WorkerEntrypoint`, multi `-c` `wrangler types`) → [`.cursor/rules/backend/workers-config.mdc`](../../.cursor/rules/backend/workers-config.mdc). Run `make types` after adding bindings.
+Worker-to-Worker only (never from `front-app`). Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()` in a route handler or service module. RPC typing (`WorkerEntrypoint`, multi `-c` `wrangler types`) → [`.cursor/rules/backend/workers-config.mdc`](../../.cursor/rules/backend/workers-config.mdc). Run `pnpm -w types` after adding bindings.
 
 Workers Cache: [`.cursor/rules/backend/workers-cache.mdc`](../../.cursor/rules/backend/workers-cache.mdc) / [`.claude/rules/backend/workers-cache.md`](../../.claude/rules/backend/workers-cache.md).
 
@@ -54,12 +54,13 @@ Workers Cache: [`.cursor/rules/backend/workers-cache.mdc`](../../.cursor/rules/b
 
 | Command | Description |
 |---------|-------------|
-| `make dev` | Dev server on :8700 |
-| `make types` | Regenerate `worker-configuration.d.ts` (commit the result) |
-| `make types-check` | Verify the committed types match `wrangler.jsonc` |
-| `make deploy` | Deploy to Cloudflare |
-| `make ci` | Lint + format + check-types |
+| `pnpm -w turbo run dev --filter=worker-api` | Dev server on :8700 |
+| `pnpm -w turbo run build --filter=worker-api` | Dry-run the production bundle |
+| `pnpm -w types` | Regenerate `worker-configuration.d.ts` (commit the result) |
+| `pnpm -w types:check` | Verify committed Worker types |
+| `pnpm -w turbo run deploy --filter=worker-api` | Typecheck and deploy this Worker |
+| `pnpm -w run ci` | Full repository PR gate |
 
 ## Contribution
 
-Follow this file and root [AGENTS.md](../../AGENTS.md). Update `README.md` when adding endpoints, middleware, or bindings. Contract changes need `dtos-common` + `front-app` in the same PR. Run `make ci` before merging.
+Follow this file and root [AGENTS.md](../../AGENTS.md). Update `README.md` when adding endpoints, middleware, or bindings. Contract changes need `dtos-common` + `front-app` in the same PR. Run `pnpm run ci` before merging.

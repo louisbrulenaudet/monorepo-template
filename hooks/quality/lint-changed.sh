@@ -6,7 +6,7 @@
 # Exits 2 with oxlint output on stderr when the file has problems. Post-tool
 # callers receive feedback, but the completed edit is not rolled back.
 #
-# Two deliberate choices, both required for the output to match `make ci`:
+# Two deliberate choices, both required for the output to match `pnpm run ci`:
 #   1. oxlint runs FROM THE REPO ROOT on a root-relative path. `.oxlintrc.json`
 #      `settings.better-tailwindcss.entryPoint` is resolved against the process
 #      CWD, so linting from anywhere else changes the diagnostics.
@@ -26,8 +26,8 @@ fi
 [ -z "$FILE" ] && exit 0
 [ -f "$FILE" ] || exit 0
 
-# Mirror the extension set in format-changed.sh so an edit is never formatted
-# but left unlinted. `.d.ts` is generated output - never lint it.
+# Lint code files only. format-changed.sh additionally handles JSON/JSONC/CSS,
+# which oxlint does not lint. `.d.ts` is generated output - never lint it.
 case "$FILE" in
   *.d.ts) exit 0 ;;
   *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs) ;;
@@ -43,6 +43,11 @@ elif command -v oxlint >/dev/null 2>&1; then
   OXLINT="oxlint"
 fi
 [ -z "$OXLINT" ] && exit 0
+
+# Tailwind's sync worker can take more than its 30s default to initialize on
+# low-power development machines. Keep the intended worker timeout portable.
+SYNCKIT_TIMEOUT=${SYNCKIT_TIMEOUT:-120000}
+export SYNCKIT_TIMEOUT
 
 # Absolutise both sides, then make FILE relative to ROOT so oxlint can run with
 # the repo root as its CWD.

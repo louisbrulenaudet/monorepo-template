@@ -45,7 +45,7 @@ apps/front-app/src/
 4. Query options in `<feature>-query-options.ts` if using TanStack Query.
 5. Hook `src/hooks/use-<feature>.ts`.
 6. Page + eager/lazy routes under `src/pages/` and `src/routes/`.
-7. `make ci`.
+7. `pnpm run ci`.
 
 Local env: `cp .env.example .env.local` (and `.env.production.example` for prod builds). `VITE_*` details: `frontend-architecture` rule.
 
@@ -53,11 +53,16 @@ Local env: `cp .env.example .env.local` (and `.env.production.example` for prod 
 
 | Command | Description |
 |---------|-------------|
-| `make dev` | Vite on port 5174 (or `make dev` from repo root for front + API) |
-| `make build` / `make preview` / `make deploy` | Build, preview, deploy |
-| `make ci` | Lint + format + check-types |
+| `pnpm -w turbo run dev --filter=front-app` | Vite on port 5174 plus the gateway |
+| `pnpm -w turbo watch dev --filter=front-app` | Same as `dev`, but restarts when watched dependency inputs change (optional; JIT + Vite HMR usually enough) |
+| `pnpm -w build` / `pnpm -w preview` | Build or preview through Turborepo |
+| `pnpm -w types` / `pnpm -w types:check` | Regenerate / verify committed Wrangler types |
+| `pnpm -w run ci` | Full repository PR gate (local; not `--affected`) |
+| `pnpm -w check-types` | Verify route generation and typecheck the workspace |
 | `pnpm analyze` | Bundle stats (`dist/stats.html`) |
+
+In-app absolute imports use package.json `imports` (`#/*` → `./src/*`), e.g. `import { Button } from "#/components/ui/Button"`.
 
 ## Contribution
 
-Follow this file and root [AGENTS.md](../../AGENTS.md). Update HTTP contracts in `@repo/dtos-common` with `worker-api` in the same PR. Run `make ci` before merging.
+Follow this file and root [AGENTS.md](../../AGENTS.md). Update HTTP contracts in `@repo/dtos-common` with `worker-api` in the same PR. Run `pnpm run ci` before merging.

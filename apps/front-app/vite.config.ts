@@ -115,10 +115,6 @@ export default defineConfig(({ command, mode }) => {
     devtools({ consolePiping: { enabled: false } }),
     tanstackRouter({
       autoCodeSplitting: true,
-      generatedRouteTree: "./src/routeTree.gen.ts",
-      routeFileIgnorePattern: "routeTree\\.gen\\.ts",
-      routesDirectory: "./src/routes",
-      target: "react",
     }),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
@@ -145,20 +141,8 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins,
 
-    resolve: {
-      alias: {
-        "@": path.resolve(appDir, "./src"),
-        "@utils": path.resolve(appDir, "./src/utils"),
-        "@enums": path.resolve(appDir, "./src/enums"),
-        "@components": path.resolve(appDir, "./src/components"),
-        "@ui": path.resolve(appDir, "./src/components/ui"),
-        "@routes": path.resolve(appDir, "./src/routes"),
-        "@pages": path.resolve(appDir, "./src/pages"),
-        "@hooks": path.resolve(appDir, "./src/hooks"),
-        "@services": path.resolve(appDir, "./src/services"),
-        "@config": path.resolve(appDir, "./src/config"),
-      },
-    },
+    // In-app absolute imports use package.json `"imports"` (`#/*` → `./src/*`).
+    // Vite resolves that field natively - do not mirror aliases here.
 
     css: {
       devSourcemap: true,

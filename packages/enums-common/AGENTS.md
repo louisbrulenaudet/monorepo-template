@@ -30,14 +30,14 @@ Changing a member's **serialized string value** is a breaking contract change - 
 1. Create `src/<feature>.ts` with `as const` object + derived type.
 2. Re-export from `src/index.ts`.
 3. Import in consumers in the same PR.
-4. `make check-types` from root.
+4. `pnpm check-types` from root.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `make format` / `make lint` / `make check` | OXC |
-| `make check-types` | TypeScript |
+| `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
+| `pnpm check-types` | TypeScript |
 
 ## Contribution
 

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ApiHealthIndicator } from "@/components/feedback/ApiHealthIndicator";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { useApiHealth } from "@/hooks/use-api-health";
+import { ApiHealthIndicator } from "#/components/feedback/ApiHealthIndicator";
+import { Button } from "#/components/ui/Button";
+import { Card } from "#/components/ui/Card";
+import { useApiHealth } from "#/hooks/use-api-health";
 
 const logos = [
   { href: "https://vite.dev", src: "/vite.svg", alt: "Vite logo", eager: true },

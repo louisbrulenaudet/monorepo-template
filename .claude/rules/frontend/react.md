@@ -65,4 +65,4 @@ Split of concerns (don't duplicate across files):
 
 ## Before finishing
 
-Run `make ci` from the repo root. Keep every Oxc rule green (see [code-style.md](../quality/code-style.md)); do not reach for `any` or a disable directive to clear a warning (see [guardrails.md](../core/guardrails.md)).
+Run `pnpm run ci` from the repo root. Keep every Oxc rule green (see [code-style.md](../quality/code-style.md)); do not reach for `any` or a disable directive to clear a warning (see [guardrails.md](../core/guardrails.md)).

@@ -21,7 +21,7 @@ paths:
 ## Monorepo
 
 - `server.fs.strict: true`, `server.fs.allow: [repoRoot]` (`path.resolve(appDir, "../..")`) for `@repo/*`.
-- `resolve.alias` mirrors `tsconfig.json` paths - update both together.
+- In-app absolute imports use package.json `"imports"` (`#/*` → `./src/*`); Vite resolves them natively - do not add `resolve.alias` for the same map.
 
 ## Dev server
 
@@ -37,4 +37,4 @@ paths:
 
 ## Verification
 
-`make ci` → `pnpm --filter <front-app> run build`. Analyze: `ANALYZE=true vite build` when the app exposes an `analyze` script.
+`pnpm run ci` → `pnpm --filter <front-app> run build`. Analyze: `ANALYZE=true vite build` when the app exposes an `analyze` script.

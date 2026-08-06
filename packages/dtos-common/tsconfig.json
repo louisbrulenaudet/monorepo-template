@@ -1,10 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "@repo/typescript-config/workers-lib.json",
+  "extends": "@repo/typescript-config/library.json",
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist"],
-  "compilerOptions": {
-    "lib": ["es2023", "webworker"]
-  },
-  "references": [{ "path": "../enums-common" }]
+  "exclude": ["node_modules", "dist"]
 }

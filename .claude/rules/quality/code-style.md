@@ -27,4 +27,4 @@ OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format)
 
 ## Before finishing
 
-Run `make ci` from the repo root: a whole-repo OXC pass (`lint:check` + `format:check`) followed by `turbo run check-types`, `make types-check`, and `make boundaries`. Lint and format deliberately do **not** go through Turborepo - never `cd` into a package and run `oxlint .`, it breaks the context-aware Tailwind rules (see the note in `make/quality.mk`). Pre-commit uses root `oxfmt` on staged files and `pnpm lint:fix` for incremental fixes.
+Run `pnpm run ci` from the repo root: a whole-repo OXC pass (`lint:check` + `format:check`) followed by `turbo run check-types`, `pnpm types:check`, and `pnpm boundaries`. Lint and format deliberately do **not** go through Turborepo - never `cd` into a package and run `oxlint .`, it breaks the context-aware Tailwind rules (see the note in `root package.json (lint/format scripts)`). Pre-commit uses root `oxfmt` on staged files and `pnpm lint:fix` for incremental fixes.

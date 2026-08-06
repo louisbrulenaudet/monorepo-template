@@ -38,7 +38,6 @@ apps/front-app/
 ├── wrangler.jsonc                 # Cloudflare Workers deploy config (assets + SPA)
 ├── .env.production.example        # Production env template
 ├── tsconfig.json
-├── Makefile
 └── README.md
 ```
 
@@ -84,10 +83,10 @@ More detail for agents: [AGENTS.md](AGENTS.md).
 From the monorepo root:
 
 ```sh
-make install
-make prepare
+pnpm install
+pnpm prepare
 cp apps/front-app/.env.example apps/front-app/.env.local   # optional overrides
-make dev
+pnpm dev
 ```
 
 Local URLs:
@@ -98,25 +97,25 @@ Local URLs:
 
 Imports use aliases defined in both `vite.config.ts` and `tsconfig.app.json` (keep them in sync): `@`, `@utils`, `@enums`, `@components`, `@ui`, `@routes`, `@pages`, `@hooks`, `@services`, `@config`. Example: `import { fetchJsonWithSchema } from "@utils/fetch-api"`.
 
-## Make Commands
+## Commands
 
-From this app directory (`apps/front-app/`):
+Run orchestration from the repository root, or use `pnpm -w` from this directory. Raw package scripts bypass Turbo dependencies.
 
 | Command | Description |
 |---------|-------------|
-| `make install` | Install dependencies for this app |
-| `make dev` | Start Vite dev server (port 5174) |
-| `make preview` | Build + preview locally |
-| `make build` | Build for production |
-| `make deploy` | Build + deploy to Cloudflare Workers |
-| `make format` | Format via Turborepo (`format:fix` per package) |
-| `make lint` | Lint via Turborepo (`lint:fix` per package) |
-| `make check` | Lint + format check via Turborepo |
-| `make check-types` | Typecheck |
-| `make types` | Generate Wrangler types |
-| `make update` | Update dependencies |
-| `make ci` | Full CI via Turborepo: lint + format + check-types |
-| `pnpm analyze` | Production build + bundle visualization (`dist/stats.html`) |
+| `pnpm -w install` | Install and link the workspace |
+| `pnpm -w turbo run dev --filter=front-app` | Start Vite plus the gateway |
+| `pnpm -w preview` | Build and preview through Turborepo |
+| `pnpm -w build` | Typecheck and build production output |
+| `pnpm -w turbo run deploy --filter=front-app` | Build and deploy this app |
+| `pnpm -w format:fix` | Format the repository with OXC |
+| `pnpm -w lint:fix` | Apply repository-wide lint fixes |
+| `pnpm -w check` | Run repository lint and format checks |
+| `pnpm -w check-types` | Verify generated routes and typecheck |
+| `pnpm -w types` | Generate committed Wrangler types |
+| `pnpm -w update` | Update workspace dependencies |
+| `pnpm -w run ci` | Full repository PR gate |
+| `pnpm run analyze` | Raw app-only bundle visualization (`dist/stats.html`) |
 
 ## Development Ports
 
@@ -141,9 +140,10 @@ Vite loads `.env.production` only for `vite build` (not for `vite dev`), so you 
 
 Examples:
 - **Development** (default): leave unset → `http://localhost:8700`
-- **Production**: set `VITE_API_BASE_URL` in `.env.production` to your deployed `worker-api` origin before `make build` or `make deploy`
+- **Production**: set `VITE_API_BASE_URL` in `.env.production` to your deployed `worker-api` origin before `pnpm -w build` or a filtered Turbo deploy
+- **CI validation**: `pnpm -w run ci` supplies a non-deployed validation origin so a clean clone can run the full gate without production credentials
 
-Deploy only the frontend from the monorepo root: `make deploy SCOPE=front-app`.
+Deploy only the frontend from the monorepo root: `pnpm turbo run deploy --filter=front-app`.
 
 Important: `VITE_*` variables are inlined during build. Changing `VITE_API_BASE_URL` requires rebuilding/redeploying the frontend assets.
 
@@ -153,30 +153,30 @@ Production builds also generate `dist/_headers` with cache and security headers 
 
 ### Local Development
 
-From `apps/front-app/`:
+From the repository root (or with `pnpm -w` from this directory):
 
 ```sh
-make dev
+pnpm -w turbo run dev --filter=front-app
 ```
 
 ### Building
 
 ```sh
-make build
+pnpm -w build
 ```
 
 ### Preview (production build)
 
 ```sh
-make preview
+pnpm -w preview
 ```
 
 ## Deployment
 
-From `apps/front-app/`:
+From the repository root:
 
 ```sh
-make deploy
+pnpm turbo run deploy --filter=front-app
 ```
 
 This runs a production build and deploys using Wrangler (`wrangler deploy`).

@@ -21,4 +21,4 @@ Tests run on **Vitest** with those conventions:
 
 - **Never weaken source to make a test pass** and never silence a failing test (no blanket skips, no loosened types). Fix the cause, or stop and report the exact command and output. See [guardrails.md](../core/guardrails.md).
 - When you change a wire shape or constrained value set, update the tests that assert it in the **same** change.
-- Before finishing, run the affected workspace's tests plus `make ci` (see [code-style.md](code-style.md)).
+- Before finishing, run the affected workspace's tests plus `pnpm run ci` (see [code-style.md](code-style.md)).

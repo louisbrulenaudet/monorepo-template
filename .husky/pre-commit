@@ -1,5 +1,4 @@
 set -e
-# oxfmt also formats CSS, JSONC, mjs and cjs - keep this glob in sync with the
-# extension list in hooks/quality/format-changed.sh.
-npx git-format-staged --formatter 'pnpm exec oxfmt {{path}}' '*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,css}'
-pnpm lint:fix
+# Apply fixes to staged snapshots only, preserving unrelated working-tree edits.
+pnpm exec git-format-staged --formatter 'pnpm exec oxfmt {{path}}' '*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,css}'
+pnpm exec git-format-staged --formatter 'pnpm exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix {{path}}' '*.{ts,tsx,js,jsx,mjs,cjs}'

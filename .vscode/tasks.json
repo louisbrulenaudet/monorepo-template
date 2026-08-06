@@ -8,7 +8,7 @@
       "label": "dev: full stack",
       "detail": "turbo run dev - worker-api (wrangler :8700) + front-app (vite :5174)",
       "type": "shell",
-      "command": "make dev",
+      "command": "pnpm dev",
       "isBackground": true,
       "problemMatcher": [],
       "runOptions": {
@@ -21,9 +21,9 @@
     },
     {
       "label": "dev: front-app",
-      "detail": "make dev SCOPE=front-app - Vite dev server on http://localhost:5174",
+      "detail": "pnpm turbo run dev --filter=front-app - Vite dev server on http://localhost:5174",
       "type": "shell",
-      "command": "make dev SCOPE=front-app",
+      "command": "pnpm turbo run dev --filter=front-app",
       "isBackground": true,
       "problemMatcher": [],
       "runOptions": {
@@ -36,9 +36,9 @@
     },
     {
       "label": "dev: worker-api",
-      "detail": "make dev SCOPE=worker-api - wrangler dev on http://localhost:8700",
+      "detail": "pnpm turbo run dev --filter=worker-api - wrangler dev on http://localhost:8700",
       "type": "shell",
-      "command": "make dev SCOPE=worker-api",
+      "command": "pnpm turbo run dev --filter=worker-api",
       "isBackground": true,
       "problemMatcher": [],
       "runOptions": {
@@ -51,9 +51,9 @@
     },
     {
       "label": "ci: full gate",
-      "detail": "make ci - oxlint + oxfmt (single root pass), then turbo check-types + boundaries (pre-PR gate)",
+      "detail": "pnpm run ci - boundaries + oxlint + oxfmt + check-types + types:check + build (full-repo pre-PR gate)",
       "type": "shell",
-      "command": "make ci",
+      "command": "pnpm run ci",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -66,9 +66,9 @@
     },
     {
       "label": "check-types",
-      "detail": "make check-types - tsc -b across every workspace",
+      "detail": "pnpm check-types - tsc --noEmit across every workspace (Turborepo transit)",
       "type": "shell",
-      "command": "make check-types",
+      "command": "pnpm check-types",
       "group": "build",
       "problemMatcher": ["$tsc"],
       "presentation": {
@@ -78,9 +78,9 @@
     },
     {
       "label": "check: format + lint",
-      "detail": "make check - oxlint + oxfmt --check in one pass from the repo root (OXC)",
+      "detail": "pnpm check - oxlint + oxfmt --check in one pass from the repo root (OXC)",
       "type": "shell",
-      "command": "make check",
+      "command": "pnpm check",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -90,9 +90,9 @@
     },
     {
       "label": "types: regenerate wrangler types",
-      "detail": "make types - wrangler types (worker-configuration.d.ts) for every Worker",
+      "detail": "pnpm types - wrangler types (worker-configuration.d.ts) for every Worker",
       "type": "shell",
-      "command": "make types",
+      "command": "pnpm types",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -102,9 +102,9 @@
     },
     {
       "label": "build",
-      "detail": "make build - turbo run build (front-app: tsc -b + vite build; workspace packages)",
+      "detail": "pnpm build - turbo run build (front-app: vite build; gated on check-types)",
       "type": "shell",
-      "command": "make build",
+      "command": "pnpm build",
       "group": "build",
       "problemMatcher": ["$tsc"],
       "presentation": {
