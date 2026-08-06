@@ -1,15 +1,12 @@
 name: CI
 
 on:
-  # Feature-branch pushes remain load-bearing: the main ruleset requires the
-  # job name below as a status check, and this repo has historically satisfied
-  # it via branch pushes. Restricting push to main alone left PRs waiting
-  # forever while this workflow's triggers still differ from main.
+  # Unfiltered push is intentional: branch filters on a PR-only rewrite of
+  # this workflow did not fire (main still has the old push-only triggers),
+  # which left the ruleset check pending forever. pull_request covers PRs
+  # once this lands on main; push covers branch heads in the meantime.
   push:
-    branches:
-      - "**"
   pull_request:
-  # Lets the registry-bound gate be re-run without an empty commit.
   workflow_dispatch:
 
 # Deny by default; every job re-grants exactly `contents: read`.
