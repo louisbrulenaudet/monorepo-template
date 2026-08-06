@@ -1,8 +1,13 @@
 name: CI
 
 on:
+  # Feature-branch pushes remain load-bearing: the main ruleset requires the
+  # job name below as a status check, and this repo has historically satisfied
+  # it via branch pushes. Restricting push to main alone left PRs waiting
+  # forever while this workflow's triggers still differ from main.
   push:
-    branches: [main]
+    branches:
+      - "**"
   pull_request:
   # Lets the registry-bound gate be re-run without an empty commit.
   workflow_dispatch:
