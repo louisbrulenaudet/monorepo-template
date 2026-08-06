@@ -1,5 +1,11 @@
 {
   "$schema": "../../node_modules/turbo/schema.json",
   "extends": ["//"],
-  "tags": ["app"]
+  "tags": ["app"],
+  "tasks": {
+    "dev": {
+      "description": "Wrangler local dev server. Interruptible so `turbo watch` can restart when dependency inputs change.",
+      "interruptible": true
+    }
+  }
 }

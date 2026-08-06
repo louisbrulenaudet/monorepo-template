@@ -30,12 +30,12 @@ This command is designed to align with industry best practices for (AI-assisted)
 
 When asked for a full or deep codebase review, conduct a deep, end-to-end technical review with the objective of bringing the codebase to state-of-the-art production standards. Your analysis should be critical, exhaustive, and opinionated where justified. Align with the root [AGENTS.md](../../../AGENTS.md) and app-level [apps/worker-api/AGENTS.md](../../../apps/worker-api/AGENTS.md) for conventions and architecture.
 
-**Key artifacts to consider:** Root and app `package.json` / `pnpm-workspace.yaml` / `turbo.json`; `make/` and root `Makefile`; [apps/front-app/vite.config.ts](../../../apps/front-app/vite.config.ts) (React, Tailwind, `@cloudflare/vite-plugin`); [apps/front-app/wrangler.jsonc](../../../apps/front-app/wrangler.jsonc) (SPA assets, env); [apps/worker-api/wrangler.jsonc](../../../apps/worker-api/wrangler.jsonc); `apps/worker-api/src/index.ts` (middleware order, routes); shared DTOs in `packages/dtos-common/` and enums in `packages/enums-common/`; `.github/workflows/ci.yml`; `.dev.vars` usage and secrets handling.
+**Key artifacts to consider:** Root and app `package.json` / `pnpm-workspace.yaml` / `turbo.json`; root `package.json` scripts; [apps/front-app/vite.config.ts](../../../apps/front-app/vite.config.ts) (React, Tailwind, `@cloudflare/vite-plugin`); [apps/front-app/wrangler.jsonc](../../../apps/front-app/wrangler.jsonc) (SPA assets, env); [apps/worker-api/wrangler.jsonc](../../../apps/worker-api/wrangler.jsonc); `apps/worker-api/src/index.ts` (middleware order, routes); shared DTOs in `packages/dtos-common/` and enums in `packages/enums-common/`; `.github/workflows/ci.yml`; `.dev.vars` usage and secrets handling.
 
 Cover the following dimensions (if a dimension yields no findings, say so in one line in the plan):
 
 - **Architecture & configuration**
-  - Monorepo: apps vs packages, `@repo/dtos-common` / `@repo/enums-common` / `@repo/typescript-config` usage, Turborepo tasks and caching, Makefile and port allocation.
+  - Monorepo: apps vs packages, `@repo/dtos-common` / `@repo/enums-common` / `@repo/typescript-config` usage, Turborepo tasks and caching, root scripts and port allocation.
   - Env and secrets: `.dev.vars` vs `wrangler.jsonc` vars; Vite `import.meta.env` (client-exposed keys only, e.g. `VITE_*` if used); no secrets in client bundle or repo.
   - Deployment: Cloudflare Workers + Vite build output for `front-app`; `worker-api` as separate Worker; env-specific build modes (development/production).
 - **Scalability**
@@ -56,8 +56,8 @@ Cover the following dimensions (if a dimension yields no findings, say so in one
   - Structure: clear separation apps/packages; DTOs in `@repo/dtos-common`, routes and handlers in `worker-api`; React components and utils in `front-app/src/`.
   - Evolution: duplication, readability, testability; sustainability of shared DTOs and API surface.
 - **CI, reproducibility & observability**
-  - CI: `.github/workflows/ci.yml` - install, lint/format (`make check`), typecheck (`make check-types`), build; cache and lockfile handling; branch/trigger strategy.
-  - Reproducibility: `make install` and lockfile, env documented (e.g. `.dev.vars.example`), build modes and deploy pipeline.
+  - CI: `.github/workflows/ci.yml` - install, lint/format (`pnpm check`), typecheck (`pnpm check-types`), build; cache and lockfile handling; branch/trigger strategy.
+  - Reproducibility: `pnpm install` and lockfile, env documented (e.g. `.dev.vars.example`), build modes and deploy pipeline.
 - **User experience**
   - Styling: Tailwind CSS, Vite plugin, dark mode, responsive design, mobile-first approach, consistent UI/UX patterns.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Purpose: Format a JS/TS file right after an agent writes/edits it, so edits stay CI-clean.
+# Purpose: Format a supported source/config file right after an agent writes/edits it.
 # Target: called by check-changed.sh after Cursor afterFileEdit or Claude Edit|Write.
 # Canonical location: hooks/quality/ - wired from .cursor/hooks.json and .claude/settings.json.
 #
@@ -19,7 +19,7 @@ fi
 
 case "$FILE" in
   *.d.ts) exit 0 ;;
-  *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs) ;;
+  *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.jsonc|*.css) ;;
   *) exit 0 ;;
 esac
 

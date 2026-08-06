@@ -17,7 +17,7 @@ Provide strongly typed, wire-safe string literals so Zod schemas, Workers, and t
 
 ## Tech Stack
 
-- **Language:** TypeScript 7.x (strict, via `@repo/typescript-config/workers-lib.json`)
+- **Language:** TypeScript 7.x (strict, via `@repo/typescript-config/library.json`)
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm
 
@@ -111,9 +111,9 @@ export type MyValueSet = (typeof MyValueSet)[keyof typeof MyValueSet];
 
 | Command | Description |
 |---------|-------------|
-| `make format` / `make lint` / `make check` | OXC |
-| `make check-types` | TypeScript (`tsc -b`) |
-| `make ci` | Lint + format + check-types |
+| `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
+| `pnpm check-types` | TypeScript (`tsc --noEmit`) |
+| `pnpm run ci` | Lint + format + check-types |
 
 ## Project structure
 
@@ -124,7 +124,6 @@ packages/enums-common/
 │   ├── status.ts
 │   ├── cors-allowed-header.ts
 │   └── index.ts
-├── Makefile
 └── package.json
 ```
 

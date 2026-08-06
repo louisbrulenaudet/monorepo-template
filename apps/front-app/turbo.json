@@ -4,11 +4,23 @@
   "tags": ["app"],
   "tasks": {
     "build": {
-      "inputs": ["$TURBO_EXTENDS$", ".env", ".env.*"]
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        ".env",
+        ".env.*",
+        "!.env.example",
+        "!.env.*.example"
+      ],
+      "env": ["$TURBO_EXTENDS$", "VITE_API_BASE_URL"]
+    },
+    "dev": {
+      "description": "Starts Vite and also worker-api so filtered `turbo run dev --filter=front-app` has a live gateway. Interruptible so `turbo watch` can restart when dependency inputs change.",
+      "with": ["worker-api#dev"],
+      "interruptible": true
     },
     "deploy": {
       "description": "Uploads ./dist as Cloudflare assets, so it needs this app's own build (not just upstream builds) before deploying.",
-      "dependsOn": ["build"]
+      "dependsOn": ["$TURBO_EXTENDS$", "build"]
     }
   }
 }

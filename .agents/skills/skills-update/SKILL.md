@@ -79,7 +79,7 @@ Or run the helper script (skips `well-known` sources such as
 From the repository root:
 
 ```bash
-make skills-update
+pnpm skills-update
 ```
 
 Equivalent to:

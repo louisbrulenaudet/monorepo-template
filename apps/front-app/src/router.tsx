@@ -1,5 +1,5 @@
 import { createRouter, type ErrorComponentProps } from "@tanstack/react-router";
-import { queryClient } from "@/config/query-client";
+import { queryClient } from "#/config/query-client";
 import { routeTree } from "./routeTree.gen";
 
 function RouterPending() {

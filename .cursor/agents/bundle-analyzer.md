@@ -41,7 +41,7 @@ does not already set.
   (see `.cursor/rules/core/guardrails.mdc`).
 - Distinguish a real size regression from a build failure or a missing dependency. If the build
   fails, report the failing command and the error, and do not report sizes.
-- Do not run `make build`, `make deploy`, or `wrangler` anything.
+- Do not run `pnpm build`, `pnpm deploy`, or `wrangler` anything.
 - One build per invocation. Do not rebuild to "confirm" a number you already have.
 
 ## Output format

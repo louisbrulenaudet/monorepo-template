@@ -5,21 +5,6 @@
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "types": ["vite/client"],
-    "paths": {
-      "@/*": ["./src/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@enums/*": ["./src/enums/*"],
-      "@components/*": ["./src/components/*"],
-      "@ui/*": ["./src/components/ui/*"],
-      "@routes/*": ["./src/routes/*"],
-      "@pages/*": ["./src/pages/*"],
-      "@hooks/*": ["./src/hooks/*"],
-      "@services/*": ["./src/services/*"],
-      "@config/*": ["./src/config/*"]
-    }
-  },
-  "references": [
-    { "path": "../../packages/dtos-common" },
-    { "path": "../../packages/enums-common" }
-  ]
+    "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.app.tsbuildinfo"
+  }
 }

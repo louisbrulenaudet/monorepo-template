@@ -1,12 +1,12 @@
 {
   // Debugging
   // • front-app (React/Vite SPA): use the Chrome/Edge configs below. Start the dev
-  //   server first (`make dev` or `make dev SCOPE=front-app`), then pick a config in
+  //   server first (`pnpm dev` or `pnpm turbo run dev --filter=front-app`), then pick a config in
   //   Run and Debug (F5).
   // • worker-api (wrangler dev): this repo keeps `inspector_port: 0` (ephemeral, per
   //   .claude/rules/backend/ports.md), so a fixed-port attach cannot target it. Debug
   //   it with VS Code's JavaScript Debug Terminal instead:
-  //     Ctrl/Cmd+Shift+P → "Debug: JavaScript Debug Terminal" → run `make dev SCOPE=worker-api`.
+  //     Ctrl/Cmd+Shift+P → "Debug: JavaScript Debug Terminal" → run `pnpm turbo run dev --filter=worker-api`.
   //   VS Code auto-attaches and discovers the ephemeral inspector port; set breakpoints
   //   as usual. (Alternatively, press `d` in the running `wrangler dev` terminal.)
   "version": "0.2.0",

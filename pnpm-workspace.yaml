@@ -2,12 +2,36 @@ packages:
   - apps/*
   - packages/*
 
+# Prefer catalog versions on `pnpm add` when a package is listed; still allow
+# one-off deps that are not in the catalog (escalate to `strict` later if desired).
+catalogMode: prefer
+
 catalog:
+  '@cloudflare/vite-plugin': ^1.51.0
+  '@tailwindcss/vite': ^4.3.3
+  '@tanstack/devtools-vite': ^0.8.3
+  '@tanstack/react-devtools': ^0.10.9
+  '@tanstack/react-query': ^5.101.4
+  '@tanstack/react-query-devtools': ^5.101.4
+  '@tanstack/react-router': ^1.170.19
+  '@tanstack/react-router-devtools': ^1.167.1
+  '@tanstack/router-cli': 1.167.22
+  '@tanstack/router-plugin': ^1.168.24
+  '@types/node': 24.13.3
+  '@types/react': ^19.2.18
+  '@types/react-dom': ^19.2.4
+  '@vitejs/plugin-react': ^6.0.5
+  babel-plugin-react-compiler: ^1.0.0
+  hono: ^4.13.0
   oxfmt: ^0.62.0
   oxlint: ^1.77.0
   oxlint-tsgolint: ^7.0.2001
-  typescript: ^7.0.2
+  react: ^19.2.8
+  react-dom: ^19.2.8
   tailwindcss: ^4.3.3
+  typescript: ^7.0.2
+  vite: ^8.2.0
+  wrangler: ^4.119.0
   zod: ^4.4.3
 
 auditConfig:
@@ -31,3 +55,6 @@ allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+
+# Fail closed when a dependency outside allowBuilds attempts an install script.
+strictDepBuilds: true

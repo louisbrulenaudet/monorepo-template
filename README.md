@@ -30,12 +30,10 @@ monorepo/
 │   ├── dtos-common/         # Zod wire contracts (api / rpc / queue / webhook)
 │   ├── enums-common/        # Shared constrained string values (`as const`)
 │   └── typescript-config/   # TypeScript configuration presets
-├── make/                    # Shared Makefile fragments (see make/README.md)
 ├── hooks/                   # AI agent hooks (not Husky - see hooks/README.md)
 ├── package.json             # Root package configuration
 ├── pnpm-workspace.yaml      # Workspace configuration
-├── turbo.json               # Turborepo configuration
-└── tsconfig.json            # Root TypeScript configuration
+└── turbo.json               # Turborepo configuration
 ```
 
 ### Architecture Components
@@ -123,74 +121,77 @@ Do **not** create shared `packages/db-*` schema packages. Put Drizzle schema und
 
 ### Prerequisites
 
-- **Node.js** 22+ (see root `package.json` `engines`); we recommend [fnm](https://github.com/Schniz/fnm) for version management
+- **Node.js** 24 (see `.nvmrc` and root `package.json` `engines`); we recommend [fnm](https://github.com/Schniz/fnm) for version management
 - **pnpm** via the root `packageManager` field (Corepack recommended)
-- **Cloudflare account** only if you need `make login` / deploy / remote Worker features
+- **Cloudflare account** only if you need `pnpm login` / deploy / remote Worker features
 
 ### Install and prepare
 
 ```sh
-make install
-make login     # optional - Cloudflare auth for remote Wrangler features
-make prepare   # Husky pre-commit hooks
+pnpm install
+pnpm login     # optional - Cloudflare auth for remote Wrangler features
+pnpm prepare   # Husky pre-commit hooks
 ```
 
-No type-generation step: `worker-configuration.d.ts` is **committed**, per Cloudflare's recommendation, so a fresh clone lints and type-checks immediately. After editing a Worker's `wrangler.jsonc`, run `make types` and commit the regenerated file - `make ci` runs `make types-check` (`wrangler types --check`), which fails if it has drifted. `wrangler types` runs entirely locally: no Cloudflare auth or network.
+No type-generation step: `worker-configuration.d.ts` is **committed**, per Cloudflare's recommendation, so a fresh clone lints and type-checks immediately. After editing a Worker's `wrangler.jsonc`, run `pnpm types` and commit the regenerated file - `pnpm run ci` runs `pnpm types:check` (`wrangler types --check`), which fails if it has drifted. `wrangler types` runs entirely locally: no Cloudflare auth or network.
 
 Copy env templates before the first run:
 
 - Workers: `apps/<worker>/.dev.vars.example` → `.dev.vars`
 - Frontend: `apps/front-app/.env.example` → `.env.local`
 
+Agent worktrees do not copy real env files. Provision isolated development credentials explicitly in each worktree when runtime access is required.
+
 Notes:
-- Prefer `make install` over raw `pnpm install` so workspace links stay consistent.
+- Use `pnpm install` from the repo root so workspace links stay consistent.
 - This repo pins `pnpm` via `packageManager` in the root `package.json`.
 
 ### First successful run (verify locally)
 
 1. Start all dev servers from the repo root:
    ```sh
-   make dev
+   pnpm dev
    ```
 2. Verify the API: `GET` `http://localhost:8700/api/v1/health`
 3. Open the frontend: `http://localhost:5174`
 
-Focused work on one package: `make dev SCOPE=worker-api` (see [Scoping](#scoping-pnpm--turborepo)).
+Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scoping](#scoping-pnpm--turborepo)).
 
-## Make Commands
+## Root Scripts (pnpm)
 
-| Command         | Description                                         |
-|-----------------|-----------------------------------------------------|
-| install         | Install and link workspace packages                 |
-| install-frozen  | Install with frozen lockfile (CI)                   |
-| login           | Login to Cloudflare (repo-pinned Wrangler)          |
-| update          | Update dependencies to latest (rewrites pnpm catalog) |
-| check           | Lint + format check (no typecheck)                  |
-| ci              | Lint + format + check-types + types-check + boundaries (local PR gate) |
-| boundaries      | Check package dependency tags against `turbo.json`  |
-| deploy          | Deploy all apps/workers (via Turborepo)             |
-| build           | Build all packages and apps (via Turborepo)         |
-| format          | Auto-fix formatting with oxfmt                    |
-| lint            | Auto-fix lint issues with oxlint                  |
-| lint-agent      | Lint with machine-readable `--format=agent` output (no auto-fix) |
-| dev             | Start all dev servers (via Turborepo)               |
-| preview         | Preview production builds locally (via Turborepo)   |
-| types           | Regenerate `worker-configuration.d.ts` (commit it)  |
-| types-check     | Verify committed Worker types match `wrangler.jsonc` |
-| check-types     | TypeScript across all workers and packages          |
-| prepare         | Install or reinstall Husky git hooks                |
-| husky-status    | Show Husky hooks status                             |
-| skills-update   | Refresh locked agent skills (see make/README.md)    |
+| Command | Description |
+|---------|-------------|
+| `pnpm install` | Install and link workspace packages |
+| `pnpm install --frozen-lockfile` | Install with frozen lockfile (CI) |
+| `pnpm login` | Login to Cloudflare (repo-pinned Wrangler) |
+| `pnpm update` | Update dependencies to latest (rewrites pnpm catalog) |
+| `pnpm check` | Lint + format check (no typecheck) |
+| `pnpm run ci` | Lint + format + check-types + types:check + boundaries + build (full-repo local PR gate; CI uses `--affected` for check-types/build) |
+| `pnpm boundaries` | Check package dependency tags against `turbo.json` |
+| `pnpm deploy` | Deploy all apps/workers (via Turborepo) |
+| `pnpm build` | Build all packages and apps (via Turborepo) |
+| `pnpm format:fix` | Auto-fix formatting with oxfmt |
+| `pnpm lint:fix` | Auto-fix lint issues with oxlint |
+| `pnpm lint:agent` | Lint with machine-readable `--format=agent` output (no auto-fix) |
+| `pnpm dev` | Start all dev servers (via Turborepo) |
+| `pnpm preview` | Build and preview `front-app` locally (via Turborepo) |
+| `pnpm types` | Regenerate `worker-configuration.d.ts` (commit it) |
+| `pnpm types:check` | Verify committed Worker types match `wrangler.jsonc` |
+| `pnpm check-types` | TypeScript across all workers and packages |
+| `pnpm prepare` | Install or reinstall Husky git hooks |
+| `pnpm skills-update` | Refresh locked agent skills (see AGENTS.md) |
 
 ### Scoping (pnpm / Turborepo)
 
-Optional variables on any turbo-backed root target (`dev`, `build`, `ci`, …):
+Pass turbo flags on turbo-backed tasks (`dev`, `build`, `check-types`, `deploy`):
 
-| Variable | Effect | Example |
-|----------|--------|---------|
-| `SCOPE` | `--filter=<package>` | `make dev SCOPE=worker-api` |
-| `FILTER` | Raw turbo filter expression | `make build FILTER=...front-app...` |
-| `AFFECTED` | Only changed packages vs base | `make ci AFFECTED=1` |
+| Flag | Effect | Example |
+|------|--------|---------|
+| `--filter=<package>` | One package | `pnpm turbo run dev --filter=worker-api` |
+| `--filter=...pkg...` | Package + dependents/deps | `pnpm turbo run build --filter=...front-app...` |
+| `--affected` | Only changed packages vs base | `pnpm turbo run build --affected` |
+
+Local `pnpm run ci` is full-repo (no `--affected`). GitHub CI runs `check-types` and `build` with `--affected`, and always verifies app `types:check`.
 
 ## Development ports
 
@@ -249,34 +250,34 @@ There is no generator CLI. Copy the closest sibling under `apps/` and wire it in
 1. **Copy** `apps/worker-api` (or another closest match) to `apps/<prefix-name>` (e.g. `apps/worker-account`).
 2. **Rename** `package.json` `name`, `wrangler.jsonc` `name`, and any display strings.
 3. **Assign ports** from the [Development ports](#development-ports) registry - set `dev.port` / `inspector_port: 0` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`.
-4. **Keep** the 4-line `Makefile` that includes `make/app.mk` (see [make/README.md](make/README.md)).
+4. **Add** `package.json` scripts (`dev`, `deploy`, `check-types`, `types`, `types:check`, lint/format via `pnpm -w exec` from repo root) and a `turbo.json` with tags (see [AGENTS.md](AGENTS.md)).
 5. **Extend** `@repo/typescript-config/workers.json` (or the matching preset); add `.dev.vars.example`.
 6. **Install and typegen** (commit the generated `worker-configuration.d.ts` with the new Worker):
    ```sh
-   make install
-   make types
+   pnpm install
+   pnpm types
    ```
 
 Copy wrangler patterns (`compatibility_flags`, `observability`, `env.staging` / `env.production`) from the existing app - see [`.cursor/rules/backend/workers-config.mdc`](.cursor/rules/backend/workers-config.mdc).
 
 ## 2. Develop a Specific Worker
 
-Prefer scoped make from the repo root:
+Prefer a filtered turbo task from the repo root:
 
 ```sh
-make dev SCOPE=worker-name
+pnpm turbo run dev --filter=worker-name
 ```
 
-Or use the worker's Makefile:
+Or run the package script directly:
 
 ```sh
 cd apps/worker-name
-make dev
+pnpm dev
 ```
 
 - This runs the `dev` script defined in `apps/worker-name/package.json`
 - Open the port shown in your terminal (for example, http://localhost:8721)
-- Each worker Makefile exposes `make dev`, `make format`, `make lint`, `make types`, `make check-types`, `make deploy`
+- Each worker exposes `pnpm dev`, `pnpm format:fix`, `pnpm lint:fix`, `pnpm types`, `pnpm check-types`, `pnpm deploy`
 
 ### Testing Service Bindings Between Workers
 
@@ -286,7 +287,7 @@ Prefer a single multi-config `wrangler dev` (first `-c` is HTTP-primary):
 wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-account/wrangler.jsonc
 ```
 
-Or run each Worker in its own terminal (`cd apps/worker-account && make dev`, then `cd apps/worker-api && make dev`) and confirm service bindings show as connected in the wrangler output.
+Or run each Worker in its own terminal (`cd apps/worker-account && pnpm dev`, then `cd apps/worker-api && pnpm dev`) and confirm service bindings show as connected in the wrangler output.
 
 ### Dual-Handler Pattern
 
@@ -367,13 +368,13 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 - **Deploy all workers:**
   ```sh
-  make deploy
+  pnpm deploy
   ```
 
 - **Deploy a specific worker:**
   ```sh
-  make deploy SCOPE=worker-name
-  # or: cd apps/worker-name && make deploy
+  pnpm turbo run deploy --filter=worker-name
+  # or: cd apps/worker-name && pnpm deploy
   ```
 
 ## Best Practices
@@ -387,8 +388,8 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ### Development Best Practices
 
-- **Always run `make install`** after adding workers or dependencies
-- **Use `make dev SCOPE=<package>`** for focused development on one app (plain `make dev` starts everything)
+- **Always run `pnpm install`** after adding workers or dependencies
+- **Use `pnpm turbo run dev --filter=<package>`** for focused development on one app (plain `pnpm dev` starts everything)
 - **Follow naming conventions:** `worker-*`, `queue-*`, `webhook-*`, `mcp-*`, `front-*`
 - **Use appropriate port ranges:** see [Development ports](#development-ports)
 - **Test service bindings:** Verify connections between workers before deployment
@@ -400,7 +401,7 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 - **Return explicit HTTP status codes** and typed JSON errors at the gateway boundary
 - **Follow OXC formatting standards:** Consistent code style across the monorepo (oxfmt + oxlint)
 - **Use shared packages:** Leverage `@repo/*` packages for wire contracts and configs
-- **Run `make ci` before opening a PR** (see [Contribution](#contribution))
+- **Run `pnpm run ci` before opening a PR** (see [Contribution](#contribution))
 
 ### Service Communication
 
@@ -436,30 +437,31 @@ flowchart LR
 
 ### Husky pre-commit
 
-[Husky](https://typicode.github.io/husky/) formats staged files with oxfmt (`git-format-staged`) and runs the repository-wide oxlint safe fixer before each commit.
+[Husky](https://typicode.github.io/husky/) applies oxfmt and oxlint safe fixes to staged snapshots through `git-format-staged`, preserving unrelated working-tree edits.
 
 ```sh
-make prepare       # install / reinstall hooks
-make husky-status  # verify hooks are executable
+pnpm prepare       # install / reinstall hooks
+ls -la .husky  # verify hooks are executable
 ```
 
 ## Contribution
 
-- Run **`make ci`** before opening a PR (lint + format + check-types). GitHub CI also runs an affected build.
+- Run **`pnpm run ci`** before opening a PR (lint + format + check-types + types:check + boundaries + build). GitHub CI mirrors those gates and uses `--affected` for check-types/build.
 - Wire-format changes: update `@repo/dtos-common` and every producer/consumer in the **same PR** (HTTP → `worker-api` + `front-app`).
 - When you add endpoints, bindings, or env vars, update the relevant app/package **README** and **AGENTS.md**.
 
 ## AI agent instructions
 
 > [!IMPORTANT]
-> **Start Claude Code from the repository root.** `CLAUDE.md` files are inherited from parent directories, but `.claude/settings.json` is **not** - [it loads only from the directory you start in](https://code.claude.com/docs/en/large-codebases). A session started in `apps/worker-api/` still loads every instruction file, but none of the permission denies, hooks, or sandbox config in the root `.claude/settings.json`. The session looks correctly configured while the enforcement layer is absent. For package-scoped work, start at the root and use `SCOPE=` instead.
+> **Start Claude Code from the repository root.** `CLAUDE.md` files are inherited from parent directories, but `.claude/settings.json` is **not** - [it loads only from the directory you start in](https://code.claude.com/docs/en/large-codebases). A session started in `apps/worker-api/` still loads every instruction file, but none of the permission denies, hooks, or sandbox config in the root `.claude/settings.json`. The session looks correctly configured while the enforcement layer is absent. For package-scoped work, start at the root and use `pnpm turbo run <task> --filter=<package>` instead.
 
 - **[AGENTS.md](AGENTS.md)** - cross-tool project conventions and Cursor's root instructions.
 - **[CLAUDE.md](CLAUDE.md)** - Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).
 - **Per-app/package** - each workspace has matching `AGENTS.md` and `CLAUDE.md`.
 - **[hooks/README.md](hooks/README.md)** - shared agent hook scripts (not Husky).
 - **Rules** - mirrored trees under `.cursor/rules/**/*.mdc` and `.claude/rules/**/*.md`.
-- **Skills** - source of truth under `.agents/skills/` (see skill `monorepo-agent-setup`).
+- **Skills** - source of truth under `.agents/skills/` (see skill `monorepo-agent-setup`). Sparse worktrees include `.agents` so mirrored skill links resolve.
+- **Versioned Turbo docs** - use `pnpm turbo docs task-caching` to query documentation matching the installed CLI.
 - **Security** - `.cursorignore` reduces model context but is not an access-control boundary.
 
 ## Shared Packages (`@repo/*`)
@@ -470,7 +472,7 @@ Local packages under `packages/`. Each package has its own README.
 
 - **`@repo/dtos-common`** - Zod wire contracts via subpaths: `/api`, `/rpc`, `/queue`, `/webhook`
 - **`@repo/enums-common`** - Shared constrained string values (`as const` objects)
-- **`@repo/typescript-config`** - TypeScript presets (`strict.json`, `workers.json`, `workers-lib.json`, `vite-react.json`, `vite-node.json`)
+- **`@repo/typescript-config`** - TypeScript presets (`strict.json`, `library.json`, `workers.json`, `vite-react.json`, `vite-node.json`)
 
 ### Benefits of Shared Packages
 - **Code sharing:** Eliminate duplication across workers
@@ -497,7 +499,7 @@ Local packages under `packages/`. Each package has its own README.
 
 3. **Development workflow:**
    - Changes in shared packages are reflected immediately in workers
-   - Run `make install` after adding new shared package dependencies
+   - Run `pnpm install` after adding new shared package dependencies
 
 ### More Information
 - [pnpm workspace protocol docs](https://pnpm.io/workspaces#workspace-protocol)

@@ -14,25 +14,29 @@
     "zod"
   ],
   "scripts": {
+    "boundaries": "turbo boundaries",
     "build": "turbo run build",
+    "build:ci": "cross-env VITE_API_BASE_URL=https://worker-api-ci.monorepo-template.workers.dev turbo run build",
     "check": "pnpm run lint:check && pnpm run format:check",
     "check-types": "turbo run check-types",
-    "check-types:solution": "tsc -b",
-    "ci": "pnpm run lint:check && pnpm run format:check && turbo run check-types",
+    "ci": "pnpm run boundaries && pnpm run lint:check && pnpm run format:check && turbo run check-types && pnpm run types:check && pnpm run build:ci",
+    "deploy": "turbo run deploy",
     "dev": "turbo run dev",
     "format:check": "oxfmt --check .",
     "format:fix": "oxfmt .",
-    "lint:agent": "oxlint --no-error-on-unmatched-pattern --format=agent .",
-    "lint:check": "oxlint --no-error-on-unmatched-pattern .",
-    "lint:fix": "oxlint --no-error-on-unmatched-pattern --fix .",
+    "lint:agent": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --format=agent .",
+    "lint:check": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern .",
+    "lint:fix": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix .",
+    "login": "wrangler login",
     "prepare": "husky",
+    "preview": "turbo run preview --filter=front-app",
+    "skills-update": "bash .agents/skills/skills-update/scripts/update-locked-skills.sh",
     "types": "turbo run types --filter='./apps/*'",
+    "types:check": "turbo run types:check --filter='./apps/*'",
     "update": "pnpm update --recursive --latest"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
-    "@types/node": "26.1.2",
-    "cloudflare": "^7.0.0",
+    "cross-env": "^10.1.0",
     "eslint-plugin-better-tailwindcss": "^4.7.0",
     "git-format-staged": "^4.0.2",
     "husky": "^9.1.7",
@@ -42,10 +46,17 @@
     "tailwindcss": "catalog:",
     "turbo": "^2.10.8",
     "typescript": "catalog:",
-    "wrangler": "^4.119.0"
+    "wrangler": "catalog:"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=24 <25",
+      "onFail": "error"
+    }
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24 <25"
   },
   "packageManager": "pnpm@11.20.0+sha512.9a6f330a95b66446ea088faf1521405a8a01f07fde7124cc9958dfed52d4bb436737e65b08f85f37b46fcba375092558ac51262b816844b22f63406ed166bfee",
   "monorepo": {

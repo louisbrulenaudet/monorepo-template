@@ -65,4 +65,4 @@ export const todoDetailQuery = (id: number) =>
 
 ## Before finishing
 
-Run `make ci`. Keep responses validated at the boundary and every Oxc rule green - don't cast through `any` (see [guardrails.md](../core/guardrails.md)).
+Run `pnpm run ci`. Keep responses validated at the boundary and every Oxc rule green - don't cast through `any` (see [guardrails.md](../core/guardrails.md)).

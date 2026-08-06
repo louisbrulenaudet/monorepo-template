@@ -25,13 +25,13 @@ Do not commit credentials, API keys, tokens, private keys, `.dev.vars` / `.env*`
 
 ## Generated files are outputs, not sources
 
-Never hand-edit generated artifacts (e.g. `wrangler types` output, the Flue-generated deploy manifest under `dist/**`, or any build output). Change the source of truth and regenerate through the documented command (`make types`, the framework's build step, etc.).
+Never hand-edit generated artifacts (e.g. `wrangler types` output, the Flue-generated deploy manifest under `dist/**`, or any build output). Change the source of truth and regenerate through the documented command (`pnpm types`, the framework's build step, etc.).
 
 **Enforced** - `permissions.deny` blocks `Edit` on generated and vendored paths.
 
 ---
 
-**Everything below is advisory** - nothing enforces it. (`make boundaries` covers the next two at *package* level only.) If one starts getting violated in practice, the fix is a hook, not stronger wording here.
+**Everything below is advisory** - nothing enforces it. (`pnpm boundaries` covers the next two at *package* level only.) If one starts getting violated in practice, the fix is a hook, not stronger wording here.
 
 ## Stay within the task's scope
 

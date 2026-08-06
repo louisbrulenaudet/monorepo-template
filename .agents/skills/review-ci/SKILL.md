@@ -25,7 +25,7 @@ Text after the slash command is additional scope/focus - narrow the review accor
 - **Hooks** - Pre-commit runs formatter/lint on staged files; fast and deterministic (e.g. oxfmt format only or check).
 - **Deploy** - Deploy step separate from main CI or behind approval; optional smoke/health check after deploy.
 
-Align with root [AGENTS.md](../../../AGENTS.md) for Makefile targets and tooling.
+Align with root [AGENTS.md](../../../AGENTS.md) for root pnpm scripts and tooling.
 
 ## Deep technical review
 
@@ -34,7 +34,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 ### GitHub Actions workflow
 
 - **Artifacts:** [.github/workflows/ci.yml](../../../.github/workflows/ci.yml).
-- **Checks:** Action versions match the repository's current supported workflow versions; `fetch-depth: 0` only when full history is required. pnpm derives its version from `packageManager`; Node matches `engines`; setup-node caches the pnpm store. Steps: frozen install, `make ci AFFECTED=1`, then `make build AFFECTED=1`. Job and step names are clear. Permissions stay least-privilege (`contents: read` for non-deploy CI). No secrets are echoed; same-branch concurrency may cancel superseded runs.
+- **Checks:** Action versions match the repository's current supported workflow versions; `fetch-depth: 0` (blobless) when `--affected` needs full history. pnpm derives its version from `packageManager`; Node matches `engines`; pnpm store cache enabled. Steps: frozen install; parallel `boundaries` + `lint:check` + `format:check` + (`check-types --affected` and `types:check`); then `turbo run build --affected` with `VITE_API_BASE_URL` set. Does **not** invoke root `pnpm run ci` as a single step (local `pnpm run ci` is the full-repo PR gate including build). Job and step names are clear. Permissions stay least-privilege (`contents: read` for non-deploy CI). Remote cache via `TURBO_TOKEN`/`TURBO_TEAM` when configured. No secrets are echoed; same-branch concurrency may cancel superseded PR runs.
 
 ### Caching
 
@@ -43,8 +43,8 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 
 ### Lockfile and reproducibility
 
-- **Artifacts:** [.github/workflows/ci.yml](../../../.github/workflows/ci.yml), [Makefile](../../../Makefile) (install-frozen target), [package.json](../../../package.json) (engines, packageManager), pnpm-lock.yaml.
-- **Checks:** Install command uses frozen lockfile (e.g. `pnpm install --frozen-lockfile` or `make install-frozen`). Lockfile committed. packageManager in package.json matches pnpm version used in CI. engines.node matches Node version in workflow. No `pnpm install` without frozen in CI (would allow drift).
+- **Artifacts:** [.github/workflows/ci.yml](../../../.github/workflows/ci.yml), [package.json](../../../package.json) (scripts) / CI frozen install, [package.json](../../../package.json) (engines, packageManager), pnpm-lock.yaml.
+- **Checks:** Install command uses frozen lockfile (e.g. `pnpm install --frozen-lockfile` or `pnpm install --frozen-lockfile`). Lockfile committed. packageManager in package.json matches pnpm version used in CI. engines.node matches Node version in workflow. No `pnpm install` without frozen in CI (would allow drift).
 
 ### Branch and trigger strategy
 
@@ -58,12 +58,12 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 
 ### Husky and pre-commit
 
-- **Artifacts:** [.husky/pre-commit](.husky/pre-commit), [make/husky.mk](../../../make/husky.mk) or root Makefile (prepare target), [.oxfmtrc.json](.oxfmtrc.json), [.oxlintrc.json](.oxlintrc.json).
-- **Checks:** Pre-commit hook runs formatter (oxfmt) on staged files only; command is fast (no full lint if format is enough for pre-commit). Use git-format-staged or lint-staged so only staged files are processed. Hook is executable and invoked by Husky. `make prepare` (or equivalent) installs hooks; documented in AGENTS.md or README. No heavy steps (e.g. full build) in pre-commit.
+- **Artifacts:** [.husky/pre-commit](.husky/pre-commit), root [package.json](../../../package.json) (prepare script), [.oxfmtrc.json](.oxfmtrc.json), [.oxlintrc.json](.oxlintrc.json).
+- **Checks:** Pre-commit hook runs formatter (oxfmt) on staged files only; command is fast (no full lint if format is enough for pre-commit). Use git-format-staged or lint-staged so only staged files are processed. Hook is executable and invoked by Husky. `pnpm prepare` (or equivalent) installs hooks; documented in AGENTS.md or README. No heavy steps (e.g. full build) in pre-commit.
 
 ### Deploy pipeline
 
-- **Artifacts:** [.github/workflows/](../../../.github/workflows/) (any deploy workflow), [Makefile](../../../Makefile) (deploy target), [turbo.json](../../../turbo.json) (deploy task).
+- **Artifacts:** [.github/workflows/](../../../.github/workflows/) (any deploy workflow), [package.json](../../../package.json) (deploy script), [turbo.json](../../../turbo.json) (deploy task).
 - **Checks:** Deploy is separate job or workflow (e.g. on push to main or manual); not mixed with lint in a way that blocks on deploy secrets. Deploy uses same build artifact or rebuilds with same lockfile. Optional: health check or smoke test after deploy (e.g. curl health endpoint). No deploy on every branch unless intended (e.g. preview deploys). Permissions for deploy: only what’s needed (e.g. Cloudflare API token in secrets).
 
 ### Observability and debugging
@@ -84,7 +84,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 ## Steps
 
 1. **Gather scope** - Full CI or specific area (workflow, cache, hooks, deploy, Dependabot). Default to full.
-2. **Read conventions** - AGENTS.md for Makefile targets (install-frozen, check, check-types, build, deploy) and tooling.
+2. **Read conventions** - AGENTS.md for root scripts (install --frozen-lockfile, check, check-types, build, deploy) and tooling.
 3. **Inspect workflow** - ci.yml: checkout, setup-node, pnpm, install, check, check-types, build; permissions and triggers.
 4. **Inspect caching** - pnpm and Turborepo cache usage; cache keys.
 5. **Inspect lockfile and install** - install-frozen; packageManager and engines; lockfile committed.
@@ -95,7 +95,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 ## Checklist
 
 - [ ] Scope clear
-- [ ] AGENTS.md consulted for Makefile and tooling
+- [ ] AGENTS.md consulted for pnpm scripts and tooling
 - [ ] GitHub Actions workflow (steps, versions, permissions) reviewed
 - [ ] Caching (pnpm, Turborepo) reviewed
 - [ ] Lockfile and frozen install reviewed
@@ -106,7 +106,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 
 ## Context usage
 
-- Use `@file` for ci.yml, dependabot.yml, .husky/pre-commit, Makefile, turbo.json, package.json.
+- Use `@file` for ci.yml, dependabot.yml, .husky/pre-commit, turbo.json, package.json.
 - Use `@code` for specific workflow steps or cache keys when suggesting changes.
 - Use `@docs` or `@web` for GitHub Actions and pnpm/Turborepo caching best practices.
 
@@ -115,7 +115,7 @@ If context is insufficient, suggest which files or @ references to add.
 ## Review checklist
 
 - **Correctness:** Workflow runs the right commands in the right order; frozen install is used.
-- **Conventions:** Matches AGENTS.md (make install-frozen, make check, make check-types, make build).
+- **Conventions:** Matches AGENTS.md (pnpm install --frozen-lockfile, pnpm check, pnpm check-types, pnpm build).
 - **Quality:** Reproducible, fast where possible (cache), minimal permissions.
 - **Actionability:** Every suggestion is implementable (e.g. "add cache key", "set fetch-depth").
 - **Trade-offs:** Note any (e.g. cache size vs hit rate).

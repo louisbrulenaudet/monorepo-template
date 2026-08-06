@@ -44,7 +44,7 @@ Import via subpath: `@repo/dtos-common/api`, `@repo/dtos-common/rpc`, `@repo/dto
 1. Edit the schema in `src/<layer>/<feature>.ts`.
 2. Export from `src/<layer>/index.ts`.
 3. Update every producer and consumer of that layer in the **same PR** (`api/` → `worker-api` + `front-app`).
-4. `make check-types`.
+4. `pnpm check-types`.
 
 Prefer additive changes. Full workflow and layer rules: `contracts/contracts`.
 
@@ -52,8 +52,8 @@ Prefer additive changes. Full workflow and layer rules: `contracts/contracts`.
 
 | Command | Description |
 |---------|-------------|
-| `make format` / `make lint` / `make check` | OXC |
-| `make check-types` | TypeScript |
+| `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
+| `pnpm check-types` | TypeScript |
 
 ## Contribution
 

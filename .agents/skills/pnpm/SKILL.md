@@ -1,7 +1,7 @@
 ---
 name: pnpm
 description: |
-  pnpm workspace and dependency management for this monorepo. Triggers on: pnpm install, pnpm add/remove/update, workspace protocol, catalogs, filtering, lockfile, hoisting, allowBuilds, minimumReleaseAge, CI install failures, and dependency version drift. Use when user or agent: adds/removes packages, scaffolds workspace packages, debugs install/hoisting issues, updates shared tool versions, or changes pnpm-workspace.yaml / .npmrc.
+  pnpm workspace and dependency management for this monorepo. Triggers on: pnpm install, pnpm add/remove/update, workspace protocol, catalogs, filtering, lockfile, hoisting, allowBuilds, minimumReleaseAge, CI install failures, and dependency version drift. Use when user or agent: adds/removes packages, scaffolds workspace packages, debugs install/hoisting issues, updates shared tool versions, or changes pnpm-workspace.yaml.
 metadata:
   source: project-owned
 disable-model-invocation: true
@@ -18,7 +18,7 @@ Fast, disk-efficient package manager for this **pnpm + Turborepo** monorepo. pnp
 | Add/remove/update deps | **pnpm** | `pnpm add`, `pnpm remove`, `pnpm up` |
 | Shared version pins | **pnpm catalog** | Edit `pnpm-workspace.yaml` `catalog:` |
 | Internal packages | **pnpm workspace** | `"@repo/foo": "workspace:*"` |
-| Build/lint/dev/deploy | **Turborepo** | `pnpm turbo run <task>` or `make <task>` |
+| Build/lint/dev/deploy | **Turborepo** | `pnpm turbo run <task>` or `pnpm <task>` |
 | Affected CI | **Turborepo** | `pnpm turbo run <task> --affected` |
 
 Do **not** put task logic in root `package.json` when it belongs in packages - see the `turborepo` skill.
@@ -27,14 +27,15 @@ Do **not** put task logic in root `package.json` when it belongs in packages - s
 
 | Setting | Value |
 |---------|-------|
-| pnpm version | `11.10.0` (pinned via `packageManager` in root `package.json`) |
+| pnpm version | `11.20.0` (pinned via `packageManager` in root `package.json`) |
 | Workspace globs | `apps/*`, `packages/*` in `pnpm-workspace.yaml` |
-| Install (local) | `make install` → `pnpm install` |
-| Install (CI) | `make install-frozen` → `pnpm install --frozen-lockfile` |
-| Update all deps | `make update` → `pnpm update --recursive --latest` (bumps catalog entries in `pnpm-workspace.yaml`) |
-| Lockfile | Single `pnpm-lock.yaml` (`shared-workspace-lockfile=true`) |
+| Install (local) | `pnpm install` |
+| Install (CI) | `pnpm install --frozen-lockfile` |
+| Update all deps | `pnpm update` → `pnpm update --recursive --latest` (bumps catalog entries in `pnpm-workspace.yaml`) |
+| Lockfile | Single `pnpm-lock.yaml` (pnpm workspace default) |
+| Policy location | `pnpm-workspace.yaml` only — project `.npmrc` is auth-only under pnpm 11 |
 
-After adding a new app under `apps/`, run `make install` before turbo commands.
+After adding a new app under `apps/`, run `pnpm install` before turbo commands.
 
 ## Workspace Protocol
 
@@ -56,21 +57,36 @@ Never duplicate a shared package version as a registry range in an app - use `wo
 
 ## Catalogs (Shared Tool Versions)
 
-Shared dev/tool versions live in the **default catalog** in `pnpm-workspace.yaml`:
+Shared versions live in the **default catalog** in `pnpm-workspace.yaml` with `catalogMode: prefer` (prefer catalog on `pnpm add` when listed; one-off deps still allowed):
 
 ```yaml
 catalog:
-  oxfmt: ^0.58.0
-  oxlint: ^1.73.0
-  typescript: 7.0.2
-  tailwindcss: ^4.3.2
+  '@cloudflare/vite-plugin': ^1.51.0
+  '@tailwindcss/vite': ^4.3.3
+  '@vitejs/plugin-react': ^6.0.5
+  babel-plugin-react-compiler: ^1.0.0
+  hono: ^4.13.0
+  oxfmt: ^0.62.0
+  oxlint: ^1.77.0
+  oxlint-tsgolint: ^7.0.2001
+  react: ^19.2.8
+  react-dom: ^19.2.8
+  tailwindcss: ^4.3.3
+  typescript: ^7.0.2
+  vite: ^8.2.0
+  wrangler: ^4.119.0
   zod: ^4.4.3
 ```
+
+TanStack packages (`@tanstack/*`) and `@types/*` are also in the catalog — see `pnpm-workspace.yaml` for the full list.
 
 Reference in any `package.json`:
 
 ```json
 {
+  "dependencies": {
+    "hono": "catalog:"
+  },
   "devDependencies": {
     "oxfmt": "catalog:",
     "oxlint": "catalog:"
@@ -78,12 +94,14 @@ Reference in any `package.json`:
 }
 ```
 
+Keep front-app-only utilities (e.g. `rollup-plugin-visualizer`) out of the catalog. Escalate `catalogMode` to `strict` only after catalog coverage is complete.
+
 **Workflow for bumping a shared tool:**
 
-1. **All catalog + non-catalog deps:** `make update` - runs `pnpm update --recursive --latest`, which rewrites catalog ranges in `pnpm-workspace.yaml` and keeps `"catalog:"` in manifests.
+1. **All catalog + non-catalog deps:** `pnpm update` - runs `pnpm update --recursive --latest`, which rewrites catalog ranges in `pnpm-workspace.yaml` and keeps `"catalog:"` in manifests.
 2. **One catalog-managed package:** `pnpm update --recursive --latest <pkg>` (e.g. `oxfmt`).
 3. **Manual pin:** edit `pnpm-workspace.yaml` `catalog:`, then `pnpm install`.
-4. Run `make ci` after any dependency bump.
+4. Run `pnpm run ci` after any dependency bump.
 
 Do **not** bump the same package in multiple `package.json` files independently - use the catalog.
 
@@ -111,7 +129,7 @@ pnpm --filter worker-api... <cmd>
 pnpm --filter front-app <cmd>
 
 # Update all deps (including catalog entries in pnpm-workspace.yaml)
-make update
+pnpm update
 
 # Update one catalog-managed package to latest
 pnpm up -r -L oxfmt
@@ -132,14 +150,16 @@ Package names: `front-app`, `worker-api`, `@repo/dtos-common`, `@repo/enums-comm
 
 ## Security Settings
 
-Configured in `pnpm-workspace.yaml` and `.npmrc`:
+Configured in `pnpm-workspace.yaml`:
 
 | Setting | Purpose |
 |---------|---------|
-| `strict-dep-builds=true` | Block lifecycle scripts unless explicitly allowed |
+| `strictDepBuilds: true` | Block lifecycle scripts unless explicitly allowed |
 | `allowBuilds` | Map of packages allowed (`true`) or denied (`false`) to run install scripts |
+| `trustPolicy: no-downgrade` | Reject installs that would downgrade package trust/provenance |
+| `blockExoticSubdeps: true` | Block exotic (non-registry) transitive dependencies |
 | `minimumReleaseAge: 480` | 8-hour cooldown on newly published versions |
-| `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `wrangler`, `typescript`, etc.) |
+| `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `wrangler`, `miniflare`, `typescript`) |
 
 When `pnpm install` fails on a blocked build script:
 
@@ -147,37 +167,19 @@ When `pnpm install` fails on a blocked build script:
 2. Add to `allowBuilds` in `pnpm-workspace.yaml` with `true` or `false`.
 3. Re-run `pnpm install`.
 
-Do **not** disable `strict-dep-builds` to silence failures.
+Do **not** disable `strictDepBuilds` to silence failures.
 
-## Hoisting Policy (Cloudflare Workers)
+## Hoisting Policy
 
-```ini
-shamefully-hoist=false
-public-hoist-pattern[]=@cloudflare/*
-public-hoist-pattern[]=*types*
-```
-
-- **Do not** enable `shamefully-hoist=true` unless a tool is completely broken - it defeats pnpm's strict layout.
-- If a specific tool cannot resolve a phantom dependency, add a targeted `public-hoist-pattern[]=<pattern>` in `.npmrc`.
-- Workers apps need `@cloudflare/*` and `*types*` hoisted for TypeScript and Wrangler.
-
-## Performance Settings (`.npmrc`)
-
-Already configured - do not remove without reason:
-
-- `side-effects-cache=true` - skip re-running unchanged postinstall scripts
-- `package-import-method=clone-or-copy` - fast linking from store
-- `network-concurrency=16` - parallel fetches
-- `recursive-install=true` - `pnpm install` at root installs all workspace packages
+Use pnpm strict linking defaults. This repository has no hoisting override: workspace dependencies use `workspace:*`, shared versions use `catalog:`, and each package declares every dependency it imports. pnpm 11 ignores non-auth project `.npmrc` settings, so package-manager policy belongs in `pnpm-workspace.yaml`. Fix a phantom dependency by declaring it in the owning package; do not add broad hoisting.
 
 ## CI
 
 GitHub Actions uses:
 
-1. `pnpm/action-setup@v5` (reads `packageManager` from root `package.json`)
-2. `actions/setup-node` with `cache: pnpm`
-3. `make install-frozen`
-4. `pnpm turbo run <task> --affected`
+1. `pnpm/setup` (pnpm v11+ successor to `pnpm/action-setup`) with `runtime: node@24`, store `cache: true`, and `install: false` (default install is not frozen)
+2. `pnpm install --frozen-lockfile` (version comes from root `package.json` `packageManager`)
+3. `pnpm turbo run <task> --affected`
 
 Rules:
 
@@ -189,19 +191,21 @@ Rules:
 
 | Mistake | Correct approach |
 |---------|------------------|
-| Duplicate `oxfmt`/`oxlint` versions in each `package.json` | Use `catalog:` |
+| Duplicate root-owned tools in each `package.json` | Keep OXC, Turbo, and Wrangler tooling at the narrowest actual owner |
 | `pnpm add foo` at root without `-w` | Use `-w` for root deps, `--filter` for packages |
 | Registry version for `@repo/*` | Use `workspace:*` |
-| `shamefully-hoist=true` for one broken tool | Targeted `public-hoist-pattern` |
-| Disable `strict-dep-builds` | Add entry to `allowBuilds` |
-| Run `pnpm build` for app tasks | Use `pnpm turbo run build` or `make build` |
+| Registry version for a catalogued package | Use `catalog:` |
+| Put install policy in `.npmrc` | Put it in `pnpm-workspace.yaml` |
+| Hoist a missing package to mask a phantom dependency | Declare it in the importing package |
+| Disable `strictDepBuilds` | Add entry to `allowBuilds` |
+| Run `pnpm build` for app tasks | Use `pnpm turbo run build` or `pnpm build` |
 | Hand-edit `pnpm-lock.yaml` | Run `pnpm install` to regenerate |
 
 ## Scaffolding a New Workspace Package
 
 1. Create directory under `apps/` or `packages/` with `package.json` (`"private": true`).
 2. Add `workspace:*` deps on shared packages as needed.
-3. Use `catalog:` for shared tools (`oxfmt`, `oxlint`, etc.).
-4. Run `make install`.
-5. Add turbo tasks in root `turbo.json` if the package has scripts.
+3. Use `catalog:` for shared tools (`hono`, `oxfmt`, `oxlint`, `vite`, etc.).
+4. Run `pnpm install`.
+5. Add a package `turbo.json` with `"extends": ["//"]` and a `tags` entry.
 6. Add `AGENTS.md` if the package has non-trivial conventions.

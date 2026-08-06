@@ -1,6 +1,6 @@
-import { ApiHealthStatus } from "@enums/api-health-status";
 import { useQuery } from "@tanstack/react-query";
-import { healthQueryOptions } from "@/services/worker-api/health-query-options";
+import { ApiHealthStatus } from "#/enums/api-health-status";
+import { healthQueryOptions } from "#/services/worker-api/health-query-options";
 
 type UseApiHealthResult = {
   status: ApiHealthStatus;

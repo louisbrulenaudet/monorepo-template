@@ -19,7 +19,7 @@ Text after the slash command is additional scope/focus - narrow the review accor
 
 - **Secrets** - Never in repo or client bundle; use `.dev.vars` (workers) and wrangler env; document required vars in `.dev.vars.example`.
 - **Environment** - Clear split: client-exposed keys via Vite (`import.meta.env`, e.g. `VITE_*` if used); server-only secrets and config in Workers; build modes (development/production) consistent across tools.
-- **TypeScript** - Strict mode everywhere; shared configs from `@repo/typescript-config` (`strict.json` core → runtime presets); root solution `tsconfig.json` with project references; no conflicting compiler options between packages.
+- **TypeScript** - Strict mode everywhere; shared configs from `@repo/typescript-config` (`strict.json` core → runtime presets); per-package `tsc --noEmit` via Turborepo transit (no root solution / project references); no conflicting compiler options between packages.
 - **OXC (oxfmt / oxlint)** - Single source of truth for format and lint; consistent rules; no conflicting formatters (e.g. Prettier).
 - **Cloudflare** - Wrangler and Vite build aligned; compatibility date and flags documented; bindings and env match usage; `front-app` assets (SPA) and `worker-api` worker entry configured correctly.
 
@@ -41,13 +41,13 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 
 ### Vite (React frontend)
 
-- **Artifacts:** [apps/front-app/vite.config.ts](../../../apps/front-app/vite.config.ts), [apps/front-app/tsconfig.json](../../../apps/front-app/tsconfig.json) (solution root), [apps/front-app/tsconfig.app.json](../../../apps/front-app/tsconfig.app.json), [apps/front-app/tsconfig.node.json](../../../apps/front-app/tsconfig.node.json).
+- **Artifacts:** [apps/front-app/vite.config.ts](../../../apps/front-app/vite.config.ts), [apps/front-app/tsconfig.json](../../../apps/front-app/tsconfig.json) (extends app config), [apps/front-app/tsconfig.app.json](../../../apps/front-app/tsconfig.app.json), [apps/front-app/tsconfig.node.json](../../../apps/front-app/tsconfig.node.json).
 - **Checks:** Plugins order (e.g. React, Tailwind, `@cloudflare/vite-plugin`); build target and chunk strategy; no dev-only options in production build. Local dev parity with deployed behavior where relevant.
 
 ### TypeScript configuration
 
-- **Artifacts:** Root [tsconfig.json](tsconfig.json), [packages/typescript-config/](../../../packages/typescript-config/) (`strict.json`, `workers.json`, `workers-lib.json`, `vite-react.json`, `vite-node.json`), [apps/front-app/tsconfig.json](../../../apps/front-app/tsconfig.json) + `tsconfig.app.json` / `tsconfig.node.json`, [apps/worker-api/tsconfig.json](../../../apps/worker-api/tsconfig.json), [packages/dtos-common/tsconfig.json](../../../packages/dtos-common/tsconfig.json), [packages/enums-common/tsconfig.json](../../../packages/enums-common/tsconfig.json).
-- **Checks:** All extend from `@repo/typescript-config` where appropriate. `strict` enabled via `strict.json` inheritance. Root tsconfig uses solution-style `references`; `dtos-common` references `enums-common`. Worker apps set `compilerOptions.types` for `worker-configuration.d.ts`. React apps use split layout: `vite-react.json` for `src/**`, `vite-node.json` for `vite.config.ts`. `workers-lib.json` keeps `isolatedDeclarations` off (schema-first `z.infer` in `@repo/dtos-common`). `erasableSyntaxOnly` on - no `export enum`; use `as const` objects in `@repo/enums-common`. Each package running `check-types` declares `typescript` in devDependencies.
+- **Artifacts:** [packages/typescript-config/](../../../packages/typescript-config/) (`strict.json`, `library.json`, `workers.json`, `vite-react.json`, `vite-node.json`), [apps/front-app/tsconfig.json](../../../apps/front-app/tsconfig.json) + `tsconfig.app.json` / `tsconfig.node.json`, [apps/worker-api/tsconfig.json](../../../apps/worker-api/tsconfig.json), [packages/dtos-common/tsconfig.json](../../../packages/dtos-common/tsconfig.json), [packages/enums-common/tsconfig.json](../../../packages/enums-common/tsconfig.json).
+- **Checks:** All extend from `@repo/typescript-config` where appropriate. `strict` enabled via `strict.json` inheritance. No root solution `tsconfig.json` and no TypeScript Project References - `check-types` is `tsc --noEmit` with Turborepo transit. Worker apps set `compilerOptions.types` for `worker-configuration.d.ts`. React apps use split layout: `vite-react.json` for `src/**`, `vite-node.json` for `vite.config.ts`. Presets keep `isolatedDeclarations` off (schema-first `z.infer` in `@repo/dtos-common`). `erasableSyntaxOnly` on - no `export enum`; use `as const` objects in `@repo/enums-common`. Each package running `check-types` declares `typescript` in devDependencies.
 
 ### OXC (oxfmt / oxlint)
 
@@ -56,8 +56,8 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 
 ### Build modes and reproducibility
 
-- **Artifacts:** Root and app [package.json](../../../package.json) scripts, [turbo.json](../../../turbo.json), [.npmrc](.npmrc).
-- **Checks:** `build` uses production mode (e.g. `NODE_ENV=production` or equivalent). Dev and build use same Node version (engines field). Lockfile is committed; CI uses `--frozen-lockfile`. packageManager in package.json matches pnpm version. .npmrc settings (e.g. shamefully-hoist, strict peer deps) are intentional and documented if non-default.
+- **Artifacts:** Root and app [package.json](../../../package.json) scripts, [turbo.json](../../../turbo.json).
+- **Checks:** `build` uses production mode (e.g. `NODE_ENV=production` or equivalent). Dev and build use same Node version (engines field). Lockfile is committed; CI uses `--frozen-lockfile`. packageManager in package.json matches pnpm version. pnpm policy in `pnpm-workspace.yaml` is intentional and documented.
 
 ### Anti-patterns to flag
 
@@ -76,7 +76,7 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 4. **Inspect wrangler and Vite** - Both wrangler.jsonc files; front-app vite.config.ts; alignment between build output and deployment.
 5. **Inspect TypeScript** - All tsconfig files and typescript-config package; strict and extends chain.
 6. **Inspect OXC** - `.oxfmtrc.json` and `.oxlintrc.json`; format/lint rules and ignore patterns.
-7. **Inspect build and lockfile** - package.json scripts, turbo.json, .npmrc, engines; reproducibility and build mode.
+7. **Inspect build and lockfile** - package.json scripts, turbo.json, pnpm-workspace.yaml, engines; reproducibility and build mode.
 8. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
 ## Checklist
@@ -87,7 +87,7 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 - [ ] Both wrangler.jsonc and front-app vite.config.ts reviewed
 - [ ] All tsconfig and typescript-config reviewed
 - [ ] `.oxfmtrc.json` and `.oxlintrc.json` reviewed
-- [ ] Build mode and reproducibility (scripts, turbo, .npmrc, lockfile) reviewed
+- [ ] Build mode and reproducibility (scripts, turbo, pnpm-workspace.yaml, lockfile) reviewed
 - [ ] Plan structured as Critical / Improvements / Optional with what/where/why
 
 ## Context usage

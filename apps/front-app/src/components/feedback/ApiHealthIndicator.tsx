@@ -1,6 +1,6 @@
-import { ApiHealthStatus } from "@enums/api-health-status";
-import { getApiHealthDotClassName } from "@utils/api-health-dot";
-import { StatusDot } from "@/components/feedback/StatusDot";
+import { StatusDot } from "#/components/feedback/StatusDot";
+import { ApiHealthStatus } from "#/enums/api-health-status";
+import { getApiHealthDotClassName } from "#/utils/api-health-dot";
 
 export type ApiHealthIndicatorProps = Readonly<{
   status: ApiHealthStatus;

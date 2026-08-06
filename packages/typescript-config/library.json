@@ -2,13 +2,12 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./strict.json",
   "compilerOptions": {
-    "target": "ES2023",
-    "lib": ["ES2023"],
+    "target": "es2023",
+    "lib": ["es2023"],
     "module": "preserve",
     "moduleResolution": "bundler",
     "incremental": true,
     "noEmit": true,
-    "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.tsbuildinfo",
-    "types": ["node"]
+    "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.tsbuildinfo"
   }
 }

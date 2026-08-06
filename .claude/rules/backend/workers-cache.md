@@ -27,7 +27,7 @@ Tiered edge cache in front of Worker **`fetch()`** entrypoints only (eyeball, bi
 | `worker-api` gateway | `"cache": { "enabled": true }` + `exports.default.cache.enabled: false` |
 | `worker-*` backend | `"cache": { "enabled": true }` on read entrypoint |
 
-**Anti-pattern:** don't enable cache on the gateway and return `no-store` - still pays tier lookup. Disable in `exports`. After `wrangler.jsonc` edits: `make types` ([workers-config.md](workers-config.md)).
+**Anti-pattern:** don't enable cache on the gateway and return `no-store` - still pays tier lookup. Disable in `exports`. After `wrangler.jsonc` edits: `pnpm types` ([workers-config.md](workers-config.md)).
 
 ## Hono headers (`c.json(..., status, headers)`)
 

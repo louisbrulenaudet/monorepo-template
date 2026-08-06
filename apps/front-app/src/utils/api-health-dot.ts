@@ -1,4 +1,4 @@
-import { ApiHealthStatus } from "@enums/api-health-status";
+import { ApiHealthStatus } from "#/enums/api-health-status";
 
 export function getApiHealthDotClassName(
   apiHealthStatus: ApiHealthStatus,
