@@ -194,3 +194,4 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 - Run `pnpm run ci` before opening a PR.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
+- Continuous deployment strategy (exploratory; not an implementation guide): [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md).

@@ -366,6 +366,8 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ## 4. Deploy Your Workers
 
+Today’s path is manual Turborepo → Wrangler (`pnpm deploy`). CI verifies only; it does not deploy. For an architectural assessment of continuous deployment (versions, gradual ramps, Flagship, monorepo risks, maturity path), see [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md).
+
 - **Deploy all workers:**
   ```sh
   pnpm deploy
