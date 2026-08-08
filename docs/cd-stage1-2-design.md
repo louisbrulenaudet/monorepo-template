@@ -388,7 +388,7 @@ Ordered conceptual work packages only—this document does not provide YAML, Wra
 3. **Scripts split** — Per-app conceptual paths: **upload** (`versions upload` for the production environment) vs **promote** (`versions deploy`). Stop treating `wrangler deploy` (upload+immediate 100%) as the recurring Stage 1 `main` path.
 4. **Build provenance** — Build `front-app` for the production Cloudflare/Vite environment, record `VITE_API_BASE_URL`, commit SHA, affected base/head, actual Worker name, and returned version ID.
 5. **CI upload job** — On `main` after verify: compute affected build graph → build → upload → publish non-secret release evidence. **No deployment mutation.**
-6. **Credential boundary** — Use a narrowly scoped Cloudflare token and account ID; never commit or log them. Cloudflare documents a generic `Workers Scripts Write` permission, not an upload-only permission. Treat the CI principal as technically capable of production deployment until a narrower permission is documented and verified. Workflow separation alone is not a security boundary: enforce promotion through a separately protected approval/broker boundary that CI cannot invoke, or explicitly accept and monitor CI as a production deployment principal.
+6. **Credential boundary** — Use a narrowly scoped Cloudflare token and account ID; never commit or log them. Cloudflare documents broad `Workers Scripts Edit` authority for version and deployment writes, not an upload-only permission. Treat the CI principal as technically capable of production deployment. Workflow separation alone is not a security boundary: promotion requires a separately protected approval/broker boundary that CI cannot invoke.
 7. **Smoke + contract checklist** — Probe only `GET /api/v1/health` and the SPA index/referenced assets with synthetic data. Add producer/consumer contract evidence for shared wire changes and verify the SPA’s baked API origin.
 8. **Owners + drill** — Name deployable/contract owners and rota; execute one rollback drill including blocked-rollback and partial-pair decisions.
 9. **Docs pointers** — Link AGENTS/README or deploy notes to this design and operating model.
@@ -411,7 +411,7 @@ Ordered conceptual work packages only—this document does not provide YAML, Wra
 
 - Binding decisions: [cd-operating-model.md](./cd-operating-model.md)
 - Architecture assessment: [continuous-deployment-workers.md](./continuous-deployment-workers.md)
-- Implementation evidence and research procedure: [cd-stage1-2-implementation-evidence.md](./cd-stage1-2-implementation-evidence.md)
+- Implementation evidence, diagrams, schemas, and Cursor conversation starters: [cd-stage1-2-implementation-evidence.md](./cd-stage1-2-implementation-evidence.md)
 - [Versions & deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 - [Deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)
 - [Preview URLs](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/)

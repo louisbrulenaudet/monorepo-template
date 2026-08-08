@@ -230,7 +230,7 @@ Privileged legal-domain data rules still apply while debugging skew: no matter/c
 - Near-term production surface stays `worker-api` + `front-app` on Cloudflare Workers in this pnpm/Turborepo monorepo (not the sibling FastAPI/k8s template).
 - Trunk-based development on `main`; `main` is kept releasable via small PRs and contract discipline.
 - External GitHub Actions + Turbo `--affected` remain the orchestration source of truth.
-- The credential used for version upload is treated as a production-capable principal unless Cloudflare documents and the team verifies an upload-only permission. Human promotion requires a protected boundary CI cannot invoke, or explicit acceptance and monitoring of CI’s deployment authority.
+- The credential used for version upload is a production-capable principal: Cloudflare documents broad Workers script-edit authority for version and deployment writes, not an upload-only permission. Human promotion requires a protected boundary CI cannot invoke.
 - Privileged-data logging constraints remain in force.
 - Flagship public beta may be evaluated for release control once wired, but it is not a Stage 1–2 safety dependency without an explicit fallback and accepted beta risk.
 - Promote / hold / rollback authority for Stages 1–2 sits with the deployable owner or on-call delegate. The role is decided; named assignments still block Stage 0→1 exit.
@@ -271,7 +271,7 @@ Affected-only, manual authority, internal TTD/TTM objectives, server-side Flagsh
 
 - Assessment (architecture): [continuous-deployment-workers.md](./continuous-deployment-workers.md) (§2, §5, §6, §8–§10)
 - Stage 1–2 design (flows / runbooks / Stage 1 handoff): [cd-stage1-2-design.md](./cd-stage1-2-design.md)
-- Implementation evidence (platform facts / repo map / research procedure): [cd-stage1-2-implementation-evidence.md](./cd-stage1-2-implementation-evidence.md)
+- Implementation evidence (platform facts, repo map, diagrams, release schemas, Cursor starters): [cd-stage1-2-implementation-evidence.md](./cd-stage1-2-implementation-evidence.md)
 - [Versions & deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 - [Deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)
 - [Preview URLs](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/)
