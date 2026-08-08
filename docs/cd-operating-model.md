@@ -23,7 +23,7 @@ The names above are logical deployable names. Wrangler named environments create
 - Stage 1 promotion replaces the active deployment with the selected version at **100%**. Stage 2 progressive exposure starts only when a human creates a two-version deployment with the new version above 0% and below 100%, then manually changes that percentage.
 - No Stage 1 or Stage 2 action is an automated ramp. “Hold” means make no deployment change; there is no separate pause primitive.
 
-This flow assumes each production Worker has already been published once. Cloudflare does not allow `versions upload` for the first upload; bootstrap uses the normal deploy path and is outside the recurring Stage 1 merge flow.
+This flow assumes each production Worker has already been published once. Cloudflare does not allow `versions upload` for the first upload; bootstrap uses the normal deploy path before production routes/domains or user traffic are attached, and is outside the recurring Stage 1 merge flow.
 
 ### Deferred target (Stage 3+)
 
@@ -146,7 +146,7 @@ Until Flagship is wired, incomplete features stay off by code path or simply do 
 
 Stage 2 is forbidden until an operator can use all of these during the ramp:
 
-1. **Version-attributed invocation outcomes** and runtime exceptions. Workers Metrics can compare active versions; Logpush `ScriptVersion` or version metadata is the fallback evidence.
+1. **Version-attributed invocation outcomes** and runtime exceptions from a verified dashboard view, Logpush `ScriptVersion`, or version-metadata instrumentation. Do not assume the default aggregate Worker view supplies every required version dimension.
 2. **Application HTTP 5xx rate by version.** A Worker invocation can be “Success” while returning an HTTP error, so runtime error charts alone are insufficient.
 3. **Version-attributed wall/CPU time** or an explicitly instrumented response-latency SLI. Wall time includes I/O and `waitUntil`; it is not guaranteed to equal client final-byte latency. Do not label a quantile “request latency” unless that is what the source measures.
 4. **`front-app` asset 404 rate** during splits. Cloudflare recommends Analytics Engine or Logpush for this; it is not currently configured in the repository.

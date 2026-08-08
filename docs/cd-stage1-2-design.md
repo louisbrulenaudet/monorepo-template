@@ -70,7 +70,7 @@ flowchart LR
 
 **Affected honesty:** Record the base/head range. If Turbo cannot resolve it or widens to everything, stop or explicitly upload both; never silently narrow. If an app would rebuild, upload a new version. If not, do not upload a decorative version.
 
-**Bootstrap exception:** this recurring flow assumes the Worker has been published before. Cloudflare requires the first upload of a new Worker to use `wrangler deploy`; `versions upload` fails for a first publish.
+**Bootstrap exception:** this recurring flow assumes the Worker has been published before. Cloudflare requires the first upload of a new Worker to use `wrangler deploy`; `versions upload` fails for a first publish. Bootstrap before production routes/domains or user traffic are attached.
 
 ### Artifact: what a “version” is
 
@@ -380,7 +380,7 @@ Mitigation is complete only when the expected deployment is active, production p
 
 Ordered conceptual work packages only—this document does not provide YAML, Wrangler configuration, or application code:
 
-1. **Bootstrap inventory** — Confirm both `<name>-production` Workers already exist. A first publish uses the bootstrap deploy path; only recurring releases use `versions upload`.
+1. **Bootstrap inventory** — Confirm both `<name>-production` Workers already exist. A first publish uses the bootstrap deploy path before production routes/domains or user traffic are attached; only recurring releases use `versions upload`.
 2. **Protected smoke path** — Keep preview URLs disabled unless Cloudflare Access protects them. When enabled, account for their missing logs and zone controls. Define the trusted 0%-override alternative and served-version verification.
 3. **Scripts split** — Per-app conceptual paths: **upload** (`versions upload` for the production environment) vs **promote** (`versions deploy`). Stop treating `wrangler deploy` (upload+immediate 100%) as the recurring Stage 1 `main` path.
 4. **Build provenance** — Build `front-app` for the production Cloudflare/Vite environment, record `VITE_API_BASE_URL`, commit SHA, affected base/head, actual Worker name, and returned version ID.
