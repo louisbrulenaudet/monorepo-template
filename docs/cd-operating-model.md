@@ -244,6 +244,7 @@ Non-blocking (decided here): affected-only vs always-all; model (a) for Stages 1
 ## References
 
 - Assessment (architecture): [continuous-deployment-workers.md](./continuous-deployment-workers.md) (§2, §5, §6, §8–§10)
+- Stage 1–2 design (flows / runbooks / Stage 1 handoff): [cd-stage1-2-design.md](./cd-stage1-2-design.md)
 - [Versions & deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 - [Deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)
 - [Gradual deployments](https://developers.cloudflare.com/workers/versions-and-deployments/gradual-deployments/)
