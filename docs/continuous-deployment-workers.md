@@ -2,6 +2,8 @@
 
 > Strategy and reliability engineering only. This document does not prescribe CI YAML, Wrangler flags, scripts, or concrete code changes. It evaluates whether deploy-on-every-merge can become a safe operating model for this pnpm Workers monorepo, and what must mature first.
 
+**Operating decision:** Near-term Stages 1–2 choices (upload ≠ promote, change gates, Flagship vs gradual levers, exit criteria) are locked in [cd-operating-model.md](./cd-operating-model.md). This assessment remains the architectural source of truth.
+
 **Scope:** Architecture, strategy, reliability engineering, and decision-making—not an implementation guide.
 
 **Assumptions (explicit):**
@@ -433,6 +435,8 @@ flowchart LR
 ## Bottom line
 
 Treat continuous deployment not as “turn on auto-deploy,” but as **building a release nervous system**: immutable versions, progressive traffic, **Flagship-separated feature release**, contract discipline in the monorepo, version-aware observability, and explicit gates for stateful changes. Cloudflare already provides both the **binary** levers (versions / gradual deploy / rollback) and the **behavior** lever (Flagship); your gap is mostly **operational maturity and monorepo deploy-graph honesty**, not platform impossibility.
+
+For the locked Stages 1–2 operating model that follows from this assessment, see [cd-operating-model.md](./cd-operating-model.md).
 
 ---
 
