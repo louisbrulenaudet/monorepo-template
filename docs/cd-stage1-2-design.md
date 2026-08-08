@@ -19,7 +19,7 @@
 | Upload trigger | Target state: merge/`push` to **`main`** after verify CI green → **affected-only** version upload. PRs stay verify-only. The repository has no upload job today. |
 | Orchestration | **GitHub Actions + Turbo `--affected`**. Workers Builds is not the monorepo brain. |
 | Production env | Wrangler **`production`** env. The actual Worker resources are currently `worker-api-production` and `front-app-production`; records and commands use the actual name. |
-| Preview URLs | `front-app` explicitly disables them today; `worker-api` does not pin the setting. If enabled for Stage 1, previews must be Access-protected because enabled URLs are public and have no Workers Logs, `wrangler tail`, or Logpush. |
+| Preview URLs | `front-app` explicitly disables them. `worker-api` leaves both `workers_dev` and `preview_urls` unset; current documented defaults enable both. Before production uploads, explicitly disable preview URLs or verify Cloudflare Access protection. Enabled previews are public and have no Workers Logs, `wrangler tail`, or Logpush. |
 | Shared contracts | When Turbo marks both apps affected, upload both from the same commit. Promotions are ordered per Worker and independently verified; Cloudflare provides no multi-Worker transaction. |
 | Stage 2 SPA gate | Blocked today: `front-app` is assets-only on `workers.dev`, where Transform Rules are unavailable. A zone route/custom domain plus first-request affinity must exist before a SPA split. |
 
@@ -54,7 +54,8 @@ flowchart LR
   Preview --> Human{Human_promote}
   Override --> Human
   Human -->|yes| Deploy100[versions_deploy_100pct]
-  Human -->|abort| Idle[Leave_version_idle]
+  Human -->|abort_after_preview| Idle[Leave_version_inactive]
+  Human -->|abort_after_0pct| Restore[Restore_prior_100_or_bound_0pct]
   Deploy100 --> VerifyActive[Verify_active_version_and_signals]
 ```
 
@@ -133,7 +134,8 @@ For a coordinated HTTP change, Cloudflare cannot promote both Workers atomically
 | Upload fail | Zero or one inactive versions may exist | Do not promote a required pair. Fix the failed upload, then verify both versions have the same commit/build provenance; do not re-upload the successful immutable version without cause. |
 | Smoke fail before 0% deployment | Version exists outside active deployment | Do not promote. Leave it idle and upload a fixed version. |
 | Smoke fail after 0% deployment | New version is active at 0%; normal traffic remains on old 100%, but overrides can select new | Restore the prior single-version deployment or leave 0% only for a bounded investigation; restrict the override path. |
-| Promote abort (human stops) | Prior version remains 100% | Record why; idle new version is fine. |
+| Abort after protected preview | Prior single-version deployment remains active | Record why; the uploaded version stays inactive. |
+| Abort after a 0% deployment | Old version still receives normal traffic at 100%, but the new version remains in the active two-version deployment and overrides can select it | Restore the prior single-version deployment, or authorize a bounded 0% investigation with override-header controls. Never call this version idle. |
 | Partial multi-app promote | One Worker changed; no automatic undo | Stop further changes. If the state is contract-compatible, hold and repair the missing step; otherwise use the compatibility matrix to roll back the changed side or complete the safe counterpart. Never assume joint rollback. |
 | Wrong version or concurrent change detected | Planned previous/new pair is no longer active | Hold. Re-read deployment history and either restore the known-good version or build a new plan from current state. |
 
