@@ -389,7 +389,7 @@ flowchart LR
 
 ### Is deploy-on-every-merge realistic here?
 
-**Yes, as a staged operating model—especially while the system stays mostly stateless.** Cloudflare’s versions, gradual deployments, affinity, overrides, rollbacks (100 versions), per-version metrics, and **Flagship** (deploy≠release at the edge) are sufficient platform primitives. Your monorepo boundaries and thin current surface make this *easier* than for a mature multi-Worker stateful system. It becomes **conditionally realistic** as you add DO/Queues/DB: full CD remains right for *routine* compute changes; migrations and contract removals must stay gated.
+**Yes, as a staged operating model—especially while the system stays mostly stateless.** Cloudflare’s versions, gradual deployments, affinity, overrides, rollbacks (among the 100 most recently published versions; deployments separately select among the 100 most recent uploads), per-version metrics, and **Flagship** (deploy≠release at the edge) are sufficient platform primitives. Your monorepo boundaries and thin current surface make this *easier* than for a mature multi-Worker stateful system. It becomes **conditionally realistic** as you add DO/Queues/DB: full CD remains right for *routine* compute changes; migrations and contract removals must stay gated.
 
 ### Biggest risks
 
