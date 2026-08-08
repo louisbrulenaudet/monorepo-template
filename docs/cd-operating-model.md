@@ -102,6 +102,7 @@ The comparison base and head are release evidence. If CI cannot resolve the inte
 - **`front-app` affinity:** Mandatory whenever traffic is split. Without it, HTML from one version can request a content-hashed JS/CSS file from the other version and receive a 404. The affinity key must be present on the first HTML request and every asset request. A cookie created in the first response cannot pin that first request.
 - **Current blocker:** `front-app` is assets-only on `workers.dev`. Transform Rules require a route on a zone and do not operate on `workers.dev`; the browser cannot reliably attach a custom header to top-level navigation and asset requests. A production `front-app` split is therefore forbidden until a zone route/custom domain and a tested affinity-key source exist.
 - **Key safety:** Use a dedicated random rollout identifier, not an auth/session secret, user/client/matter identifier, filename, or other privileged value. The version key participates in Workers cache partitioning and must be treated as infrastructure metadata.
+- **Override safety:** A trusted zone boundary must remove or block untrusted `Cloudflare-Workers-Version-Overrides` throughout every two-version deployment. Otherwise a caller with a version ID can bypass the intended percentage.
 - **SPA ↔ API skew:** Affinity pins **within** `front-app`. It does **not** lock `front-app` and `worker-api` to the same generation. HTTP contracts must tolerate N/N+1 and already-loaded SPA clients. Promote additive API support to 100% before exposing a dependent SPA; for removals, stop SPA use first and retain API compatibility for the measured client-retirement window.
 
 Regional percentage-by-geography is **not** our primary lever.
@@ -133,6 +134,7 @@ Flagship is not wired in this repository. Its public beta has no documented prod
 - Typed methods return the call-site `defaultValue` for known failures such as a missing flag or type mismatch; unexpected runtime failures can still throw. Callers must convert those failures to the same safe behavior.
 - Disabling a flag returns the flag’s configured default variant; that variant must be the safe behavior. It is distinct from the typed method’s call-site fallback.
 - Changes can take up to **30 seconds** to reflect globally, during which evaluations may disagree. A kill-switch is not an instantaneous global stop.
+- Browser bootstrap decisions have a bounded lifetime and refresh path. Privileged operations enforce the safe decision server-side per request; a cached browser decision is never authorization.
 - Flagship disable is not schema safety for queues/DO/DB and cannot repair an incompatible binary.
 - Do not increase a Worker traffic percentage and a Flagship feature percentage for the same risky behavior at the same time. Change one exposure lever, observe it, then change the other.
 
@@ -228,6 +230,7 @@ Privileged legal-domain data rules still apply while debugging skew: no matter/c
 - Near-term production surface stays `worker-api` + `front-app` on Cloudflare Workers in this pnpm/Turborepo monorepo (not the sibling FastAPI/k8s template).
 - Trunk-based development on `main`; `main` is kept releasable via small PRs and contract discipline.
 - External GitHub Actions + Turbo `--affected` remain the orchestration source of truth.
+- The credential used for version upload is treated as a production-capable principal unless Cloudflare documents and the team verifies an upload-only permission. Human promotion requires a protected boundary CI cannot invoke, or explicit acceptance and monitoring of CI’s deployment authority.
 - Privileged-data logging constraints remain in force.
 - Flagship public beta may be evaluated for release control once wired, but it is not a Stage 1–2 safety dependency without an explicit fallback and accepted beta risk.
 - Promote / hold / rollback authority for Stages 1–2 sits with the deployable owner or on-call delegate. The role is decided; named assignments still block Stage 0→1 exit.
@@ -241,6 +244,7 @@ Privileged legal-domain data rules still apply while debugging skew: no matter/c
 5. Using Worker rollback after an irreversible storage/schema change once those products exist.
 6. Treating a public-beta Flagship kill as instantaneous or embedding its API token in the SPA.
 7. Publishing a production-bound version at a public preview URL without Access, then sending privileged smoke traffic to it.
+8. Treating workflow separation as authorization even though the CI Worker-write credential can mutate production.
 
 ### Required assignments before Stage 1
 

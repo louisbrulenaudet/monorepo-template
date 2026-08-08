@@ -93,7 +93,7 @@ Routes, domains, and cron triggers are not applied by `versions upload`. Connect
 
 Preview URLs are not isolated staging: a preview of a production-environment version uses that version’s production bindings/settings and is publicly reachable unless Access protects it. Never send real client/matter traffic or credentials merely because the hostname says “preview.”
 
-Version overrides are not an authorization mechanism. They apply only while the version is one of the active deployment’s two versions; an invalid or not-yet-propagated override falls back to normal percentage routing. The trusted zone boundary must block or remove `Cloudflare-Workers-Version-Overrides` from untrusted requests while a 0% version is active. The smoke runner must verify the served version before accepting any response, wait/retry the documented short propagation window, and abort rather than test an unverified version.
+Version overrides are not an authorization mechanism. They apply only while the version is one of the active deployment’s two versions; an invalid or not-yet-propagated override falls back to normal percentage routing. The trusted zone boundary must block or remove `Cloudflare-Workers-Version-Overrides` from untrusted requests for the entire lifetime of every two-version deployment, including a 0% smoke state and every non-zero ramp step. Otherwise a caller who learns a version ID can bypass percentage containment. The smoke runner must verify the served version before accepting any response, wait/retry the documented short propagation window, and abort rather than test an unverified version.
 
 **Smoke proves:** the selected version responds; `GET /api/v1/health` succeeds for `worker-api`; `front-app` index HTML and every referenced critical JS/CSS asset load. For paired changes, confirm the SPA artifact’s baked `VITE_API_BASE_URL` targets the intended API resource and test against the compatible API version.
 
@@ -261,6 +261,7 @@ CI green never authorizes skipping these signals on a gradual path.
 - Typed methods use a safe call-site fallback for known failures; unexpected runtime failures can throw and must be caught into the same safe behavior. A disabled flag serves its configured default variant.
 - Flag targeting and rollout context uses a dedicated opaque rollout key and only necessary non-privileged attributes—never user/client/matter identifiers or content.
 - Flag changes can take up to 30 seconds to propagate globally. Confirm the safe variant before declaring mitigation; if severity cannot tolerate that window, use the binary rollback path.
+- SPA bootstrap decisions are advisory and require a documented bounded lifetime plus refresh path; an already-open client must not retain risky behavior indefinitely after a kill. Authorization and other privileged operations evaluate and enforce the safe decision server-side on every request, never from a cached browser flag alone.
 - Flagship disable ≠ schema safety for future queues/DO/DB.
 - Do not ramp the Worker percentage and Flagship percentage for the same risky path simultaneously.
 
@@ -385,7 +386,7 @@ Ordered conceptual work packages only—this document does not provide YAML, Wra
 3. **Scripts split** — Per-app conceptual paths: **upload** (`versions upload` for the production environment) vs **promote** (`versions deploy`). Stop treating `wrangler deploy` (upload+immediate 100%) as the recurring Stage 1 `main` path.
 4. **Build provenance** — Build `front-app` for the production Cloudflare/Vite environment, record `VITE_API_BASE_URL`, commit SHA, affected base/head, actual Worker name, and returned version ID.
 5. **CI upload job** — On `main` after verify: compute affected build graph → build → upload → publish non-secret release evidence. **No deployment mutation.**
-6. **Credential boundary** — Use a least-privilege Cloudflare token and account ID for upload; never commit or log them. Do not claim token-level “upload-only” isolation unless the Cloudflare permission is verified; the workflow must still contain no promote step, and human deployment authority uses a separately controlled principal.
+6. **Credential boundary** — Use a narrowly scoped Cloudflare token and account ID; never commit or log them. Cloudflare documents a generic `Workers Scripts Write` permission, not an upload-only permission. Treat the CI principal as technically capable of production deployment until a narrower permission is documented and verified. Workflow separation alone is not a security boundary: enforce promotion through a separately protected approval/broker boundary that CI cannot invoke, or explicitly accept and monitor CI as a production deployment principal.
 7. **Smoke + contract checklist** — Probe only `GET /api/v1/health` and the SPA index/referenced assets with synthetic data. Add producer/consumer contract evidence for shared wire changes and verify the SPA’s baked API origin.
 8. **Owners + drill** — Name deployable/contract owners and rota; execute one rollback drill including blocked-rollback and partial-pair decisions.
 9. **Docs pointers** — Link AGENTS/README or deploy notes to this design and operating model.
