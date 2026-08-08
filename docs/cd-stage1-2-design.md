@@ -411,6 +411,7 @@ Ordered conceptual work packages only—this document does not provide YAML, Wra
 
 - Binding decisions: [cd-operating-model.md](./cd-operating-model.md)
 - Architecture assessment: [continuous-deployment-workers.md](./continuous-deployment-workers.md)
+- Implementation evidence and research procedure: [cd-stage1-2-implementation-evidence.md](./cd-stage1-2-implementation-evidence.md)
 - [Versions & deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 - [Deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)
 - [Preview URLs](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/)

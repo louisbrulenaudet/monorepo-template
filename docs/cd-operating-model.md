@@ -271,6 +271,7 @@ Affected-only, manual authority, internal TTD/TTM objectives, server-side Flagsh
 
 - Assessment (architecture): [continuous-deployment-workers.md](./continuous-deployment-workers.md) (§2, §5, §6, §8–§10)
 - Stage 1–2 design (flows / runbooks / Stage 1 handoff): [cd-stage1-2-design.md](./cd-stage1-2-design.md)
+- Implementation evidence (platform facts / repo map / research procedure): [cd-stage1-2-implementation-evidence.md](./cd-stage1-2-implementation-evidence.md)
 - [Versions & deployments](https://developers.cloudflare.com/workers/versions-and-deployments/)
 - [Deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)
 - [Preview URLs](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/)
