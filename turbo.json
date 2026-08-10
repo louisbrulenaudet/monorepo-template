@@ -105,9 +105,37 @@
       "passThroughEnv": ["VITE_API_BASE_URL", "NODE_ENV"]
     },
     "deploy": {
-      "description": "Deploy to Cloudflare Workers via wrangler (uncached). `check-types` gates workers that have no build step of their own (wrangler bundles from source); apps that upload build output add their own `build` edge in their package turbo.json.",
+      "description": "Bootstrap / emergency path: wrangler deploy (upload + immediate 100%). Not the recurring Stage 1 main path — use upload then human promote.",
       "dependsOn": ["^build", "check-types"],
       "cache": false,
+      "outputLogs": "new-only",
+      "passThroughEnv": [
+        "CI",
+        "NODE_ENV",
+        "CLOUDFLARE_API_TOKEN",
+        "CLOUDFLARE_ACCOUNT_ID",
+        "CF_ACCOUNT_ID"
+      ]
+    },
+    "upload": {
+      "description": "Stage 1: wrangler versions upload for the production env. Creates an immutable version without changing the active deployment. Human promote is a separate path.",
+      "dependsOn": ["^build", "check-types"],
+      "cache": false,
+      "outputLogs": "new-only",
+      "passThroughEnv": [
+        "CI",
+        "NODE_ENV",
+        "CLOUDFLARE_API_TOKEN",
+        "CLOUDFLARE_ACCOUNT_ID",
+        "CF_ACCOUNT_ID",
+        "WRANGLER_OUTPUT_FILE_PATH",
+        "WRANGLER_OUTPUT_FILE_DIRECTORY"
+      ]
+    },
+    "promote": {
+      "description": "Human-only Stage 1 promote: wrangler versions deploy (interactive). Must not be invoked from CI; the upload credential is deployment-capable.",
+      "cache": false,
+      "interactive": true,
       "outputLogs": "new-only",
       "passThroughEnv": [
         "CI",

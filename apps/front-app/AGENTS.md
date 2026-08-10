@@ -57,6 +57,9 @@ Local env: `cp .env.example .env.local` (and `.env.production.example` for prod 
 | `pnpm -w turbo watch dev --filter=front-app` | Same as `dev`, but restarts when watched dependency inputs change (optional; JIT + Vite HMR usually enough) |
 | `pnpm -w build` / `pnpm -w preview` | Build or preview through Turborepo |
 | `pnpm -w types` / `pnpm -w types:check` | Regenerate / verify committed Wrangler types |
+| `pnpm -w turbo run upload --filter=front-app` | Stage 1: versions upload (no traffic change) |
+| `pnpm -w turbo run promote --filter=front-app` | Human-only promote to 100% |
+| `pnpm -w turbo run deploy --filter=front-app` | Bootstrap / emergency upload+100% |
 | `pnpm -w run ci` | Full repository PR gate (local; not `--affected`) |
 | `pnpm -w check-types` | Verify route generation and typecheck the workspace |
 | `pnpm analyze` | Bundle stats (`dist/stats.html`) |

@@ -366,17 +366,36 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ## 4. Deploy Your Workers
 
-Today’s path is manual Turborepo → Wrangler (`pnpm deploy`). CI verifies only; it does not deploy. For an architectural assessment of continuous deployment (versions, gradual ramps, Flagship, monorepo risks, maturity path), see [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md).
+**Stage 1 (target on `main`):** verify green → affected `versions upload` only → human promote to 100%. CI never mutates traffic. Promote uses the Cloudflare dashboard or local `pnpm --filter=<app> run promote` under interactive human auth (the CI token is deployment-capable; there is no upload-only Cloudflare permission).
 
-- **Deploy all workers:**
+- Operating model: [docs/cd-operating-model.md](docs/cd-operating-model.md)
+- Design / runbooks: [docs/cd-stage1-2-design.md](docs/cd-stage1-2-design.md)
+- Stage 1 operator runbook: [docs/cd-stage1-runbook.md](docs/cd-stage1-runbook.md)
+- Owners / drills: [docs/cd-owners.md](docs/cd-owners.md)
+- Architecture assessment: [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md)
+
+Actual production Worker names: `worker-api-production`, `front-app-production`.
+
+- **Upload a version (no traffic change):**
   ```sh
-  pnpm deploy
+  pnpm --filter=worker-api run upload
+  pnpm --filter=front-app run upload
   ```
 
-- **Deploy a specific worker:**
+- **Promote (human only, 100%):**
   ```sh
-  pnpm turbo run deploy --filter=worker-name
-  # or: cd apps/worker-name && pnpm deploy
+  pnpm --filter=worker-api run promote
+  ```
+
+- **Bootstrap / emergency (upload + immediate 100% — not the recurring `main` path):**
+  ```sh
+  pnpm deploy
+  # or: pnpm turbo run deploy --filter=worker-name
+  ```
+
+- **Inventory (read-only):**
+  ```sh
+  pnpm run cd:inventory
   ```
 
 ## Best Practices

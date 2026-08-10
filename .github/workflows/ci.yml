@@ -79,3 +79,65 @@ jobs:
         env:
           VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
         run: pnpm turbo run build --affected
+
+  # Stage 1: upload is not promote. Creates immutable versions only.
+  # Never runs versions deploy or wrangler deploy. Promote is human-only.
+  upload:
+    name: Upload Worker versions
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [ci]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Production SPA origin baked into front-app uploads (not the CI placeholder).
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      CD_AFFECTED_BASE: ${{ github.event.before }}
+      CD_AFFECTED_HEAD: ${{ github.sha }}
+      CD_SELECTION_OUT: dist/cd/selection.json
+      CD_RELEASE_OUT: dist/cd/release.json
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Require Cloudflare credentials
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "ERROR: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required for upload" >&2
+            exit 1
+          fi
+
+      - name: Upload affected versions
+        run: node scripts/cd/upload-affected.mjs
+
+      - name: Upload release evidence artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: stage1-release-${{ github.sha }}
+          path: |
+            dist/cd/selection.json
+            dist/cd/release.json
+          if-no-files-found: warn
+          retention-days: 30

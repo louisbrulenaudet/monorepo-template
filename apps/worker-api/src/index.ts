@@ -72,7 +72,7 @@ app.use("/api/*", (c, next) => {
     origin: allowedOrigins ?? "*",
     allowHeaders: [...CORS_ALLOWED_HEADERS],
     allowMethods: [...CORS_ALLOWED_HTTP_METHODS],
-    exposeHeaders: ["X-Request-Id"],
+    exposeHeaders: ["X-Request-Id", "X-Worker-Version-Id"],
     maxAge: 600,
   })(c, next);
 });

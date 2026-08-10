@@ -34,10 +34,12 @@
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern apps/front-app",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix apps/front-app",
     "preview": "vite preview",
+    "promote": "wrangler versions deploy --env production",
     "routes:check": "tsr generate && git diff --exit-code -- src/routeTree.gen.ts",
     "routes:generate": "tsr generate",
     "types": "wrangler types -c ./wrangler.jsonc",
-    "types:check": "wrangler types -c ./wrangler.jsonc --check"
+    "types:check": "wrangler types -c ./wrangler.jsonc --check",
+    "upload": "wrangler versions upload --env production"
   },
   "dependencies": {
     "@repo/dtos-common": "workspace:*",

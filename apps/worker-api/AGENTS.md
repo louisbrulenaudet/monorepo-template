@@ -58,7 +58,9 @@ Workers Cache: [`.cursor/rules/backend/workers-cache.mdc`](../../.cursor/rules/b
 | `pnpm -w turbo run build --filter=worker-api` | Dry-run the production bundle |
 | `pnpm -w types` | Regenerate `worker-configuration.d.ts` (commit the result) |
 | `pnpm -w types:check` | Verify committed Worker types |
-| `pnpm -w turbo run deploy --filter=worker-api` | Typecheck and deploy this Worker |
+| `pnpm -w turbo run upload --filter=worker-api` | Stage 1: versions upload (no traffic change) |
+| `pnpm -w turbo run promote --filter=worker-api` | Human-only promote to 100% |
+| `pnpm -w turbo run deploy --filter=worker-api` | Bootstrap / emergency upload+100% |
 | `pnpm -w run ci` | Full repository PR gate |
 
 ## Contribution

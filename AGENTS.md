@@ -194,4 +194,4 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 - Run `pnpm run ci` before opening a PR.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
-- Continuous deployment strategy (exploratory; not an implementation guide): [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md). Operating-model decisions for Stages 1–2: [docs/cd-operating-model.md](docs/cd-operating-model.md).
+- Continuous deployment: [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md) (architecture), [docs/cd-operating-model.md](docs/cd-operating-model.md) (locked Stage 1–2 decisions), [docs/cd-stage1-2-design.md](docs/cd-stage1-2-design.md) (flows/runbooks), [docs/cd-stage1-2-implementation-evidence.md](docs/cd-stage1-2-implementation-evidence.md) (evidence), [docs/cd-stage1-runbook.md](docs/cd-stage1-runbook.md) (Stage 1 operator path), [docs/cd-owners.md](docs/cd-owners.md) (owners/drills).
