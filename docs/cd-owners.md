@@ -17,4 +17,4 @@ Named assignments below are required for Stage 0→1 exit. Prefill uses the only
 1. Confirm live remote inventory (`pnpm run cd:inventory`) against the production account.
 2. Complete one rollback drill with measured TTD/TTM and blocked-rollback notes.
 3. Name a durable on-call rota beyond CODEOWNERS.
-4. Add producer/consumer contract tests (or equally strong recorded evidence) for shared HTTP changes.
+4. Keep producer/consumer contract tests current for shared HTTP changes (Vitest under apps/*/tests/; extend when wire changes).

@@ -4,12 +4,13 @@ paths:
   - "**/*.spec.ts"
   - "**/tests/**"
   - "**/vitest.config.ts"
+  - "**/vitest.config.mts"
   - "**/vitest.evals.config.ts"
 ---
 
 # Testing Rules
 
-Tests run on **Vitest** with those conventions:
+Toolchain and Workers pool details: [vitest.md](../tests/vitest.md), [hono-workers.md](../tests/hono-workers.md). Front-app React/Query/Router Vitest: [front-react.md](../tests/front-react.md).
 
 - Put unit tests under the app or package at a `tests/` directory that mirrors the source area.
 - Keep Vitest tests deterministic and avoid assertions that depend on test order.
@@ -21,4 +22,4 @@ Tests run on **Vitest** with those conventions:
 
 - **Never weaken source to make a test pass** and never silence a failing test (no blanket skips, no loosened types). Fix the cause, or stop and report the exact command and output. See [guardrails.md](../core/guardrails.md).
 - When you change a wire shape or constrained value set, update the tests that assert it in the **same** change.
-- Before finishing, run the affected workspace's tests plus `pnpm run ci` (see [code-style.md](code-style.md)).
+- Before finishing, run the affected workspace tests plus `pnpm run ci` (see [code-style.md](code-style.md)).

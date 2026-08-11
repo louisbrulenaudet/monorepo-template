@@ -166,7 +166,9 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 | `pnpm login` | Login to Cloudflare (repo-pinned Wrangler) |
 | `pnpm update` | Update dependencies to latest (rewrites pnpm catalog) |
 | `pnpm check` | Lint + format check (no typecheck) |
-| `pnpm run ci` | Lint + format + check-types + types:check + boundaries + build (full-repo local PR gate; CI uses `--affected` for check-types/build) |
+| `pnpm run ci` | Lint + format + check-types + types:check + boundaries + test + build (full-repo local PR gate; CI uses `--affected` for check-types/test/build) |
+| `pnpm test` | Vitest via `turbo run test` (per-app; Node or Cloudflare pool) |
+| `pnpm test:watch` | Vitest watch via `turbo run test:watch` (humans; persistent, uncached) |
 | `pnpm boundaries` | Check package dependency tags against `turbo.json` |
 | `pnpm deploy` | Deploy all apps/workers (via Turborepo) |
 | `pnpm build` | Build all packages and apps (via Turborepo) |
@@ -183,7 +185,7 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 
 ### Scoping (pnpm / Turborepo)
 
-Pass turbo flags on turbo-backed tasks (`dev`, `build`, `check-types`, `deploy`):
+Pass turbo flags on turbo-backed tasks (`dev`, `build`, `check-types`, `test`, `test:watch`, `deploy`):
 
 | Flag | Effect | Example |
 |------|--------|---------|

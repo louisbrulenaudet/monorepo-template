@@ -97,7 +97,7 @@ Every bullet in this section is **repo-observed** as of the evidence-review date
 - **Correlation:** the API creates/exposes an opaque request ID; the SPA does not propagate one end to end. Correlation is a Stage 2 prerequisite, not current capability.
 - **Stateful products:** no KV/R2/DO/D1/Queue bindings exist. Their migration playbooks remain out of scope.
 - **Flagship:** no binding or evaluation path exists. Runbooks must work without a flag kill-switch.
-- **Tests/signals:** no contract test suite, version-attributed application-5xx gate, or asset-404 alert exists. Stage 2 is closed.
+- **Tests/signals:** Vitest HTTP contract coverage exists for GET /api/v1/health (worker-api producer + front-app consumer/queryOptions). No version-attributed application-5xx gate or asset-404 alert exists. Stage 2 is closed.
 
 ---
 

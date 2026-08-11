@@ -26,7 +26,7 @@
   "scripts": {
     "analyze": "ANALYZE=true vite build",
     "build": "vite build",
-    "check-types": "pnpm run routes:check && tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
+    "check-types": "pnpm run routes:check && tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tests/tsconfig.json",
     "deploy": "wrangler deploy --env production",
     "dev": "vite",
     "format": "pnpm -w exec oxfmt --check apps/front-app",
@@ -37,6 +37,8 @@
     "promote": "wrangler versions deploy --env production",
     "routes:check": "tsr generate && git diff --exit-code -- src/routeTree.gen.ts",
     "routes:generate": "tsr generate",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "types": "wrangler types -c ./wrangler.jsonc",
     "types:check": "wrangler types -c ./wrangler.jsonc --check",
     "upload": "wrangler versions upload --env production"
@@ -52,7 +54,8 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "catalog:",
     "@repo/typescript-config": "workspace:*",
-    "@rolldown/plugin-babel": "^0.2.3",
+    "@repo/vitest-config": "workspace:*",
+    "@rolldown/plugin-babel": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/devtools-vite": "catalog:",
     "@tanstack/react-devtools": "catalog:",
@@ -65,10 +68,11 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
-    "rollup-plugin-visualizer": "^7.0.1",
+    "rollup-plugin-visualizer": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
+    "vitest": "catalog:",
     "wrangler": "catalog:"
   },
   "monorepo": {

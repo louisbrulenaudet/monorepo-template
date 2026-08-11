@@ -1,0 +1,172 @@
+---
+description: "Vitest for Hono Cloudflare Workers - cloudflareTest, isolation, env/exports, DO/D1, gotchas."
+alwaysApply: false
+globs: apps/worker-*/**,apps/queue-*/**,apps/webhook-*/**,apps/mcp-*/**
+---
+
+# Hono Workers Vitest (Cloudflare pool)
+
+Pinned here: vitest 4.1.x, @cloudflare/vitest-pool-workers 0.21.x, hono 4.13.x, wrangler 4.120.x, worker-api compatibility_date 2026-07-08 with nodejs_compat.
+General Vitest agent bar: [vitest.mdc](vitest.mdc). Discipline: [testing.mdc](../quality/testing.mdc).
+Docs retrieved 2026-08-11: Cloudflare Vitest integration (configuration, test APIs, isolation, migrate Vitest 3 to 4), Hono testing guide. Prefer those over training memory.
+
+## 1. Scope
+
+Governs Vitest for Hono apps on Cloudflare Workers using @cloudflare/vitest-pool-workers (workerd), not Node Vitest.
+Typical paths: apps/worker-*/tests/**, apps/worker-*/vitest.config.*, same for queue-*/webhook-*/mcp-* when added.
+
+## 2. Toolchain and canonical config
+
+Canonical pattern (matches apps/worker-api/vitest.config.mts):
+
+```ts
+import { defineWorkersConfig } from "@repo/vitest-config/workers";
+
+export default defineWorkersConfig({
+  wrangler: { configPath: "./wrangler.jsonc" },
+});
+```
+
+defineWorkersConfig wraps cloudflareTest() plus shared mock hygiene from @repo/vitest-config. Import the Workers entry (@repo/vitest-config/workers), not the Node entry.
+
+Divergences from Node Vitest (do not paper over):
+- Test files run inside workerd; the Vitest config and globalSetup run in Node.
+- Use cloudflareTest() Vite plugin (via defineWorkersConfig). The old Cloudflare helpers defineWorkersConfig / defineWorkersProject from @cloudflare/vitest-pool-workers/config are removed (Vitest 4 / pool-workers >= 0.13) - do not confuse them with this repo's @repo/vitest-config/workers export.
+- Options formerly under test.poolOptions.workers pass directly to cloudflareTest() / defineWorkersConfig().
+- Pool injects minimal Node-compat flags for Vitest unless wrangler already defines a Node.js compatibility flag (isolation-and-concurrency docs).
+- compatibility_date and compatibility_flags come from wrangler.jsonc via wrangler.configPath. Prerequisite: compatibility_date >= 2022-10-31, ES modules format. This repo sets nodejs_compat on worker apps - keep it; do not invent extra flags unless wrangler needs them.
+- Optional miniflare key merges over wrangler; miniflare wins on conflicts (e.g. stub a service binding only in tests).
+- Never set isolate: false / Node pool on Workers configs (shares binding storage).
+- Types: tests/tsconfig.json should include @cloudflare/vitest-pool-workers/types and committed worker-configuration.d.ts (in include). Ambient typing:
+
+```ts
+declare module "cloudflare:workers" {
+  interface ProvidedEnv extends Env {}
+}
+```
+
+(as in apps/worker-api/tests/env.d.ts)
+
+## 3. Runtime model and isolation
+
+Bindings and Worker entry:
+- Prefer import { env, exports } from "cloudflare:workers".
+- env / SELF from cloudflare:test are deprecated; exports.default.fetch() replaces SELF.fetch(). exports does not expose Assets - use env.ASSETS or startDevWorker for assets.
+- Helpers remain on cloudflare:test: createExecutionContext, waitOnExecutionContext, createScheduledController, createMessageBatch, getQueueResult, Durable Object helpers, applyD1Migrations, reset, Workflow introspectors.
+- fetchMock from cloudflare:test is removed - mock globalThis.fetch or use MSW.
+
+Isolation (Cloudflare isolation-and-concurrency + Vitest 4 migration):
+- Storage isolation is per test file by default. Files run concurrently. Writes in one file are not visible to another.
+- Within a file, storage persists across it() unless you call await reset() (e.g. afterEach).
+- isolatedStorage and singleWorker config options are removed.
+
+| Mode | How | Tradeoff |
+|------|-----|----------|
+| Default | no special flags | Isolated storage per file, concurrent - prefer this |
+| Single process | --max-workers=1 | Still isolated storage; shared worker process |
+| Shared storage | --max-workers=1 --no-isolate | Shared globals and storage across files - order-dependent; avoid unless intentional |
+
+Vitest general advice to disable isolate for speed also shares Workers binding storage - never apply casually to storage-backed tests.
+
+workerd do / do not:
+- Do use real local bindings from wrangler / miniflare simulation.
+- Do assert on Response status/body/headers and binding state.
+- Do not use removed fetchMock; mock globalThis.fetch or MSW instead.
+- Do not assume vi.mock intercepts the main Worker entry - the pool injects a side-effect import of main outside normal mock setup (workers-sdk pool notes).
+- Do not set Node pool threads/forks on Workers configs.
+
+.dev.vars (explicit uncertainty):
+Docs retrieved for this rule document .dev.vars for wrangler/vite local development and secrets.required, but do not clearly state that vitest-pool-workers always loads .dev.vars the same way. Prefer miniflare.bindings or wrangler vars for CI-stable secrets in tests. Never commit .dev.vars. Do not write tests that only pass when a local secret file is present.
+
+## 4. Testing Hono
+
+Hono export default app is the Worker entry (apps/worker-api/src/index.ts).
+
+| Mode | Pattern | When |
+|------|---------|------|
+| Unit / route-focused | await app.request(path, init?, env?) - 3rd arg sets c.env | Middleware isolation, intentional mock env, no full export path |
+| Integration | await exports.default.fetch(request) | Full default export + real pool env |
+| Handler + waitUntil | worker.fetch(req, env, createExecutionContext()) then waitOnExecutionContext | Side effects via waitUntil |
+
+Repo default for gateway smoke: exports integration (see apps/worker-api/tests/routes/health.test.ts). Use app.request when stubbing c.env without exercising real storage bindings. Optional testClient from hono/testing is secondary.
+
+Hono docs: pass MOCK_ENV as the 3rd parameter to app.request for bindings. Prefer real env from cloudflare:workers when the behavior under test depends on KV/D1/R2/DO/queues.
+
+## 5. Durable Objects and D1
+
+worker-api has neither today. Document for future worker-* apps. APIs from Cloudflare Test APIs docs.
+
+runInDurableObject(stub, callback) - run inside the DO instance to seed/inspect storage or call methods. Avoids guessing state only through fetch/RPC.
+
+```ts
+import { env } from "cloudflare:workers";
+import { runInDurableObject } from "cloudflare:test";
+
+const id = env.COUNTER.newUniqueId();
+const stub = env.COUNTER.get(id);
+await runInDurableObject(stub, async (instance, state) => {
+  await state.storage.put("count", 1);
+});
+```
+
+runDurableObjectAlarm(stub) - immediately run and clear a scheduled alarm; returns whether an alarm ran. Avoids waiting on real alarm timers.
+
+listDurableObjectIds(namespace) - IDs created in this test file only (respects per-file isolation).
+
+evictDurableObject / evictAllDurableObjects - tear down in-memory DO instances while preserving durable storage (available in pool-workers >= 0.16.20; this repo is 0.21). Use to test recovery across eviction.
+
+applyD1Migrations(db, migrations, tableName?) - apply migrations in tests. Read migrations in Node via readD1Migrations from @cloudflare/vitest-pool-workers/config inside cloudflareTest(async () => ...), pass via miniflare.bindings, apply in a setupFile.
+
+Workflow introspectors (introspectWorkflowInstance / introspectWorkflow): must dispose with await using or dispose(), or instance state leaks across tests (false greens).
+
+## 6. Gotchas (false greens first)
+
+| Gotcha | Why | Correct pattern | Source |
+|--------|-----|-----------------|--------|
+| import { SELF, env } from cloudflare:test / SELF.fetch | Deprecated; Assets semantics differ | import { env, exports } from cloudflare:workers; exports.default.fetch | migrate Vitest 3 to 4 |
+| fetchMock from cloudflare:test | Removed | mock globalThis.fetch or MSW | migrate Vitest 3 to 4 |
+| expect(x).toBeDefined() only | Passes for almost anything | Assert status, parsed body, headers, binding effects | Vitest Writing Tests with AI |
+| Assume storage cleared per it() | Isolation is per file | await reset() in afterEach when needed | Test APIs reset |
+| --no-isolate / isolate: false for speed | Shares Workers binding storage | Keep default isolation for storage tests | Vitest perf + Cloudflare migration |
+| Mock KV/D1/R2 instead of pool bindings | Tests pass with stubs that diverge from workerd | Use wrangler/miniflare real local bindings | write-your-first-test |
+| Workflow introspector not disposed | State leaks - next test sees completed instance | await using or dispose() | Test APIs Workflows |
+| vi.mock on Worker main entry | Pool injects main outside mock graph | Prefer exports.fetch + binding APIs; mock outbound fetch | workers-sdk pool notes |
+| Assert Assets via exports.default.fetch | exports does not expose Assets | env.ASSETS or startDevWorker | Test APIs exports |
+| Hono app.request with MOCK_ENV only, claiming binding correctness | Never hits real binding semantics | Use env from cloudflare:workers for binding behavior | Hono testing + Cloudflare env |
+| Test depends on local .dev.vars | CI/agents without the file get different results | miniflare.bindings / wrangler vars; flag if undocumented | wrangler secrets docs; pool docs silent |
+| Unawaited async in tests | Unhandled rejection / flaky pass | await; expect(...).rejects | Vitest common-errors |
+| Set Node pool threads on Workers config | Does not select Cloudflare pool | cloudflareTest only | Vitest common-errors / pool model |
+| jest.fn / jest.mock | Wrong API | vi.* | Vitest Writing Tests with AI |
+
+## 7. CI and performance
+
+- CI: pnpm turbo run test --affected (.github/workflows/ci.yml). Package scripts use vitest run. No pool-specific shard flags today.
+- Default: concurrent files, per-file storage isolation.
+- Shared storage only with --max-workers=1 --no-isolate - not for routine CI.
+- Vitest --shard + blob merge is documented by Vitest at file granularity. Compatibility with vitest-pool-workers is not claimed in Cloudflare docs retrieved 2026-08-11 - keep CI unsharded unless proven.
+- Do not claim Node execArgv --cpu-prof profiles workerd runners (not in retrieved Cloudflare docs). Use Vitest duration metrics, optional importDurations, and turbo --filter while iterating.
+
+## 8. Anti-patterns (never generate)
+
+- defineWorkersConfig / defineWorkersProject / test.poolOptions.workers nesting
+- isolatedStorage or singleWorker options on cloudflareTest
+- import { SELF, fetchMock } from "cloudflare:test"
+- jest.* APIs
+- Stubbing KV/D1/R2/DO that the pool would simulate locally
+- Weak assertions (toBeDefined-only) or asserting workerd-private internals
+- Logging or asserting privileged client/matter identifiers (see guardrails)
+- Silencing failing tests (skip, any-cast, loosened types)
+- Node environment Vitest for Worker apps
+- Starting vitest watch / --ui from an agent session
+- Adding @vitest/ui unsolicited
+
+## 9. Self-verification checklist
+
+- [ ] vitest.config uses defineWorkersConfig from @repo/vitest-config/workers + wrangler.configPath (not obsolete Cloudflare defineWorkers*)
+- [ ] tests/env.d.ts ProvidedEnv extends Env; tests tsconfig types include @cloudflare/vitest-pool-workers/types; check-types runs tests/tsconfig
+- [ ] Isolation assumptions match (per-file; reset/dispose if needed)
+- [ ] Binding use is real pool vs intentional Hono MOCK_ENV - stated in the test purpose
+- [ ] Hono unit (app.request) vs integration (exports.default.fetch) choice is justified
+- [ ] DO/D1/Workflow helpers used with dispose/reset where required
+- [ ] Assertions check observable behavior (status, contract body, headers)
+- [ ] vitest run via pnpm turbo run test --filter=<app> passes without relying on local .dev.vars

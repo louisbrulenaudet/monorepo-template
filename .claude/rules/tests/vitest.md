@@ -1,0 +1,73 @@
+---
+paths:
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/tests/**"
+  - "**/vitest.config.ts"
+  - "**/vitest.config.mts"
+  - "**/vitest.evals.config.ts"
+---
+
+# Vitest (general)
+
+Catalog pins (see root pnpm-workspace.yaml / lockfile): vitest ^4.1 (4.1.10), @cloudflare/vitest-pool-workers ^0.21 (0.21.0).
+Shared factories: @repo/vitest-config (Node) and @repo/vitest-config/workers (Cloudflare pool).
+Discipline: [testing.md](../quality/testing.md). Workers + Hono: [hono-workers.md](hono-workers.md). Front React/Query/Router: [front-react.md](front-react.md).
+
+## Scope
+
+Governs Vitest tests and configs across apps/packages. Does not replace the Workers pool rule when editing apps/worker-* (and siblings that use cloudflareTest), or the front-react rule when editing front-* React/Query/Router tests.
+
+## Toolchain
+
+- Run via package scripts or turbo: pnpm turbo run test --filter=<pkg>, root pnpm test. Package test scripts use vitest run.
+- Humans: test:watch via turbo run test:watch (cache false, persistent). Agents: always non-watch - vitest run / package test. Never leave interactive watch or --ui. See https://vitest.dev/guide/learn/writing-tests-with-ai.html
+- Place tests under app/package tests/ mirroring source. Filenames kebab-case (*.test.ts).
+- Match existing describe / it / import / assertion style before inventing new patterns.
+- This repo does not enable Vitest globals - always import { describe, it, expect, vi, ... } from "vitest".
+- Per-app vitest.config.ts / .mts via Turborepo, built with @repo/vitest-config. No root Vitest workspace.
+- Do not set custom reporters unless you also include 'agent' - Vitest 4.1 auto-selects the agent reporter when AI_AGENT / std-env detects an agent; a custom reporters list skips that detection. Leave reporters unset so GHA also keeps the built-in github-actions job summary.
+- Turbo test passes through AI_AGENT and GITHUB_* summary vars under envMode: "strict".
+
+## Two runtimes
+
+- worker-*, queue-*, webhook-*, mcp-*: defineWorkersConfig from @repo/vitest-config/workers (wraps cloudflareTest + wrangler configPath). See hono-workers.md.
+- front-*: defineNodeConfig from @repo/vitest-config (Node, pool: "threads", isolate: false). Never attach the Workers pool. React/Query/Router constraints: [front-react.md](front-react.md).
+- Do not set Node pool to threads or forks to fix Workers tests - those knobs do not select the Cloudflare pool.
+
+## Agent quality bar
+
+From Vitest Writing Tests with AI (https://vitest.dev/guide/learn/writing-tests-with-ai.html) - hard checks:
+
+- Meaningful assertions - reject expect(x).toBeDefined()-only / did not throw. Assert status, body shape (Zod-parse shared contracts when present), headers, or binding side effects.
+- Behavior over implementation - do not over-mock or assert internal call order. Mock only true I/O boundaries (Node); prefer real pool bindings on Workers.
+- Vitest APIs, not Jest - vi.fn / vi.mock / vi.spyOn, never jest.*.
+- Mock hygiene - shared config enables restoreMocks / clearMocks / unstubEnvs / unstubGlobals. Prefer vi.mock(import("./mod.js")) over string paths when mocking modules.
+- Names - short behavior labels (returns 404 with requestId), not essay-length should correctly....
+- Cover edge cases when relevant: empty/null, validation failures, fail-closed paths - not only happy path.
+- Always run generated tests before considering them done.
+
+## Common errors
+
+See https://vitest.dev/guide/common-errors.html
+
+- Vite ignores tsconfig baseUrl by default. Prefer package.json imports (#/*) and relative imports - do not invent @/ aliases unless configured.
+- Custom package.json exports / imports conditions under Node Vitest may need ssr.resolve.conditions (default env uses Vite SSR resolve).
+- Unhandled rejections: always await async work; use await expect(...).rejects for expected failures (aligns with oxlint no-floating-promises).
+- Node pool threads segfault / fetch-terminate issues apply to Node Vitest only.
+
+## Performance and diagnostics
+
+See https://vitest.dev/guide/improving-performance.html and https://vitest.dev/guide/profiling-test-performance.html
+
+- Duration metrics: transform / setup / import / tests / environment. Prefer direct imports over barrel files when import time dominates; optional experimental.importDurations.print for diagnosis.
+- Node defaults from @repo/vitest-config: pool: "threads", isolate: false, experimental.fsModuleCache. On Workers, isolate: false / --no-isolate also shares binding storage - see hono-workers.md.
+- Vitest file sharding (--reporter=blob --shard=n/m + --merge-reports) exists. This repo does not shard today. Cloudflare docs retrieved for this rule set do not specifically validate sharding with @cloudflare/vitest-pool-workers - do not enable in CI without an explicit follow-up.
+- @vitest/ui, HTML reporters, IDE extensions: human diagnostics only. Do not add @vitest/ui or start --ui unless asked.
+
+## Self-check
+
+- [ ] Config uses @repo/vitest-config (Node) or @repo/vitest-config/workers (Cloudflare)
+- [ ] Imports from vitest; no jest.*
+- [ ] Assertions check observable behavior
+- [ ] Non-watch run green: pnpm turbo run test --filter=<pkg>

@@ -84,6 +84,7 @@ bun.lockb
 
 # Test artifacts and cache
 **/.vitest/
+**/.experimental-vitest-cache/
 **/test-results/
 **/playwright-report/
 **/playwright/.cache/

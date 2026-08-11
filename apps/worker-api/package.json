@@ -14,7 +14,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "wrangler deploy --dry-run --outdir dist --env production",
-    "check-types": "tsc --noEmit",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
     "deploy": "wrangler deploy --env production",
     "dev": "wrangler dev",
     "format": "pnpm -w exec oxfmt --check apps/worker-api",
@@ -22,6 +22,8 @@
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern apps/worker-api",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix apps/worker-api",
     "promote": "wrangler versions deploy --env production",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "types": "wrangler types -c ./wrangler.jsonc",
     "types:check": "wrangler types -c ./wrangler.jsonc --check",
     "upload": "wrangler versions upload --env production"
@@ -32,8 +34,11 @@
     "hono": "catalog:"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "catalog:",
     "@repo/typescript-config": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
     "typescript": "catalog:",
+    "vitest": "catalog:",
     "wrangler": "catalog:"
   },
   "monorepo": {

@@ -1,12 +1,12 @@
 ---
-description: "Vitest testing conventions - trust boundaries, no weakening source to pass tests."
+description: "Vitest testing discipline - trust boundaries, no weakening source to pass tests."
 alwaysApply: false
-globs: **/*.test.ts,**/*.spec.ts,**/tests/**,**/vitest.config.ts,**/vitest.evals.config.ts
+globs: **/*.test.ts,**/*.spec.ts,**/tests/**,**/vitest.config.ts,**/vitest.config.mts,**/vitest.evals.config.ts
 ---
 
 # Testing Rules
 
-Tests run on **Vitest** with those conventions:
+Toolchain and Workers pool details: [vitest.mdc](../tests/vitest.mdc), [hono-workers.mdc](../tests/hono-workers.mdc). Front-app React/Query/Router Vitest: [front-react.mdc](../tests/front-react.mdc).
 
 - Put unit tests under the app or package at a `tests/` directory that mirrors the source area.
 - Keep Vitest tests deterministic and avoid assertions that depend on test order.
@@ -18,4 +18,4 @@ Tests run on **Vitest** with those conventions:
 
 - **Never weaken source to make a test pass** and never silence a failing test (no blanket skips, no loosened types). Fix the cause, or stop and report the exact command and output. See [guardrails.mdc](../core/guardrails.mdc).
 - When you change a wire shape or constrained value set, update the tests that assert it in the **same** change.
-- Before finishing, run the affected workspace's tests plus `pnpm run ci` (see [code-style.mdc](code-style.mdc)).
+- Before finishing, run the affected workspace tests plus `pnpm run ci` (see [code-style.mdc](code-style.mdc)).

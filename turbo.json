@@ -91,6 +91,35 @@
       "outputs": ["dist/**"],
       "env": ["NODE_ENV"]
     },
+    "test": {
+      "description": "Run Vitest for the package (Workers pool for worker-* apps; Node for front-*).",
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!README.md", "!AGENTS.md", "!CLAUDE.md"],
+      "outputs": [],
+      "passThroughEnv": [
+        "AI_AGENT",
+        "GITHUB_ACTIONS",
+        "GITHUB_STEP_SUMMARY",
+        "GITHUB_SERVER_URL",
+        "GITHUB_REPOSITORY",
+        "GITHUB_SHA",
+        "GITHUB_WORKSPACE"
+      ]
+    },
+    "test:watch": {
+      "description": "Vitest watch mode (persistent, uncached). Humans only - agents must use the test task.",
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "AI_AGENT",
+        "GITHUB_ACTIONS",
+        "GITHUB_STEP_SUMMARY",
+        "GITHUB_SERVER_URL",
+        "GITHUB_REPOSITORY",
+        "GITHUB_SHA",
+        "GITHUB_WORKSPACE"
+      ]
+    },
     "dev": {
       "description": "Run the local dev server (persistent, uncached).",
       "cache": false,

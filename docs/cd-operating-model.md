@@ -181,7 +181,7 @@ Enforceable standing rules for HTTP DTOs in `@repo/dtos-common` (and later RPC/q
 1. **Expand/contract only.** Add optional fields and additive enum members first. Consumers adopt. Removals and renames happen only after the expand window.
 2. **N and N+1 must coexist** across `front-app` ↔ `worker-api` whenever either side can deploy independently. Reaching 100% SPA traffic does not retire JavaScript already loaded in open tabs.
 3. **Same-PR discipline** for additive wire changes that require consumer updates; never leave `main` with a producer that emits a shape no live consumer understands—or a consumer that requires a field no live producer emits—without an explicit compatibility window.
-4. **Contract evidence is required.** Shared wire changes need HTTP contract tests or equivalent recorded producer/consumer evidence before promote. This repository has no contract test suite today; types alone do not satisfy this gate.
+4. **Contract evidence is required.** Shared wire changes need HTTP contract tests or equivalent recorded producer/consumer evidence before promote. App Vitest suites cover the current GET /api/v1/health producer/consumer contract; types alone do not satisfy this gate for new shared wire shapes.
 5. **What disables promote / future auto-ramp:**
    - Known breaking or removal contract on `main` without a completed expand/migrate window
    - Incomplete consumer uploads for an additive contract that those consumers must understand before traffic moves
@@ -197,12 +197,12 @@ Privileged legal-domain data rules still apply while debugging skew: no matter/c
 
 ### Stage 0 → 1
 
-- [ ] CI remains the merge gate (boundaries, lint, format, affected typecheck/build).
+- [ ] CI remains the merge gate (boundaries, lint, format, affected typecheck/test/build).
 - [ ] Version **upload without immediate 100% traffic** practiced until boring on a non-critical path.
 - [ ] **Rollback drill** completed (time-to-mitigate measured; “what rollback does not undo” understood).
 - [ ] Named owners for `worker-api`, `front-app`, and shared contracts.
 - [ ] Access-protected preview or trusted 0%-override smoke is a real habit; public preview URLs are not accepted by default.
-- [ ] Shared HTTP changes have contract evidence; the current lack of contract tests is resolved or explicitly replaced with an equally strong check.
+- [x] Shared HTTP changes have contract evidence; Vitest covers the current /api/v1/health producer/consumer contract (extend the suite when adding wire).
 
 ### Stage 1 → 2
 

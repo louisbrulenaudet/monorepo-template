@@ -1,0 +1,62 @@
+---
+paths:
+  - "apps/front-*/tests/**"
+  - "apps/front-*/vitest.config.ts"
+  - "apps/front-*/vitest.setup.ts"
+---
+
+# Front-app Vitest
+
+Pinned lock front-app 2026-08-11: react/react-dom **19.2.8**, @tanstack/react-query **5.101.4**, @tanstack/react-router **1.170.25**, vite **8.2.1**, vitest **4.1.10**.
+
+General Vitest: [vitest.md](vitest.md). Discipline: [testing.md](../quality/testing.md). Source Query/Router: [tanstack-query.md](../frontend/tanstack-query.md), [tanstack-router.md](../frontend/tanstack-router.md). Workers pool: [hono-workers.md](hono-workers.md) - **never** on `front-*`.
+
+DOM / RTL / render / renderHook / RouterProvider harnesses: skill **`front-vitest`**. Docs retrieved 2026-08-11 from vitest.dev, tanstack.com/query testing, tanstack.com/router testing, react.dev.
+
+## Scope
+
+Governs Vitest for `front-*` SPAs. Typical paths: `apps/front-*/tests/**`, `apps/front-*/vitest.config.ts`. Today: Node-only suites under `tests/` with `*.test.ts`. jsdom and `@testing-library/*` are **not** installed - load skill `front-vitest` and add peers before any DOM suite.
+
+## Hard constraints
+
+- Config: `defineNodeConfig` from `@repo/vitest-config` (Node, `pool: "threads"`, `isolate: false`, mock hygiene + `fsModuleCache`). Never attach `cloudflareTest` / Workers pool.
+- Prefer Node unit tests for `services/`, `utils/`, `*-query-options`: isolated `QueryClient` with `retry: false` and `gcTime: Infinity`; exercise shared `queryOptions` via `fetchQuery` / `ensureQueryData`; mock I/O with `vi.stubGlobal` for fetch (shared config unstubs globals). Do not reuse `src/config/query-client.ts` across tests without `clear`.
+- Never hand-edit `src/routeTree.gen.ts` - regenerate with `pnpm --filter=front-app run routes:generate` / `routes:check`.
+- Imports from `vitest` only - no `jest.*`. In-app paths via `#/*` - do not invent `@/`.
+- Separate `vitest.config.ts` ignores `vite.config.ts` unless you `mergeConfig`. Do **not** merge the full app Vite config cloudflare / prod env asserts / Devtools. Never invent coverage thresholds until coverage is configured.
+- Typecheck tests via `tests/tsconfig.json` (included in package `check-types`).
+- Agents: non-watch only - `pnpm turbo run test --filter=front-app`. Humans: `pnpm turbo run test:watch --filter=front-app`.
+
+```ts
+import { QueryClient } from "@tanstack/react-query";
+
+function createTestQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity },
+    },
+  });
+}
+```
+
+## Gotchas
+
+| Symptom | Cause | Fix |
+|---------|--------|-----|
+| Error-query tests hang | Query default retry 3 | Test client `retry: false` |
+| Cache bleed | Shared QueryClient | New client per test or `clear` |
+| `window is not defined` | Node env + DOM API | Stay on Node, or skill `front-vitest` + jsdom |
+| JSX fails under Vitest | vitest.config ignores vite plugins | Add `@vitejs/plugin-react` only; see skill |
+| `routes:check` fails | Hand-edited `routeTree.gen.ts` | Regenerate only |
+| Workers pool on front | Wrong runtime | Keep Node/jsdom; never `cloudflareTest` |
+| Suspended UI / missing data | `useSuspenseQuery` without boundaries | Prefer `fetchQuery`, or skill Suspense notes |
+| Invented `@/` imports | No alias configured | Use `#/*` or relative |
+
+## Self-check
+
+- [ ] Node vs jsdom matches intent; never Workers pool on `front-*`
+- [ ] Query client isolated; `retry: false` on error paths
+- [ ] No edits to `routeTree.gen.ts`
+- [ ] Imports from `vitest`; `#/*` paths
+- [ ] DOM/RTL only after peers + skill `front-vitest`
+- [ ] `pnpm turbo run test --filter=front-app` green non-watch

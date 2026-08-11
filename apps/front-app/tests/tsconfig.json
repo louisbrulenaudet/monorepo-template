@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.app.json",
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "tsBuildInfoFile": "${configDir}/../node_modules/.tmp/tsconfig.tests.tsbuildinfo"
+  },
+  "include": ["./**/*.ts", "../src/**/*.ts", "../src/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

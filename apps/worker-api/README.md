@@ -32,6 +32,7 @@ What you can add as you grow the repo:
 - **Validation:** Zod schemas from `@repo/dtos-common/api`
 - **Middleware:** request id, secure headers, CORS, CSRF, timeout, body limits, timing + pretty JSON (dev)
 - **Runtime:** Cloudflare Workers
+- **Tests:** Vitest 4 + `@cloudflare/vitest-pool-workers` via `@repo/vitest-config/workers`
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm
 
@@ -44,7 +45,12 @@ apps/worker-api/
 │   │   └── health.ts
 │   ├── enums/            # Worker-local value sets (`as const`)
 │   └── index.ts          # Middleware stack + route mounts
+├── tests/                # Vitest (Cloudflare pool / workerd)
+│   ├── env.d.ts
+│   └── tsconfig.json
+├── vitest.config.mts     # defineWorkersConfig from @repo/vitest-config/workers
 ├── wrangler.jsonc
+├── worker-configuration.d.ts
 ├── .dev.vars.example
 └── README.md
 ```
@@ -117,6 +123,8 @@ Run orchestration from the repository root, or use `pnpm -w` here. Raw package s
 |---------|-------------|
 | `pnpm -w install` | Install and link the workspace |
 | `pnpm -w turbo run dev --filter=worker-api` | Start Wrangler on port 8700 |
+| `pnpm -w turbo run test --filter=worker-api` | Vitest (Workers pool, `vitest run`) |
+| `pnpm -w turbo run test:watch --filter=worker-api` | Vitest watch (humans) |
 | `pnpm -w turbo run build --filter=worker-api` | Typecheck and dry-run the production bundle |
 | `pnpm -w turbo run deploy --filter=worker-api` | Typecheck and deploy this Worker |
 | `pnpm -w format:fix` | Format the repository with OXC |
@@ -148,6 +156,14 @@ health.get("/", (c) => {
 ```
 
 Worker-local constrained strings belong in `src/enums/`. Promote to `@repo/enums-common` when a second app needs them.
+
+## Testing
+
+Suites live under `tests/` and run inside workerd via `@cloudflare/vitest-pool-workers`. Prefer `import { env, exports } from "cloudflare:workers"` for integration checks. Config: `vitest.config.mts` → `defineWorkersConfig` from `@repo/vitest-config/workers`.
+
+```bash
+pnpm -w turbo run test --filter=worker-api
+```
 
 ## Development Guidelines
 

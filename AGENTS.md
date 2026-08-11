@@ -93,6 +93,8 @@ If a Worker is both RPC and a queue consumer, keep prefix **`worker-*`** (busine
 | Reusable UI / hooks | `apps/front-app/src/components/ui/`, `src/hooks/` |
 | Worker bindings / config | `apps/<worker>/wrangler.jsonc` |
 | Local dev secrets | `apps/<worker>/.dev.vars` (from `.dev.vars.example`) |
+| App Vitest config | `apps/<app>/vitest.config.ts` / `.mts` via `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` |
+| App unit tests | `apps/<app>/tests/` mirroring source (`*.test.ts`) |
 
 Queue-only apps (`queue-*`) and dual-handler `worker-*` use: `handlers/request.ts`, `handlers/message.ts`, shared `services/`, minimal `index.ts`.
 
@@ -106,15 +108,17 @@ Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev
 
 | Command | Description |
 |---------|-------------|
-| `pnpm run ci` | lint + format + check-types + **types:check + boundaries + build** (full-repo local PR gate; CI uses `--affected` for check-types/build) |
+| `pnpm run ci` | lint + format + check-types + **types:check + boundaries + test + build** (full-repo local PR gate; CI uses `--affected` for check-types/test/build) |
 | `pnpm lint:agent` | Lint with `--format=agent` - one machine-readable line per diagnostic, no auto-fix |
+| `pnpm test` | Vitest via `turbo run test` (apps) |
+| `pnpm test:watch` | Vitest watch via `turbo run test:watch` (humans; persistent, uncached) |
 | `pnpm types` | Regenerate `worker-configuration.d.ts` in apps (**commit the result**) |
 | `pnpm types:check` | Verify committed Worker types still match `wrangler.jsonc` (apps only; inside `pnpm run ci`) |
 | `pnpm boundaries` | Check package dependency tags against `turbo.json` (inside `pnpm run ci`) |
 
 ### Scoping (pnpm / Turborepo)
 
-Pass turbo filters on turbo-backed tasks (`check-types`, `build`, `dev`, `deploy`, `preview`, `types`):
+Pass turbo filters on turbo-backed tasks (`check-types`, `test`, `build`, `dev`, `deploy`, `preview`, `types`):
 
 | Flag | Effect | Example |
 |------|--------|---------|
@@ -122,7 +126,7 @@ Pass turbo filters on turbo-backed tasks (`check-types`, `build`, `dev`, `deploy
 | `--filter=...pkg...` | Package + dependents/deps | `pnpm turbo run build --filter=...front-app...` |
 | `--affected` | Changed packages vs base | `pnpm turbo run build --affected` |
 
-Local `pnpm run ci` runs the full graph (no `--affected`) so agents and humans get a complete gate without needing a meaningful git base. GitHub CI runs `check-types` and `build` with `--affected`, and always runs full `types:check` on apps.
+Local `pnpm run ci` runs the full graph (no `--affected`) so agents and humans get a complete gate without needing a meaningful git base. GitHub CI runs `check-types`, `test`, and `build` with `--affected`, and always runs full `types:check` on apps.
 
 **Lint and format are not turbo-backed.** OXC runs as a single pass from the repo root. This is deliberate: oxlint resolves `settings.better-tailwindcss.entryPoint` against the process CWD, so a per-package `oxlint .` silently breaks the context-aware Tailwind rules, and it re-spawns `tsgolint` once per package. A whole-repo pass is ~2.0s. To narrow it, pass a path instead: `pnpm --filter=front-app run lint`.
 
@@ -130,12 +134,13 @@ Local `pnpm run ci` runs the full graph (no `--affected`) so agents and humans g
 
 | Need | Command | Notes |
 |------|---------|-------|
-| Full local PR gate | `pnpm run ci` | Full graph (no `--affected`); includes boundaries, lint, format, typecheck, types:check, build |
+| Full local PR gate | `pnpm run ci` | Full graph (no `--affected`); includes boundaries, lint, format, typecheck, types:check, test, build |
 | Scoped typecheck | `pnpm turbo run check-types --filter=<package>` | Prefer this while iterating on one package |
+| Scoped tests | `pnpm turbo run test --filter=<package>` | Vitest for that app |
 | Scoped build | `pnpm turbo run build --filter=<package>` | Still runs that package's `check-types` first |
 | Local full-stack dev | `pnpm turbo run dev --filter=front-app` | Also starts `worker-api` via `with` |
 | Watch shared-package edits | `pnpm turbo watch dev --filter=front-app` | `watchUsingTaskInputs` + interruptible `dev` restart only when task inputs change; JIT + Vite HMR usually enough without it |
-| Affected only | `pnpm turbo run check-types --affected` / `build --affected` | **GitHub CI only** - needs a meaningful git base; do not use as the local PR gate |
+| Affected only | `pnpm turbo run check-types --affected` / `test --affected` / `build --affected` | **GitHub CI only** - needs a meaningful git base; do not use as the local PR gate |
 | Lint / format | `pnpm run lint:check` / `format:check` (or `pnpm lint:agent`) | Always from repo root; never `cd` into a package and run `oxlint .` |
 
 `pnpm boundaries` calls `turbo boundaries` (a CLI command, not a package task). Keep lint/format outside Turborepo.
@@ -148,7 +153,7 @@ Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `mo
 
 Three - `verifier`, `bundle-analyzer`, `docs-researcher` - each read-only in the sense that matters: none can edit a file. Their descriptions load automatically from `.claude/agents/*.md`; do not restate them here.
 
-Not installed, and why: templates for `code-reviewer`, `security-reviewer`, `refactorer`, and `db-reader` are not wired yet - there is no database, no client-data surface, and no test suite. When one of those surfaces lands, add a matching agent under `.claude/agents/` / `.cursor/agents/` (see skill `monorepo-agent-setup`).
+Not installed, and why: templates for `code-reviewer`, `security-reviewer`, `refactorer`, and `db-reader` are not wired yet - there is no database and no client-data surface (Vitest suites exist under apps/*/tests/). When one of those surfaces lands, add a matching agent under `.claude/agents/` / `.cursor/agents/` (see skill `monorepo-agent-setup`).
 
 ### When to delegate
 
