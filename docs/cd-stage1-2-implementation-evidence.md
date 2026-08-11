@@ -85,7 +85,7 @@ Unless explicitly labeled otherwise, each sourced bullet below is **platform-doc
 
 Every bullet in this section is **repo-observed** as of the evidence-review date and must be rechecked after relevant repository changes.
 
-- **CI:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) verifies boundaries, lint, format, affected typecheck/build; it has no upload/promote job. Full history supports affected correctness. Stage 1 automation is target state.
+- **CI:** [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) verifies boundaries, lint, format, affected typecheck/test/build; it has no upload/promote job. Full history supports affected correctness. Stage 1 automation is target state.
 - **Deploy scripts:** both app package files use `wrangler deploy --env production`, so current deploy is upload plus immediate 100%.
 - **Turbo:** [`turbo.json`](../turbo.json) models affected builds; `front-app#deploy` depends on its build. Use the affected **build** graph to select uploads.
 - **Shared contracts:** both apps depend directly on `@repo/dtos-common` and `@repo/enums-common`. Shared-wire changes normally upload both consumers from one commit. Types do not prove runtime compatibility.
