@@ -18,6 +18,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { timeout } from "hono/timeout";
 import { timing } from "hono/timing";
 import healthRoute from "./routes/health";
+import { resolveOpaqueRequestId } from "./utils/opaque-request-id";
 
 const API_TIMEOUT_MS = 15_000;
 const MAX_BODY_BYTES = 3 * 1024 * 1024;
@@ -33,7 +34,18 @@ type AppEnv = {
 
 const app = new Hono<AppEnv>();
 
-app.use(requestId());
+// Accept client X-Request-Id only when opaque UUID; otherwise mint one.
+app.use(
+  requestId({
+    headerName: "",
+    generator: (c) => resolveOpaqueRequestId(c.req.header("X-Request-Id")),
+  }),
+);
+
+app.use(async (c, next) => {
+  await next();
+  c.header("X-Request-Id", c.get("requestId"));
+});
 
 app.use(
   methodNotAllowed({
@@ -72,7 +84,7 @@ app.use("/api/*", (c, next) => {
     origin: allowedOrigins ?? "*",
     allowHeaders: [...CORS_ALLOWED_HEADERS],
     allowMethods: [...CORS_ALLOWED_HTTP_METHODS],
-    exposeHeaders: ["X-Request-Id"],
+    exposeHeaders: ["X-Request-Id", "X-Worker-Version-Id"],
     maxAge: 600,
   })(c, next);
 });

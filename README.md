@@ -166,7 +166,9 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 | `pnpm login` | Login to Cloudflare (repo-pinned Wrangler) |
 | `pnpm update` | Update dependencies to latest (rewrites pnpm catalog) |
 | `pnpm check` | Lint + format check (no typecheck) |
-| `pnpm run ci` | Lint + format + check-types + types:check + boundaries + build (full-repo local PR gate; CI uses `--affected` for check-types/build) |
+| `pnpm run ci` | Lint + format + check-types + types:check + boundaries + test + build (full-repo local PR gate; CI uses `--affected` for check-types/test/build) |
+| `pnpm test` | Vitest via `turbo run test` (per-app; Node or Cloudflare pool) |
+| `pnpm test:watch` | Vitest watch via `turbo run test:watch` (humans; persistent, uncached) |
 | `pnpm boundaries` | Check package dependency tags against `turbo.json` |
 | `pnpm deploy` | Deploy all apps/workers (via Turborepo) |
 | `pnpm build` | Build all packages and apps (via Turborepo) |
@@ -183,7 +185,7 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 
 ### Scoping (pnpm / Turborepo)
 
-Pass turbo flags on turbo-backed tasks (`dev`, `build`, `check-types`, `deploy`):
+Pass turbo flags on turbo-backed tasks (`dev`, `build`, `check-types`, `test`, `test:watch`, `deploy`):
 
 | Flag | Effect | Example |
 |------|--------|---------|
@@ -366,18 +368,43 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ## 4. Deploy Your Workers
 
-Today’s path is manual Turborepo → Wrangler (`pnpm deploy`). CI verifies only; it does not deploy. For an architectural assessment of continuous deployment (versions, gradual ramps, Flagship, monorepo risks, maturity path), see [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md).
+On merge to `main`, after the **CI** workflow succeeds, the **CD** workflow ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)) builds and ships production (GitHub Environment `production`):
 
-- **Deploy all workers:**
-  ```sh
-  pnpm deploy
-  ```
+1. `wrangler versions upload --env production` (with `--strict`, commit `--tag` / `--message`)
+2. `wrangler versions deploy <version-id>@100% --yes --env production`
 
-- **Deploy a specific worker:**
-  ```sh
-  pnpm turbo run deploy --filter=worker-name
-  # or: cd apps/worker-name && pnpm deploy
-  ```
+for `worker-api` and `front-app`. CD skips if the CI commit is no longer the tip of `main` (avoids stale overwrites).
+
+**GitHub secrets / variables** (repo-level or on the `production` environment):
+
+| Name | Kind | Purpose |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | secret | Wrangler auth |
+| `CLOUDFLARE_ACCOUNT_ID` | secret | Target account |
+| `VITE_API_BASE_URL` | variable | Production API origin baked into `front-app` |
+
+**API token permissions** (scoped token; do not use a global API key):
+
+| Permission | When |
+| --- | --- |
+| Account → Workers Scripts Edit | Required |
+| Account → Account Settings Read | Typical for Wrangler |
+| Zone → Workers Routes Edit | Only if using zone routes |
+| Account → Secrets Store Edit | Only if binding Secrets Store |
+
+Actual production Worker names: `worker-api-production`, `front-app-production`.
+
+Local helpers:
+
+```sh
+# One-shot upload + 100% (same effect as CD, coupled)
+pnpm --filter=worker-api run deploy
+pnpm --filter=front-app run deploy
+
+# Or split steps
+pnpm --filter=worker-api run upload
+pnpm --filter=worker-api run promote
+```
 
 ## Best Practices
 

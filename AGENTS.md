@@ -78,23 +78,19 @@ If a Worker is both RPC and a queue consumer, keep prefix **`worker-*`** (busine
 
 ## Where to Put Things
 
+Root map for cross-cutting placement. App-local detail: `apps/*/AGENTS.md` and `packages/*/AGENTS.md`.
+
 | Task | Location |
 |------|---------|
-| New API endpoint route | `apps/worker-api/src/routes/<feature>.ts` → mount in `src/index.ts` |
-| Request/response Zod schemas (HTTP) | `packages/dtos-common/src/api/<feature>.ts` |
-| Service-binding RPC schemas | `packages/dtos-common/src/rpc/<feature>.ts` |
-| Queue message schemas | `packages/dtos-common/src/queue/<feature>.ts` |
-| Webhook payload schemas | `packages/dtos-common/src/webhook/<feature>.ts` |
-| Shared constrained value set | `packages/enums-common/src/index.ts` |
-| Worker-local value set | `apps/<worker>/src/enums/` |
-| DB schema / migrations / query helpers | `apps/<owner>/src/db/` (one owning Worker; never `packages/db-*`; no shared DB bindings) |
-| Frontend API service | `apps/front-app/src/services/worker-api/<feature>.ts` |
-| Frontend page | `apps/front-app/src/pages/` + `src/routes/` (TanStack file routes) |
-| Reusable UI / hooks | `apps/front-app/src/components/ui/`, `src/hooks/` |
-| Worker bindings / config | `apps/<worker>/wrangler.jsonc` |
-| Local dev secrets | `apps/<worker>/.dev.vars` (from `.dev.vars.example`) |
+| HTTP route | `apps/worker-api/src/routes/<feature>.ts` → mount in `src/index.ts` |
+| Zod schemas | `packages/dtos-common/src/{api,rpc,queue,webhook}/` |
+| Shared enums | `packages/enums-common`; worker-local under `apps/<worker>/src/enums/` |
+| DB schema / migrations | `apps/<owner>/src/db/` (one owner; never `packages/db-*`) |
+| Frontend feature | `apps/front-app/src/{pages,routes,services,hooks,components}/` |
+| Bindings / secrets | `apps/<worker>/wrangler.jsonc`; `.dev.vars` from `.dev.vars.example` |
+| Tests | `apps/<app>/tests/` + `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` |
 
-Queue-only apps (`queue-*`) and dual-handler `worker-*` use: `handlers/request.ts`, `handlers/message.ts`, shared `services/`, minimal `index.ts`.
+Queue-only / dual-handler workers: `handlers/request.ts`, `handlers/message.ts`, shared `services/`, minimal `index.ts`.
 
 ## Environment
 
@@ -102,89 +98,59 @@ Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev
 
 ## Root Scripts (pnpm)
 
-`pnpm run` lists every root script. The ones that are not guessable:
+`pnpm run` lists every root script. Non-obvious ones:
 
 | Command | Description |
 |---------|-------------|
-| `pnpm run ci` | lint + format + check-types + **types:check + boundaries + build** (full-repo local PR gate; CI uses `--affected` for check-types/build) |
+| `pnpm run ci` | Full-repo local PR gate (no `--affected`); CI uses `--affected` for check-types/test/build |
 | `pnpm lint:agent` | Lint with `--format=agent` - one machine-readable line per diagnostic, no auto-fix |
-| `pnpm types` | Regenerate `worker-configuration.d.ts` in apps (**commit the result**) |
-| `pnpm types:check` | Verify committed Worker types still match `wrangler.jsonc` (apps only; inside `pnpm run ci`) |
-| `pnpm boundaries` | Check package dependency tags against `turbo.json` (inside `pnpm run ci`) |
+| `pnpm types` | Regenerate `worker-configuration.d.ts` (**commit the result**) |
+| `pnpm types:check` | Verify committed Worker types match `wrangler.jsonc` (inside `pnpm run ci`) |
+| `pnpm boundaries` | Package dependency tags vs `turbo.json` (inside `pnpm run ci`) |
 
-### Scoping (pnpm / Turborepo)
+### Scoping
 
-Pass turbo filters on turbo-backed tasks (`check-types`, `build`, `dev`, `deploy`, `preview`, `types`):
+Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview`, `types` (`--filter=<pkg>`, `--filter=...pkg...`, `--affected`). Prefer scoped turbo while iterating; use `pnpm run ci` as the local PR gate (full graph). **GitHub CI only** for `--affected`.
 
-| Flag | Effect | Example |
-|------|--------|---------|
-| `--filter=<package>` | One package | `pnpm turbo run dev --filter=worker-api` |
-| `--filter=...pkg...` | Package + dependents/deps | `pnpm turbo run build --filter=...front-app...` |
-| `--affected` | Changed packages vs base | `pnpm turbo run build --affected` |
-
-Local `pnpm run ci` runs the full graph (no `--affected`) so agents and humans get a complete gate without needing a meaningful git base. GitHub CI runs `check-types` and `build` with `--affected`, and always runs full `types:check` on apps.
-
-**Lint and format are not turbo-backed.** OXC runs as a single pass from the repo root. This is deliberate: oxlint resolves `settings.better-tailwindcss.entryPoint` against the process CWD, so a per-package `oxlint .` silently breaks the context-aware Tailwind rules, and it re-spawns `tsgolint` once per package. A whole-repo pass is ~2.0s. To narrow it, pass a path instead: `pnpm --filter=front-app run lint`.
-
-### Turbo commands for agents
-
-| Need | Command | Notes |
-|------|---------|-------|
-| Full local PR gate | `pnpm run ci` | Full graph (no `--affected`); includes boundaries, lint, format, typecheck, types:check, build |
-| Scoped typecheck | `pnpm turbo run check-types --filter=<package>` | Prefer this while iterating on one package |
-| Scoped build | `pnpm turbo run build --filter=<package>` | Still runs that package's `check-types` first |
-| Local full-stack dev | `pnpm turbo run dev --filter=front-app` | Also starts `worker-api` via `with` |
-| Watch shared-package edits | `pnpm turbo watch dev --filter=front-app` | `watchUsingTaskInputs` + interruptible `dev` restart only when task inputs change; JIT + Vite HMR usually enough without it |
-| Affected only | `pnpm turbo run check-types --affected` / `build --affected` | **GitHub CI only** - needs a meaningful git base; do not use as the local PR gate |
-| Lint / format | `pnpm run lint:check` / `format:check` (or `pnpm lint:agent`) | Always from repo root; never `cd` into a package and run `oxlint .` |
-
-`pnpm boundaries` calls `turbo boundaries` (a CLI command, not a package task). Keep lint/format outside Turborepo.
+**Lint and format are not turbo-backed.** OXC runs as a single pass from the repo root: oxlint resolves `settings.better-tailwindcss.entryPoint` against process CWD, so per-package `oxlint .` silently breaks Tailwind context rules and re-spawns `tsgolint` per package. Narrow with a path: `pnpm --filter=front-app run lint`. Never `cd` into a package to lint. `pnpm boundaries` is a CLI command, not a package task.
 
 ## Agent tooling
 
-Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Use `pnpm turbo docs task-caching` for version-matched guidance.
+Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Nested `AGENTS.md` + `CLAUDE.md` live under each `apps/*`, `packages/*`, and `hooks/` - give new packages the same pair.
 
 ### Subagent roster
 
-Three - `verifier`, `bundle-analyzer`, `docs-researcher` - each read-only in the sense that matters: none can edit a file. Their descriptions load automatically from `.claude/agents/*.md`; do not restate them here.
-
-Not installed, and why: templates for `code-reviewer`, `security-reviewer`, `refactorer`, and `db-reader` are not wired yet - there is no database, no client-data surface, and no test suite. When one of those surfaces lands, add a matching agent under `.claude/agents/` / `.cursor/agents/` (see skill `monorepo-agent-setup`).
+Three read-only agents - `verifier`, `bundle-analyzer`, `docs-researcher`. Descriptions load from `.claude/agents/*.md`; do not restate them here. Add more under `.claude/agents/` / `.cursor/agents/` when new surfaces land (see `monorepo-agent-setup`).
 
 ### When to delegate
 
 | Reach for | When |
 |-----------|------|
-| **Main thread** | Iterative work; phases sharing context; a small targeted change; anything latency-sensitive (a subagent starts cold). |
-| **Plan mode** | The approach is uncertain, or the change spans files. Skip it if you could describe the diff in one sentence. |
-| **Skill** | A reusable procedure that needs the *current* context - the nine `/review-*` commands, `/git-commit`. |
-| **Subagent** | The work emits output you will never re-read (CI logs, a build dump, doc pages, a broad sweep); **or** you need a tool restriction the main thread cannot express; **or** you need a fresh context so the reviewer is not the author. |
-| **Never a subagent** | A trivial or strictly sequential step, or work sharing mutable state with the main thread. |
+| **Main thread** | Iterative work; phases sharing context; a small targeted change; latency-sensitive work. |
+| **Plan mode** | Uncertain approach, or multi-file change. Skip if the diff fits one sentence. |
+| **Skill** | Reusable procedure in current context - `/review-*`, `/git-commit`. |
+| **Subagent** | Output you will never re-read; tool restriction the main thread cannot express; fresh context so the reviewer is not the author. |
+| **Never a subagent** | Trivial or strictly sequential step, or shared mutable state with the main thread. |
 
-Three things that are easy to get wrong:
+Easy to get wrong:
 
-- **`tools` is the only real least-privilege gate.** `permissions.defaultMode` is `acceptEdits`, and a parent `acceptEdits` takes precedence over any subagent `permissionMode`, so a `permissionMode: plan` line on an agent is silently ignored. Omit `Edit`/`Write`/`Bash` to make an agent read-only; do not rely on the mode.
-- **`Explore` and `Plan` do not load `CLAUDE.md` or `.claude/rules/`.** Every other subagent does, including always-on `guardrails.md` and this file. Restate any binding constraint in the delegation prompt for those two.
-- **Agents never write scratch files, reports, or notes into the working tree.** Findings come back in the reply.
-
-## Agent Guides
-
-Every workspace carries its own `AGENTS.md` + `CLAUDE.md` pair (`apps/*`, `packages/*`, `hooks/`). Claude Code loads a subdirectory's pair automatically the first time it reads a file in that subtree, so there is no index to consult or maintain - open the code and the local conventions arrive with it. Give a new app or package the same pair.
+- **`tools` is the only real least-privilege gate.** Parent `acceptEdits` overrides subagent `permissionMode`. Omit `Edit`/`Write`/`Bash` for read-only; do not rely on the mode.
+- **`Explore` and `Plan` do not load `CLAUDE.md` or `.claude/rules/`.** Restate binding constraints in the delegation prompt for those two.
+- **Agents never write scratch files into the working tree.** Findings come back in the reply.
 
 ## Enforced Boundaries
 
-Package dependency rules are **machine-checked** by `pnpm boundaries` (part of `pnpm run ci`) - a violation fails CI, it is not a convention. The tag rules live in root `turbo.json` under `boundaries.tags` (self-documenting, with comments); each package declares its tag in its own `turbo.json`.
+`pnpm boundaries` (in `pnpm run ci`) fails on tag violations. Rules live in root `turbo.json` `boundaries.tags`; each package declares tags in its `turbo.json`.
 
-Two invariants worth knowing before you add a dependency:
+- **Nothing may import an `app`.** Worker-to-Worker: service-binding RPC in `wrangler.jsonc`, never a package import.
+- New app/package needs `turbo.json` with `"extends": ["//"]` and a `tags` entry.
 
-- Apps are entry points, never installable dependencies: **nothing may import an `app`**. Worker-to-Worker calls go through service-binding RPC declared in `wrangler.jsonc` - never a package import.
-- A new app or package needs its own `turbo.json` with `"extends": ["//"]` and a `tags` entry, or `pnpm boundaries` reports it as untagged.
-
-Detail loads from `.claude/rules/core/boundaries.md` / `.cursor/rules/core/boundaries.mdc` when you touch a `turbo.json`.
+Detail: `.claude/rules/core/boundaries.md` / `.cursor/rules/core/boundaries.mdc` when editing `turbo.json`.
 
 ## Decision Checklist
 
-1. Worker-to-Worker call? **Service binding RPC**, not HTTP (no extra request fee on Workers Standard).
-2. DB access? Schema + binding in **one** owning `worker-*` / `queue-*` under `src/db/` - never `packages/db-*`, never the same DB binding on multiple apps. Other apps use **service-binding RPC** (or a queue).
+1. Worker-to-Worker call? **Service binding RPC**, not HTTP.
+2. DB access? Schema + binding in **one** owning `worker-*` / `queue-*` under `src/db/` - never `packages/db-*`, never the same DB binding on multiple apps. Others use RPC or a queue.
 3. Public HTTP only for gateway, webhooks, MCP, and frontends - not for business RPC or queue-only workers.
 
 Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor/rules/` / `.claude/rules/` (`contracts`, `quality`).
@@ -194,4 +160,4 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 - Run `pnpm run ci` before opening a PR.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
-- Continuous deployment strategy (exploratory; not an implementation guide): [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md). Operating-model decisions for Stages 1–2: [docs/cd-operating-model.md](docs/cd-operating-model.md).
+- Continuous deployment: after green CI on `main`, [`.github/workflows/cd.yml`](.github/workflows/cd.yml) runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for `worker-api` and `front-app`.

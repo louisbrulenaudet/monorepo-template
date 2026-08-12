@@ -1,0 +1,18 @@
+---
+paths:
+  - "apps/front-*/tests/**"
+  - "apps/front-*/vitest.config.ts"
+  - "apps/front-*/vitest.setup.ts"
+---
+
+# Front-app Vitest
+
+General: [vitest.md](vitest.md). Discipline: [testing.md](../quality/testing.md). DOM/RTL harness depth: skill **`front-vitest`**. Never use the Workers pool on `front-*`.
+
+## Repo invariants
+
+- Config: `defineNodeConfig` from `@repo/vitest-config` (Node). Never `cloudflareTest`.
+- Prefer Node unit tests for `services/`, `utils/`, `*-query-options`: isolated `QueryClient` with `retry: false` and `gcTime: Infinity`; exercise shared `queryOptions` via `fetchQuery` / `ensureQueryData`. Do not reuse `src/config/query-client.ts` across tests without `clear`.
+- Never hand-edit `src/routeTree.gen.ts` - regenerate with app `routes:generate` / `routes:check`.
+- Imports from `vitest` only; in-app paths via `#/*`. Typecheck via `tests/tsconfig.json` (in package `check-types`).
+- Agents: `pnpm turbo run test --filter=front-app` (non-watch). jsdom / `@testing-library/*` are not installed - load `front-vitest` and add peers before any DOM suite.

@@ -91,6 +91,35 @@
       "outputs": ["dist/**"],
       "env": ["NODE_ENV"]
     },
+    "test": {
+      "description": "Run Vitest for the package (Workers pool for worker-* apps; Node for front-*).",
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!README.md", "!AGENTS.md", "!CLAUDE.md"],
+      "outputs": [],
+      "passThroughEnv": [
+        "AI_AGENT",
+        "GITHUB_ACTIONS",
+        "GITHUB_STEP_SUMMARY",
+        "GITHUB_SERVER_URL",
+        "GITHUB_REPOSITORY",
+        "GITHUB_SHA",
+        "GITHUB_WORKSPACE"
+      ]
+    },
+    "test:watch": {
+      "description": "Vitest watch mode (persistent, uncached). Humans only - agents must use the test task.",
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "AI_AGENT",
+        "GITHUB_ACTIONS",
+        "GITHUB_STEP_SUMMARY",
+        "GITHUB_SERVER_URL",
+        "GITHUB_REPOSITORY",
+        "GITHUB_SHA",
+        "GITHUB_WORKSPACE"
+      ]
+    },
     "dev": {
       "description": "Run the local dev server (persistent, uncached).",
       "cache": false,
@@ -105,9 +134,37 @@
       "passThroughEnv": ["VITE_API_BASE_URL", "NODE_ENV"]
     },
     "deploy": {
-      "description": "Deploy to Cloudflare Workers via wrangler (uncached). `check-types` gates workers that have no build step of their own (wrangler bundles from source); apps that upload build output add their own `build` edge in their package turbo.json.",
+      "description": "wrangler deploy --env production (upload + immediate 100%). Local/bootstrap; GitHub CD uses versions upload + versions deploy.",
       "dependsOn": ["^build", "check-types"],
       "cache": false,
+      "outputLogs": "new-only",
+      "passThroughEnv": [
+        "CI",
+        "NODE_ENV",
+        "CLOUDFLARE_API_TOKEN",
+        "CLOUDFLARE_ACCOUNT_ID",
+        "CF_ACCOUNT_ID"
+      ]
+    },
+    "upload": {
+      "description": "wrangler versions upload --env production (no traffic change).",
+      "dependsOn": ["^build", "check-types"],
+      "cache": false,
+      "outputLogs": "new-only",
+      "passThroughEnv": [
+        "CI",
+        "NODE_ENV",
+        "CLOUDFLARE_API_TOKEN",
+        "CLOUDFLARE_ACCOUNT_ID",
+        "CF_ACCOUNT_ID",
+        "WRANGLER_OUTPUT_FILE_PATH",
+        "WRANGLER_OUTPUT_FILE_DIRECTORY"
+      ]
+    },
+    "promote": {
+      "description": "wrangler versions deploy --env production (interactive local promote/rollback helper).",
+      "cache": false,
+      "interactive": true,
       "outputLogs": "new-only",
       "passThroughEnv": [
         "CI",

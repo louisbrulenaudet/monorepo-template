@@ -19,7 +19,11 @@
       "interruptible": true
     },
     "deploy": {
-      "description": "Uploads ./dist as Cloudflare assets, so it needs this app's own build (not just upstream builds) before deploying.",
+      "description": "wrangler deploy of ./dist as Cloudflare assets at 100%.",
+      "dependsOn": ["$TURBO_EXTENDS$", "build"]
+    },
+    "upload": {
+      "description": "wrangler versions upload of ./dist; requires this app's production Vite build first.",
       "dependsOn": ["$TURBO_EXTENDS$", "build"]
     }
   }

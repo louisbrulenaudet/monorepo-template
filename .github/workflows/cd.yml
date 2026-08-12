@@ -1,0 +1,147 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+# Deny by default; the deploy job re-grants `contents: read`.
+permissions: {}
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  TELEMETRY_DISABLED: "1"
+  WRANGLER_SEND_METRICS: "false"
+  TURBO_UI: "false"
+
+jobs:
+  deploy:
+    name: Deploy production Workers
+    # CD paused: production GitHub Environment secrets are not configured yet.
+    # Re-enable by removing the leading false && below (leave tip-check / upload / promote as-is).
+    if: >-
+      false &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      NODE_ENV: production
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.HEAD_SHA }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      # workflow_run + cancel-in-progress: false can let a slower older CI finish
+      # after a newer one and overwrite production. Skip unless HEAD_SHA is still tip.
+      - name: Skip stale deploy
+        id: tip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tip="$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)"
+          if [ "$tip" != "$HEAD_SHA" ]; then
+            echo "Skipping stale deploy: $HEAD_SHA is not tip of main ($tip)"
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup pnpm and Node.js
+        if: steps.tip.outputs.should_deploy == 'true'
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - name: Install dependencies
+        if: steps.tip.outputs.should_deploy == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Require Cloudflare credentials
+        if: steps.tip.outputs.should_deploy == 'true'
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "ERROR: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required for CD" >&2
+            exit 1
+          fi
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "ERROR: repository variable VITE_API_BASE_URL is required for front-app" >&2
+            exit 1
+          fi
+
+      - name: Build production artifacts
+        if: steps.tip.outputs.should_deploy == 'true'
+        run: pnpm turbo run build --filter=worker-api --filter=front-app
+
+      # versions upload does not apply routes, custom domains, or cron triggers.
+      # When those are added to wrangler.jsonc, also run:
+      #   pnpm --filter="$app" exec wrangler triggers deploy --env production
+      - name: Upload and deploy versions (100%)
+        if: steps.tip.outputs.should_deploy == 'true'
+        run: |
+          set -euo pipefail
+
+          deploy_app() {
+            local app="$1"
+            local out version_id
+            out="$(mktemp)"
+            echo "::group::${app} versions upload"
+            WRANGLER_OUTPUT_FILE_PATH="$out" pnpm --filter="$app" run upload -- \
+              --strict \
+              --tag "$HEAD_SHA" \
+              --message "cd ${HEAD_SHA}"
+            echo "::endgroup::"
+
+            version_id="$(
+              node --input-type=module -e '
+                import { readFileSync } from "node:fs";
+                const lines = readFileSync(process.argv[1], "utf8")
+                  .split("\n")
+                  .map((line) => line.trim())
+                  .filter(Boolean)
+                  .map((line) => JSON.parse(line));
+                const hit = [...lines]
+                  .reverse()
+                  .find((entry) => entry?.type === "version-upload" && entry.version_id);
+                if (!hit) {
+                  console.error("wrangler versions upload did not emit version-upload.version_id");
+                  process.exit(1);
+                }
+                process.stdout.write(String(hit.version_id));
+              ' "$out"
+            )"
+            rm -f "$out"
+
+            echo "::group::${app} versions deploy ${version_id}@100%"
+            pnpm --filter="$app" run promote -- "${version_id}@100%" --yes
+            echo "::endgroup::"
+          }
+
+          deploy_app worker-api
+          if ! deploy_app front-app; then
+            echo "::error::front-app deploy failed after worker-api may already be live at 100%. Rollback with: pnpm --filter=worker-api exec wrangler rollback --env production"
+            exit 1
+          fi

@@ -23,6 +23,7 @@
   },
   "env": {
     "staging": {
+      "preview_urls": false,
       "vars": {
         "ENVIRONMENT": "staging",
       },
@@ -35,6 +36,7 @@
       },
     },
     "production": {
+      "preview_urls": false,
       "vars": {
         "ENVIRONMENT": "production",
       },

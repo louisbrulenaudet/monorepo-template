@@ -32,12 +32,15 @@ apps/front-app/
 │   ├── utils/                     # Shared utilities (fetch wrapper, helpers)
 │   ├── main.tsx                   # React entry (RouterProvider)
 │   └── index.css                  # Tailwind entry + global styles
+├── tests/                         # Vitest suites mirroring src/ (Node)
 ├── public/                        # Static assets
 ├── index.html
+├── vitest.config.ts               # defineNodeConfig from @repo/vitest-config
 ├── vite.config.ts                 # Vite + TanStack Router + Cloudflare plugin
 ├── wrangler.jsonc                 # Cloudflare Workers deploy config (assets + SPA)
 ├── .env.production.example        # Production env template
 ├── tsconfig.json
+├── tests/tsconfig.json            # Included in check-types
 └── README.md
 ```
 
@@ -69,6 +72,7 @@ More detail for agents: [AGENTS.md](AGENTS.md).
 - **Runtime**: Cloudflare Workers (static assets + SPA routing)
 - **Styling**: Tailwind CSS v4 (via Vite plugin)
 - **API integration**: `fetchJsonWithSchema` wrapper + shared Zod schemas from `@repo/dtos-common`
+- **Tests**: Vitest 4 (Node) via `@repo/vitest-config` / `defineNodeConfig`
 - **Formatting/Linting**: OXC (oxfmt / oxlint)
 - **Package manager**: pnpm
 
@@ -95,7 +99,7 @@ Local URLs:
 
 ### Path aliases
 
-Imports use aliases defined in both `vite.config.ts` and `tsconfig.app.json` (keep them in sync): `@`, `@utils`, `@enums`, `@components`, `@ui`, `@routes`, `@pages`, `@hooks`, `@services`, `@config`. Example: `import { fetchJsonWithSchema } from "@utils/fetch-api"`.
+In-app absolute imports use package.json `"imports"` (`#/*` → `./src/*`). Example: `import { fetchJsonWithSchema } from "#/utils/fetch-api"`. Do not invent `@/` aliases.
 
 ## Commands
 
@@ -105,6 +109,8 @@ Run orchestration from the repository root, or use `pnpm -w` from this directory
 |---------|-------------|
 | `pnpm -w install` | Install and link the workspace |
 | `pnpm -w turbo run dev --filter=front-app` | Start Vite plus the gateway |
+| `pnpm -w turbo run test --filter=front-app` | Vitest (Node, `vitest run`) |
+| `pnpm -w turbo run test:watch --filter=front-app` | Vitest watch (humans) |
 | `pnpm -w preview` | Build and preview through Turborepo |
 | `pnpm -w build` | Typecheck and build production output |
 | `pnpm -w turbo run deploy --filter=front-app` | Build and deploy this app |

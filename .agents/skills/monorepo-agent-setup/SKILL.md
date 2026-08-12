@@ -24,11 +24,12 @@ Canonical layout and sync policy for **Cursor** and **Claude Code** in this repo
 
 - Claude: nested `CLAUDE.md` loads on demand; debug with `tail -f hooks/logs/instructions-loaded.log`.
 - Cursor: nested `AGENTS.md` by directory; `.mdc` rules attach via `globs` / `alwaysApply`. Debug: **Customize → Hooks**.
-- Rule folders (`core`, `frontend`, `backend`, `contracts`, `quality`) organize only; scoping is frontmatter (`paths` vs `globs`/`alwaysApply`).
+- Rule folders (`core`, `frontend`, `backend`, `contracts`, `quality`, `tests`, `ops`) organize only; scoping is frontmatter (`paths` vs `globs`/`alwaysApply`).
 - Vite config rule: `.claude/rules/frontend/vite-config.md` ↔ `.cursor/rules/frontend/vite-config.mdc` - `apps/front-*/vite.config.ts` only.
 - Tailwind rule: `.claude/rules/frontend/tailwind.md` ↔ `.cursor/rules/frontend/tailwind.mdc` - `apps/front-*/src/**/*.{ts,tsx,css}`, `apps/front-*/index.html`.
 - Ports rule: `.claude/rules/backend/ports.md` ↔ `.cursor/rules/backend/ports.mdc` - `wrangler.jsonc`, app `package.json`, `front-*/vite.config.ts`.
 - TSConfig rule: `.claude/rules/quality/typescript-config.md` ↔ `.cursor/rules/quality/typescript-config.mdc` - `packages/typescript-config/**`, `**/tsconfig*.json`.
+- Vitest shared-config rule: `.claude/rules/quality/vitest-config.md` ↔ `.cursor/rules/quality/vitest-config.mdc` - `packages/vitest-config/**`.
 
 See [`hooks/AGENTS.md`](../../../hooks/AGENTS.md) for hook authoring. Full layout and sync policy: this skill.
 
@@ -53,14 +54,17 @@ When changing agent setup, keep both tools in sync:
 1. **Rules:** edit both `.cursor/rules/<cat>/<name>.mdc` and `.claude/rules/<cat>/<name>.md` (remap frontmatter: Cursor `description`/`globs`/`alwaysApply` ↔ Claude `paths`).
 2. **Agents:** edit both `.cursor/agents/<name>.md` and `.claude/agents/<name>.md` (keep product-native keys: `model`, `tools`, `readonly`, `color`).
 3. **Hooks:** edit scripts only under `hooks/`; update both `.cursor/hooks.json` and `.claude/settings.json` when wiring changes.
-4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json` (when present). Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `privileged-legal-data`, `review-*`) live once under `.agents/skills/`.
+4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json` (when present). Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `privileged-legal-data`, `front-vitest`, `review-*`) live once under `.agents/skills/`.
 5. **Review skills:** edit `.agents/skills/review*/SKILL.md` (self-contained; Claude via symlink).
    `review-*` and `pnpm` set `disable-model-invocation: true`, so **only a human can run them** -
    they cannot be preloaded into a subagent's `skills:` field or invoked through the Skill tool.
    Keep it that way for the whole-repo review deep dives; do not add it to a skill an agent needs.
    `privileged-legal-data` is deliberately **model-invocable** for exactly that reason: it is the
-   preloadable checklist behind `guardrails.md` → "Privileged client data", and the
-   `security-reviewer` template in `docs/agent-templates/` preloads it rather than copying it.
+   preloadable checklist behind `guardrails.md` → "Privileged client data". When adding a
+   security review agent later, preload that skill rather than copying its contents into the
+   agent description.
+   `front-vitest` is also model-invocable: the thin `tests/front-react` rule points at it for
+   DOM/RTL/Router harness depth.
 6. **MCP:** keep [`.mcp.json`](../../../.mcp.json) and [`.cursor/mcp.json`](../../../.cursor/mcp.json) server lists aligned (`type: "http"` on HTTP servers).
 7. **Nested guides:** update `AGENTS.md`; keep `CLAUDE.md` as `@AGENTS.md` + Claude-only bullets.
 
@@ -78,7 +82,7 @@ When changing agent setup, keep both tools in sync:
 
 ## Inventory (quick)
 
-- **Rules:** 18 mirrored basenames (only `core/guardrails` always-on).
+- **Rules:** 24 mirrored basenames (only `core/guardrails` always-on); `tests/` holds vitest + hono-workers + front-react (DOM/RTL depth in skill `front-vitest`); `ops/` holds `ci` + `cd`. No `drizzle-orm` rule until a DB-owning worker lands.
 - **Subagents:** `verifier`, `bundle-analyzer`, `docs-researcher`.
 - **Cursor hooks:** `beforeShellExecution` (git guards, `failClosed`), `afterFileEdit` (format/lint), `sessionStart`.
 - **Claude hooks:** PreToolUse Bash (same git guards), PostToolUse Edit\|Write (format/lint), InstructionsLoaded.

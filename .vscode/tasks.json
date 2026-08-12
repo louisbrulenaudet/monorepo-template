@@ -1,7 +1,6 @@
 {
   // Run with: Terminal → Run Task…  (Ctrl/Cmd+Shift+B runs the default build: "ci: full gate")
-  // Tests run through the Vitest Test Explorer (extension) until a `turbo run test`
-  // pipeline is wired up; there is intentionally no shell "test" task yet.
+  // Tests run through `pnpm test` (turbo run test / Vitest) and the Vitest Test Explorer.
   "version": "2.0.0",
   "tasks": [
     {
@@ -51,7 +50,7 @@
     },
     {
       "label": "ci: full gate",
-      "detail": "pnpm run ci - boundaries + oxlint + oxfmt + check-types + types:check + build (full-repo pre-PR gate)",
+      "detail": "pnpm run ci - boundaries + oxlint + oxfmt + check-types + types:check + test + build (full-repo pre-PR gate)",
       "type": "shell",
       "command": "pnpm run ci",
       "group": {
@@ -94,6 +93,18 @@
       "type": "shell",
       "command": "pnpm types",
       "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "test",
+      "detail": "pnpm test - turbo run test (Vitest per app)",
+      "type": "shell",
+      "command": "pnpm test",
+      "group": "test",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

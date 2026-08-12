@@ -12,15 +12,21 @@ React, routing, query, and env patterns load from `.claude/rules/frontend/` or `
 ## Structure (abbreviated)
 
 ```
-apps/front-app/src/
-├── routes/          # TanStack file routes (loaders, guards - thin)
-├── pages/           # Page UI (imported by *.lazy.tsx)
-├── services/worker-api/   # <feature>.ts + <feature>-query-options.ts
-├── hooks/           # use-<feature>.ts
-├── components/ui/   # Reusable primitives
-├── config/          # env.ts, query-client.ts
-├── utils/           # fetch-api.ts
-└── enums/           # Frontend-only value sets (`as const`)
+apps/front-app/
+├── src/
+│   ├── routes/          # TanStack file routes (loaders, guards - thin)
+│   ├── pages/           # Page UI (imported by *.lazy.tsx)
+│   ├── services/worker-api/   # <feature>.ts + <feature>-query-options.ts
+│   ├── hooks/           # use-<feature>.ts
+│   ├── components/ui/   # Reusable primitives
+│   ├── config/          # env.ts, query-client.ts
+│   ├── utils/           # fetch-api, opaque-request-id
+│   └── enums/           # Frontend-only value sets (`as const`)
+├── tests/               # Vitest suites mirroring src/ (Node)
+├── vitest.config.ts     # defineNodeConfig from @repo/vitest-config
+├── tests/tsconfig.json  # Included in check-types
+├── vite.config.ts
+└── wrangler.jsonc
 ```
 
 ## Where to Change Things
@@ -36,6 +42,8 @@ apps/front-app/src/
 | Frontend-only value set | `src/enums/<feature>.ts` |
 | Shared value set | `packages/enums-common/src/index.ts` |
 | SPA / deploy config | `wrangler.jsonc`, `vite.config.ts` |
+| Opaque API correlation | `src/utils/opaque-request-id.ts` + `fetch-api.ts` (`X-Request-Id`) |
+| Unit tests | `tests/` mirroring `src/` + `vitest.config.ts` (`@repo/vitest-config`) |
 
 ## Adding a Feature
 
@@ -55,8 +63,13 @@ Local env: `cp .env.example .env.local` (and `.env.production.example` for prod 
 |---------|-------------|
 | `pnpm -w turbo run dev --filter=front-app` | Vite on port 5174 plus the gateway |
 | `pnpm -w turbo watch dev --filter=front-app` | Same as `dev`, but restarts when watched dependency inputs change (optional; JIT + Vite HMR usually enough) |
+| `pnpm -w turbo run test --filter=front-app` | Vitest Node, vitest run |
+| `pnpm -w turbo run test:watch --filter=front-app` | Vitest watch, humans only |
 | `pnpm -w build` / `pnpm -w preview` | Build or preview through Turborepo |
 | `pnpm -w types` / `pnpm -w types:check` | Regenerate / verify committed Wrangler types |
+| `pnpm -w turbo run upload --filter=front-app` | `wrangler versions upload` (no traffic) |
+| `pnpm -w turbo run promote --filter=front-app` | Interactive `wrangler versions deploy` |
+| `pnpm -w turbo run deploy --filter=front-app` | `wrangler deploy` (upload + 100%) |
 | `pnpm -w run ci` | Full repository PR gate (local; not `--affected`) |
 | `pnpm -w check-types` | Verify route generation and typecheck the workspace |
 | `pnpm analyze` | Bundle stats (`dist/stats.html`) |

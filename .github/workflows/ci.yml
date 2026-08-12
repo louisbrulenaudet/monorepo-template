@@ -25,7 +25,7 @@ env:
 
 jobs:
   ci:
-    name: Lint, typecheck, and build
+    name: Lint, typecheck, test, and build
     # Pinned, not `ubuntu-latest`; Dependabot does not manage runner labels.
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -75,7 +75,16 @@ jobs:
               pnpm turbo run check-types --affected
               pnpm run types:check
 
+          - name: Test
+            run: pnpm turbo run test --affected
+
       - name: Build
         env:
           VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
         run: pnpm turbo run build --affected
+
+      # No Cloudflare credentials required: --dry-run only bundles/validates Wrangler config.
+      - name: Wrangler deploy dry-run
+        env:
+          VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
+        run: pnpm turbo run deploy --filter=worker-api --filter=front-app -- --dry-run
