@@ -6,27 +6,10 @@ paths:
 
 # Naming
 
-Match the casing of the surrounding code. The conventions below are enforced by Oxc, so a new name should look like the names already around it.
+Match the casing of the surrounding code. Oxc enforces filename and identifier conventions (`.oxlintrc.json`) - do not invent a personal scheme.
 
-## Filenames (enforced by `unicorn/filename-case`)
+## Repo-specific exceptions
 
-- **kebab-case**: all-lowercase words joined by hyphens (`some-module.ts`). Never PascalCase, camelCase, or snake_case in a filename.
-- **Exception - `apps/front-*/**`**: a React component file may use PascalCase to mirror the component it exports (`SomeComponent.tsx`); every non-component file (hooks, utils, services) stays kebab-case.
-
-## Code identifiers
-
-| Kind                  | Convention                                 | Example (illustrative)     |
-| --------------------- | ------------------------------------------ | -------------------------- |
-| Variables / functions | `camelCase`                                | `doSomething()`            |
-| Classes / types       | `PascalCase`                               | `SomeClass`, `SomeInput`   |
-| Constants             | `CONSTANT_CASE`                            | `MAX_SOMETHING`            |
-| Constrained string sets | `PascalCase` name, `CONSTANT_CASE` members | `SomeEnum.SOME_MEMBER` via `as const` object |
-
-## Snake_case is the exception, not the norm
-
-The only place snake_case appears is an identifier that must match an external contract - e.g. an MCP tool's `name` / OpenAPI `operationId`, which is snake_case even though the file that defines it stays kebab-case. Do not introduce snake_case anywhere else.
-
-## DTOs
-
-- Schema exports end in `Schema` (or a `…RequestSchema` / `…ResponseSchema` / `…InputSchema` / `…PayloadSchema` / `…MessageSchema` / `…EventSchema` variant).
-- Inferred types drop the `Schema` suffix; never use a `Type` suffix. See [type-inference.md](../contracts/type-inference.md) and [contracts.md](../contracts/contracts.md).
+- **Filenames** are kebab-case. Exception in `apps/front-*/**`: a React component file may use PascalCase to mirror its export (`SomeComponent.tsx`); hooks, utils, and services stay kebab-case.
+- **DTO schemas** end in `Schema` (or `…RequestSchema` / `…ResponseSchema` / `…InputSchema` / `…PayloadSchema` / `…MessageSchema` / `…EventSchema`). Inferred types drop the `Schema` suffix; never use a `Type` suffix. See [type-inference.md](../contracts/type-inference.md) and [contracts.md](../contracts/contracts.md).
+- Snake_case only when an external contract requires it (e.g. MCP tool `name` / OpenAPI `operationId`); the defining file stays kebab-case.

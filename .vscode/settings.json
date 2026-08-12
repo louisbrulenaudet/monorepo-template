@@ -88,7 +88,9 @@
       "url": "./node_modules/wrangler/config-schema.json"
     }
   ],
-  "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,*.d.ts,**/vite.config.ts,**/vitest.config.ts,**/vitest.*.config.ts,**/dist/**,**/build/**}",
+  // Exclude Vite-only configs from Vitest discovery; keep vitest.config.* so
+  // the explorer finds both .ts (front-*) and .mts (worker-*) packages.
+  "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,*.d.ts,**/vite.config.ts,**/dist/**,**/build/**}",
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,

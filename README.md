@@ -368,37 +368,43 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ## 4. Deploy Your Workers
 
-**Stage 1 (target on `main`):** verify green → affected `versions upload` only → human promote to 100%. CI never mutates traffic. Promote uses the Cloudflare dashboard or local `pnpm --filter=<app> run promote` under interactive human auth (the CI token is deployment-capable; there is no upload-only Cloudflare permission).
+On merge to `main`, after the **CI** workflow succeeds, the **CD** workflow ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)) builds and ships production (GitHub Environment `production`):
 
-- Operating model: [docs/cd-operating-model.md](docs/cd-operating-model.md)
-- Design / runbooks: [docs/cd-stage1-2-design.md](docs/cd-stage1-2-design.md)
-- Stage 1 operator runbook: [docs/cd-stage1-runbook.md](docs/cd-stage1-runbook.md)
-- Owners / drills: [docs/cd-owners.md](docs/cd-owners.md)
-- Architecture assessment: [docs/continuous-deployment-workers.md](docs/continuous-deployment-workers.md)
+1. `wrangler versions upload --env production` (with `--strict`, commit `--tag` / `--message`)
+2. `wrangler versions deploy <version-id>@100% --yes --env production`
+
+for `worker-api` and `front-app`. CD skips if the CI commit is no longer the tip of `main` (avoids stale overwrites).
+
+**GitHub secrets / variables** (repo-level or on the `production` environment):
+
+| Name | Kind | Purpose |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | secret | Wrangler auth |
+| `CLOUDFLARE_ACCOUNT_ID` | secret | Target account |
+| `VITE_API_BASE_URL` | variable | Production API origin baked into `front-app` |
+
+**API token permissions** (scoped token; do not use a global API key):
+
+| Permission | When |
+| --- | --- |
+| Account → Workers Scripts Edit | Required |
+| Account → Account Settings Read | Typical for Wrangler |
+| Zone → Workers Routes Edit | Only if using zone routes |
+| Account → Secrets Store Edit | Only if binding Secrets Store |
 
 Actual production Worker names: `worker-api-production`, `front-app-production`.
 
-- **Upload a version (no traffic change):**
-  ```sh
-  pnpm --filter=worker-api run upload
-  pnpm --filter=front-app run upload
-  ```
+Local helpers:
 
-- **Promote (human only, 100%):**
-  ```sh
-  pnpm --filter=worker-api run promote
-  ```
+```sh
+# One-shot upload + 100% (same effect as CD, coupled)
+pnpm --filter=worker-api run deploy
+pnpm --filter=front-app run deploy
 
-- **Bootstrap / emergency (upload + immediate 100% — not the recurring `main` path):**
-  ```sh
-  pnpm deploy
-  # or: pnpm turbo run deploy --filter=worker-name
-  ```
-
-- **Inventory (read-only):**
-  ```sh
-  pnpm run cd:inventory
-  ```
+# Or split steps
+pnpm --filter=worker-api run upload
+pnpm --filter=worker-api run promote
+```
 
 ## Best Practices
 

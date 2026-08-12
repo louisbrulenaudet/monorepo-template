@@ -134,7 +134,7 @@
       "passThroughEnv": ["VITE_API_BASE_URL", "NODE_ENV"]
     },
     "deploy": {
-      "description": "Bootstrap / emergency path: wrangler deploy (upload + immediate 100%). Not the recurring Stage 1 main path — use upload then human promote.",
+      "description": "wrangler deploy --env production (upload + immediate 100%). Local/bootstrap; GitHub CD uses versions upload + versions deploy.",
       "dependsOn": ["^build", "check-types"],
       "cache": false,
       "outputLogs": "new-only",
@@ -147,7 +147,7 @@
       ]
     },
     "upload": {
-      "description": "Stage 1: wrangler versions upload for the production env. Creates an immutable version without changing the active deployment. Human promote is a separate path.",
+      "description": "wrangler versions upload --env production (no traffic change).",
       "dependsOn": ["^build", "check-types"],
       "cache": false,
       "outputLogs": "new-only",
@@ -162,7 +162,7 @@
       ]
     },
     "promote": {
-      "description": "Human-only Stage 1 promote: wrangler versions deploy (interactive). Must not be invoked from CI; the upload credential is deployment-capable.",
+      "description": "wrangler versions deploy --env production (interactive local promote/rollback helper).",
       "cache": false,
       "interactive": true,
       "outputLogs": "new-only",

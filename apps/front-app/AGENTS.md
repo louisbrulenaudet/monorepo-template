@@ -20,7 +20,7 @@ apps/front-app/
 │   ├── hooks/           # use-<feature>.ts
 │   ├── components/ui/   # Reusable primitives
 │   ├── config/          # env.ts, query-client.ts
-│   ├── utils/           # fetch-api.ts
+│   ├── utils/           # fetch-api, opaque-request-id
 │   └── enums/           # Frontend-only value sets (`as const`)
 ├── tests/               # Vitest suites mirroring src/ (Node)
 ├── vitest.config.ts     # defineNodeConfig from @repo/vitest-config
@@ -42,6 +42,7 @@ apps/front-app/
 | Frontend-only value set | `src/enums/<feature>.ts` |
 | Shared value set | `packages/enums-common/src/index.ts` |
 | SPA / deploy config | `wrangler.jsonc`, `vite.config.ts` |
+| Opaque API correlation | `src/utils/opaque-request-id.ts` + `fetch-api.ts` (`X-Request-Id`) |
 | Unit tests | `tests/` mirroring `src/` + `vitest.config.ts` (`@repo/vitest-config`) |
 
 ## Adding a Feature
@@ -66,9 +67,9 @@ Local env: `cp .env.example .env.local` (and `.env.production.example` for prod 
 | `pnpm -w turbo run test:watch --filter=front-app` | Vitest watch, humans only |
 | `pnpm -w build` / `pnpm -w preview` | Build or preview through Turborepo |
 | `pnpm -w types` / `pnpm -w types:check` | Regenerate / verify committed Wrangler types |
-| `pnpm -w turbo run upload --filter=front-app` | Stage 1: versions upload (no traffic change) |
-| `pnpm -w turbo run promote --filter=front-app` | Human-only promote to 100% |
-| `pnpm -w turbo run deploy --filter=front-app` | Bootstrap / emergency upload+100% |
+| `pnpm -w turbo run upload --filter=front-app` | `wrangler versions upload` (no traffic) |
+| `pnpm -w turbo run promote --filter=front-app` | Interactive `wrangler versions deploy` |
+| `pnpm -w turbo run deploy --filter=front-app` | `wrangler deploy` (upload + 100%) |
 | `pnpm -w run ci` | Full repository PR gate (local; not `--affected`) |
 | `pnpm -w check-types` | Verify route generation and typecheck the workspace |
 | `pnpm analyze` | Bundle stats (`dist/stats.html`) |

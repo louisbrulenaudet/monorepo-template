@@ -6,25 +6,10 @@ paths:
 
 # Code Style
 
-OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format). Do not restyle to match personal habits - match the surrounding file and let `oxfmt` decide layout. These rules run with `denyWarnings: true` / `maxWarnings: 0`, so any warning fails CI.
-
-## Hard rules (oxlint will fail the build)
-
-- Always use block statements for `if`, `else`, loops, and similar control flow - no single-line bodies (`curly: all`).
-- Keep every function under 100 non-blank lines (`max-lines-per-function`). Extract helpers rather than growing a handler. (Disabled only in `apps/front-*/**` - React SPAs per `.oxlintrc.json`.)
-- No `any` - use precise types or `unknown` plus validation (`typescript/no-explicit-any`). Allowed only in `*.test.ts` / `*.spec.ts`.
-- Remove unused imports and variables before finishing (`no-unused-vars`).
-- Do not use TypeScript constructor parameter properties (`typescript/parameter-properties`). Declare fields explicitly and assign in the body.
-- Use type-only imports/exports: `import type { … }` / `export type { … }` (`consistent-type-imports` / `consistent-type-exports`, separate specifiers).
-- Never leave a floating promise; `await` or explicitly `void` it (`no-floating-promises`, `await-thenable`, `no-misused-promises`).
-- No import cycles (`import/no-cycle`).
-- No unnecessary type assertions; do not stringify non-strings in template literals (`no-unnecessary-type-assertion`, `restrict-template-expressions`).
+OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format). Do not restyle to match personal habits - match the surrounding file and let `oxfmt` decide layout. These rules run with `denyWarnings: true` / `maxWarnings: 0`, so any warning fails CI. Do not silence a rule, add a blanket ignore, or cast through `any` / `as unknown` to clear an error - fix the cause (see [guardrails.md](../core/guardrails.md)).
 
 ## Discipline
 
 - Keep route/tool handlers thin: validate at the boundary, delegate I/O to a client or service module, then map the response. Business logic does not belong inline in the handler.
 - Prefer native type inference (see [type-inference.md](../contracts/type-inference.md)) over hand-written shapes.
-
-## Before finishing
-
-Run `pnpm run ci` from the repo root: a whole-repo OXC pass (`lint:check` + `format:check`) followed by `turbo run check-types`, `pnpm types:check`, and `pnpm boundaries`. Lint and format deliberately do **not** go through Turborepo - never `cd` into a package and run `oxlint .`, it breaks the context-aware Tailwind rules (see the note in `root package.json (lint/format scripts)`). Pre-commit uses root `oxfmt` on staged files and `pnpm lint:fix` for incremental fixes.
+- Lint and format run as a whole-repo OXC pass from the root - never `cd` into a package and run `oxlint .` (breaks context-aware Tailwind rules). See **Scoping** in root `AGENTS.md`.

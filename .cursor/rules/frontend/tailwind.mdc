@@ -70,7 +70,3 @@ Styling for the React SPAs. Tailwind **v4**, CSS-first (no `tailwind.config.js`)
 - Class **ordering** is not linted - `oxfmt` owns it natively via `sortTailwindcss.stylesheet` (same algorithm as `prettier-plugin-tailwindcss`, and unlike the lint plugin it resolves the path relative to `.oxfmtrc.json`, so it is CWD-independent). `enforce-consistent-class-order` stays **off** so the two cannot disagree.
 - `no-unknown-classes` rejects any class not registered in the theme (typos, hallucinated utilities, stray hand-written CSS class names) - the strongest guard for AI-authored markup. Consequence: **every `className` token must be a Tailwind utility or a `@theme` token**; introduce a semantic token or an `@utility` instead of a raw CSS class.
 - `enforce-consistent-line-wrapping` stays **off** - `oxfmt` owns JS/JSX layout; the two would fight over `className` wrapping.
-
-## Before finishing
-
-Run `pnpm run ci`, then `pnpm --filter front-app run build` to confirm CSS compiles and chunks resolve. Keep every Oxc rule green (see [code-style.mdc](../quality/code-style.mdc)); never silence a rule to pass (see [guardrails.mdc](../core/guardrails.mdc)).

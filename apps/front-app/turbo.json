@@ -19,11 +19,11 @@
       "interruptible": true
     },
     "deploy": {
-      "description": "Bootstrap / emergency: uploads ./dist as Cloudflare assets at 100%. Not the recurring Stage 1 main path.",
+      "description": "wrangler deploy of ./dist as Cloudflare assets at 100%.",
       "dependsOn": ["$TURBO_EXTENDS$", "build"]
     },
     "upload": {
-      "description": "Stage 1 versions upload of ./dist; requires this app's production Vite build first.",
+      "description": "wrangler versions upload of ./dist; requires this app's production Vite build first.",
       "dependsOn": ["$TURBO_EXTENDS$", "build"]
     }
   }

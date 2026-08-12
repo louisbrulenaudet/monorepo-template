@@ -46,7 +46,3 @@ Styling has its own path-scoped rule: [tailwind.md](tailwind.md) - engine/entry,
 - The SPA talks to backends over **HTTP only** (never Worker service bindings); keep credentials and privileged calls server-side. See [guardrails.md](../core/guardrails.md).
 - Validate every response at the boundary with the **shared** schema (`@repo/dtos-common`) before mapping into a local view model - one source of truth for wire shapes, never redefined client-side. See [contracts.md](../contracts/contracts.md) / [type-inference.md](../contracts/type-inference.md).
 - `routeTree.gen.ts` is a generated artifact: never hand-edit it - the router plugin regenerates it on dev/build. In this repo it is **committed** (and excluded from lint/format via `.oxlintrc.json` / `.oxfmtrc.json`); other Vite build output under `dist/**` stays out of version control (see [guardrails.md](../core/guardrails.md)).
-
-## Before finishing
-
-Run `pnpm run ci`, then build the app (`pnpm --filter front-app run build`, or `pnpm build` from the repo root) to confirm the bundle compiles and chunks resolve. Keep every Oxc rule green (see [code-style.md](../quality/code-style.md)).

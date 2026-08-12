@@ -1,0 +1,31 @@
+name: Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# Deny by default; job re-grants the minimum scopes the labeler needs.
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  labeler:
+    name: Label pull request
+    # Pinned, not `ubuntu-latest`; Dependabot does not manage runner labels.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+      # Required so missing labels can be auto-created.
+      issues: write
+    steps:
+      # No checkout: labeler loads `.github/labeler.yml` via the GitHub API.
+      # Every `uses:` is pinned to a full-length commit SHA with the tag in a trailing comment.
+      - name: Apply path and branch labels
+        uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+        with:
+          sync-labels: true

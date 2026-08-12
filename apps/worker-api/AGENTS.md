@@ -13,6 +13,7 @@ apps/worker-api/
 ├── src/
 │   ├── routes/<feature>.ts   # One route module per feature
 │   ├── enums/                # Worker-local value sets (`as const`)
+│   ├── utils/                # opaque-request-id
 │   └── index.ts              # Middleware stack + route mounts
 ├── tests/                    # Vitest suites (Cloudflare pool / workerd)
 │   ├── env.d.ts              # ProvidedEnv extends Env
@@ -68,9 +69,9 @@ Workers Cache: [`.cursor/rules/backend/workers-cache.mdc`](../../.cursor/rules/b
 | `pnpm -w turbo run test:watch --filter=worker-api` | Vitest watch, humans only |
 | `pnpm -w types` | Regenerate `worker-configuration.d.ts` (commit the result) |
 | `pnpm -w types:check` | Verify committed Worker types |
-| `pnpm -w turbo run upload --filter=worker-api` | Stage 1: versions upload (no traffic change) |
-| `pnpm -w turbo run promote --filter=worker-api` | Human-only promote to 100% |
-| `pnpm -w turbo run deploy --filter=worker-api` | Bootstrap / emergency upload+100% |
+| `pnpm -w turbo run upload --filter=worker-api` | `wrangler versions upload` (no traffic) |
+| `pnpm -w turbo run promote --filter=worker-api` | Interactive `wrangler versions deploy` |
+| `pnpm -w turbo run deploy --filter=worker-api` | `wrangler deploy` (upload + 100%) |
 | `pnpm -w run ci` | Full repository PR gate |
 
 ## Contribution

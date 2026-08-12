@@ -1,4 +1,5 @@
-import { HttpMethod } from "@repo/enums-common";
+import { CorsAllowedHeader, HttpMethod } from "@repo/enums-common";
+import { getOrCreateOpaqueRequestId } from "#/utils/opaque-request-id";
 
 type SchemaLike<T> = {
   parse: (value: unknown) => T;
@@ -30,6 +31,14 @@ function resolveSignal(
   return parent ? AbortSignal.any([parent, timeoutSignal]) : timeoutSignal;
 }
 
+function withOpaqueRequestId(headers?: HeadersInit): Headers {
+  const merged = new Headers(headers);
+  if (!merged.has(CorsAllowedHeader.X_REQUEST_ID)) {
+    merged.set(CorsAllowedHeader.X_REQUEST_ID, getOrCreateOpaqueRequestId());
+  }
+  return merged;
+}
+
 async function fetchJsonRaw(
   url: string,
   options?: FetchJsonOptions,
@@ -41,10 +50,8 @@ async function fetchJsonRaw(
     method,
     body: options?.body ?? null,
     signal: signal ?? null,
+    headers: withOpaqueRequestId(options?.headers),
   };
-  if (options?.headers !== undefined) {
-    init.headers = options.headers;
-  }
 
   const res = await fetch(url, init);
 

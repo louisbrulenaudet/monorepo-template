@@ -1,0 +1,72 @@
+# Path / branch labels for actions/labeler (v5+ schema).
+# Docs: https://github.com/actions/labeler
+
+# Skip file-based labeling on huge PRs; branch labels still apply.
+max-files-changed: 200
+# Cap new path labels per run so tree-wide diffs do not spam.
+changed-files-labels-limit: 8
+
+front-app:
+  - changed-files:
+      - any-glob-to-any-file: apps/front-app/**
+
+worker-api:
+  - changed-files:
+      - any-glob-to-any-file: apps/worker-api/**
+
+dtos-common:
+  - changed-files:
+      - any-glob-to-any-file: packages/dtos-common/**
+
+enums-common:
+  - changed-files:
+      - any-glob-to-any-file: packages/enums-common/**
+
+typescript-config:
+  - changed-files:
+      - any-glob-to-any-file: packages/typescript-config/**
+
+vitest-config:
+  - changed-files:
+      - any-glob-to-any-file: packages/vitest-config/**
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/AGENTS.md"
+          - "**/CLAUDE.md"
+          - README.md
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: .github/**
+
+hooks:
+  - changed-files:
+      - any-glob-to-any-file: hooks/**
+
+agent:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .agents/**
+          - .claude/**
+          - .cursor/**
+          - skills-lock.json
+
+root:
+  - changed-files:
+      - any-glob-to-any-file:
+          - package.json
+          - pnpm-lock.yaml
+          - pnpm-workspace.yaml
+          - turbo.json
+          - .oxlintrc.json
+          - .oxfmtrc.json
+          - .nvmrc
+          - .gitignore
+
+dependencies:
+  - head-branch: "^dependabot/"
+
+cursor:
+  - head-branch: "^cursor/"

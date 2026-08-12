@@ -24,4 +24,29 @@ describe("GET /api/v1/health", () => {
     const body: unknown = await response.json();
     expect(HealthResponseSchema.parse(body)).toEqual({ status: "ok" });
   });
+
+  it("echoes a valid client X-Request-Id for SPA correlation", async () => {
+    const clientId = "550e8400-e29b-41d4-a716-446655440000";
+    const response = await exports.default.fetch(
+      new Request("http://example.com/api/v1/health", {
+        headers: { "X-Request-Id": clientId },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-Request-Id")).toBe(clientId);
+  });
+
+  it("rejects non-opaque client request ids", async () => {
+    const response = await exports.default.fetch(
+      new Request("http://example.com/api/v1/health", {
+        headers: { "X-Request-Id": "matter-abc" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const echoed = response.headers.get("X-Request-Id");
+    expect(echoed).toBeTruthy();
+    expect(echoed).not.toBe("matter-abc");
+  });
 });

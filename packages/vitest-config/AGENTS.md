@@ -36,15 +36,18 @@ This package has no `check-types` script (same model as `@repo/typescript-config
 ```ts
 // apps/front-app/vitest.config.ts
 import { defineNodeConfig } from "@repo/vitest-config";
-export default defineNodeConfig();
+export default defineNodeConfig({
+  root: import.meta.dirname, // required for Vitest VS Code explorer
+});
 ```
 
 ```ts
 // apps/worker-api/vitest.config.mts
 import { defineWorkersConfig } from "@repo/vitest-config/workers";
-export default defineWorkersConfig({
-  wrangler: { configPath: "./wrangler.jsonc" },
-});
+export default defineWorkersConfig(
+  { wrangler: { configPath: "./wrangler.jsonc" } },
+  { root: import.meta.dirname }, // required for Vitest VS Code explorer
+);
 ```
 
 App scripts: `test` = `vitest run` (CI/agents/Turbo cache); `test:watch` = `vitest` (Turbo task is cache false + persistent true; humans only).

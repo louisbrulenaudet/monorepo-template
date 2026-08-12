@@ -7,8 +7,6 @@
   "send_metrics": false,
   "upload_source_maps": true,
   "minify": true,
-  // Explicit deny: omitting preview_urls defaults to workers_dev (often enabled).
-  // Public production-bound previews are not accepted for Stage 1 smoke.
   "preview_urls": false,
   "version_metadata": {
     "binding": "CF_VERSION_METADATA",
