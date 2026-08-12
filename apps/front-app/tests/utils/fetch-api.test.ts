@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CorsAllowedHeader } from "@repo/enums-common";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchJsonWithSchema } from "#/utils/fetch-api";
 
 const SampleSchema = {
@@ -63,14 +63,10 @@ describe("fetchJsonWithSchema", () => {
   });
 
   it("sends an opaque X-Request-Id on every call", async () => {
-    const fetchMock = vi.fn(
-      (
-        _input: RequestInfo | URL,
-        _init?: RequestInit,
-      ): Promise<Response> =>
-        Promise.resolve(
-          Response.json({ ok: true }, { status: 200, statusText: "OK" }),
-        ),
+    const fetchMock = vi.fn<typeof fetch>(() =>
+      Promise.resolve(
+        Response.json({ ok: true }, { status: 200, statusText: "OK" }),
+      ),
     );
     vi.stubGlobal("fetch", fetchMock);
 

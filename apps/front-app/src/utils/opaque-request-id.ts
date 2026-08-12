@@ -13,7 +13,10 @@ export function isOpaqueRequestId(value: string): boolean {
  * worker-api calls so SPA and gateway logs correlate without privileged data.
  */
 export function getOrCreateOpaqueRequestId(): string {
-  if (typeof crypto === "undefined" || typeof crypto.randomUUID !== "function") {
+  if (
+    typeof crypto === "undefined" ||
+    typeof crypto.randomUUID !== "function"
+  ) {
     throw new Error("crypto.randomUUID is required for opaque request ids");
   }
 
