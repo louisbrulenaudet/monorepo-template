@@ -14,7 +14,7 @@
       "computedHash": "220e5e1b12bbaeec49ec362b6e2262d77632d0536e9758bba9acbbc323fef990"
     },
     "pnpm": {
-      "source": "project",
+      "source": "./project",
       "sourceType": "local",
       "skillPath": "skills/pnpm/SKILL.md"
     },
@@ -46,7 +46,7 @@
       "source": "vercel/turborepo",
       "sourceType": "github",
       "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "c34cdc86e98c1063cf802b09edbafa40d0236d5e57a48fe16d871c75cb87e4fd"
+      "computedHash": "a4a6a23c4212cef33c00cc5a5413d95c52e602eb1f8ca9e2d2a69cdcb41f4c40"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
