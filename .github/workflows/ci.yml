@@ -9,7 +9,8 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Deny by default; every job re-grants exactly `contents: read`.
+# Deny by default; the CI job re-grants `contents: read` and `actions: write`
+# (artifacts on failure only).
 permissions: {}
 
 concurrency:
@@ -31,6 +32,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+      actions: write
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -88,3 +90,14 @@ jobs:
         env:
           VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
         run: pnpm turbo run deploy --filter=worker-api --filter=front-app -- --dry-run
+
+      - name: Upload build artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ci-failure-build-${{ github.run_id }}
+          path: |
+            apps/*/dist/**
+            .turbo/**
+          if-no-files-found: ignore
+          retention-days: 7

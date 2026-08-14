@@ -1,35 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   getOrCreateOpaqueRequestId,
   isOpaqueRequestId,
 } from "#/utils/opaque-request-id";
+import { installSessionStorageHooks } from "../helpers/session-storage-mock";
 
-const memory = new Map<string, string>();
-
-beforeEach(() => {
-  memory.clear();
-  vi.stubGlobal("sessionStorage", {
-    getItem: (key: string) => memory.get(key) ?? null,
-    setItem: (key: string, value: string) => {
-      memory.set(key, value);
-    },
-    removeItem: (key: string) => {
-      memory.delete(key);
-    },
-    clear: () => {
-      memory.clear();
-    },
-    key: () => null,
-    get length() {
-      return memory.size;
-    },
-  } satisfies Storage);
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+installSessionStorageHooks();
 
 describe("isOpaqueRequestId", () => {
   it("accepts UUID v4", () => {
@@ -46,6 +22,30 @@ describe("isOpaqueRequestId", () => {
 
 describe("getOrCreateOpaqueRequestId", () => {
   it("reuses a stored opaque id for the session", () => {
+    const first = getOrCreateOpaqueRequestId();
+    const second = getOrCreateOpaqueRequestId();
+    expect(first).toBe(second);
+    expect(isOpaqueRequestId(first)).toBe(true);
+  });
+
+  it("keeps a stable id when sessionStorage is blocked", () => {
+    vi.stubGlobal("sessionStorage", {
+      getItem: () => {
+        throw new Error("blocked");
+      },
+      setItem: () => {
+        throw new Error("blocked");
+      },
+      removeItem: () => {
+        throw new Error("blocked");
+      },
+      clear: () => {
+        throw new Error("blocked");
+      },
+      key: () => null,
+      length: 0,
+    } satisfies Storage);
+
     const first = getOrCreateOpaqueRequestId();
     const second = getOrCreateOpaqueRequestId();
     expect(first).toBe(second);

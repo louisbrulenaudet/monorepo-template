@@ -21,10 +21,10 @@ General test authoring: [vitest.mdc](../tests/vitest.mdc). Workers: [hono-worker
 
 | Import | For |
 |--------|-----|
-| @repo/vitest-config | defineNodeConfig, sharedTestDefaults for front-* |
-| @repo/vitest-config/workers | defineWorkersConfig for worker-*, queue-*, webhook-*, mcp-* |
+| @repo/vitest-config | defineNodeConfig, sharedTestDefaults, resolvePackageRoot for front-* |
+| @repo/vitest-config/workers | defineWorkersConfig, resolvePackageRoot for worker-*, queue-*, webhook-*, mcp-* |
 
-Two entry files on purpose: src/index.ts and src/workers.ts. Node apps must never resolve @cloudflare/vitest-pool-workers. Shared mock-hygiene defaults are intentionally duplicated across those files. Do not reintroduce a relative import between them.
+Two entry files on purpose: src/index.ts and src/workers.ts. Node apps must never resolve @cloudflare/vitest-pool-workers. Shared mock-hygiene defaults are intentionally duplicated across those files. Do not reintroduce a relative import between them. `resolvePackageRoot` lives in package-root.js and is re-exported from both.
 
 ## Editing rules
 
@@ -41,12 +41,16 @@ Changing this package is a monorepo-wide breaking change.
 
 ## App wiring
 
-Front apps import defineNodeConfig from @repo/vitest-config.
-Worker apps import defineWorkersConfig from @repo/vitest-config/workers with wrangler.configPath.
+Front apps import defineNodeConfig and resolvePackageRoot from @repo/vitest-config.
+Worker apps import defineWorkersConfig and resolvePackageRoot from @repo/vitest-config/workers with an absolute wrangler.configPath via path.join(root, "wrangler.jsonc").
+
+Every app must set root and test.dir via resolvePackageRoot(import.meta.dirname) so the Vitest VS Code explorer realpath cache matches (avoids Fatal Error parent of root folder).
 
 Scripts: test uses vitest run for CI, agents, and Turbo cache. test:watch uses vitest. The Turbo test:watch task is cache false and persistent true.
 
 ## Anti-patterns
+
+- Replacing Workers Vitest pool suites with Wrangler `createTestHarness` for single-Worker unit/route tests (harness is multi-Worker integration only; see package AGENTS.md)
 
 - Root vitest.config with test.projects or deprecated workspace as the primary CI path
 - Importing @repo/vitest-config/workers from front-*

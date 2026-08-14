@@ -10,12 +10,12 @@ export const HttpMethod = {
 export type HttpMethod = (typeof HttpMethod)[keyof typeof HttpMethod];
 
 export const CORS_ALLOWED_HTTP_METHODS: readonly HttpMethod[] = [
-  "GET",
-  "POST",
-  "PUT",
-  "PATCH",
-  "DELETE",
-  "OPTIONS",
+  HttpMethod.GET,
+  HttpMethod.POST,
+  HttpMethod.PUT,
+  HttpMethod.PATCH,
+  HttpMethod.DELETE,
+  HttpMethod.OPTIONS,
 ];
 
 const HTTP_METHOD_LOOKUP = new Map<string, HttpMethod>(

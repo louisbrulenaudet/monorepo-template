@@ -1,12 +1,9 @@
 import type { HTMLAttributes } from "react";
+import { cx } from "#/utils/cx";
 
 export type CardProps = HTMLAttributes<HTMLDivElement> & {
   variant?: "default" | "subtle";
 };
-
-function cx(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(" ");
-}
 
 export function Card({ className, variant = "default", ...props }: CardProps) {
   const variants: Record<NonNullable<CardProps["variant"]>, string> = {

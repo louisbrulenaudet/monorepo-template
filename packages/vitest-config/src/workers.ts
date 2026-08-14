@@ -3,6 +3,8 @@ import type { InlineConfig } from "vitest/node";
 import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
 import { defineConfig, mergeConfig } from "vitest/config";
 
+export { resolvePackageRoot } from "./package-root.js";
+
 /**
  * Shared defaults duplicated here so `@repo/vitest-config/workers` does not
  * import the Node entry (and Node apps never resolve the Cloudflare pool).

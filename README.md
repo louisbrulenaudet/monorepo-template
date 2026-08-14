@@ -260,7 +260,7 @@ There is no generator CLI. Copy the closest sibling under `apps/` and wire it in
    pnpm types
    ```
 
-Copy wrangler patterns (`compatibility_flags`, `observability`, `env.staging` / `env.production`) from the existing app - see [`.cursor/rules/backend/workers-config.mdc`](.cursor/rules/backend/workers-config.mdc).
+Copy wrangler patterns (`compatibility_date`, `observability`, `env.staging` / `env.production`) from the existing app - see [`.cursor/rules/backend/workers-config.mdc`](.cursor/rules/backend/workers-config.mdc).
 
 ## 2. Develop a Specific Worker
 
@@ -327,8 +327,7 @@ Each worker uses environment-specific configuration. Frontends use Vite env file
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "my-worker",
-  "compatibility_date": "2026-07-08",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2026-08-11",
   "vars": {
     "ENVIRONMENT": "dev"
   },

@@ -12,9 +12,10 @@ Governs Vitest for Hono apps on Cloudflare Workers via `@cloudflare/vitest-pool-
 
 ## Repo invariants
 
-- Config: `defineWorkersConfig` from `@repo/vitest-config/workers` + `wrangler: { configPath: "./wrangler.jsonc" }`. Do **not** use removed Cloudflare helpers `defineWorkersConfig` / `defineWorkersProject` from `@cloudflare/vitest-pool-workers/config`, or `test.poolOptions.workers` nesting.
+- Config: `defineWorkersConfig` from `@repo/vitest-config/workers` with absolute `wrangler.configPath` via `path.join(resolvePackageRoot(import.meta.dirname), "wrangler.jsonc")` and `root` / `test.dir` from the same realpath. Do **not** use removed Cloudflare helpers `defineWorkersConfig` / `defineWorkersProject` from `@cloudflare/vitest-pool-workers/config`, or `test.poolOptions.workers` nesting.
 - Prefer `import { env, exports } from "cloudflare:workers"`. `SELF` / `env` from `cloudflare:test` are deprecated; `fetchMock` is removed - mock `globalThis.fetch` or MSW. Integration default: `exports.default.fetch(...)`. Hono unit: `app.request(path, init?, env?)`.
 - Storage isolation is **per test file** by default. Within a file, call `await reset()` when needed. Never `isolate: false` / `--no-isolate` casually (shares binding storage). Never set Node pool on Workers configs.
-- `compatibility_date` / `compatibility_flags` come from `wrangler.jsonc` (`nodejs_compat` required). Prefer miniflare/wrangler vars for CI-stable secrets - do not write tests that only pass with a local `.dev.vars`.
+- `compatibility_date` comes from `wrangler.jsonc` (use 2026-08-04 or later so Node.js compatibility is default; do not require a redundant `nodejs_compat` flag). Prefer miniflare/wrangler vars for CI-stable secrets - do not write tests that only pass with a local `.dev.vars`.
 - Types: `tests/env.d.ts` with `ProvidedEnv extends Env`; tests tsconfig includes `@cloudflare/vitest-pool-workers/types` and committed `worker-configuration.d.ts`.
 - Assert status/body/headers/binding state - not `toBeDefined()`-only. Agents: `pnpm turbo run test --filter=<app>` non-watch.
+- Keep this pool for unit/route tests. Add Wrangler `createTestHarness` only for multi-Worker production-build integration when a service binding exists - do not replace these suites. See `packages/vitest-config/AGENTS.md`.

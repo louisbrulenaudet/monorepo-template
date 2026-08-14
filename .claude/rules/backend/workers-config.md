@@ -14,7 +14,7 @@ paths:
 
 ## Required config
 
-Every app `wrangler.jsonc` should include: `$schema` (`../../node_modules/wrangler/config-schema.json` from `apps/*`), `compatibility_date`, `compatibility_flags` (`nodejs_compat`), `send_metrics: false`, root `observability`, and `env.staging` + `env.production` with traces enabled. Copy patterns from an existing app (`worker-api`, `front-app`) when scaffolding.
+Every app `wrangler.jsonc` should include: `$schema` (`../../node_modules/wrangler/config-schema.json` from `apps/*`), a current `compatibility_date` (2026-08-04 or later so Node.js compatibility is on by default; do not add redundant `nodejs_compat` / `nodejs_compat_v2` flags), `send_metrics: false`, root `observability`, and `env.staging` + `env.production` with traces enabled. Copy patterns from an existing app (`worker-api`, `front-app`) when scaffolding.
 
 ## Secrets vs vars
 

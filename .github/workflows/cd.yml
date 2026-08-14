@@ -145,3 +145,9 @@ jobs:
             echo "::error::front-app deploy failed after worker-api may already be live at 100%. Rollback with: pnpm --filter=worker-api exec wrangler rollback --env production"
             exit 1
           fi
+
+      - name: Smoke production health
+        if: steps.tip.outputs.should_deploy == 'true'
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 30 "${VITE_API_BASE_URL}/api/v1/health"

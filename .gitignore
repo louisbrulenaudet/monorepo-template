@@ -182,3 +182,6 @@ id_ed25519
 id_ecdsa
 *.p12
 *.pfx
+
+# Wrangler local startup profiles (wrangler check startup)
+*.cpuprofile

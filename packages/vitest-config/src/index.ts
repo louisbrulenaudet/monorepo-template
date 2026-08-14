@@ -2,6 +2,8 @@ import type { ViteUserConfig } from "vitest/config";
 import type { InlineConfig } from "vitest/node";
 import { defineConfig, mergeConfig } from "vitest/config";
 
+export { resolvePackageRoot } from "./package-root.js";
+
 /**
  * Shared Vitest `test` defaults for every app runtime.
  *

@@ -1,4 +1,5 @@
 import { createRouter, type ErrorComponentProps } from "@tanstack/react-router";
+import { RouteErrorFallback } from "#/components/feedback/RouteErrorFallback";
 import { queryClient } from "#/config/query-client";
 import { routeTree } from "./routeTree.gen";
 
@@ -14,15 +15,7 @@ function RouterPending() {
 }
 
 function RouterError({ error }: ErrorComponentProps) {
-  return (
-    <div
-      role="alert"
-      className="flex min-h-dvh flex-col items-center justify-center gap-2 text-foreground"
-    >
-      <p className="font-medium">Something went wrong.</p>
-      <p className="text-sm text-muted-foreground">{error.message}</p>
-    </div>
-  );
+  return <RouteErrorFallback error={error} />;
 }
 
 export const router = createRouter({

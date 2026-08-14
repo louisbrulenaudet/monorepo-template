@@ -9,12 +9,12 @@ Public HTTP API gateway for the monorepo. `front-app` and external clients call 
 
 ## Current configuration (checked-in starter)
 
-The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev port **8700**, and a minimal set of `vars` (e.g. `ENVIRONMENT`).
+The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev port **8700**, and a minimal set of `vars` (e.g. `ENVIRONMENT`, local `CORS_ORIGINS`).
 
 What you can run today:
 - Health endpoint at `GET /api/v1/health`
 - Every response carries an `X-Request-Id` header, and error responses return `{ error, requestId }`. Per-request access logging comes from native Workers observability; failures log structured JSON with the request id for correlation.
-- CORS allows any origin by default (and exposes `X-Request-Id`). To restrict browsers to specific origins, set the `CORS_ORIGINS` var (comma-separated list, e.g. `http://localhost:5174,https://app.example.com`) in `wrangler.jsonc` or `.dev.vars`.
+- Local/dev `CORS_ORIGINS` is `http://localhost:5174` (and exposes `X-Request-Id`). Staging/production set it to `""` for permissive `*` until you replace with a comma-separated allowlist in `wrangler.jsonc` `vars` (e.g. `https://app.example.com`).
 - A 15 s request timeout returns `504`, and a `Server-Timing` header is added in non-production for local profiling.
 
 What you can add as you grow the repo:
@@ -29,7 +29,7 @@ What you can add as you grow the repo:
 
 - **Language:** TypeScript (strict mode, ESNext)
 - **Framework:** Hono (for Cloudflare Workers)
-- **Validation:** Zod schemas from `@repo/dtos-common/api`
+- **Validation:** Zod Mini schemas from `@repo/dtos-common/api`
 - **Middleware:** request id, secure headers, CORS, CSRF, timeout, body limits, timing + pretty JSON (dev)
 - **Runtime:** Cloudflare Workers
 - **Tests:** Vitest 4 + `@cloudflare/vitest-pool-workers` via `@repo/vitest-config/workers`
@@ -143,16 +143,14 @@ pnpm -w turbo run deploy --filter=worker-api
 
 ## Request Validation with Zod
 
-All HTTP DTOs live in `@repo/dtos-common/api` so the frontend and gateway stay aligned:
+All HTTP DTOs live in `@repo/dtos-common/api` (Zod Mini) so the frontend and gateway stay aligned. Validate inputs with `zValidator` at the route boundary. For constant probe bodies such as health, assert the shared schema in Vitest instead of re-parsing on every request:
 
 ```typescript
 import { HealthResponseSchema } from "@repo/dtos-common/api";
 
-health.get("/", (c) => {
-  const response = { status: "ok" };
-  HealthResponseSchema.parse(response);
-  return c.json(response);
-});
+// Contract check lives in tests/routes/health.test.ts
+const body: unknown = await response.json();
+expect(HealthResponseSchema.parse(body)).toEqual({ status: "ok" });
 ```
 
 Worker-local constrained strings belong in `src/enums/`. Promote to `@repo/enums-common` when a second app needs them.

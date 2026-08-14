@@ -2,8 +2,8 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "worker-api",
   "main": "src/index.ts",
-  "compatibility_date": "2026-07-08",
-  "compatibility_flags": ["nodejs_compat"],
+  // >= 2026-08-04 enables nodejs_compat by default; do not add the flag.
+  "compatibility_date": "2026-08-11",
   "send_metrics": false,
   "upload_source_maps": true,
   "minify": true,
@@ -39,6 +39,8 @@
   // },
   "vars": {
     "ENVIRONMENT": "dev",
+    // Comma-separated browser origins. Empty/unset = permissive (*).
+    "CORS_ORIGINS": "http://localhost:5174",
   },
   "env": {
     "staging": {
@@ -48,6 +50,8 @@
       },
       "vars": {
         "ENVIRONMENT": "staging",
+        // Empty = permissive CORS until a real allowlist is set.
+        "CORS_ORIGINS": "",
       },
       "observability": {
         "enabled": true,
@@ -64,6 +68,8 @@
       },
       "vars": {
         "ENVIRONMENT": "production",
+        // Empty = permissive CORS until a real allowlist is set.
+        "CORS_ORIGINS": "",
       },
       "observability": {
         "enabled": true,

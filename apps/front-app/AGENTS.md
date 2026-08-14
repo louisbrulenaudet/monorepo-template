@@ -4,6 +4,8 @@
 
 `front-app` is the **React SPA**: Vite + React 19 + Tailwind CSS v4 + TanStack Router/Query, deployed as static assets on Cloudflare Workers. Talks to **`worker-api` over HTTP only** - no service bindings.
 
+Keep `@cloudflare/vite-plugin` for assets + SPA routing only. Do **not** use Vite `auxiliaryWorkers` to co-locate `worker-api`, and do not put API routes in this assets Worker (Cloudflare SPA+API-in-one-Worker tutorial is an anti-pattern here). `worker-api` stays on Wrangler.
+
 - **Dev**: `http://localhost:5174`
 - **API**: `worker-api` at `http://localhost:8700` via `src/config/env.ts` - never hardcode the origin elsewhere
 
