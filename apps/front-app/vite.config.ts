@@ -59,6 +59,8 @@ function assertProductionOriginEnv(mode: string, command: string): void {
 
 function cspHeaders(apiBaseUrl: string): string {
   const apiOrigin = new URL(apiBaseUrl).origin;
+  // style-src unsafe-inline is deliberate for Vite/Tailwind injected styles;
+  // keep script-src strict (no unsafe-inline / unsafe-eval).
   const csp = [
     "default-src 'self'",
     "base-uri 'self'",
@@ -80,6 +82,7 @@ function cspHeaders(apiBaseUrl: string): string {
     `  Content-Security-Policy: ${csp}`,
     "  Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=()",
     "  Referrer-Policy: strict-origin-when-cross-origin",
+    "  Strict-Transport-Security: max-age=31536000; includeSubDomains",
     "  X-Content-Type-Options: nosniff",
     "  X-Frame-Options: DENY",
     "",
@@ -95,10 +98,18 @@ function generatedHeadersPlugin(mode: string, command: string) {
         return;
       }
 
+      const isStaticAnalysis = process.argv.some((arg) => arg.includes("knip"));
+      if (isStaticAnalysis) {
+        return;
+      }
+
       const env = loadEnv(mode, appDir, "VITE_");
       const apiBaseUrl = env["VITE_API_BASE_URL"];
       if (!apiBaseUrl) {
-        return;
+        throw new Error(
+          "Missing VITE_API_BASE_URL: cannot generate dist/_headers. " +
+            "Set it in apps/front-app/.env.production or the deploy environment.",
+        );
       }
 
       writeFileSync(

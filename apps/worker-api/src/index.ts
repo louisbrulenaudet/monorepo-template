@@ -1,4 +1,5 @@
 import type { RequestIdVariables } from "hono/request-id";
+import { AppEnvironment } from "@repo/enums-common";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
@@ -46,11 +47,19 @@ app.use(
   }),
 );
 
+// CORP same-origin is fine for CORS-mode fetch from front-app; do not disable
+// it to "fix" cross-origin SPA reads — Access-Control-* governs those.
 app.use(
   secureHeaders({
     contentSecurityPolicy: {
       defaultSrc: ["'none'"],
       frameAncestors: ["'none'"],
+    },
+    permissionsPolicy: {
+      camera: [],
+      geolocation: [],
+      microphone: [],
+      payment: [],
     },
   }),
 );
@@ -63,7 +72,7 @@ const api = new Hono<AppEnv>();
 // Server-Timing header for local profiling. Disabled in production: Workers
 // timer metrics are inaccurate, and internal timings should not leak to clients.
 api.use(async (c, next) => {
-  if (c.env.ENVIRONMENT === "production") {
+  if (c.env.ENVIRONMENT === AppEnvironment.PRODUCTION) {
     return await next();
   }
   return timing()(c, next);
@@ -81,7 +90,7 @@ api.use(
 );
 
 api.use(async (c, next) => {
-  if (c.env.ENVIRONMENT !== "production") {
+  if (c.env.ENVIRONMENT !== AppEnvironment.PRODUCTION) {
     return prettyJSON()(c, next);
   }
   return await next();

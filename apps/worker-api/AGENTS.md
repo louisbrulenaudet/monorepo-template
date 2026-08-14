@@ -65,6 +65,13 @@ When the first `worker-*` binding lands, add a `createTestHarness` Node suite fo
 
 Workers Cache: `.cursor/rules/backend/workers-cache.mdc` / `.claude/rules/backend/workers-cache.md`.
 
+## Security middleware
+
+- **CORS** - allowlist from `c.env.CORS_ORIGINS` (comma-separated). Empty is permissive (`*`) when `ENVIRONMENT` is `AppEnvironment.DEV` only. `STAGING` / `PRODUCTION` (`@repo/enums-common`) with an empty list return **503** on `/api/*` (fail closed).
+- **CSRF / origin gate** - all unsafe methods (including `application/json`), not only form content-types. Allowed when Origin is on the allowlist **or** `Sec-Fetch-Site` is `same-origin` / `same-site`. Skips `OPTIONS` so CORS preflight works. Browser JSON mutations rely on this gate plus CORS; do not reintroduce permissive CSRF in strict envs.
+- **Errors** - `onError` returns `HTTPException.message` to clients. Keep those messages generic (no privileged content, no upstream provider text). Unexpected errors stay `"Internal server error"` + `requestId`.
+- **Rate limiting** - add a Workers [Rate Limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) binding and/or zone WAF rules before shipping auth or other abuse-prone public writes. Health-only traffic does not need it yet.
+
 ## Commands
 
 | Command | Description |

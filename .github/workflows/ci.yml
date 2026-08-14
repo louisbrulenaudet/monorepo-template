@@ -62,6 +62,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Dependency audit
+        run: pnpm run audit
+
       - parallel:
           - name: Boundaries
             run: pnpm run boundaries

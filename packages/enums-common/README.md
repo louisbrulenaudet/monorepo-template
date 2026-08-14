@@ -3,7 +3,7 @@
 [![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-Shared **constrained string values** reused across apps and packages (HTTP methods, CORS headers, etc.). Implemented as `as const` objects - not TypeScript `enum`.
+Shared **constrained string values** reused across apps and packages (HTTP methods, CORS headers, app environments, etc.). Implemented as `as const` objects - not TypeScript `enum`.
 
 ## Purpose
 

@@ -14,16 +14,17 @@ The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev por
 What you can run today:
 - Health endpoint at `GET /api/v1/health`
 - Every response carries an `X-Request-Id` header, and error responses return `{ error, requestId }`. Per-request access logging comes from native Workers observability; failures log structured JSON with the request id for correlation.
-- Local/dev `CORS_ORIGINS` is `http://localhost:5174` (and exposes `X-Request-Id`). Staging/production set it to `""` for permissive `*` until you replace with a comma-separated allowlist in `wrangler.jsonc` `vars` (e.g. `https://app.example.com`).
+- Local/dev `CORS_ORIGINS` is `http://localhost:5174` (and exposes `X-Request-Id`). Staging/production **require** a comma-separated allowlist in `wrangler.jsonc` `vars` (e.g. `https://app.example.com`); an empty value fails closed with `503` on `/api/*` (no permissive `*`).
 - A 15 s request timeout returns `504`, and a `Server-Timing` header is added in non-production for local profiling.
 
 What you can add as you grow the repo:
 - Auth / session middleware
 - **Service bindings** to `worker-*` (configure under `services` in `wrangler.jsonc`)
+- **Rate limiting** on abuse-prone routes (Cloudflare Workers Rate Limiting binding and/or WAF rules) before shipping public writes
 
 ## Purpose
 
-`worker-api` is the public-facing HTTP gateway: validate requests with shared Zod schemas, apply CORS and security middleware, and return typed JSON. The starter ships a health check with open CORS; authentication and RPC bindings are extension points, not current defaults.
+`worker-api` is the public-facing HTTP gateway: validate requests with shared Zod schemas, apply CORS and security middleware, and return typed JSON. The starter ships a health check with a local CORS allowlist; authentication and RPC bindings are extension points, not current defaults.
 
 ## Tech Stack
 
