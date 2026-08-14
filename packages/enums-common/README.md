@@ -3,7 +3,7 @@
 [![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-Shared **constrained string values** reused across apps and packages (HTTP methods, status codes, CORS headers, etc.). Implemented as `as const` objects - not TypeScript `enum`.
+Shared **constrained string values** reused across apps and packages (HTTP methods, CORS headers, etc.). Implemented as `as const` objects - not TypeScript `enum`.
 
 ## Purpose
 
@@ -66,18 +66,18 @@ allowHeaders: [...CORS_ALLOWED_HEADERS],
 Pass the `as const` object directly when the schema allows every member:
 
 ```typescript
-import { Status } from "@repo/enums-common";
+import { HttpMethod } from "@repo/enums-common";
 import { z } from "zod";
 
-export const JobStatusSchema = z.enum(Status);
+export const HttpMethodSchema = z.enum(HttpMethod);
 ```
 
 For a **subset**, use a `as const` tuple:
 
 ```typescript
-const statusValues = [Status.PENDING, Status.FAILED] as const;
+const writeMethods = [HttpMethod.POST, HttpMethod.PUT] as const;
 
-export const TerminalStatusSchema = z.enum(statusValues);
+export const WriteMethodSchema = z.enum(writeMethods);
 ```
 
 Avoid passing a plain `string[]` without `as const` - Zod will infer `string` instead of a literal union.
@@ -121,7 +121,6 @@ export type MyValueSet = (typeof MyValueSet)[keyof typeof MyValueSet];
 packages/enums-common/
 ├── src/
 │   ├── http-method.ts
-│   ├── status.ts
 │   ├── cors-allowed-header.ts
 │   └── index.ts
 └── package.json
@@ -133,5 +132,6 @@ packages/enums-common/
 2. **Use `as const` objects**, not `export enum`.
 3. **String values only** on HTTP/JSON boundaries - no numeric enums.
 4. **Explicit `readonly` arrays** for exported lists when `isolatedDeclarations`-style clarity helps (e.g. CORS allow-lists).
+5. **Named barrel re-exports** in `src/index.ts` - prefer explicit `export { … } from "./feature"` over `export *`.
 
 Agent-focused notes: [AGENTS.md](AGENTS.md).

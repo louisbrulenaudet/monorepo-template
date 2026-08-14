@@ -11,7 +11,7 @@ Values are **`as const` objects** with a derived type - not TypeScript `enum` (`
 ```
 packages/enums-common/src/
 ├── <feature>.ts    # One value set per file (kebab-case)
-└── index.ts        # Re-exports
+└── index.ts        # Named re-exports (prefer explicit export { … } over export *)
 ```
 
 ## When to Add Here vs. Locally
@@ -28,7 +28,7 @@ Changing a member's **serialized string value** is a breaking contract change - 
 ## Adding a value set
 
 1. Create `src/<feature>.ts` with `as const` object + derived type.
-2. Re-export from `src/index.ts`.
+2. Named-export from `src/index.ts` (value + type).
 3. Import in consumers in the same PR.
 4. `pnpm check-types` from root.
 

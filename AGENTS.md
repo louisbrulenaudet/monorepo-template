@@ -88,9 +88,21 @@ Root map for cross-cutting placement. App-local detail: `apps/*/AGENTS.md` and `
 | DB schema / migrations | `apps/<owner>/src/db/` (one owner; never `packages/db-*`) |
 | Frontend feature | `apps/front-app/src/{pages,routes,services,hooks,components}/` |
 | Bindings / secrets | `apps/<worker>/wrangler.jsonc`; `.dev.vars` from `.dev.vars.example` |
-| Tests | `apps/<app>/tests/` + `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` |
+| Tests (unit) | `apps/<app>/tests/` + `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` (Cloudflare Vitest pool) |
+| Tests (multi-Worker integration) | Wrangler `createTestHarness()` from a Node Vitest suite - only after a second Worker + service binding exists; see [`packages/vitest-config/AGENTS.md`](packages/vitest-config/AGENTS.md) |
 
 Queue-only / dual-handler workers: `handlers/request.ts`, `handlers/message.ts`, shared `services/`, minimal `index.ts`.
+
+### Worker testing split (Cloudflare)
+
+Align with [Cloudflare Workers testing](https://developers.cloudflare.com/workers/testing/):
+
+| Layer | Tool | When |
+|-------|------|------|
+| **Unit** (handlers, helpers, single-Worker routes) | `@cloudflare/vitest-pool-workers` via `defineWorkersConfig` - tests run inside workerd; prefer `exports.default.fetch` / `env` from `cloudflare:workers` | Default for every `worker-*` / `queue-*` / `webhook-*` / `mcp-*` app today |
+| **Integration** (gateway to business Worker, production builds, binding overrides) | Wrangler [`createTestHarness()`](https://developers.cloudflare.com/workers/testing/test-harness/) from Node Vitest | When the first `worker-*` is bound to `worker-api` (or a fixture pair). Do **not** replace the Vitest pool with the harness for single-Worker route suites |
+
+`front-*` stays on Node Vitest. Do not put the Workers pool on the SPA, and do not merge the SPA and gateway into one Vite/`auxiliaryWorkers` app (SPA to gateway is **HTTP only**).
 
 ## Environment
 
@@ -152,6 +164,8 @@ Detail: `.claude/rules/core/boundaries.md` / `.cursor/rules/core/boundaries.mdc`
 1. Worker-to-Worker call? **Service binding RPC**, not HTTP.
 2. DB access? Schema + binding in **one** owning `worker-*` / `queue-*` under `src/db/` - never `packages/db-*`, never the same DB binding on multiple apps. Others use RPC or a queue.
 3. Public HTTP only for gateway, webhooks, MCP, and frontends - not for business RPC or queue-only workers.
+4. SPA to API? Keep `front-*` on `@cloudflare/vite-plugin` + assets `wrangler.jsonc`, and `worker-api` on Wrangler. Never co-locate the gateway as a Vite `auxiliaryWorkers` entry or put API routes in the assets Worker (Cloudflare SPA+API-in-one-Worker tutorial is an anti-pattern for this monorepo).
+5. Cross-Worker tests? Keep per-app Vitest pool suites; add `createTestHarness` only for multi-Worker production-build integration (see testing split above).
 
 Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor/rules/` / `.claude/rules/` (`contracts`, `quality`).
 

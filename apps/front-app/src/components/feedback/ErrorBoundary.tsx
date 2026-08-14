@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { RouteErrorFallback } from "#/components/feedback/RouteErrorFallback";
 
 export type ErrorBoundaryProps = Readonly<{
   children: ReactNode;
@@ -27,13 +28,7 @@ export class ErrorBoundary extends Component<
 
     if (error) {
       return (
-        <div
-          role="alert"
-          className="flex min-h-dvh flex-col items-center justify-center gap-2 text-foreground"
-        >
-          <p className="font-medium">The application crashed.</p>
-          <p className="text-sm text-muted-foreground">{error.message}</p>
-        </div>
+        <RouteErrorFallback error={error} title="The application crashed." />
       );
     }
 

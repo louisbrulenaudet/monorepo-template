@@ -18,6 +18,7 @@ globs: apps/front-*/vite.config.ts
 ## Plugins (order matters)
 
 `devtools` → `tanstackRouter` (**before** `react`) → `react()` → `babel({ presets: [reactCompilerPreset()] })` → `tailwindcss` → `cloudflare` → build-only (`apply: "build"`) → conditional via spread. Falsy plugins are skipped. Compiler on → less manual memoization ([react.mdc](react.mdc)).
+Do not configure `auxiliaryWorkers` on `front-*` to embed `worker-api` or other backends - HTTP-only SPA boundary.
 
 ## Monorepo
 
@@ -31,7 +32,7 @@ globs: apps/front-*/vite.config.ts
 
 ## Build, env, deps
 
-- `target: "esnext"`; `sourcemap`: inline (dev) / hidden (prod); `reportCompressedSize: false`; `cssCodeSplit: true`; `modulePreload.polyfill: false`.
+- Leave `build.target` unset (Vite 8 default `baseline-widely-available`). `sourcemap`: inline (development mode) / `false` (production). `reportCompressedSize: false`; `cssCodeSplit: true`. Leave `modulePreload.polyfill` at its Vite default `true` unless you intentionally drop older-browser preload support.
 - Chunk vendors: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`. HTML `Cache-Control: no-cache` via generated `_headers`.
 - Only `VITE_*` in client bundle - no secrets. Fail production `build` on missing/placeholder required vars; skip under static analysis (`knip`). Generate `dist/_headers` in a build plugin - never hand-edit ([guardrails.mdc](../core/guardrails.mdc)). Deploy in `wrangler.jsonc`.
 - `optimizeDeps.entries` + `include` for heavy deps - dev pre-bundler only, not production bundle size.

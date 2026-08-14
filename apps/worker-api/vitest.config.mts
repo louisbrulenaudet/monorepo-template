@@ -1,9 +1,14 @@
-import { defineWorkersConfig } from "@repo/vitest-config/workers";
+import {
+  defineWorkersConfig,
+  resolvePackageRoot,
+} from "@repo/vitest-config/workers";
+import path from "node:path";
 
-// Pin root to this package so the Vitest VS Code extension does not walk
-// process.cwd()-relative paths up to filesystem root (Fatal Error: Attempted
-// to get parent of root folder "/").
+// realpath so Vitest VS Code explorer path walks match its workspace cache
+// (Fatal Error: Attempted to get parent of root folder "/").
+const root = resolvePackageRoot(import.meta.dirname);
+
 export default defineWorkersConfig(
-  { wrangler: { configPath: "./wrangler.jsonc" } },
-  { root: import.meta.dirname },
+  { wrangler: { configPath: path.join(root, "wrangler.jsonc") } },
+  { root, test: { dir: root } },
 );

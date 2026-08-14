@@ -1,47 +1,14 @@
 import { CorsAllowedHeader } from "@repo/enums-common";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchJsonWithSchema } from "#/utils/fetch-api";
+import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
+import { FetchApiError, fetchJsonWithSchema } from "#/utils/fetch-api";
+import { installSessionStorageHooks } from "../helpers/session-storage-mock";
 
-const SampleSchema = {
-  parse(value: unknown): { ok: true } {
-    if (
-      typeof value === "object" &&
-      value !== null &&
-      "ok" in value &&
-      value.ok === true
-    ) {
-      return { ok: true };
-    }
-    throw new Error("invalid sample payload");
-  },
-};
-
-const memory = new Map<string, string>();
-
-beforeEach(() => {
-  memory.clear();
-  vi.stubGlobal("sessionStorage", {
-    getItem: (key: string) => memory.get(key) ?? null,
-    setItem: (key: string, value: string) => {
-      memory.set(key, value);
-    },
-    removeItem: (key: string) => {
-      memory.delete(key);
-    },
-    clear: () => {
-      memory.clear();
-    },
-    key: () => null,
-    get length() {
-      return memory.size;
-    },
-  } satisfies Storage);
+const SampleSchema = z.object({
+  ok: z.literal(true),
 });
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+installSessionStorageHooks();
 
 describe("fetchJsonWithSchema", () => {
   it("parses a successful JSON response with the given schema", async () => {
@@ -84,24 +51,74 @@ describe("fetchJsonWithSchema", () => {
     );
   });
 
-  it("throws when the response is not ok", async () => {
+  it("throws FetchApiError when the response is not ok", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn<() => Promise<Response>>(() =>
         Promise.resolve(
-          Response.json(
-            { error: "boom" },
-            { status: 500, statusText: "Error" },
-          ),
+          new Response(JSON.stringify({ error: "boom" }), {
+            status: 500,
+            statusText: "Error",
+            headers: {
+              "Content-Type": "application/json",
+              [CorsAllowedHeader.X_REQUEST_ID]:
+                "550e8400-e29b-41d4-a716-446655440000",
+            },
+          }),
         ),
       ),
     );
 
-    await expect(
-      fetchJsonWithSchema("http://example.com/sample", SampleSchema, {
+    const error = await fetchJsonWithSchema(
+      "http://example.com/sample",
+      SampleSchema,
+      {
         dedupe: false,
         timeoutMs: 0,
-      }),
-    ).rejects.toThrow("Request failed: 500 Error");
+      },
+    ).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(FetchApiError);
+    expect(error).toMatchObject({
+      message: "Request failed: 500 Error",
+      status: 500,
+      statusText: "Error",
+      requestId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+  });
+
+  it("dedupes concurrent GET requests for the same URL", async () => {
+    let resolveResponse!: (value: Response) => void;
+    const pending = new Promise<Response>((resolve) => {
+      resolveResponse = resolve;
+    });
+    const fetchMock = vi.fn<typeof fetch>(() => pending);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = fetchJsonWithSchema(
+      "http://example.com/sample",
+      SampleSchema,
+      {
+        timeoutMs: 0,
+      },
+    );
+    const second = fetchJsonWithSchema(
+      "http://example.com/sample",
+      SampleSchema,
+      {
+        timeoutMs: 0,
+      },
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    resolveResponse(
+      Response.json({ ok: true }, { status: 200, statusText: "OK" }),
+    );
+
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      { ok: true },
+      { ok: true },
+    ]);
   });
 });

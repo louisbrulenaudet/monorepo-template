@@ -6,15 +6,16 @@ import app from "../src/index";
 void app;
 
 describe("worker-api root", () => {
-  it("GET / returns gateway metadata", async () => {
+  it("GET / returns gateway metadata with version metadata id", async () => {
     const response = await exports.default.fetch(
       new Request("http://example.com/"),
     );
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
+    const body: unknown = await response.json();
+    expect(body).toEqual({
       message: "Worker API",
-      version: "1.0.0",
+      version: expect.stringMatching(/\S/),
     });
   });
 

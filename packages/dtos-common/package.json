@@ -25,18 +25,6 @@
     "./api": {
       "types": "./src/api/index.ts",
       "default": "./src/api/index.ts"
-    },
-    "./rpc": {
-      "types": "./src/rpc/index.ts",
-      "default": "./src/rpc/index.ts"
-    },
-    "./queue": {
-      "types": "./src/queue/index.ts",
-      "default": "./src/queue/index.ts"
-    },
-    "./webhook": {
-      "types": "./src/webhook/index.ts",
-      "default": "./src/webhook/index.ts"
     }
   },
   "scripts": {

@@ -4,18 +4,30 @@ import { Button } from "#/components/ui/Button";
 import { Card } from "#/components/ui/Card";
 import { useApiHealth } from "#/hooks/use-api-health";
 
+/** Intrinsic sizes match SVG viewBox aspect at CSS `h-24` (96px). */
 const logos = [
-  { href: "https://vite.dev", src: "/vite.svg", alt: "Vite logo", eager: true },
+  {
+    href: "https://vite.dev",
+    src: "/vite.svg",
+    alt: "Vite logo",
+    width: 96,
+    height: 96,
+    eager: true,
+  },
   {
     href: "https://react.dev",
     src: "/react.svg",
     alt: "React logo",
+    width: 108,
+    height: 96,
     eager: false,
   },
   {
     href: "https://workers.cloudflare.com/",
     src: "/Cloudflare_Logo.svg",
     alt: "Cloudflare logo",
+    width: 222,
+    height: 96,
     eager: false,
   },
 ];
@@ -32,8 +44,13 @@ export function HomePage() {
             <img
               src={logo.src}
               alt={logo.alt}
+              role="img"
+              width={logo.width}
+              height={logo.height}
               fetchPriority={logo.eager ? "high" : "auto"}
-              className="h-24 opacity-80 transition-opacity duration-300 hover:opacity-100 motion-reduce:transition-none"
+              loading={logo.eager ? "eager" : "lazy"}
+              decoding="async"
+              className="h-24 w-auto opacity-80 transition-opacity duration-300 hover:opacity-100 motion-reduce:transition-none"
             />
           </a>
         ))}

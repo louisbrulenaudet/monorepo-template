@@ -1,37 +1,20 @@
+import type { ApiHealthStatus } from "#/enums/api-health-status";
 import { StatusDot } from "#/components/feedback/StatusDot";
-import { ApiHealthStatus } from "#/enums/api-health-status";
-import { getApiHealthDotClassName } from "#/utils/api-health-dot";
+import { getApiHealthPresentation } from "#/utils/api-health-dot";
 
 export type ApiHealthIndicatorProps = Readonly<{
   status: ApiHealthStatus;
 }>;
 
-function getStatusLabel(status: ApiHealthStatus): string {
-  if (status === ApiHealthStatus.CHECKING) {
-    return "Checking…";
-  }
-  if (status === ApiHealthStatus.HEALTHY) {
-    return "Healthy";
-  }
-  if (status === ApiHealthStatus.UNHEALTHY) {
-    return "Unhealthy";
-  }
-  return "API status";
-}
-
 export function ApiHealthIndicator({ status }: ApiHealthIndicatorProps) {
-  const label = getStatusLabel(status);
+  const { label, dotClassName } = getApiHealthPresentation(status);
 
   return (
     <div
       className="inline-flex items-center gap-2.5 opacity-95 transition-opacity motion-reduce:transition-none"
       aria-live="polite"
     >
-      <StatusDot
-        ariaHidden
-        className={getApiHealthDotClassName(status)}
-        label={label}
-      />
+      <StatusDot ariaHidden className={dotClassName} label={label} />
       <span className="text-[0.95rem] text-muted-foreground">{label}</span>
     </div>
   );

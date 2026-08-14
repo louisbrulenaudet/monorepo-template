@@ -1,4 +1,4 @@
-const defaultApiBaseUrl = import.meta.env.DEV ? "http://localhost:8700" : "";
+const DEFAULT_API_BASE_URL = import.meta.env.DEV ? "http://localhost:8700" : "";
 
 function readViteApiBaseUrl(): string | undefined {
   const value: unknown = import.meta.env["VITE_API_BASE_URL"];
@@ -8,4 +8,4 @@ function readViteApiBaseUrl(): string | undefined {
   return value;
 }
 
-export const apiBaseUrl = readViteApiBaseUrl() ?? defaultApiBaseUrl;
+export const apiBaseUrl = readViteApiBaseUrl() ?? DEFAULT_API_BASE_URL;

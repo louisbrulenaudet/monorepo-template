@@ -15,11 +15,11 @@ alwaysApply: false
 | `app` | every `front-*` / `worker-*` / `queue-*` / `webhook-*` / `mcp-*` |
 | `contracts` | `@repo/dtos-common` |
 | `contracts-base` | `@repo/enums-common` |
-| `config` | `@repo/typescript-config` |
+| `config` | `@repo/typescript-config`, `@repo/vitest-config` |
 
 ## Invariants
 
 - **Nothing may depend on an `app`.** `app.dependents.deny` lists all four tags, so apps are entry points and never installable dependencies. Worker-to-Worker calls go through service-binding RPC declared in `wrangler.jsonc` - never a package import.
 - **The contract chain cannot invert.** `contracts` → `contracts-base` → `config` are declared as allow-lists, so the documented `enums → dtos` direction is genuinely enforced and cannot become a cycle.
 - **A new package must declare its tag.** Add `turbo.json` with `"extends": ["//"]` and a `tags` entry, or `pnpm boundaries` reports it as untagged.
-- **`config` depends on nothing internal.** `config.dependencies.allow` is `[]`, so `@repo/typescript-config` cannot depend on any tagged workspace package.
+- **`config` depends on nothing internal.** `config.dependencies.allow` is `[]`, so `@repo/typescript-config` and `@repo/vitest-config` cannot depend on any tagged workspace package.

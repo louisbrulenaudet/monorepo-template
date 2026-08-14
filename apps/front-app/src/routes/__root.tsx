@@ -1,39 +1,23 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
-import {
-  createRootRouteWithContext,
-  Outlet,
-  useRouter,
-} from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 
 export interface RouterContext {
   queryClient: QueryClient;
 }
 
-function RootLayout() {
-  const router = useRouter();
+const LazyAppDevtools = import.meta.env.DEV
+  ? lazy(() => import("#/components/devtools/AppDevtools"))
+  : null;
 
+function RootLayout() {
   return (
     <>
       <Outlet />
-      {import.meta.env.DEV ? (
-        <TanStackDevtools
-          config={{ hideUntilHover: true }}
-          plugins={[
-            {
-              id: "react-query",
-              name: "React Query",
-              render: () => <ReactQueryDevtoolsPanel />,
-            },
-            {
-              id: "router",
-              name: "Router",
-              render: () => <TanStackRouterDevtoolsPanel router={router} />,
-            },
-          ]}
-        />
+      {LazyAppDevtools ? (
+        <Suspense fallback={null}>
+          <LazyAppDevtools />
+        </Suspense>
       ) : null}
     </>
   );

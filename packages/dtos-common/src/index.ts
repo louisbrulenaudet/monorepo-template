@@ -1,1 +1,1 @@
-export * from "./api";
+export { HealthResponseSchema, type HealthResponse } from "./api";

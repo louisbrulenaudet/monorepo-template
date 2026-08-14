@@ -23,6 +23,7 @@ Cross-cutting scaffolding for the React SPAs. Component/hook authoring is in [re
 ## Cloudflare Workers deployment
 
 - These SPAs deploy as **static assets + SPA routing on Cloudflare Workers** - `@cloudflare/vite-plugin` in `vite.config.ts`, deploy settings in `wrangler.jsonc`. Router/query devtools stay dev-only (see below).
+- Keep the Vite plugin assets-only for `front-*`. Never add `auxiliaryWorkers` to pull in `worker-api`, and never co-locate gateway/API routes in the SPA Worker. SPA to gateway remains **HTTP only**; `worker-api` stays on Wrangler.
 
 ## Tailwind v4
 

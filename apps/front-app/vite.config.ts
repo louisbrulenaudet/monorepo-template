@@ -21,7 +21,9 @@ function isPlaceholderOrigin(value: string): boolean {
   try {
     const hostname = new URL(value).hostname;
     return (
-      hostname.endsWith(".example.com") || hostname.endsWith(".your-domain.com")
+      hostname.endsWith(".example.com") ||
+      hostname.endsWith(".your-domain.com") ||
+      hostname === "your-worker-api.workers.dev"
     );
   } catch {
     return true;

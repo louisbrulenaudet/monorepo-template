@@ -11,7 +11,7 @@ General: [vitest.md](vitest.md). Discipline: [testing.md](../quality/testing.md)
 
 ## Repo invariants
 
-- Config: `defineNodeConfig` from `@repo/vitest-config` (Node). Never `cloudflareTest`.
+- Config: `defineNodeConfig` + `resolvePackageRoot(import.meta.dirname)` for `root` / `test.dir` from `@repo/vitest-config` (Node). Never `cloudflareTest`.
 - Prefer Node unit tests for `services/`, `utils/`, `*-query-options`: isolated `QueryClient` with `retry: false` and `gcTime: Infinity`; exercise shared `queryOptions` via `fetchQuery` / `ensureQueryData`. Do not reuse `src/config/query-client.ts` across tests without `clear`.
 - Never hand-edit `src/routeTree.gen.ts` - regenerate with app `routes:generate` / `routes:check`.
 - Imports from `vitest` only; in-app paths via `#/*`. Typecheck via `tests/tsconfig.json` (in package `check-types`).

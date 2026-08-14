@@ -1,8 +1,8 @@
 import { CorsAllowedHeader, HttpMethod } from "@repo/enums-common";
 import { getOrCreateOpaqueRequestId } from "#/utils/opaque-request-id";
 
-type SchemaLike<T> = {
-  parse: (value: unknown) => T;
+type SchemaWithParse<T> = {
+  parse: (data: unknown) => T;
 };
 
 type FetchJsonOptions = {
@@ -14,6 +14,24 @@ type FetchJsonOptions = {
   dedupe?: boolean;
   dedupeKey?: string;
 };
+
+export class FetchApiError extends Error {
+  readonly status: number;
+  readonly statusText: string;
+  readonly requestId: string | null;
+
+  constructor(
+    status: number,
+    statusText: string,
+    requestId: string | null = null,
+  ) {
+    super(`Request failed: ${status} ${statusText}`);
+    this.name = "FetchApiError";
+    this.status = status;
+    this.statusText = statusText;
+    this.requestId = requestId;
+  }
+}
 
 const inflightGetRequests = new Map<string, Promise<unknown>>();
 
@@ -56,15 +74,20 @@ async function fetchJsonRaw(
   const res = await fetch(url, init);
 
   if (!res.ok) {
-    throw new Error(`Request failed: ${res.status} ${res.statusText}`);
+    throw new FetchApiError(
+      res.status,
+      res.statusText,
+      res.headers.get(CorsAllowedHeader.X_REQUEST_ID),
+    );
   }
 
-  return (await res.json()) as unknown;
+  const json: unknown = await res.json();
+  return json;
 }
 
 export async function fetchJsonWithSchema<T>(
   url: string,
-  schema: SchemaLike<T>,
+  schema: SchemaWithParse<T>,
   options?: FetchJsonOptions,
 ): Promise<T> {
   const method = options?.method ?? HttpMethod.GET;

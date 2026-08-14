@@ -72,7 +72,7 @@ Register in this order. The onion model runs "before" logic top-down and "after"
 - Type the app **inline** with the Hono generic - `new Hono<{ Bindings: WorkerApiBindings; Variables: RequestIdVariables }>()` (the Cloudflare / Hono pattern; neither recommends a separate env-type file). Reuse a local `type AppEnv` alias for sub-apps in the **same file** rather than repeating the generic; promote the env type to its own module only once several route files import it.
 - Keep small custom middleware inline in `index.ts`. Extract to `src/middleware/<name>.ts` (`createMiddleware<AppEnv>`, `hono/factory`) only when it grows or is reused across workers.
 - Broad-with-carve-outs scoping: prefer `except` / `some` / `every` from `hono/combine` over duplicating `app.use()` per sub-route.
-- `hono/context-storage` (`getContext()`) is available (`nodejs_compat` is already set) for deep call stacks, but a thin gateway should pass `c` explicitly - don't reach for it by default.
+- `hono/context-storage` (`getContext()`) is available (Node.js compatibility is on via compatibility_date 2026-08-04 or later) for deep call stacks, but a thin gateway should pass `c` explicitly - don't reach for it by default.
 
 ## Workers runtime
 

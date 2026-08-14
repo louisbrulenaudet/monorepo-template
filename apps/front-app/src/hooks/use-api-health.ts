@@ -6,7 +6,7 @@ type UseApiHealthResult = {
   status: ApiHealthStatus;
 };
 
-function resolveApiHealthStatus({
+export function resolveApiHealthStatus({
   isFetching,
   isPending,
   isSuccess,

@@ -63,9 +63,17 @@ pnpm install
 
 ```ts
 // vitest.config.ts
-import { defineNodeConfig } from "@repo/vitest-config";
+import {
+  defineNodeConfig,
+  resolvePackageRoot,
+} from "@repo/vitest-config";
 
-export default defineNodeConfig();
+const root = resolvePackageRoot(import.meta.dirname);
+
+export default defineNodeConfig({
+  root,
+  test: { dir: root },
+});
 ```
 
 ```json
@@ -82,22 +90,32 @@ export default defineNodeConfig();
 
 ```ts
 // vitest.config.mts
-import { defineWorkersConfig } from "@repo/vitest-config/workers";
+import path from "node:path";
+import {
+  defineWorkersConfig,
+  resolvePackageRoot,
+} from "@repo/vitest-config/workers";
 
-export default defineWorkersConfig({
-  wrangler: { configPath: "./wrangler.jsonc" },
-});
+const root = resolvePackageRoot(import.meta.dirname);
+
+export default defineWorkersConfig(
+  { wrangler: { configPath: path.join(root, "wrangler.jsonc") } },
+  { root, test: { dir: root } },
+);
 ```
 
 Prefer `import { env, exports } from "cloudflare:workers"` in integration suites. Keep `tests/tsconfig.json` on `@cloudflare/vitest-pool-workers/types` and include it in the app's `check-types` script.
+
+**Vitest VS Code explorer:** Pin `root` and `test.dir` with `resolvePackageRoot(import.meta.dirname)` in every app config. The explorer caches the workspace folder via `realpathSync`; a non-realpathed path can miss that cache (notably on macOS with symlinks) and throw `Fatal Error: Attempted to get parent of root folder "/"`.
 
 ## Project Structure
 
 ```
 packages/vitest-config/
 ├── src/
-│   ├── index.ts      # defineNodeConfig + sharedTestDefaults (front-*)
-│   └── workers.ts    # defineWorkersConfig (Worker-family apps)
+│   ├── index.ts         # defineNodeConfig + sharedTestDefaults + resolvePackageRoot (front-*)
+│   ├── workers.ts       # defineWorkersConfig + resolvePackageRoot (Worker-family apps)
+│   └── package-root.js  # resolvePackageRoot (realpathSync helper; plain JS for Node ESM)
 ├── package.json
 ├── turbo.json        # tags: ["config"]
 ├── README.md
@@ -105,7 +123,7 @@ packages/vitest-config/
 └── CLAUDE.md
 ```
 
-`src/index.ts` and `src/workers.ts` are separate package exports so Node apps never resolve the Cloudflare pool. Shared mock-hygiene defaults are intentionally **duplicated** in both files (no relative ESM hop between entries).
+`src/index.ts` and `src/workers.ts` are separate package exports so Node apps never resolve the Cloudflare pool. `resolvePackageRoot` lives in `package-root.js` and is re-exported from both entries. Shared mock-hygiene defaults are intentionally **duplicated** in both files (no relative ESM hop between entries).
 
 Agent-focused notes: [AGENTS.md](AGENTS.md).
 
@@ -130,6 +148,10 @@ Apps own Vitest; Turbo caches `test` (`vitest run`) and runs `test:watch` as per
 | `pnpm turbo run test --filter=worker-api` | Scoped Workers pool suite |
 | `pnpm run ci` | Full gate including `test` |
 
+## Unit vs integration
+
+Cloudflare recommends the Workers Vitest pool for **unit** tests (this package) and Wrangler `createTestHarness()` for **multi-Worker integration** tests against production builds. Do not replace pool suites with the harness for single-Worker routes. Harness scaffolding notes live in [AGENTS.md](AGENTS.md).
+
 ## Best Practices
 
 1. **Import the right entry** - Node never imports `/workers`; Workers never use `defineNodeConfig`
@@ -138,3 +160,4 @@ Apps own Vitest; Turbo caches `test` (`vitest run`) and runs `test:watch` as per
 4. **Keep suites under `tests/`** - mirror source layout; `*.test.ts` only
 5. **Use `vitest run` for CI / Turbo cache** - `test:watch` is for humans only
 6. **Spot-check consumers after factory changes** - `pnpm turbo run test --filter=front-app --filter=worker-api`
+7. **Do not add createTestHarness until a second Worker + service binding exists** - keep pool suites; follow AGENTS.md checklist when wiring the harness

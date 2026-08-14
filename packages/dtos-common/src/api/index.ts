@@ -1,1 +1,1 @@
-export * from "./health";
+export { HealthResponseSchema, type HealthResponse } from "./health";

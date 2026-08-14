@@ -1,8 +1,10 @@
-import { defineNodeConfig } from "@repo/vitest-config";
+import { defineNodeConfig, resolvePackageRoot } from "@repo/vitest-config";
 
-// Pin root to this package so the Vitest VS Code extension does not walk
-// process.cwd()-relative paths up to filesystem root (Fatal Error: Attempted
-// to get parent of root folder "/").
+// realpath so Vitest VS Code explorer path walks match its workspace cache
+// (Fatal Error: Attempted to get parent of root folder "/").
+const root = resolvePackageRoot(import.meta.dirname);
+
 export default defineNodeConfig({
-  root: import.meta.dirname,
+  root,
+  test: { dir: root },
 });
