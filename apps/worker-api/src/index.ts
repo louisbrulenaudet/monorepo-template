@@ -1,15 +1,6 @@
 import type { RequestIdVariables } from "hono/request-id";
-import {
-  CORS_ALLOWED_HEADERS,
-  CORS_ALLOWED_HTTP_METHODS,
-  HttpMethod,
-  isUnsafeHttpMethod,
-  parseHttpMethod,
-} from "@repo/enums-common";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { cors } from "hono/cors";
-import { csrf } from "hono/csrf";
 import { HTTPException } from "hono/http-exception";
 import { methodNotAllowed } from "hono/method-not-allowed";
 import { prettyJSON } from "hono/pretty-json";
@@ -17,6 +8,8 @@ import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import { timeout } from "hono/timeout";
 import { timing } from "hono/timing";
+import { corsMiddleware } from "./middlewares/cors";
+import { csrfMiddleware } from "./middlewares/csrf";
 import healthRoute from "./routes/health";
 import { resolveOpaqueRequestId } from "./utils/opaque-request-id";
 
@@ -62,77 +55,8 @@ app.use(
   }),
 );
 
-const CORS_ALLOW_HEADERS: string[] = [...CORS_ALLOWED_HEADERS];
-const CORS_ALLOW_METHODS: string[] = [...CORS_ALLOWED_HTTP_METHODS];
-const CORS_EXPOSE_HEADERS: string[] = ["X-Request-Id", "X-Worker-Version-Id"];
-
-/** `null` means permissive mode (any origin). */
-function parseCorsOrigins(value: string | undefined): string[] | null {
-  if (value === undefined || value.trim() === "") {
-    return null;
-  }
-  const origins = value
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-  return origins.length > 0 ? origins : null;
-}
-
-type CorsMiddlewareStack = {
-  originsKey: string;
-  cors: ReturnType<typeof cors>;
-  csrf: ReturnType<typeof csrf>;
-};
-
-let corsMiddlewareStack: CorsMiddlewareStack | null = null;
-
-/**
- * Env is per-request on Workers; cache the cors/csrf factories for the current
- * CORS_ORIGINS string within this isolate.
- */
-function getCorsMiddlewareStack(
-  originsEnv: string | undefined,
-): CorsMiddlewareStack {
-  const originsKey = originsEnv ?? "";
-  if (corsMiddlewareStack?.originsKey === originsKey) {
-    return corsMiddlewareStack;
-  }
-
-  const allowedOrigins = parseCorsOrigins(originsEnv);
-  corsMiddlewareStack = {
-    originsKey,
-    cors: cors({
-      origin: allowedOrigins ?? "*",
-      allowHeaders: CORS_ALLOW_HEADERS,
-      allowMethods: CORS_ALLOW_METHODS,
-      exposeHeaders: CORS_EXPOSE_HEADERS,
-      maxAge: 600,
-    }),
-    csrf: csrf({
-      origin: allowedOrigins ?? (() => true),
-      secFetchSite: (value) => value === "same-origin" || value === "same-site",
-    }),
-  };
-  return corsMiddlewareStack;
-}
-
-app.use("/api/*", (c, next) => {
-  return getCorsMiddlewareStack(c.env.CORS_ORIGINS).cors(c, next);
-});
-
-// CSRF should not block CORS preflight, and only applies to unsafe methods.
-app.use("/api/*", async (c, next) => {
-  const method = parseHttpMethod(c.req.method);
-  if (
-    method === undefined ||
-    method === HttpMethod.OPTIONS ||
-    !isUnsafeHttpMethod(method)
-  ) {
-    return await next();
-  }
-
-  return getCorsMiddlewareStack(c.env.CORS_ORIGINS).csrf(c, next);
-});
+app.use("/api/*", corsMiddleware);
+app.use("/api/*", csrfMiddleware);
 
 const api = new Hono<AppEnv>();
 

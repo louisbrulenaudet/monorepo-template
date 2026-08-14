@@ -11,9 +11,10 @@ Starter surface: `GET /api/v1/health`. Hono lifecycle, middleware order, and val
 ```
 apps/worker-api/
 ├── src/
+│   ├── middlewares/          # cors, csrf (env-dependent Hono wrappers)
 │   ├── routes/<feature>.ts   # One route module per feature
 │   ├── utils/                # opaque-request-id
-│   └── index.ts              # Middleware stack + route mounts
+│   └── index.ts              # Middleware registration + route mounts
 ├── tests/                    # Vitest suites - Cloudflare pool / workerd
 │   ├── env.d.ts              # ProvidedEnv extends Env
 │   └── tsconfig.json         # @cloudflare/vitest-pool-workers/types; in check-types
@@ -29,7 +30,7 @@ Create `src/enums/` when the first worker-local `as const` value set is needed. 
 | Task | Location |
 |------|---------|
 | New endpoint | `src/routes/<feature>.ts` then mount in `src/index.ts` |
-| Middleware | `src/index.ts` before route mounts |
+| Middleware | `src/middlewares/<name>.ts` then register in `src/index.ts` before route mounts |
 | Shared schema | `packages/dtos-common/src/api/<feature>.ts` |
 | Worker-local value set | `src/enums/` - create the directory on first use |
 | Non-trivial handler logic | `src/services/<feature>.ts` - create on first use |
