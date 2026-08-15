@@ -24,7 +24,7 @@ Do not commit credentials, API keys, tokens, private keys, `.dev.vars` / `.env*`
 
 ## Generated files are outputs, not sources
 
-Never hand-edit generated artifacts (e.g. `wrangler types` output, the Flue-generated deploy manifest under `dist/**`, or any build output). Change the source of truth and regenerate through the documented command (`pnpm types`, the framework's build step, etc.).
+Never hand-edit generated artifacts (e.g. `wrangler types` output, Vite/Wrangler build output under `dist/**`, or any other build artifact). Change the source of truth and regenerate through the documented command (`pnpm types`, the app's build step, etc.).
 
 **Enforced** by hooks/settings - see [hooks/AGENTS.md](../../../hooks/AGENTS.md).
 

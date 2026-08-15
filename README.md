@@ -27,9 +27,11 @@ monorepo/
 │   ├── worker-api/          # REST API gateway
 │   └── front-app/           # React SPA (Vite + TanStack)
 ├── packages/                # Shared @repo/* packages
-│   ├── dtos-common/         # Zod wire contracts (api / rpc / queue / webhook)
+│   ├── correlation-id/      # Opaque X-Request-Id helpers
+│   ├── dtos-common/         # Zod wire contracts (api live; rpc/queue/webhook scaffold)
 │   ├── enums-common/        # Shared constrained string values (`as const`)
-│   └── typescript-config/   # TypeScript configuration presets
+│   ├── typescript-config/   # TypeScript configuration presets
+│   └── vitest-config/       # Shared Vitest factories (Node + Workers pool)
 ├── hooks/                   # AI agent hooks (not Husky - see hooks/README.md)
 ├── package.json             # Root package configuration
 ├── pnpm-workspace.yaml      # Workspace configuration
@@ -166,7 +168,7 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 | `pnpm login` | Login to Cloudflare (repo-pinned Wrangler) |
 | `pnpm update` | Update dependencies to latest (rewrites pnpm catalog) |
 | `pnpm check` | Lint + format check (no typecheck) |
-| `pnpm run ci` | Lint + format + check-types + types:check + boundaries + test + build (full-repo local PR gate; CI uses `--affected` for check-types/test/build) |
+| `pnpm run ci` | Full-repo local PR gate: boundaries, lint:check, format:check, check-types, types:check, test, build:ci, audit (GitHub CI uses `--affected` for check-types/test/build) |
 | `pnpm test` | Vitest via `turbo run test` (per-app; Node or Cloudflare pool) |
 | `pnpm test:watch` | Vitest watch via `turbo run test:watch` (humans; persistent, uncached) |
 | `pnpm boundaries` | Check package dependency tags against `turbo.json` |
@@ -193,7 +195,7 @@ Pass turbo flags on turbo-backed tasks (`dev`, `build`, `check-types`, `test`, `
 | `--filter=...pkg...` | Package + dependents/deps | `pnpm turbo run build --filter=...front-app...` |
 | `--affected` | Only changed packages vs base | `pnpm turbo run build --affected` |
 
-Local `pnpm run ci` is full-repo (no `--affected`). GitHub CI runs `check-types` and `build` with `--affected`, and always verifies app `types:check`.
+Local `pnpm run ci` is full-repo (no `--affected`). GitHub CI runs `check-types`, `test`, and `build` with `--affected`, and always verifies app `types:check`.
 
 ## Development ports
 
@@ -367,12 +369,15 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ## 4. Deploy Your Workers
 
-On merge to `main`, after the **CI** workflow succeeds, the **CD** workflow ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)) builds and ships production (GitHub Environment `production`):
+On merge to `main`, after the **CI** workflow succeeds, the **CD** workflow ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)) is designed to build and ship production (GitHub Environment `production`):
 
 1. `wrangler versions upload --env production` (with `--strict`, commit `--tag` / `--message`)
 2. `wrangler versions deploy <version-id>@100% --yes --env production`
 
 for `worker-api` and `front-app`. CD skips if the CI commit is no longer the tip of `main` (avoids stale overwrites).
+
+> [!NOTE]
+> **CD is paused** until production Environment secrets are configured. The deploy job condition is hard-disabled (leading `false` short-circuit); re-enable by removing that guard (leave tip-check / upload / promote as-is). Until then, use the local helpers below.
 
 **GitHub secrets / variables** (repo-level or on the `production` environment):
 
@@ -474,7 +479,7 @@ ls -la .husky  # verify hooks are executable
 
 ## Contribution
 
-- Run **`pnpm run ci`** before opening a PR (lint + format + check-types + types:check + boundaries + build). GitHub CI mirrors those gates and uses `--affected` for check-types/build.
+- Run **`pnpm run ci`** before opening a PR (boundaries, lint, format, check-types, types:check, test, build:ci, audit). GitHub CI mirrors those gates and uses `--affected` for check-types/test/build.
 - Wire-format changes: update `@repo/dtos-common` and every producer/consumer in the **same PR** (HTTP → `worker-api` + `front-app`).
 - When you add endpoints, bindings, or env vars, update the relevant app/package **README** and **AGENTS.md**.
 
@@ -498,9 +503,11 @@ Local packages under `packages/`. Each package has its own README.
 
 ### Available Shared Packages
 
-- **`@repo/dtos-common`** - Zod wire contracts via subpaths: `/api`, `/rpc`, `/queue`, `/webhook`
+- **`@repo/correlation-id`** - Opaque `X-Request-Id` helpers (SPA session wrapper stays in `front-app`)
+- **`@repo/dtos-common`** - Zod Mini wire contracts. Public export today: `/api`. Scaffold dirs exist for `/rpc`, `/queue`, `/webhook` - add `package.json` `exports` with the first schema in each layer
 - **`@repo/enums-common`** - Shared constrained string values (`as const` objects)
 - **`@repo/typescript-config`** - TypeScript presets (`strict.json`, `library.json`, `workers.json`, `vite-react.json`, `vite-node.json`)
+- **`@repo/vitest-config`** - Shared Vitest factories (`defineNodeConfig`, `defineWorkersConfig`)
 
 ### Benefits of Shared Packages
 - **Code sharing:** Eliminate duplication across workers

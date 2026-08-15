@@ -9,7 +9,7 @@ paths:
 
 # Contract Rules
 
-Zod 4 is the default. The one exception is a framework schema slot that mandates another validator (e.g. Flue's input/output slots take **valibot**) - use its validator only inside that slot and keep the rest of the app on Zod.
+Zod 4 with **Zod Mini** (`import * as z from "zod/mini"`) is the house style for `@repo/dtos-common` and app boundary validation. Prefer Mini for tree-shakable Worker and SPA bundles. Only `@repo/dtos-common/api` is in `package.json` `exports` today. `src/rpc/`, `src/queue/`, and `src/webhook/` are scaffolds - add the matching `exports` entry when the first schema in that layer lands (see `packages/dtos-common/AGENTS.md`). If a framework schema slot mandates another validator, use that validator only inside that slot and keep the rest of the app on Zod Mini.
 
 ## Where a shape lives
 

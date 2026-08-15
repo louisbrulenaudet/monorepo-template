@@ -10,9 +10,13 @@ The pipeline is [`.github/workflows/cd.yml`](../../../.github/workflows/cd.yml).
 
 Weakening a deploy gate or shipping with missing credentials is covered by [`guardrails.md`](../core/guardrails.md) and is never the answer here either.
 
+## Status
+
+**CD is paused** until production GitHub Environment secrets are configured. The deploy job condition is hard-disabled (leading `false` short-circuit); re-enable by removing that guard (leave tip-check / upload / promote as-is). The rest of this rule describes the intended pipeline once re-enabled.
+
 ## Trigger and tip-of-main
 
-- **CD runs on `workflow_run` after CI `completed`, and only when that CI was a successful `push` to `main`.** Deploy secrets stay off PR CI. Do not deploy from `pull_request` or `pull_request_target` (the latter especially - base-branch context plus untrusted checkout is a pwn pattern).
+- **When enabled, CD runs on `workflow_run` after CI `completed`, and only when that CI was a successful `push` to `main`.** Deploy secrets stay off PR CI. Do not deploy from `pull_request` or `pull_request_target` (the latter especially - base-branch context plus untrusted checkout is a pwn pattern).
 - **Concurrency group is `cd-production` with `cancel-in-progress: false`.** Cancelling would drop an in-flight production ship; queuing is intentional.
 - **That combination can let a slower older CI finish after a newer tip.** The "Skip stale deploy" step compares `HEAD_SHA` (from the triggering run, via job `env:`) to the current tip of `main` and no-ops when stale. Do not remove it as redundant with concurrency.
 - **Checkout uses `ref: ${{ env.HEAD_SHA }}`**, not whatever the default branch tip is at job start - the ship must match the green CI commit.

@@ -2,7 +2,7 @@
 
 ## Overview
 
-`worker-api` is the **public HTTP gateway**: **Cloudflare Workers** + **Hono**, port **8700** in dev. Entry point for `front-app` over HTTP and coordinator for internal Workers via service bindings.
+`worker-api` is the **public HTTP gateway**: **Cloudflare Workers** + **Hono**, port **8700** in dev. Entry point for `front-app` over HTTP; coordinates internal Workers via service bindings when those bindings exist.
 
 Starter surface: `GET /api/v1/health`. Hono lifecycle, middleware order, and validation patterns load from `.claude/rules/backend/hono-gateway.md` or `.cursor/rules/backend/hono-gateway.mdc` when editing `src/**`.
 

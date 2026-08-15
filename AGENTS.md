@@ -176,4 +176,4 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 - Run `pnpm run ci` before opening a PR.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
-- Continuous deployment: after green CI on `main`, [`.github/workflows/cd.yml`](.github/workflows/cd.yml) runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for `worker-api` and `front-app`.
+- Continuous deployment: after green CI on `main`, [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is designed to run `wrangler versions upload` then `wrangler versions deploy <id>@100%` for `worker-api` and `front-app`. **CD is paused** until production GitHub Environment secrets are configured; the deploy job condition is hard-disabled (leading `false` short-circuit) - re-enable by removing that guard (leave tip-check / upload / promote as-is).
