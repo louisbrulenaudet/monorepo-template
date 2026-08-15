@@ -31,10 +31,10 @@
       // service-binding RPC declared in wrangler.jsonc, never a package import.
       "app": {
         "dependencies": {
-          "allow": ["contracts", "contracts-base", "config"]
+          "allow": ["contracts", "contracts-base", "config", "lib"]
         },
         "dependents": {
-          "deny": ["app", "contracts", "contracts-base", "config"]
+          "deny": ["app", "contracts", "contracts-base", "config", "lib"]
         }
       },
       // Shared wire contracts (@repo/dtos-common): may build on the enum base, never on an app.
@@ -46,6 +46,13 @@
       // Leaf of the contract chain (@repo/enums-common). Depends on nothing internal,
       // so the documented `enums -> dtos` direction can never invert into a cycle.
       "contracts-base": {
+        "dependencies": {
+          "allow": ["config"]
+        }
+      },
+      // Runtime-neutral shared helpers (@repo/correlation-id). Apps may depend on lib;
+      // lib must not depend on apps or contracts.
+      "lib": {
         "dependencies": {
           "allow": ["config"]
         }

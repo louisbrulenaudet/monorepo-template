@@ -22,7 +22,7 @@ apps/front-app/
 │   ├── hooks/           # use-<feature>.ts
 │   ├── components/ui/   # Reusable primitives
 │   ├── config/          # env.ts, query-client.ts
-│   ├── utils/           # fetch-api, opaque-request-id
+│   ├── utils/           # fetch-api, correlation-id (SPA session wrapper)
 │   └── enums/           # Frontend-only value sets (`as const`)
 ├── tests/               # Vitest suites mirroring src/ (Node)
 ├── vitest.config.ts     # defineNodeConfig from @repo/vitest-config
@@ -44,7 +44,7 @@ apps/front-app/
 | Frontend-only value set | `src/enums/<feature>.ts` |
 | Shared value set | `packages/enums-common/src/index.ts` |
 | SPA / deploy config | `wrangler.jsonc`, `vite.config.ts` |
-| Opaque API correlation | `src/utils/opaque-request-id.ts` + `fetch-api.ts` (`X-Request-Id`) |
+| Opaque API correlation | `@repo/correlation-id` + `src/utils/correlation-id.ts` + `fetch-api.ts` (`X-Request-Id`) |
 | Unit tests | `tests/` mirroring `src/` + `vitest.config.ts` (`@repo/vitest-config`) |
 
 ## Adding a Feature

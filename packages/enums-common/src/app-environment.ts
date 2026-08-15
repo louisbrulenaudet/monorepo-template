@@ -12,20 +12,22 @@ const APP_ENVIRONMENT_LOOKUP = new Map<string, AppEnvironment>(
 );
 
 /**
- * Staging and production — never fall back to permissive CORS / CSRF. Local
- * `dev` may use an empty allowlist.
+ * Known deploy targets that must set `CORS_ORIGINS`. Unknown / mistyped
+ * `ENVIRONMENT` values are also strict — see `isStrictCorsAppEnvironment`.
  */
 export const STRICT_CORS_APP_ENVIRONMENTS: readonly AppEnvironment[] = [
   AppEnvironment.STAGING,
   AppEnvironment.PRODUCTION,
 ];
 
-const STRICT_CORS_LOOKUP = new Set<string>(STRICT_CORS_APP_ENVIRONMENTS);
-
 export function parseAppEnvironment(value: string): AppEnvironment | undefined {
   return APP_ENVIRONMENT_LOOKUP.get(value);
 }
 
+/**
+ * Empty `CORS_ORIGINS` is permissive only for explicit `AppEnvironment.DEV`.
+ * Staging, production, typos (`prod`), and any other value fail closed.
+ */
 export function isStrictCorsAppEnvironment(environment: string): boolean {
-  return STRICT_CORS_LOOKUP.has(environment);
+  return environment !== AppEnvironment.DEV;
 }

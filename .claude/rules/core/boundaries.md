@@ -14,6 +14,7 @@ paths:
 | `app` | every `front-*` / `worker-*` / `queue-*` / `webhook-*` / `mcp-*` |
 | `contracts` | `@repo/dtos-common` |
 | `contracts-base` | `@repo/enums-common` |
+| `lib` | `@repo/correlation-id` |
 | `config` | `@repo/typescript-config`, `@repo/vitest-config` |
 
 ## Invariants

@@ -351,6 +351,9 @@ importers:
 
   apps/front-app:
     dependencies:
+      '@repo/correlation-id':
+        specifier: workspace:*
+        version: link:../../packages/correlation-id
       '@repo/dtos-common':
         specifier: workspace:*
         version: link:../../packages/dtos-common
@@ -442,6 +445,9 @@ importers:
 
   apps/worker-api:
     dependencies:
+      '@repo/correlation-id':
+        specifier: workspace:*
+        version: link:../../packages/correlation-id
       '@repo/dtos-common':
         specifier: workspace:*
         version: link:../../packages/dtos-common
@@ -470,6 +476,15 @@ importers:
       wrangler:
         specifier: 'catalog:'
         version: 4.123.0
+
+  packages/correlation-id:
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/dtos-common:
     dependencies:

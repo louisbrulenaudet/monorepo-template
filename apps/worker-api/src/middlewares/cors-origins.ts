@@ -17,9 +17,10 @@ export type CorsOriginResolution =
   | { ok: false; reason: "missing_allowlist" };
 
 /**
- * Resolve the browser-origin allowlist for CORS and CSRF.
- * `AppEnvironment.STAGING` / `PRODUCTION` with an empty list fail closed
- * (callers return 503). `DEV` may use `null` (= permissive `*` / allow-all).
+ * Resolve the browser-origin allowlist for CORS and CSRF. Only explicit
+ * `AppEnvironment.DEV` may use `null` (= permissive `*` / allow-all). Staging,
+ * production, and any other `ENVIRONMENT` with an empty list fail closed
+ * (callers return 503).
  */
 export function resolveCorsOrigins(
   environment: string,

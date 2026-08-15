@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, vi } from "vitest";
-import { resetOpaqueRequestIdCache } from "#/utils/opaque-request-id";
+import { resetCorrelationIdCache } from "#/utils/correlation-id";
 
 const memory = new Map<string, string>();
 
 export function stubSessionStorage(): void {
   memory.clear();
-  resetOpaqueRequestIdCache();
+  resetCorrelationIdCache();
   vi.stubGlobal("sessionStorage", {
     getItem: (key: string) => memory.get(key) ?? null,
     setItem: (key: string, value: string) => {
@@ -32,6 +32,6 @@ export function installSessionStorageHooks(): void {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
-    resetOpaqueRequestIdCache();
+    resetCorrelationIdCache();
   });
 }

@@ -20,10 +20,12 @@ describe("parseCorsOrigins", () => {
 });
 
 describe("isStrictCorsAppEnvironment", () => {
-  it("treats staging and production as strict", () => {
+  it("is permissive only for explicit dev", () => {
+    expect(isStrictCorsAppEnvironment(AppEnvironment.DEV)).toBe(false);
     expect(isStrictCorsAppEnvironment(AppEnvironment.STAGING)).toBe(true);
     expect(isStrictCorsAppEnvironment(AppEnvironment.PRODUCTION)).toBe(true);
-    expect(isStrictCorsAppEnvironment(AppEnvironment.DEV)).toBe(false);
+    expect(isStrictCorsAppEnvironment("prod")).toBe(true);
+    expect(isStrictCorsAppEnvironment("")).toBe(true);
   });
 });
 
@@ -41,6 +43,13 @@ describe("resolveCorsOrigins", () => {
       reason: "missing_allowlist",
     });
     expect(resolveCorsOrigins(AppEnvironment.PRODUCTION, undefined)).toEqual({
+      ok: false,
+      reason: "missing_allowlist",
+    });
+  });
+
+  it("fails closed when ENVIRONMENT is unrecognized and allowlist is empty", () => {
+    expect(resolveCorsOrigins("prod", "")).toEqual({
       ok: false,
       reason: "missing_allowlist",
     });

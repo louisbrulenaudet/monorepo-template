@@ -29,6 +29,7 @@
     "upload": "wrangler versions upload --env production"
   },
   "dependencies": {
+    "@repo/correlation-id": "workspace:*",
     "@repo/dtos-common": "workspace:*",
     "@repo/enums-common": "workspace:*",
     "hono": "catalog:"

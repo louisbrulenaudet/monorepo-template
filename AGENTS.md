@@ -43,6 +43,7 @@ flowchart TB
     direction LR
     Enums["@repo/enums-common"]
     DTOs["@repo/dtos-common"]
+    Corr["@repo/correlation-id"]
     Enums --> DTOs
   end
 
@@ -85,6 +86,7 @@ Root map for cross-cutting placement. App-local detail: `apps/*/AGENTS.md` and `
 | HTTP route | `apps/worker-api/src/routes/<feature>.ts` → mount in `src/index.ts` |
 | Zod schemas | `packages/dtos-common/src/{api,rpc,queue,webhook}/` |
 | Shared enums | `packages/enums-common`; worker-local under `apps/<worker>/src/enums/` |
+| Opaque correlation ids | `packages/correlation-id` (`X-Request-Id`); SPA session wrapper in `front-app` |
 | DB schema / migrations | `apps/<owner>/src/db/` (one owner; never `packages/db-*`) |
 | Frontend feature | `apps/front-app/src/{pages,routes,services,hooks,components}/` |
 | Bindings / secrets | `apps/<worker>/wrangler.jsonc`; `.dev.vars` from `.dev.vars.example` |
@@ -155,7 +157,7 @@ Easy to get wrong:
 `pnpm boundaries` (in `pnpm run ci`) fails on tag violations. Rules live in root `turbo.json` `boundaries.tags`; each package declares tags in its `turbo.json`.
 
 - **Nothing may import an `app`.** Worker-to-Worker: service-binding RPC in `wrangler.jsonc`, never a package import.
-- New app/package needs `turbo.json` with `"extends": ["//"]` and a `tags` entry.
+- New app/package needs `turbo.json` with `"extends": ["//"]` and a `tags` entry (`app`, `contracts`, `contracts-base`, `lib`, or `config`).
 
 Detail: `.claude/rules/core/boundaries.md` / `.cursor/rules/core/boundaries.mdc` when editing `turbo.json`.
 

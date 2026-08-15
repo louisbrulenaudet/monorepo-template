@@ -1,4 +1,5 @@
 import type { RequestIdVariables } from "hono/request-id";
+import { resolveCorrelationId } from "@repo/correlation-id";
 import { AppEnvironment } from "@repo/enums-common";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
@@ -12,7 +13,6 @@ import { timing } from "hono/timing";
 import { corsMiddleware } from "./middlewares/cors";
 import { csrfMiddleware } from "./middlewares/csrf";
 import healthRoute from "./routes/health";
-import { resolveOpaqueRequestId } from "./utils/opaque-request-id";
 
 const API_TIMEOUT_MS = 15_000;
 const MAX_BODY_BYTES = 3 * 1024 * 1024;
@@ -28,7 +28,7 @@ const app = new Hono<AppEnv>();
 app.use(
   requestId({
     headerName: "",
-    generator: (c) => resolveOpaqueRequestId(c.req.header("X-Request-Id")),
+    generator: (c) => resolveCorrelationId(c.req.header("X-Request-Id")),
   }),
 );
 

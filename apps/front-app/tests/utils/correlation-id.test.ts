@@ -1,31 +1,31 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  getOrCreateOpaqueRequestId,
-  isOpaqueRequestId,
-} from "#/utils/opaque-request-id";
+  getOrCreateCorrelationId,
+  isOpaqueCorrelationId,
+} from "#/utils/correlation-id";
 import { installSessionStorageHooks } from "../helpers/session-storage-mock";
 
 installSessionStorageHooks();
 
-describe("isOpaqueRequestId", () => {
+describe("isOpaqueCorrelationId", () => {
   it("accepts UUID v4", () => {
-    expect(isOpaqueRequestId("550e8400-e29b-41d4-a716-446655440000")).toBe(
+    expect(isOpaqueCorrelationId("550e8400-e29b-41d4-a716-446655440000")).toBe(
       true,
     );
   });
 
   it("rejects privileged-looking values", () => {
-    expect(isOpaqueRequestId("matter-123")).toBe(false);
-    expect(isOpaqueRequestId("")).toBe(false);
+    expect(isOpaqueCorrelationId("matter-123")).toBe(false);
+    expect(isOpaqueCorrelationId("")).toBe(false);
   });
 });
 
-describe("getOrCreateOpaqueRequestId", () => {
+describe("getOrCreateCorrelationId", () => {
   it("reuses a stored opaque id for the session", () => {
-    const first = getOrCreateOpaqueRequestId();
-    const second = getOrCreateOpaqueRequestId();
+    const first = getOrCreateCorrelationId();
+    const second = getOrCreateCorrelationId();
     expect(first).toBe(second);
-    expect(isOpaqueRequestId(first)).toBe(true);
+    expect(isOpaqueCorrelationId(first)).toBe(true);
   });
 
   it("keeps a stable id when sessionStorage is blocked", () => {
@@ -46,9 +46,9 @@ describe("getOrCreateOpaqueRequestId", () => {
       length: 0,
     } satisfies Storage);
 
-    const first = getOrCreateOpaqueRequestId();
-    const second = getOrCreateOpaqueRequestId();
+    const first = getOrCreateCorrelationId();
+    const second = getOrCreateCorrelationId();
     expect(first).toBe(second);
-    expect(isOpaqueRequestId(first)).toBe(true);
+    expect(isOpaqueCorrelationId(first)).toBe(true);
   });
 });
