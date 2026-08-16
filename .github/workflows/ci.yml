@@ -36,6 +36,10 @@ jobs:
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      # actions/checkout materializes branches as origin/<name> only. Turbo reads
+      # GITHUB_BASE_REF as a bare name ("main"), which is not a local revision -
+      # without this, --affected falls back to "everything changed".
+      TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
 
     steps:
       # Every `uses:` is pinned to a full-length commit SHA with the tag in a trailing comment, and

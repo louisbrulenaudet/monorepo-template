@@ -9,10 +9,19 @@ export function isOpaqueCorrelationId(value: string): boolean {
   return OPAQUE_CORRELATION_ID.test(value);
 }
 
+/** Narrow `globalThis.crypto` without DOM lib (library stays runtime-neutral). */
+function hasRandomUuid(value: unknown): value is { randomUUID: () => string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "randomUUID" in value &&
+    typeof value.randomUUID === "function"
+  );
+}
+
 function randomUuid(): string {
-  const webCrypto = (globalThis as { crypto?: { randomUUID?: () => string } })
-    .crypto;
-  if (typeof webCrypto?.randomUUID !== "function") {
+  const webCrypto: unknown = Reflect.get(globalThis, "crypto");
+  if (!hasRandomUuid(webCrypto)) {
     throw new Error("crypto.randomUUID is required for correlation ids");
   }
   return webCrypto.randomUUID();
