@@ -10,7 +10,7 @@ export function isOpaqueCorrelationId(value: string): boolean {
 }
 
 /** Narrow `globalThis.crypto` without DOM lib (library stays runtime-neutral). */
-function hasRandomUuid(value: unknown): value is { randomUUID: () => string } {
+function hasRandomUuid(value: unknown): value is { randomUUID: () => unknown } {
   return (
     typeof value === "object" &&
     value !== null &&
@@ -24,7 +24,11 @@ function randomUuid(): string {
   if (!hasRandomUuid(webCrypto)) {
     throw new Error("crypto.randomUUID is required for correlation ids");
   }
-  return webCrypto.randomUUID();
+  const id: unknown = webCrypto.randomUUID();
+  if (typeof id !== "string") {
+    throw new Error("crypto.randomUUID is required for correlation ids");
+  }
+  return id;
 }
 
 /** Accept a client-supplied opaque id, or mint a new UUID v4. */
