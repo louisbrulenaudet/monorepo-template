@@ -1,10 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@repo/typescript-config/library.json",
-  // DOM for Web Crypto (`crypto.randomUUID`) — available in Workers, browsers, and Node 19+.
-  "compilerOptions": {
-    "lib": ["ES2023", "DOM"]
-  },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

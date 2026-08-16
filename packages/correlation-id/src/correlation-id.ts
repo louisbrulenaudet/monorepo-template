@@ -10,10 +10,12 @@ export function isOpaqueCorrelationId(value: string): boolean {
 }
 
 function randomUuid(): string {
-  if (typeof globalThis.crypto.randomUUID !== "function") {
+  const webCrypto = (globalThis as { crypto?: { randomUUID?: () => string } })
+    .crypto;
+  if (typeof webCrypto?.randomUUID !== "function") {
     throw new Error("crypto.randomUUID is required for correlation ids");
   }
-  return globalThis.crypto.randomUUID();
+  return webCrypto.randomUUID();
 }
 
 /** Accept a client-supplied opaque id, or mint a new UUID v4. */
