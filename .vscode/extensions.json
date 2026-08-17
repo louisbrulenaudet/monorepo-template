@@ -2,7 +2,6 @@
   "recommendations": [
     "TypeScriptTeam.native-preview",
     "oxc.oxc-vscode",
-    "Vercel.turbo-vsc",
     "bradlc.vscode-tailwindcss",
     "vitest.explorer",
     "streetsidesoftware.code-spell-checker",
