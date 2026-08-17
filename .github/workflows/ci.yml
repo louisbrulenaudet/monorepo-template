@@ -69,6 +69,8 @@ jobs:
       - name: Dependency audit
         run: pnpm run audit
 
+      # One turbo CLI for check-types/test/build (avoids oversubscribing the runner with
+      # two concurrency:100% processes). OXC, boundaries, and types:check stay in parallel.
       - parallel:
           - name: Boundaries
             run: pnpm run boundaries
@@ -79,24 +81,20 @@ jobs:
           - name: Format
             run: pnpm run format:check
 
-          - name: Typecheck
-            run: |
-              pnpm turbo run check-types --affected
-              pnpm run types:check
+          - name: Types check
+            run: pnpm run types:check
 
-          - name: Test
-            run: pnpm turbo run test --affected
+          - name: Typecheck, test, and build
+            env:
+              VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
+            run: pnpm turbo run check-types test build --affected
 
-      - name: Build
-        env:
-          VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
-        run: pnpm turbo run build --affected
-
+      # front-app needs dist/ from the build step; worker-api build is already a dry-run.
       # No Cloudflare credentials required: --dry-run only bundles/validates Wrangler config.
       - name: Wrangler deploy dry-run
         env:
           VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
-        run: pnpm turbo run deploy --filter=worker-api --filter=front-app -- --dry-run
+        run: pnpm turbo run deploy --filter=front-app -- --dry-run
 
       - name: Upload build artifacts on failure
         if: failure()

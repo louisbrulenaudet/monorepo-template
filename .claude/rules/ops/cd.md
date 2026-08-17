@@ -35,7 +35,8 @@ Weakening a deploy gate or shipping with missing credentials is covered by [`gua
 - **Keep `--strict`, and tag/message with `$HEAD_SHA`** (already in `env:` - never interpolate raw `github.ref_name` into the shell). Cloudflare: `--strict` makes upload/deploy more defensive in non-interactive CI (blocks conflicting remote overrides) - do not drop it to force green.
 - **Traffic policy today is 100%.** Gradual percentages exist in Wrangler; do not add them casually without observability and a rollback runbook. Current CD is upload → promote `@100%`.
 - **`versions upload` does not apply routes, custom domains, or cron triggers** ([Cloudflare deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)). When those land in `wrangler.jsonc`, also run `wrangler triggers deploy --env production` (comment already in the workflow). Omitting that ships code without the trigger change.
-- **Order is `worker-api` then `front-app`.** If front fails after API is already at 100%, production can be split - the workflow's error names the rollback (`wrangler rollback --env production` on worker-api). Do not reorder or parallelize the two promotes without handling that partial state.
+- **Uploads may run in `parallel:`; promotes stay sequential.** `worker-api` then `front-app` at `@100%`. If front fails after API is already live, production can be split - the workflow's error names the rollback (`wrangler rollback --env production` on worker-api). Do not reorder or parallelize the two promotes without handling that partial state.
+- **Credential gate may `parallel:` with `pnpm/setup`.** Install stays after setup.
 
 ## Same hardening as CI
 

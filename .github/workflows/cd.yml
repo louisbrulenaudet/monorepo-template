@@ -6,7 +6,7 @@ on:
     types: [completed]
     branches: [main]
 
-# Deny by default; the deploy job re-grants `contents: read`.
+# Deny by default; the deploy job re-grants contents read.
 permissions: {}
 
 concurrency:
@@ -23,7 +23,7 @@ jobs:
   deploy:
     name: Deploy production Workers
     # CD paused: production GitHub Environment secrets are not configured yet.
-    # Re-enable by removing the leading false && below (leave tip-check / upload / promote as-is).
+    # Re-enable by removing the leading false && below.
     if: >-
       false &&
       github.event.workflow_run.conclusion == 'success' &&
@@ -51,8 +51,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
-      # workflow_run + cancel-in-progress: false can let a slower older CI finish
-      # after a newer one and overwrite production. Skip unless HEAD_SHA is still tip.
+      # Skip unless HEAD_SHA is still tip of main.
       - name: Skip stale deploy
         id: tip
         env:
@@ -67,30 +66,32 @@ jobs:
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Setup pnpm and Node.js
-        if: steps.tip.outputs.should_deploy == 'true'
-        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
-        with:
-          runtime: node@24
-          cache: true
-          cache-dependency-path: pnpm-lock.yaml
-          install: false
+      # Credentials overlap with pnpm/setup; install stays after setup.
+      - parallel:
+          - name: Require Cloudflare credentials
+            if: steps.tip.outputs.should_deploy == 'true'
+            run: |
+              if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+                echo "ERROR: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required for CD" >&2
+                exit 1
+              fi
+              if [ -z "$VITE_API_BASE_URL" ]; then
+                echo "ERROR: repository variable VITE_API_BASE_URL is required for front-app" >&2
+                exit 1
+              fi
+
+          - name: Setup pnpm and Node.js
+            if: steps.tip.outputs.should_deploy == 'true'
+            uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+            with:
+              runtime: node@24
+              cache: true
+              cache-dependency-path: pnpm-lock.yaml
+              install: false
 
       - name: Install dependencies
         if: steps.tip.outputs.should_deploy == 'true'
         run: pnpm install --frozen-lockfile
-
-      - name: Require Cloudflare credentials
-        if: steps.tip.outputs.should_deploy == 'true'
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "ERROR: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required for CD" >&2
-            exit 1
-          fi
-          if [ -z "$VITE_API_BASE_URL" ]; then
-            echo "ERROR: repository variable VITE_API_BASE_URL is required for front-app" >&2
-            exit 1
-          fi
 
       - name: Build production artifacts
         if: steps.tip.outputs.should_deploy == 'true'
@@ -99,52 +100,94 @@ jobs:
       # versions upload does not apply routes, custom domains, or cron triggers.
       # When those are added to wrangler.jsonc, also run:
       #   pnpm --filter="$app" exec wrangler triggers deploy --env production
-      - name: Upload and deploy versions (100%)
+      # Uploads are independent; promotes stay sequential (worker-api then front-app).
+      - parallel:
+          - name: Upload worker-api
+            id: upload-api
+            if: steps.tip.outputs.should_deploy == 'true'
+            run: |
+              set -euo pipefail
+              out="$(mktemp)"
+              echo "::group::worker-api versions upload"
+              WRANGLER_OUTPUT_FILE_PATH="$out" pnpm --filter=worker-api run upload -- \
+                --strict \
+                --tag "$HEAD_SHA" \
+                --message "cd ${HEAD_SHA}"
+              echo "::endgroup::"
+              version_id="$(
+                node --input-type=module -e '
+                  import { readFileSync } from "node:fs";
+                  const lines = readFileSync(process.argv[1], "utf8")
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .map((line) => JSON.parse(line));
+                  const hit = [...lines]
+                    .reverse()
+                    .find((entry) => entry?.type === "version-upload" && entry.version_id);
+                  if (!hit) {
+                    console.error("wrangler versions upload did not emit version-upload.version_id");
+                    process.exit(1);
+                  }
+                  process.stdout.write(String(hit.version_id));
+                ' "$out"
+              )"
+              rm -f "$out"
+              echo "version_id=${version_id}" >> "$GITHUB_OUTPUT"
+
+          - name: Upload front-app
+            id: upload-front
+            if: steps.tip.outputs.should_deploy == 'true'
+            run: |
+              set -euo pipefail
+              out="$(mktemp)"
+              echo "::group::front-app versions upload"
+              WRANGLER_OUTPUT_FILE_PATH="$out" pnpm --filter=front-app run upload -- \
+                --strict \
+                --tag "$HEAD_SHA" \
+                --message "cd ${HEAD_SHA}"
+              echo "::endgroup::"
+              version_id="$(
+                node --input-type=module -e '
+                  import { readFileSync } from "node:fs";
+                  const lines = readFileSync(process.argv[1], "utf8")
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .map((line) => JSON.parse(line));
+                  const hit = [...lines]
+                    .reverse()
+                    .find((entry) => entry?.type === "version-upload" && entry.version_id);
+                  if (!hit) {
+                    console.error("wrangler versions upload did not emit version-upload.version_id");
+                    process.exit(1);
+                  }
+                  process.stdout.write(String(hit.version_id));
+                ' "$out"
+              )"
+              rm -f "$out"
+              echo "version_id=${version_id}" >> "$GITHUB_OUTPUT"
+
+      - name: Promote worker-api @100%
         if: steps.tip.outputs.should_deploy == 'true'
         run: |
           set -euo pipefail
+          echo "::group::worker-api versions deploy ${{ steps.upload-api.outputs.version_id }}@100%"
+          pnpm --filter=worker-api run promote -- \
+            "${{ steps.upload-api.outputs.version_id }}@100%" --yes
+          echo "::endgroup::"
 
-          deploy_app() {
-            local app="$1"
-            local out version_id
-            out="$(mktemp)"
-            echo "::group::${app} versions upload"
-            WRANGLER_OUTPUT_FILE_PATH="$out" pnpm --filter="$app" run upload -- \
-              --strict \
-              --tag "$HEAD_SHA" \
-              --message "cd ${HEAD_SHA}"
-            echo "::endgroup::"
-
-            version_id="$(
-              node --input-type=module -e '
-                import { readFileSync } from "node:fs";
-                const lines = readFileSync(process.argv[1], "utf8")
-                  .split("\n")
-                  .map((line) => line.trim())
-                  .filter(Boolean)
-                  .map((line) => JSON.parse(line));
-                const hit = [...lines]
-                  .reverse()
-                  .find((entry) => entry?.type === "version-upload" && entry.version_id);
-                if (!hit) {
-                  console.error("wrangler versions upload did not emit version-upload.version_id");
-                  process.exit(1);
-                }
-                process.stdout.write(String(hit.version_id));
-              ' "$out"
-            )"
-            rm -f "$out"
-
-            echo "::group::${app} versions deploy ${version_id}@100%"
-            pnpm --filter="$app" run promote -- "${version_id}@100%" --yes
-            echo "::endgroup::"
-          }
-
-          deploy_app worker-api
-          if ! deploy_app front-app; then
+      - name: Promote front-app @100%
+        if: steps.tip.outputs.should_deploy == 'true'
+        run: |
+          set -euo pipefail
+          echo "::group::front-app versions deploy ${{ steps.upload-front.outputs.version_id }}@100%"
+          if ! pnpm --filter=front-app run promote -- \
+            "${{ steps.upload-front.outputs.version_id }}@100%" --yes; then
             echo "::error::front-app deploy failed after worker-api may already be live at 100%. Rollback with: pnpm --filter=worker-api exec wrangler rollback --env production"
             exit 1
           fi
+          echo "::endgroup::"
 
       - name: Smoke production health
         if: steps.tip.outputs.should_deploy == 'true'
