@@ -10,9 +10,13 @@ The pipeline is `.github/workflows/cd.yml`. Read it for the step list; a prose c
 
 Weakening a deploy gate or shipping with missing credentials is covered by `guardrails` and is never the answer here either.
 
+## Status
+
+**CD is paused** until production GitHub Environment secrets are configured. The deploy job condition is hard-disabled (leading `false` short-circuit); re-enable by removing that guard (leave tip-check / upload / promote as-is). The rest of this rule describes the intended pipeline once re-enabled.
+
 ## Trigger and tip-of-main
 
-- **CD runs on `workflow_run` after CI `completed`, and only when that CI was a successful `push` to `main`.** Deploy secrets stay off PR CI. Do not deploy from `pull_request` or `pull_request_target` (the latter especially - base-branch context plus untrusted checkout is a pwn pattern).
+- **When enabled, CD runs on `workflow_run` after CI `completed`, and only when that CI was a successful `push` to `main`.** Deploy secrets stay off PR CI. Do not deploy from `pull_request` or `pull_request_target` (the latter especially - base-branch context plus untrusted checkout is a pwn pattern).
 - **Concurrency group is `cd-production` with `cancel-in-progress: false`.** Cancelling would drop an in-flight production ship; queuing is intentional.
 - **That combination can let a slower older CI finish after a newer tip.** The "Skip stale deploy" step compares `HEAD_SHA` (from the triggering run, via job `env:`) to the current tip of `main` and no-ops when stale. Do not remove it as redundant with concurrency.
 - **Checkout uses `ref: ${{ env.HEAD_SHA }}`**, not whatever the default branch tip is at job start - the ship must match the green CI commit.
@@ -31,7 +35,8 @@ Weakening a deploy gate or shipping with missing credentials is covered by `guar
 - **Keep `--strict`, and tag/message with `$HEAD_SHA`** (already in `env:` - never interpolate raw `github.ref_name` into the shell). Cloudflare: `--strict` makes upload/deploy more defensive in non-interactive CI (blocks conflicting remote overrides) - do not drop it to force green.
 - **Traffic policy today is 100%.** Gradual percentages exist in Wrangler; do not add them casually without observability and a rollback runbook. Current CD is upload → promote `@100%`.
 - **`versions upload` does not apply routes, custom domains, or cron triggers** ([Cloudflare deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)). When those land in `wrangler.jsonc`, also run `wrangler triggers deploy --env production` (comment already in the workflow). Omitting that ships code without the trigger change.
-- **Order is `worker-api` then `front-app`.** If front fails after API is already at 100%, production can be split - the workflow's error names the rollback (`wrangler rollback --env production` on worker-api). Do not reorder or parallelize the two promotes without handling that partial state.
+- **Uploads may run in `parallel:`; promotes stay sequential.** `worker-api` then `front-app` at `@100%`. If front fails after API is already live, production can be split - the workflow's error names the rollback (`wrangler rollback --env production` on worker-api). Do not reorder or parallelize the two promotes without handling that partial state.
+- **Credential gate may `parallel:` with `pnpm/setup`.** Install stays after setup.
 
 ## Same hardening as CI
 

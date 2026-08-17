@@ -32,7 +32,7 @@ Styling has its own path-scoped rule: [tailwind.mdc](tailwind.mdc) - engine/entr
 ## App entry & providers
 
 - Compose providers at the root once, outermost first: `<QueryClientProvider>` → `<RouterProvider>`, with a top-level **error boundary** and route-level `<Suspense>`/pending components for loading states.
-- Create the `QueryClient` (module singleton) and the `router` (with `queryClient` + auth in context) at module scope; pass runtime values (e.g. resolved auth) through `<RouterProvider context={...}>`. See the integration section in [tanstack-router.mdc](tanstack-router.mdc).
+- Create the `QueryClient` (module singleton) and the `router` (with `queryClient` in context today) at module scope; pass additional runtime values through `<RouterProvider context={...}>` when they exist. Auth, when added, belongs in route `beforeLoad` / context - do not invent an auth field that the app does not define. See the integration section in [tanstack-router.mdc](tanstack-router.mdc).
 - Mount all devtools (`ReactQueryDevtools`, router devtools) **dev-only** behind `import.meta.env.DEV` so they are tree-shaken from production.
 
 ## Bundle & code splitting

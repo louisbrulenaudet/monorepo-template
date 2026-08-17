@@ -24,7 +24,7 @@ packages/typescript-config/
 | I am writing… | Extend |
 |--------------|--------|
 | A Cloudflare Worker (e.g. `worker-api`, `worker-*`, `queue-*`, `webhook-*`) | `workers.json` |
-| A runtime-neutral library shared by browser and Workers (e.g. `dtos-common`, `enums-common`) | `library.json` |
+| A runtime-neutral library shared by browser and Workers (e.g. `dtos-common`, `enums-common`, `correlation-id`) | `library.json` |
 | A React + Vite frontend (e.g. `front-app`) | `vite-react.json` |
 | A Node-oriented Vite project | `vite-node.json` |
 | A new runtime preset | `strict.json` |

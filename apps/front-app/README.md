@@ -153,7 +153,7 @@ Deploy only the frontend from the monorepo root: `pnpm turbo run deploy --filter
 
 Important: `VITE_*` variables are inlined during build. Changing `VITE_API_BASE_URL` requires rebuilding/redeploying the frontend assets.
 
-Production builds also generate `dist/_headers` with cache and security headers (CSP includes the API origin from `VITE_API_BASE_URL`).
+Production builds also generate `dist/_headers` with cache and security headers (CSP includes the API origin from `VITE_API_BASE_URL`, plus HSTS, Permissions-Policy, and frame denial). The build fails if `VITE_API_BASE_URL` is missing so `_headers` cannot be omitted silently. `style-src 'unsafe-inline'` is deliberate for Vite/Tailwind; `script-src` stays strict.
 
 ## Development
 

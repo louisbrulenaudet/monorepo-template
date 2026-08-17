@@ -2,7 +2,7 @@
 
 ## Overview
 
-`worker-api` is the **public HTTP gateway**: **Cloudflare Workers** + **Hono**, port **8700** in dev. Entry point for `front-app` over HTTP and coordinator for internal Workers via service bindings.
+`worker-api` is the **public HTTP gateway**: **Cloudflare Workers** + **Hono**, port **8700** in dev. Entry point for `front-app` over HTTP; coordinates internal Workers via service bindings when those bindings exist.
 
 Starter surface: `GET /api/v1/health`. Hono lifecycle, middleware order, and validation patterns load from `.claude/rules/backend/hono-gateway.md` or `.cursor/rules/backend/hono-gateway.mdc` when editing `src/**`.
 
@@ -13,7 +13,6 @@ apps/worker-api/
 ├── src/
 │   ├── middlewares/          # cors, csrf (env-dependent Hono wrappers)
 │   ├── routes/<feature>.ts   # One route module per feature
-│   ├── utils/                # opaque-request-id
 │   └── index.ts              # Middleware registration + route mounts
 ├── tests/                    # Vitest suites - Cloudflare pool / workerd
 │   ├── env.d.ts              # ProvidedEnv extends Env
@@ -64,6 +63,13 @@ Worker-to-Worker only - never from `front-app`. Configure in `wrangler.jsonc` un
 When the first `worker-*` binding lands, add a `createTestHarness` Node suite for production builds and gateway HTTP to RPC alongside the existing Vitest pool unit suites - do not replace the pool. Checklist: `packages/vitest-config/AGENTS.md`.
 
 Workers Cache: `.cursor/rules/backend/workers-cache.mdc` / `.claude/rules/backend/workers-cache.md`.
+
+## Security middleware
+
+- **CORS** - allowlist from `c.env.CORS_ORIGINS` (comma-separated). Empty is permissive (`*`) when `ENVIRONMENT` is `AppEnvironment.DEV` only. Any other `ENVIRONMENT` value (including staging/production and typos) with an empty list returns **503** on `/api/*` (fail closed).
+- **CSRF / origin gate** - all unsafe methods (including `application/json`), not only form content-types. Allowed when Origin is on the allowlist **or** `Sec-Fetch-Site` is `same-origin` / `same-site`. Skips `OPTIONS` so CORS preflight works. Browser JSON mutations rely on this gate plus CORS; do not reintroduce permissive CSRF in strict envs.
+- **Errors** - `onError` returns `HTTPException.message` to clients. Keep those messages generic (no privileged content, no upstream provider text). Unexpected errors stay `"Internal server error"` + `requestId`.
+- **Rate limiting** - add a Workers [Rate Limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) binding and/or zone WAF rules before shipping auth or other abuse-prone public writes. Health-only traffic does not need it yet.
 
 ## Commands
 

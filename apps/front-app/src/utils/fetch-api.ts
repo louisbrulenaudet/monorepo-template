@@ -1,5 +1,5 @@
 import { CorsAllowedHeader, HttpMethod } from "@repo/enums-common";
-import { getOrCreateOpaqueRequestId } from "#/utils/opaque-request-id";
+import { getOrCreateCorrelationId } from "#/utils/correlation-id";
 
 type SchemaWithParse<T> = {
   parse: (data: unknown) => T;
@@ -52,7 +52,7 @@ function resolveSignal(
 function withOpaqueRequestId(headers?: HeadersInit): Headers {
   const merged = new Headers(headers);
   if (!merged.has(CorsAllowedHeader.X_REQUEST_ID)) {
-    merged.set(CorsAllowedHeader.X_REQUEST_ID, getOrCreateOpaqueRequestId());
+    merged.set(CorsAllowedHeader.X_REQUEST_ID, getOrCreateCorrelationId());
   }
   return merged;
 }

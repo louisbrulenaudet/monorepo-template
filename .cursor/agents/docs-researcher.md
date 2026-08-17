@@ -1,6 +1,6 @@
 ---
 name: docs-researcher
-description: Use PROACTIVELY to look up external library / framework / SDK / API documentation (Cloudflare Workers, wrangler, Hono, Zod, Flue) via Context7 and the web, and return ONLY the distilled answer with citations. Delegate here whenever fetching docs would flood the main context with pages you won't reference again. Returns the exact API/config snippet + source URL. Never edits code.
+description: Use PROACTIVELY to look up external library / framework / SDK / API documentation (Cloudflare Workers, wrangler, Hono, Zod) via Context7 and the web, and return ONLY the distilled answer with citations. Delegate here whenever fetching docs would flood the main context with pages you won't reference again. Returns the exact API/config snippet + source URL. Never edits code.
 readonly: true
 model: inherit
 ---

@@ -38,8 +38,8 @@
   //   "required": ["EXAMPLE_SECRET"],
   // },
   "vars": {
-    "ENVIRONMENT": "dev",
-    // Comma-separated browser origins. Empty/unset = permissive (*).
+    "ENVIRONMENT": "dev", // AppEnvironment.DEV
+    // Comma-separated browser origins. Empty/unset is permissive (*) when ENVIRONMENT is AppEnvironment.DEV only.
     "CORS_ORIGINS": "http://localhost:5174",
   },
   "env": {
@@ -50,7 +50,9 @@
       },
       "vars": {
         "ENVIRONMENT": "staging",
-        // Empty = permissive CORS until a real allowlist is set.
+        // Wire value = AppEnvironment.STAGING (@repo/enums-common).
+        // Required before go-live. Empty → /api/* returns 503 (fail closed).
+        // Example: "https://front-app-staging.example.com"
         "CORS_ORIGINS": "",
       },
       "observability": {
@@ -68,7 +70,9 @@
       },
       "vars": {
         "ENVIRONMENT": "production",
-        // Empty = permissive CORS until a real allowlist is set.
+        // Wire value = AppEnvironment.PRODUCTION (@repo/enums-common).
+        // Required before go-live. Empty → /api/* returns 503 (fail closed).
+        // Example: "https://app.example.com"
         "CORS_ORIGINS": "",
       },
       "observability": {
