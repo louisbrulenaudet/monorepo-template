@@ -1,0 +1,2 @@
+export SYNCKIT_TIMEOUT=120000
+vp staged

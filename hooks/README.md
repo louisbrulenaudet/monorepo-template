@@ -2,7 +2,7 @@
 
 Shared shell hooks for **Cursor** and **Claude Code**. Scripts live here; wiring stays in tool-specific config files.
 
-These hooks run in the **AI agent loop** only. They do **not** run on a normal human `git commit` - that is [Husky](../README.md#git-hooks) (`.husky/pre-commit`). See the root README diagram that contrasts both systems.
+These hooks run in the **AI agent loop** only. They do **not** run on a normal human `git commit` - that is [Vite+](https://viteplus.dev/guide/commit-hooks) (`.vite-hooks/pre-commit`). See the root README diagram that contrasts both systems.
 
 ## Layout
 

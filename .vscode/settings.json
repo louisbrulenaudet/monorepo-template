@@ -80,7 +80,7 @@
     "*.css": "tailwindcss",
     "wrangler.jsonc": "jsonc",
     ".oxlintrc.json": "jsonc",
-    "**/.husky/*": "shellscript"
+    "**/.vite-hooks/*": "shellscript"
   },
   "json.schemas": [
     {
@@ -127,7 +127,7 @@
     "**/preview": true,
     "**/*.tsbuildinfo": true,
     "**/.pnpm-store": true,
-    "**/.husky/_": true,
+    "**/.vite-hooks/_": true,
     "**/.claude/worktrees": true,
     "**/.claude/logs": true,
     "**/.claude/agent-memory-local": true,
@@ -263,6 +263,7 @@
     "mintimeout",
     "mousemove",
     "mozilla",
+    "navigations",
     "networkidle",
     "njsproj",
     "noemail",
@@ -311,6 +312,7 @@
     "Subfolders",
     "subpaths",
     "subrequests",
+    "SYNCKIT",
     "tailwindcss",
     "tanstack",
     "tiktok",
@@ -334,6 +336,7 @@
     "vercel",
     "visualiser",
     "VITE",
+    "vitejs",
     "vitest",
     "WAAPI",
     "webworker",

@@ -56,10 +56,10 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 - **Artifacts:** [.github/dependabot.yml](../../../.github/dependabot.yml) (if present), root and app package.json.
 - **Checks:** Dependabot configured for npm (or pnpm); schedule and open-pull-requests-limit set. Grouping: optional groups (e.g. minor-patch) to reduce PR noise. Versioning strategy: allow or ignore as needed. CI runs on Dependabot PRs so updates are validated.
 
-### Husky and pre-commit
+### Vite+ commit hooks and pre-commit
 
-- **Artifacts:** [.husky/pre-commit](.husky/pre-commit), root [package.json](../../../package.json) (prepare script), [.oxfmtrc.json](.oxfmtrc.json), [.oxlintrc.json](.oxlintrc.json).
-- **Checks:** Pre-commit hook runs formatter (oxfmt) on staged files only; command is fast (no full lint if format is enough for pre-commit). Use git-format-staged or lint-staged so only staged files are processed. Hook is executable and invoked by Husky. `pnpm prepare` (or equivalent) installs hooks; documented in AGENTS.md or README. No heavy steps (e.g. full build) in pre-commit.
+- **Artifacts:** [.vite-hooks/pre-commit](.vite-hooks/pre-commit), root [package.json](../../../package.json) (prepare script), root [vite.config.ts](../../../vite.config.ts) (`staged` block), [.oxfmtrc.json](.oxfmtrc.json), [.oxlintrc.json](.oxlintrc.json).
+- **Checks:** Pre-commit hook runs `vp staged` so only staged files are processed; commands are fast (no full lint or full build in pre-commit). Hook is executable and invoked by the Vite+ dispatcher (`core.hooksPath`). `pnpm prepare` (or equivalent) installs hooks via `vp config`; documented in AGENTS.md or README. Bypass documented (`VP_GIT_HOOKS=0`).
 
 ### Deploy pipeline
 
@@ -88,7 +88,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 3. **Inspect workflow** - ci.yml: checkout, setup-node, pnpm, install, check, check-types, build; permissions and triggers.
 4. **Inspect caching** - pnpm and Turborepo cache usage; cache keys.
 5. **Inspect lockfile and install** - install-frozen; packageManager and engines; lockfile committed.
-6. **Inspect Dependabot and Husky** - dependabot.yml; .husky/pre-commit and prepare target.
+6. **Inspect Dependabot and Vite+ hooks** - dependabot.yml; .vite-hooks/pre-commit, vite.config.ts staged block, and prepare target.
 7. **Inspect deploy** - Deploy workflow or job; permissions; optional health check.
 8. **Compose plan** - Critical / Improvements / Optional; each item: **what**, **where**, **why**. One-line "no issues" per sub-area if none.
 
@@ -106,7 +106,7 @@ Conduct a CI-only review. Inspect the following and call out violations or impro
 
 ## Context usage
 
-- Use `@file` for ci.yml, dependabot.yml, .husky/pre-commit, turbo.json, package.json.
+- Use `@file` for ci.yml, dependabot.yml, .vite-hooks/pre-commit, vite.config.ts, turbo.json, package.json.
 - Use `@code` for specific workflow steps or cache keys when suggesting changes.
 - Use `@docs` or `@web` for GitHub Actions and pnpm/Turborepo caching best practices.
 

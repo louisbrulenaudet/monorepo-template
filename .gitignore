@@ -153,8 +153,8 @@ out/
 # TypeScript incremental build in node_modules
 **/node_modules/.tmp/
 
-# Husky internal files
-.husky/_/
+# Vite+ generated hook dispatcher and shims
+.vite-hooks/_/
 
 # Claude Code personal project overrides (see code.claude.com/docs/en/memory)
 CLAUDE.local.md

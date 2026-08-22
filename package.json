@@ -29,7 +29,7 @@
     "lint:check": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern .",
     "lint:fix": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix .",
     "login": "wrangler login",
-    "prepare": "husky",
+    "prepare": "vp config --no-agent",
     "preview": "turbo run preview --filter=front-app",
     "promote": "turbo run promote --filter=worker-api --filter=front-app",
     "skills-update": "bash .agents/skills/skills-update/scripts/update-locked-skills.sh",
@@ -43,15 +43,13 @@
   "devDependencies": {
     "cross-env": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
-    "git-format-staged": "catalog:",
-    "husky": "catalog:",
-    "lefthook": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "tailwindcss": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
+    "vite-plus": "catalog:",
     "wrangler": "catalog:"
   },
   "devEngines": {

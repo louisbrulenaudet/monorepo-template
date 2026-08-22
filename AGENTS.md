@@ -9,7 +9,7 @@ A minimal, production-oriented monorepo starter built on **pnpm workspaces** wit
 ```bash
 pnpm install    # dependencies + workspace links
 pnpm login      # Cloudflare (remote Worker features)
-pnpm prepare    # Husky pre-commit hooks
+pnpm prepare    # Vite+ pre-commit hooks
 pnpm dev        # all dev servers
 ```
 

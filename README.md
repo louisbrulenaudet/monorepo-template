@@ -32,7 +32,7 @@ monorepo/
 │   ├── enums-common/        # Shared constrained string values (`as const`)
 │   ├── typescript-config/   # TypeScript configuration presets
 │   └── vitest-config/       # Shared Vitest factories (Node + Workers pool)
-├── hooks/                   # AI agent hooks (not Husky - see hooks/README.md)
+├── hooks/                   # AI agent hooks (not Vite+ git hooks - see hooks/README.md)
 ├── package.json             # Root package configuration
 ├── pnpm-workspace.yaml      # Workspace configuration
 └── turbo.json               # Turborepo configuration
@@ -132,7 +132,7 @@ Do **not** create shared `packages/db-*` schema packages. Put Drizzle schema und
 ```sh
 pnpm install
 pnpm login     # optional - Cloudflare auth for remote Wrangler features
-pnpm prepare   # Husky pre-commit hooks
+pnpm prepare   # Vite+ pre-commit hooks
 ```
 
 No type-generation step: `worker-configuration.d.ts` is **committed**, per Cloudflare's recommendation, so a fresh clone lints and type-checks immediately. After editing a Worker's `wrangler.jsonc`, run `pnpm types` and commit the regenerated file - `pnpm run ci` runs `pnpm types:check` (`wrangler types --check`), which fails if it has drifted. `wrangler types` runs entirely locally: no Cloudflare auth or network.
@@ -182,7 +182,7 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 | `pnpm types` | Regenerate `worker-configuration.d.ts` (commit it) |
 | `pnpm types:check` | Verify committed Worker types match `wrangler.jsonc` |
 | `pnpm check-types` | TypeScript across all workers and packages |
-| `pnpm prepare` | Install or reinstall Husky git hooks |
+| `pnpm prepare` | Install or reinstall Vite+ git hooks (`vp config`) |
 | `pnpm skills-update` | Refresh locked agent skills (see AGENTS.md) |
 
 ### Scoping (pnpm / Turborepo)
@@ -453,14 +453,14 @@ This repo has **two** hook systems. They do not replace each other:
 
 | System | When it runs | Docs |
 |--------|--------------|------|
-| **Husky** (`.husky/`) | Human `git commit` | This section |
+| **Vite+** (`.vite-hooks/`) | Human `git commit` | This section |
 | **Agent hooks** (`hooks/`) | Cursor / Claude Code tool loop | [hooks/README.md](hooks/README.md) |
 
 ```mermaid
 flowchart LR
   subgraph human [Human git]
-    Commit["git commit"] --> Husky[".husky/pre-commit"]
-    Husky --> Oxc["oxfmt + oxlint"]
+    Commit["git commit"] --> ViteHooks[".vite-hooks/pre-commit"]
+    ViteHooks --> Staged["vp staged"] --> Oxc["oxfmt + oxlint"]
   end
   subgraph agent [AI agent loop]
     Shell["beforeShellExecution"] --> GitHooks["hooks/git/*"]
@@ -468,13 +468,14 @@ flowchart LR
   end
 ```
 
-### Husky pre-commit
+### Vite+ pre-commit
 
-[Husky](https://typicode.github.io/husky/) applies oxfmt and oxlint safe fixes to staged snapshots through `git-format-staged`, preserving unrelated working-tree edits.
+[Vite+](https://viteplus.dev/guide/commit-hooks) provides the hook dispatcher (`vp config`, run by `pnpm prepare`) and `vp staged`, which applies oxfmt and oxlint safe fixes to staged files, preserving unrelated working-tree edits. Commands live in the `staged` block of the root [`vite.config.ts`](vite.config.ts).
 
 ```sh
-pnpm prepare       # install / reinstall hooks
-ls -la .husky  # verify hooks are executable
+pnpm prepare       # install / reinstall hooks (runs vp config)
+vp hooks status    # verify dispatcher is active
+VP_GIT_HOOKS=0 git commit -m "..."  # bypass hooks for one commit
 ```
 
 ## Contribution
@@ -491,7 +492,7 @@ ls -la .husky  # verify hooks are executable
 - **[AGENTS.md](AGENTS.md)** - cross-tool project conventions and Cursor's root instructions.
 - **[CLAUDE.md](CLAUDE.md)** - Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).
 - **Per-app/package** - each workspace has matching `AGENTS.md` and `CLAUDE.md`.
-- **[hooks/README.md](hooks/README.md)** - shared agent hook scripts (not Husky).
+- **[hooks/README.md](hooks/README.md)** - shared agent hook scripts (not Vite+ git hooks).
 - **Rules** - mirrored trees under `.cursor/rules/**/*.mdc` and `.claude/rules/**/*.md`.
 - **Skills** - source of truth under `.agents/skills/` (see skill `monorepo-agent-setup`). Sparse worktrees include `.agents` so mirrored skill links resolve.
 - **Versioned Turbo docs** - use `pnpm turbo docs task-caching` to query documentation matching the installed CLI.

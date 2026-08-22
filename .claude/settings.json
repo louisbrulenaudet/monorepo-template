@@ -249,7 +249,7 @@
       ".claude",
       ".cursor",
       ".github",
-      ".husky",
+      ".vite-hooks",
       ".vscode",
       ".nvmrc",
       ".oxfmtrc.json",
@@ -262,7 +262,8 @@
       "package.json",
       "pnpm-lock.yaml",
       "pnpm-workspace.yaml",
-      "turbo.json"
+      "turbo.json",
+      "vite.config.ts"
     ],
     "symlinkDirectories": [
       "node_modules"

@@ -9,7 +9,7 @@
   "global": {
     "ui": "tui",
     "envMode": "strict",
-    "concurrency": "100%",
+    "concurrency": "50%",
     "cacheMaxAge": "7d",
     "cacheMaxSize": "10GB",
     "remoteCache": {
