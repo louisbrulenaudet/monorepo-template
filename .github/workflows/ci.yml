@@ -23,6 +23,8 @@ env:
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
   TURBO_UI: "false"
+  # Within-job Node V8 bytecode cache; turbo passThroughEnv must list this (strict mode).
+  NODE_COMPILE_CACHE: ${{ runner.temp }}/node-compile-cache
 
 jobs:
   ci:

@@ -20,7 +20,12 @@
     // absent: lint and format do not run through Turborepo, so .oxlintrc.json and
     // .oxfmtrc.json must not invalidate check-types or build. See root package.json (lint/format scripts).
     "inputs": ["pnpm-workspace.yaml"],
-    "passThroughEnv": ["CI", "NODE_ENV"]
+    "passThroughEnv": [
+      "CI",
+      "NODE_ENV",
+      "NODE_COMPILE_CACHE",
+      "NODE_DISABLE_COMPILE_CACHE"
+    ]
   },
   // Machine-enforced version of the architecture in AGENTS.md. Run via `pnpm boundaries`
   // (part of `pnpm run ci`). Tags are assigned in each package's own turbo.json.

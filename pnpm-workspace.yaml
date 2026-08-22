@@ -29,6 +29,7 @@ catalog:
   git-format-staged: ^4.0.2
   hono: ^4.13.2
   husky: ^9.1.7
+  lefthook: ^2.1.10
   oxfmt: ^0.63.0
   oxlint: ^1.78.0
   oxlint-tsgolint: ^7.0.2001
@@ -62,6 +63,7 @@ trustPolicyIgnoreAfter: 525600 # 365 days — skip trust checks for older publis
 
 allowBuilds:
   esbuild: true
+  lefthook: false
   sharp: true
   workerd: true
 

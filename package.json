@@ -45,6 +45,7 @@
     "eslint-plugin-better-tailwindcss": "catalog:",
     "git-format-staged": "catalog:",
     "husky": "catalog:",
+    "lefthook": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
