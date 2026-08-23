@@ -26,6 +26,7 @@
     "format:fix": "oxfmt .",
     "lint:agent": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --format=agent .",
     "lint:check": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern .",
+    "lint:ci": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --format=github .",
     "lint:fix": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix .",
     "login": "wrangler login",
     "prepare": "vp config --no-agent",

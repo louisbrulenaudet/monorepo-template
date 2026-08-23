@@ -25,6 +25,15 @@
   "options": {
     "typeAware": true,
     "denyWarnings": true,
+    // Disable-directive policy: only `oxlint-disable*` directives are honored.
+    // `eslint-disable*` comments are NOT respected, and because unused
+    // directives are errors, any stray `// eslint-disable-next-line` fails the
+    // lint pass. Always suppress with `// oxlint-disable-next-line <rule>` and
+    // a reason (see .claude/rules/quality/code-style.*).
+    //
+    // Type checking stays with tsc via `turbo run check-types`:
+    // oxlint's experimental options.typeCheck would duplicate it while losing
+    // per-package Turbo caching and --affected filtering. Revisit when stable.
     "reportUnusedDisableDirectives": "error",
     "respectEslintDisableDirectives": false
   },

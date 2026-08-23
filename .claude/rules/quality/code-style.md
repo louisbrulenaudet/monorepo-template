@@ -13,3 +13,4 @@ OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format)
 - Keep route/tool handlers thin: validate at the boundary, delegate I/O to a client or service module, then map the response. Business logic does not belong inline in the handler.
 - Prefer native type inference (see [type-inference.md](../contracts/type-inference.md)) over hand-written shapes.
 - Lint and format run as a whole-repo OXC pass from the root - never `cd` into a package and run `oxlint .` (breaks context-aware Tailwind rules). See **Scoping** in root `AGENTS.md`.
+- Inline suppressions use the `oxlint-*` form only (`// oxlint-disable-next-line <rule>` with a reason). `.oxlintrc.json` sets `respectEslintDisableDirectives: false`, so `eslint-disable*` comments are ignored by the linter and, via `reportUnusedDisableDirectives: "error"`, any stray one fails CI.
