@@ -30,6 +30,7 @@ Canonical layout and sync policy for **Cursor** and **Claude Code** in this repo
 - Ports rule: `.claude/rules/backend/ports.md` ↔ `.cursor/rules/backend/ports.mdc` - `wrangler.jsonc`, app `package.json`, `front-*/vite.config.ts`.
 - TSConfig rule: `.claude/rules/quality/typescript-config.md` ↔ `.cursor/rules/quality/typescript-config.mdc` - `packages/typescript-config/**`, `**/tsconfig*.json`.
 - Vitest shared-config rule: `.claude/rules/quality/vitest-config.md` ↔ `.cursor/rules/quality/vitest-config.mdc` - `packages/vitest-config/**`.
+- Turbo rule: `.claude/rules/core/turborepo.md` ↔ `.cursor/rules/core/turborepo.mdc` - `**/turbo.json`, `.github/workflows/**`.
 
 See [`hooks/AGENTS.md`](../../../hooks/AGENTS.md) for hook authoring. Full layout and sync policy: this skill.
 
@@ -82,7 +83,7 @@ When changing agent setup, keep both tools in sync:
 
 ## Inventory (quick)
 
-- **Rules:** 24 mirrored basenames (only `core/guardrails` always-on); `tests/` holds vitest + hono-workers + front-react (DOM/RTL depth in skill `front-vitest`); `ops/` holds `ci` + `cd`. No `drizzle-orm` rule until a DB-owning worker lands.
+- **Rules:** 25 mirrored basenames (only `core/guardrails` always-on); `tests/` holds vitest + hono-workers + front-react (DOM/RTL depth in skill `front-vitest`); `ops/` holds `ci` + `cd`. No `drizzle-orm` rule until a DB-owning worker lands.
 - **Subagents:** `verifier`, `bundle-analyzer`, `docs-researcher`.
 - **Cursor hooks:** `beforeShellExecution` (git guards, `failClosed`), `afterFileEdit` (format/lint), `sessionStart`.
 - **Claude hooks:** PreToolUse Bash (same git guards), PostToolUse Edit\|Write (format/lint), InstructionsLoaded.

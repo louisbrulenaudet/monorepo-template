@@ -116,7 +116,7 @@ Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev
 
 | Command | Description |
 |---------|-------------|
-| `pnpm run ci` | Full-repo local PR gate (no `--affected`); CI uses `--affected` for check-types/test/build |
+| `pnpm run ci` | Full-repo local PR gate (no `--affected`); one `turbo run check-types test build`; CI uses `--affected` for that phase |
 | `pnpm lint:agent` | Lint with `--format=agent` - one machine-readable line per diagnostic, no auto-fix |
 | `pnpm types` | Regenerate `worker-configuration.d.ts` (**commit the result**) |
 | `pnpm types:check` | Verify committed Worker types match `wrangler.jsonc` (inside `pnpm run ci`) |
@@ -130,7 +130,7 @@ Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview
 
 ## Agent tooling
 
-Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Nested `AGENTS.md` + `CLAUDE.md` live under each `apps/*`, `packages/*`, and `hooks/` - give new packages the same pair.
+Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Nested `AGENTS.md` + `CLAUDE.md` live under each `apps/*`, `packages/*`, and `hooks/` - give new packages the same pair. Turbo graph primitives (`turbo query`) and signed-remote-cache provisioning are path-scoped in `core/turborepo`.
 
 ### Subagent roster
 

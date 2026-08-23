@@ -2,18 +2,23 @@
   "$schema": "./node_modules/turbo/schema.json",
   "futureFlags": {
     "affectedUsingTaskInputs": true,
+    "filterUsingTasks": true,
     "watchUsingTaskInputs": true,
     "strictTaskEntrypointSelection": true,
+    // Remote-cache artifact signing (HMAC-SHA256). Requires TURBO_REMOTE_CACHE_SIGNATURE_KEY
+    // (>= 32 bytes) locally and in CI, or signed fetches fail closed.
+    "longerSignatureKey": true,
     "globalConfiguration": true
   },
   "global": {
     "ui": "tui",
     "envMode": "strict",
-    "concurrency": "50%",
     "cacheMaxAge": "7d",
     "cacheMaxSize": "10GB",
     "remoteCache": {
-      "enabled": true
+      "enabled": true,
+      // Verifies artifacts against TURBO_REMOTE_CACHE_SIGNATURE_KEY on fetch and upload.
+      "signature": true
     },
     // Prepended to every task's `inputs` (not folded into a single global hash), so a
     // task can drop a specific entry with a negation glob. OXC configs are deliberately

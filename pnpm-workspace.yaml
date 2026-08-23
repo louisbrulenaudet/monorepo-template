@@ -34,7 +34,7 @@ catalog:
   react-dom: ^19.2.8
   rollup-plugin-visualizer: ^7.1.1
   tailwindcss: ^4.3.3
-  turbo: ^2.10.11
+  turbo: 2.10.11
   typescript: ^7.0.2
   vite: ^8.2.2
   vite-plus: 0.2.9

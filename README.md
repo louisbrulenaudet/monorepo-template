@@ -168,7 +168,7 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 | `pnpm login` | Login to Cloudflare (repo-pinned Wrangler) |
 | `pnpm update` | Update dependencies to latest (rewrites pnpm catalog) |
 | `pnpm check` | Lint + format check (no typecheck) |
-| `pnpm run ci` | Full-repo local PR gate: boundaries, lint:check, format:check, check-types, types:check, test, build:ci, audit (GitHub CI uses `--affected` for check-types/test/build) |
+| `pnpm run ci` | Full-repo local PR gate: boundaries, lint:check, format:check, types:check, one `turbo run check-types test build`, audit (GitHub CI uses `--affected` for the turbo phase) |
 | `pnpm test` | Vitest via `turbo run test` (per-app; Node or Cloudflare pool) |
 | `pnpm test:watch` | Vitest watch via `turbo run test:watch` (humans; persistent, uncached) |
 | `pnpm boundaries` | Check package dependency tags against `turbo.json` |
@@ -480,7 +480,7 @@ VP_GIT_HOOKS=0 git commit -m "..."  # bypass hooks for one commit
 
 ## Contribution
 
-- Run **`pnpm run ci`** before opening a PR (boundaries, lint, format, check-types, types:check, test, build:ci, audit). GitHub CI mirrors those gates and uses `--affected` for check-types/test/build.
+- Run **`pnpm run ci`** before opening a PR (boundaries, lint, format, types:check, one `turbo run check-types test build`, audit). GitHub CI mirrors those gates and uses `--affected` for the turbo phase.
 - Wire-format changes: update `@repo/dtos-common` and every producer/consumer in the **same PR** (HTTP → `worker-api` + `front-app`).
 - When you add endpoints, bindings, or env vars, update the relevant app/package **README** and **AGENTS.md**.
 

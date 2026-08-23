@@ -38,6 +38,9 @@ jobs:
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      # Remote-cache artifact signing (turbo.json remoteCache.signature + longerSignatureKey).
+      # Repo-level secret; must be >= 32 bytes and identical to local machines' value.
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       # actions/checkout materializes branches as origin/<name> only. Turbo reads
       # GITHUB_BASE_REF as a bare name ("main"), which is not a local revision -
       # without this, --affected falls back to "everything changed".
