@@ -23,7 +23,7 @@ General test authoring: [vitest.md](../tests/vitest.md). Workers: [hono-workers.
 | @repo/vitest-config | defineNodeConfig, sharedTestDefaults, resolvePackageRoot for front-* |
 | @repo/vitest-config/workers | defineWorkersConfig, resolvePackageRoot for worker-*, queue-*, webhook-*, mcp-* |
 
-Two entry files on purpose: src/index.ts and src/workers.ts. Node apps must never resolve @cloudflare/vitest-pool-workers. Shared mock-hygiene defaults are intentionally duplicated across those files. Do not reintroduce a relative import between them. `resolvePackageRoot` lives in package-root.js and is re-exported from both.
+Two entry files on purpose: src/index.ts and src/workers.ts. Node apps must never resolve @cloudflare/vitest-plugin. Shared mock-hygiene defaults are intentionally duplicated across those files. Do not reintroduce a relative import between them. `resolvePackageRoot` lives in package-root.js and is re-exported from both.
 
 ## Editing rules
 

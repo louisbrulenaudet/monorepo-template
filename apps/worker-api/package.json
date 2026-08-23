@@ -1,8 +1,21 @@
 {
   "name": "worker-api",
-  "version": "0.0.0",
-  "private": true,
   "description": "Public Hono HTTP gateway on Cloudflare Workers; validates requests with shared Zod contracts.",
+  "version": "0.0.0",
+  "dependencies": {
+    "@repo/correlation-id": "workspace:*",
+    "@repo/enums-common": "workspace:*",
+    "hono": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "catalog:",
+    "@repo/dtos-common": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  },
   "keywords": [
     "api",
     "cloudflare-workers",
@@ -12,6 +25,14 @@
     "zod"
   ],
   "main": "src/index.ts",
+  "monorepo": {
+    "kind": "app",
+    "role": "http-gateway",
+    "prefix": "worker-",
+    "devPort": 8700,
+    "agentGuide": "AGENTS.md"
+  },
+  "private": true,
   "scripts": {
     "build": "wrangler deploy --dry-run --outdir dist --env production",
     "check-types": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
@@ -27,26 +48,5 @@
     "types": "wrangler types -c ./wrangler.jsonc",
     "types:check": "wrangler types -c ./wrangler.jsonc --check",
     "upload": "wrangler versions upload --env production"
-  },
-  "dependencies": {
-    "@repo/correlation-id": "workspace:*",
-    "@repo/dtos-common": "workspace:*",
-    "@repo/enums-common": "workspace:*",
-    "hono": "catalog:"
-  },
-  "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "catalog:",
-    "@repo/typescript-config": "workspace:*",
-    "@repo/vitest-config": "workspace:*",
-    "typescript": "catalog:",
-    "vitest": "catalog:",
-    "wrangler": "catalog:"
-  },
-  "monorepo": {
-    "kind": "app",
-    "role": "http-gateway",
-    "prefix": "worker-",
-    "devPort": 8700,
-    "agentGuide": "AGENTS.md"
   }
 }

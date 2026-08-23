@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/syncpack/schema.json",
+  "versionGroups": [
+    {
+      "label": "internal workspace links",
+      "dependencies": ["@repo/**"],
+      "dependencyTypes": ["prod", "dev"],
+      "pinVersion": "workspace:*"
+    },
+    {
+      "label": "peer compatibility ranges",
+      "dependencyTypes": ["peer"],
+      "isIgnored": true
+    },
+    {
+      "label": "third-party via pnpm catalog",
+      "dependencies": ["**"],
+      "dependencyTypes": ["prod", "dev"],
+      "policy": "catalog"
+    }
+  ]
+}

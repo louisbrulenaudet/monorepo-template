@@ -6,6 +6,11 @@ type UseApiHealthResult = {
   status: ApiHealthStatus;
 };
 
+/**
+ * Pure reducer extracted for unit testing.
+ *
+ * @internal
+ */
 export function resolveApiHealthStatus({
   isFetching,
   isPending,

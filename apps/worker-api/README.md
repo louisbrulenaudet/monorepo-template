@@ -33,7 +33,7 @@ What you can add as you grow the repo:
 - **Validation:** Zod Mini schemas from `@repo/dtos-common/api`
 - **Middleware:** request id, secure headers, CORS, CSRF, timeout, body limits, timing + pretty JSON (dev)
 - **Runtime:** Cloudflare Workers
-- **Tests:** Vitest 4 + `@cloudflare/vitest-pool-workers` via `@repo/vitest-config/workers`
+- **Tests:** Vitest 4 + `@cloudflare/vitest-plugin` via `@repo/vitest-config/workers`
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm
 
@@ -158,7 +158,7 @@ Worker-local constrained strings belong in `src/enums/`. Promote to `@repo/enums
 
 ## Testing
 
-Suites live under `tests/` and run inside workerd via `@cloudflare/vitest-pool-workers`. Prefer `import { env, exports } from "cloudflare:workers"` for integration checks. Config: `vitest.config.mts` → `defineWorkersConfig` from `@repo/vitest-config/workers`.
+Suites live under `tests/` and run inside workerd via `@cloudflare/vitest-plugin`. Prefer `import { env, exports } from "cloudflare:workers"` for integration checks. Config: `vitest.config.mts` → `defineWorkersConfig` from `@repo/vitest-config/workers`.
 
 ```bash
 pnpm -w turbo run test --filter=worker-api

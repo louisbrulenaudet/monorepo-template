@@ -1,8 +1,14 @@
 {
   "name": "@repo/typescript-config",
-  "version": "0.0.0",
-  "private": true,
   "description": "Shared TypeScript compiler presets for Workers apps, React/Vite apps, and internal libraries.",
+  "version": "0.0.0",
+  "exports": {
+    "./library.json": "./library.json",
+    "./strict.json": "./strict.json",
+    "./workers.json": "./workers.json",
+    "./vite-react.json": "./vite-react.json",
+    "./vite-node.json": "./vite-node.json"
+  },
   "keywords": [
     "react",
     "shared-config",
@@ -12,23 +18,17 @@
     "workers"
   ],
   "license": "MIT",
-  "sideEffects": false,
-  "exports": {
-    "./library.json": "./library.json",
-    "./strict.json": "./strict.json",
-    "./workers.json": "./workers.json",
-    "./vite-react.json": "./vite-react.json",
-    "./vite-node.json": "./vite-node.json"
+  "monorepo": {
+    "kind": "config",
+    "role": "typescript-config",
+    "agentGuide": "AGENTS.md"
   },
+  "private": true,
   "scripts": {
     "format": "pnpm -w exec oxfmt --check packages/typescript-config",
     "format:fix": "pnpm -w exec oxfmt packages/typescript-config",
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/typescript-config",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/typescript-config"
   },
-  "monorepo": {
-    "kind": "config",
-    "role": "typescript-config",
-    "agentGuide": "AGENTS.md"
-  }
+  "sideEffects": false
 }

@@ -5,11 +5,18 @@ const STORAGE_KEY = "correlation-id";
 /** In-memory cache so we skip sessionStorage I/O after the first resolve. */
 let cachedId: string | null = null;
 
+/**
+ * Re-exported for unit tests; production code uses the internal import.
+ *
+ * @internal
+ */
 export { isOpaqueCorrelationId };
 
 /**
  * Clears the in-memory cache. Used by tests when sessionStorage is stubbed
  * fresh between cases.
+ *
+ * @internal
  */
 export function resetCorrelationIdCache(): void {
   cachedId = null;

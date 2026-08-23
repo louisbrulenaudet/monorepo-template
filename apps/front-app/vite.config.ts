@@ -4,6 +4,7 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import { DevTools } from "@vitejs/devtools";
 import react from "@vitejs/plugin-react";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -133,6 +134,7 @@ export default defineConfig(({ command, mode }) => {
 
   const plugins: PluginOption[] = [
     devtools({ consolePiping: { enabled: false } }),
+    DevTools(),
     tanstackRouter({
       autoCodeSplitting: true,
     }),
@@ -183,6 +185,7 @@ export default defineConfig(({ command, mode }) => {
       reportCompressedSize: false,
       chunkSizeWarningLimit: 500,
       rolldownOptions: {
+        ...(analyzeBundle ? { devtools: {} } : {}),
         output: {
           codeSplitting: {
             groups: [

@@ -1,8 +1,51 @@
 {
   "name": "front-app",
-  "version": "0.0.0",
-  "private": true,
   "description": "React SPA (Vite + TanStack Router/Query) deployed on Cloudflare; talks to worker-api over HTTP only.",
+  "version": "0.0.0",
+  "dependencies": {
+    "@repo/correlation-id": "workspace:*",
+    "@repo/dtos-common": "workspace:*",
+    "@repo/enums-common": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "catalog:",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "@tailwindcss/vite": "catalog:",
+    "@tanstack/devtools-vite": "catalog:",
+    "@tanstack/react-devtools": "catalog:",
+    "@tanstack/react-query-devtools": "catalog:",
+    "@tanstack/react-router-devtools": "catalog:",
+    "@tanstack/router-cli": "catalog:",
+    "@tanstack/router-plugin": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/devtools": "catalog:",
+    "@vitejs/devtools-rolldown": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "oxc-transform-react": "catalog:",
+    "rollup-plugin-visualizer": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:",
+    "zod": "catalog:"
+  },
+  "imports": {
+    "#/*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx"
+    ]
+  },
   "keywords": [
     "cloudflare",
     "frontend",
@@ -13,16 +56,14 @@
     "tanstack-router",
     "vite"
   ],
-  "type": "module",
-  "imports": {
-    "#/*": [
-      "./src/*",
-      "./src/*.ts",
-      "./src/*.tsx",
-      "./src/*/index.ts",
-      "./src/*/index.tsx"
-    ]
+  "monorepo": {
+    "kind": "app",
+    "role": "frontend",
+    "prefix": "front-",
+    "devPort": 5174,
+    "agentGuide": "AGENTS.md"
   },
+  "private": true,
   "scripts": {
     "analyze": "ANALYZE=true vite build",
     "build": "vite build",
@@ -43,44 +84,5 @@
     "types:check": "wrangler types -c ./wrangler.jsonc --check",
     "upload": "wrangler versions upload --env production"
   },
-  "dependencies": {
-    "@repo/correlation-id": "workspace:*",
-    "@repo/dtos-common": "workspace:*",
-    "@repo/enums-common": "workspace:*",
-    "@tanstack/react-query": "catalog:",
-    "@tanstack/react-router": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@cloudflare/vite-plugin": "catalog:",
-    "@repo/typescript-config": "workspace:*",
-    "@repo/vitest-config": "workspace:*",
-    "@tailwindcss/vite": "catalog:",
-    "@tanstack/devtools-vite": "catalog:",
-    "@tanstack/react-devtools": "catalog:",
-    "@tanstack/react-query-devtools": "catalog:",
-    "@tanstack/react-router-devtools": "catalog:",
-    "@tanstack/router-cli": "catalog:",
-    "@tanstack/router-plugin": "catalog:",
-    "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "oxc-transform-react": "catalog:",
-    "rollup-plugin-visualizer": "catalog:",
-    "tailwindcss": "catalog:",
-    "typescript": "catalog:",
-    "vite": "catalog:",
-    "vitest": "catalog:",
-    "wrangler": "catalog:"
-  },
-  "monorepo": {
-    "kind": "app",
-    "role": "frontend",
-    "prefix": "front-",
-    "devPort": 5174,
-    "agentGuide": "AGENTS.md"
-  }
+  "type": "module"
 }

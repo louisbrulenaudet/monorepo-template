@@ -8,7 +8,7 @@ Shared Vitest configuration factories for the monorepo. Apps call these helpers 
 
 ## Purpose
 
-`@repo/vitest-config` standardizes Vitest setup so every app gets the same mock cleanup and `tests/**/*.test.ts` layout, while keeping **Node** and **Cloudflare Workers** entry points separate. Front apps never resolve `@cloudflare/vitest-pool-workers`; Worker apps never inherit Node `pool` / `isolate: false`.
+`@repo/vitest-config` standardizes Vitest setup so every app gets the same mock cleanup and `tests/**/*.test.ts` layout, while keeping **Node** and **Cloudflare Workers** entry points separate. Front apps never resolve `@cloudflare/vitest-plugin`; Worker apps never inherit Node `pool` / `isolate: false`.
 
 ## Features
 
@@ -22,7 +22,7 @@ Shared Vitest configuration factories for the monorepo. Apps call these helpers 
 ## Tech Stack
 
 - **Test runner:** Vitest 4.x (pnpm catalog)
-- **Workers pool:** `@cloudflare/vitest-pool-workers` (optional peer; Workers entry only)
+- **Workers pool:** `@cloudflare/vitest-plugin` (optional peer; Workers entry only)
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm
 
@@ -44,7 +44,7 @@ Worker-family apps also need the pool peer:
 ```json
 {
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "catalog:",
+    "@cloudflare/vitest-plugin": "catalog:",
     "@repo/vitest-config": "workspace:*",
     "vitest": "catalog:"
   }
@@ -104,7 +104,7 @@ export default defineWorkersConfig(
 );
 ```
 
-Prefer `import { env, exports } from "cloudflare:workers"` in integration suites. Keep `tests/tsconfig.json` on `@cloudflare/vitest-pool-workers/types` and include it in the app's `check-types` script.
+Prefer `import { env, exports } from "cloudflare:workers"` in integration suites. Keep `tests/tsconfig.json` on `@cloudflare/vitest-plugin/types` and include it in the app's `check-types` script.
 
 **Vitest VS Code explorer:** Pin `root` and `test.dir` with `resolvePackageRoot(import.meta.dirname)` in every app config. The explorer caches the workspace folder via `realpathSync`; a non-realpathed path can miss that cache (notably on macOS with symlinks) and throw `Fatal Error: Attempted to get parent of root folder "/"`.
 

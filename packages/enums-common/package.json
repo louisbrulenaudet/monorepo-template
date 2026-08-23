@@ -1,24 +1,30 @@
 {
   "name": "@repo/enums-common",
-  "version": "0.0.0",
-  "private": true,
   "description": "Shared constrained string values (`as const` objects) for dtos-common, workers, and front-app.",
-  "keywords": [
-    "contracts",
-    "enums",
-    "shared",
-    "typescript"
-  ],
-  "type": "module",
-  "sideEffects": false,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "version": "0.0.0",
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     }
   },
+  "keywords": [
+    "contracts",
+    "enums",
+    "shared",
+    "typescript"
+  ],
+  "main": "./src/index.ts",
+  "monorepo": {
+    "kind": "library",
+    "role": "enums",
+    "agentGuide": "AGENTS.md"
+  },
+  "private": true,
   "scripts": {
     "check-types": "tsc --noEmit",
     "format": "pnpm -w exec oxfmt --check packages/enums-common",
@@ -26,13 +32,7 @@
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/enums-common",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/enums-common"
   },
-  "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
-    "typescript": "catalog:"
-  },
-  "monorepo": {
-    "kind": "library",
-    "role": "enums",
-    "agentGuide": "AGENTS.md"
-  }
+  "sideEffects": false,
+  "type": "module",
+  "types": "./src/index.ts"
 }

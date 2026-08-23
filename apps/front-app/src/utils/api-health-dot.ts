@@ -34,6 +34,11 @@ export function getApiHealthPresentation(
   return API_HEALTH_PRESENTATION[apiHealthStatus];
 }
 
+/**
+ * Pure mapper extracted for unit testing.
+ *
+ * @internal
+ */
 export function getApiHealthDotClassName(
   apiHealthStatus: ApiHealthStatus,
 ): string {

@@ -1,8 +1,17 @@
 {
   "name": "@repo/correlation-id",
-  "version": "0.0.0",
-  "private": true,
   "description": "Opaque UUID correlation ids for SPA ↔ gateway log correlation (X-Request-Id).",
+  "version": "0.0.0",
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "keywords": [
     "correlation",
     "opaque",
@@ -10,16 +19,13 @@
     "shared",
     "typescript"
   ],
-  "type": "module",
-  "sideEffects": false,
   "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    }
+  "monorepo": {
+    "kind": "library",
+    "role": "correlation-id",
+    "agentGuide": "AGENTS.md"
   },
+  "private": true,
   "scripts": {
     "check-types": "tsc --noEmit",
     "format": "pnpm -w exec oxfmt --check packages/correlation-id",
@@ -27,13 +33,7 @@
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/correlation-id",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/correlation-id"
   },
-  "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
-    "typescript": "catalog:"
-  },
-  "monorepo": {
-    "kind": "library",
-    "role": "correlation-id",
-    "agentGuide": "AGENTS.md"
-  }
+  "sideEffects": false,
+  "type": "module",
+  "types": "./src/index.ts"
 }

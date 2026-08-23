@@ -12,7 +12,7 @@ export { resolvePackageRoot } from "./package-root.js";
  * detection. GitHub Actions still gets the built-in `github-actions` job
  * summary when unset.
  */
-export const sharedTestDefaults: InlineConfig = {
+const sharedTestDefaults: InlineConfig = {
   include: ["tests/**/*.test.ts"],
   restoreMocks: true,
   clearMocks: true,

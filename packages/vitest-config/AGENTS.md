@@ -30,7 +30,7 @@ packages/vitest-config/
 | A `front-*` SPA | `@repo/vitest-config` → `defineNodeConfig` |
 | A `worker-*` / `queue-*` / `webhook-*` / `mcp-*` app | `@repo/vitest-config/workers` → `defineWorkersConfig` |
 
-Keep the Workers entry separate so Node-only apps never resolve `@cloudflare/vitest-pool-workers`. Shared mock-hygiene defaults are intentionally duplicated across the two entry files (no relative ESM imports between them).
+Keep the Workers entry separate so Node-only apps never resolve `@cloudflare/vitest-plugin`. Shared mock-hygiene defaults are intentionally duplicated across the two entry files (no relative ESM imports between them).
 
 This package has no `check-types` script (same model as `@repo/typescript-config`); consuming apps typecheck their Vitest configs.
 
@@ -75,7 +75,7 @@ App scripts: `test` = `vitest run` (CI/agents/Turbo cache); `test:watch` = `vite
 
 | Layer | Tool | Use for |
 |-------|------|---------|
-| **Unit** | `defineWorkersConfig` / `@cloudflare/vitest-pool-workers` (tests inside workerd) | Handlers, helpers, single-Worker routes via `exports.default.fetch` / `env` from `cloudflare:workers` |
+| **Unit** | `defineWorkersConfig` / `@cloudflare/vitest-plugin` (tests inside workerd) | Handlers, helpers, single-Worker routes via `exports.default.fetch` / `env` from `cloudflare:workers` |
 | **Integration** | Wrangler `createTestHarness()` from **Node** Vitest | Multi-Worker production builds, gateway to worker-* RPC, bindingOverrides, MSW/Playwright |
 
 `front-*` always uses `defineNodeConfig` (Node). Never attach `cloudflareTest` or the harness to the SPA for unit suites.

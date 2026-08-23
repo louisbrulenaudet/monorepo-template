@@ -3,7 +3,7 @@ import { resetCorrelationIdCache } from "#/utils/correlation-id";
 
 const memory = new Map<string, string>();
 
-export function stubSessionStorage(): void {
+function stubSessionStorage(): void {
   memory.clear();
   resetCorrelationIdCache();
   vi.stubGlobal("sessionStorage", {

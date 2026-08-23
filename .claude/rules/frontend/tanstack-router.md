@@ -16,6 +16,6 @@ Client-side routing only - ignore TanStack Start / SSR / server functions. Depth
 - **`routeTree.gen.ts` is generated and committed** - never hand-edit; regenerate via app `routes:generate` / `routes:check`. Excluded from OXC.
 - Register the router once (`declare module "@tanstack/react-router" { interface Register { router: typeof router } }`). One `router` + one `<RouterProvider>`. Prefer `defaultPreload: "intent"` and `scrollRestoration: true`.
 - Three-layer split: eager `src/routes/<path>.tsx` (loaders/guards/`validateSearch`) → `src/routes/<path>.lazy.tsx` (UI components) → `src/pages/<Page>.tsx`. Keep route files thin.
-- Typed `<Link>` / `useNavigate()` only - no hand-built internal URLs. Search params: `validateSearch` with defaults; `loaderDeps` when loaders depend on search.
+- Typed `<Link>` / `useNavigate()` only - no hand-built internal URLs. Search params: `validateSearch` with a **zod v4 schema passed directly** (native support - no `@tanstack/zod-adapter`, never reintroduce it); `.catch()` fallbacks keep type inference; `loaderDeps` when loaders depend on search.
 - Auth/redirects in **`beforeLoad`**, not render. Throw `notFound()` from loaders when appropriate.
 - Query integration: `queryClient` on root context; loaders `ensureQueryData(opts)`; components `useSuspenseQuery(opts)`. Set **`defaultPreloadStaleTime: 0`** so Query `staleTime` owns freshness (common misconfig). See [tanstack-query.md](tanstack-query.md).

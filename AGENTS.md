@@ -101,7 +101,7 @@ Align with [Cloudflare Workers testing](https://developers.cloudflare.com/worker
 
 | Layer | Tool | When |
 |-------|------|------|
-| **Unit** (handlers, helpers, single-Worker routes) | `@cloudflare/vitest-pool-workers` via `defineWorkersConfig` - tests run inside workerd; prefer `exports.default.fetch` / `env` from `cloudflare:workers` | Default for every `worker-*` / `queue-*` / `webhook-*` / `mcp-*` app today |
+| **Unit** (handlers, helpers, single-Worker routes) | `@cloudflare/vitest-plugin` via `defineWorkersConfig` - tests run inside workerd; prefer `exports.default.fetch` / `env` from `cloudflare:workers` | Default for every `worker-*` / `queue-*` / `webhook-*` / `mcp-*` app today |
 | **Integration** (gateway to business Worker, production builds, binding overrides) | Wrangler [`createTestHarness()`](https://developers.cloudflare.com/workers/testing/test-harness/) from Node Vitest | When the first `worker-*` is bound to `worker-api` (or a fixture pair). Do **not** replace the Vitest pool with the harness for single-Worker route suites |
 
 `front-*` stays on Node Vitest. Do not put the Workers pool on the SPA, and do not merge the SPA and gateway into one Vite/`auxiliaryWorkers` app (SPA to gateway is **HTTP only**).
@@ -122,6 +122,13 @@ Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev
 | `pnpm types` | Regenerate `worker-configuration.d.ts` (**commit the result**) |
 | `pnpm types:check` | Verify committed Worker types match `wrangler.jsonc` (inside `pnpm run ci`) |
 | `pnpm boundaries` | Package dependency tags vs `turbo.json` (inside `pnpm run ci`) |
+| `pnpm knip` | Unused files, exports, and dependencies across workspaces (root `knip.jsonc`; inside `pnpm run ci`) |
+| `pnpm knip:production` | Knip `--production --strict`: shipped-code-only pass + workspace isolation (inside `pnpm run ci`) |
+| `pnpm knip:agent` | Knip with `--reporter symbols` - one machine-readable line per unused symbol, for agents |
+| `pnpm deps:check` | syncpack lint - third-party deps must use `catalog:` specifiers; internal `@repo/**` links must use `workspace:*`; peer ranges exempt (inside `pnpm run ci`) |
+| `pnpm deps:fix` | Autofix syncpack findings (`syncpack fix`); `pnpm deps:format --check` verifies `package.json` field ordering in CI, run `pnpm deps:format` to normalize |
+
+**Dependency workflow:** add every new third-party dependency to the pnpm catalog in `pnpm-workspace.yaml` and reference it as `"catalog:"` (one-offs outside the catalog install fine via `catalogMode: prefer` but fail `syncpack lint`). Internal packages always use `"workspace:*"`. Run `pnpm deps:fix` when lint flags version drift, and keep `package.json` field ordering normalized with `pnpm deps:format`.
 
 ### Scoping
 
@@ -130,6 +137,8 @@ Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview
 **Lint and format are not turbo-backed.** OXC runs as a single pass from the repo root: oxlint resolves `settings.better-tailwindcss.entryPoint` against process CWD, so per-package `oxlint .` silently breaks Tailwind context rules and re-spawns `tsgolint` per package. Narrow with a path: `pnpm --filter=front-app run lint`. Never `cd` into a package to lint. `pnpm boundaries` is a CLI command, not a package task.
 
 **Agent lint contract** (mirrors [OXC coding agents](https://oxc.rs/docs/guide/usage/coding-agents.html)): iterate with `pnpm lint:fix`, then finish every code change with `pnpm lint:agent` and read only that output - it is the machine-readable `--format=agent` form (`file:line:col: severity plugin(rule): message help:`). The human/CI format (`pnpm lint:check`) renders TTY-dependent code frames; do not parse it. Inline suppressions: `oxlint-disable*` directives only - see `.claude/rules/quality/code-style.md`. Type checking stays with tsc via `turbo run check-types`; oxlint's experimental `options.typeCheck` is deliberately not used (it would lose Turbo per-package caching and `--affected`).
+
+**Knip policy** (root `knip.jsonc`, kept comment-free): both the default pass and `pnpm knip:production` must stay green. Never blanket-`ignore`; prefer scoped patterns (`ignoreIssues`, production-only suffixes like `"dep!"` / `"!tests/**!"`) or JSDoc `@internal` on test-only exports. Auto-fix unused dependencies and pnpm catalog entries with `knip --fix --fix-type dependencies,catalog`. Test-only exports carry an explicit `@internal` tag rather than relying on tests to keep them "used". Per-override rationale: `.claude/rules/quality/knip.md` / `.cursor/rules/quality/knip.mdc`.
 
 ## Agent tooling
 

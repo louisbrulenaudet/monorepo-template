@@ -1,18 +1,11 @@
 {
   "name": "@repo/vitest-config",
+  "description": "Shared Vitest config helpers for Node (front-*) and Cloudflare Workers plugin apps.",
   "version": "0.0.0",
-  "private": true,
-  "description": "Shared Vitest config helpers for Node (front-*) and Cloudflare Workers pool apps.",
-  "keywords": [
-    "cloudflare",
-    "config",
-    "shared-config",
-    "vitest",
-    "workers"
-  ],
-  "license": "MIT",
-  "type": "module",
-  "sideEffects": false,
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "catalog:",
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -23,28 +16,35 @@
       "default": "./src/workers.ts"
     }
   },
+  "keywords": [
+    "cloudflare",
+    "config",
+    "shared-config",
+    "vitest",
+    "workers"
+  ],
+  "license": "MIT",
+  "monorepo": {
+    "kind": "config",
+    "role": "vitest-config",
+    "agentGuide": "AGENTS.md"
+  },
+  "peerDependencies": {
+    "@cloudflare/vitest-plugin": "^1.0.0",
+    "vitest": "^4.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@cloudflare/vitest-plugin": {
+      "optional": true
+    }
+  },
+  "private": true,
   "scripts": {
     "format": "pnpm -w exec oxfmt --check packages/vitest-config",
     "format:fix": "pnpm -w exec oxfmt packages/vitest-config",
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/vitest-config",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/vitest-config"
   },
-  "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "catalog:",
-    "vitest": "catalog:"
-  },
-  "peerDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.21.0",
-    "vitest": "^4.1.0"
-  },
-  "peerDependenciesMeta": {
-    "@cloudflare/vitest-pool-workers": {
-      "optional": true
-    }
-  },
-  "monorepo": {
-    "kind": "config",
-    "role": "vitest-config",
-    "agentGuide": "AGENTS.md"
-  }
+  "sideEffects": false,
+  "type": "module"
 }

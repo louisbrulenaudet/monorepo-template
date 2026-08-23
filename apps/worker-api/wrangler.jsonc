@@ -32,6 +32,10 @@
     "logs": {
       "head_sampling_rate": 1,
     },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+    },
   },
   // Uncomment when adding secrets - wrangler types + deploy validate these names (no .dev.vars needed in CI):
   // "secrets": {

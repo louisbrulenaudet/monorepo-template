@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/knip/schema-jsonc.json",
+  "includeEntryExports": true,
+  "treatConfigHintsAsErrors": true,
+  "workspaces": {
+    "apps/front-app": {
+      "ignoreDependencies": [
+        "@tanstack/react-devtools!",
+        "@tanstack/react-query-devtools!",
+        "@tanstack/react-router-devtools!",
+        "tailwindcss!",
+      ],
+      "project": [
+        "**/*.{css,js,cjs,mjs,jsx,ts,cts,mts,tsx}!",
+        "!tests/helpers/**!",
+      ],
+    },
+    "apps/worker-api": {
+      "ignoreDependencies": ["cloudflare"],
+    },
+    "packages/vitest-config": {
+      "ignoreFiles": ["src/package-root.d.ts"],
+    },
+  },
+  "ignoreWorkspaces": ["packages/vitest-config!"],
+}

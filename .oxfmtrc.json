@@ -39,6 +39,9 @@
   "ignorePatterns": [
     "**/*.gen.ts",
     "**/worker-configuration.d.ts",
+    // package.json field order is owned by `syncpack format` (`pnpm
+    // deps:format`); its sort order differs from oxfmt's sortPackageJson.
+    "**/package.json",
     "**/*.md",
     "**/*.markdown",
     "**/*.mdx",
