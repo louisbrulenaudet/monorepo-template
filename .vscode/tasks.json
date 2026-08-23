@@ -100,6 +100,43 @@
       }
     },
     {
+      "label": "watch: tests",
+      "detail": "pnpm test:watch - Vitest watch mode via turbo (persistent, uncached; humans only)",
+      "type": "shell",
+      "command": "pnpm test:watch",
+      "isBackground": true,
+      "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "lint: agent output",
+      "detail": "pnpm lint:agent - oxlint --format=agent (one machine-readable line per diagnostic, for AI agents)",
+      "type": "shell",
+      "command": "pnpm lint:agent",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "fix: lint + format",
+      "detail": "pnpm lint:fix && pnpm format:fix - auto-fix oxlint diagnostics then oxfmt the repo",
+      "type": "shell",
+      "command": "pnpm lint:fix && pnpm format:fix",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
       "label": "test",
       "detail": "pnpm test - turbo run test (Vitest per app)",
       "type": "shell",

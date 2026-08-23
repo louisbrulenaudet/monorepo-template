@@ -2,12 +2,13 @@
 @source "../index.html";
 @source "./**/*.{ts,tsx}";
 
+@theme {
+  --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
 :root {
   color-scheme: light dark;
 
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -107,13 +108,5 @@
 
   body {
     @apply m-0 flex min-h-dvh items-center justify-center bg-background text-foreground;
-  }
-
-  #root {
-    @apply mx-auto max-w-7xl p-8 text-center;
-  }
-
-  h1 {
-    @apply text-5xl leading-tight md:text-6xl;
   }
 }

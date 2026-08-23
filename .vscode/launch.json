@@ -9,8 +9,31 @@
   //     Ctrl/Cmd+Shift+P → "Debug: JavaScript Debug Terminal" → run `pnpm turbo run dev --filter=worker-api`.
   //   VS Code auto-attaches and discovers the ephemeral inspector port; set breakpoints
   //   as usual. (Alternatively, press `d` in the running `wrangler dev` terminal.)
+  // • worker-api Vitest suite (@cloudflare/vitest-pool-workers): tests run inside a
+  //   workerd pool, so node-based breakpoint debugging does not apply. Debug those
+  //   through the JS Debug Terminal pattern above or rely on Vitest error output.
+  // • "Debug Vitest (front-app, current file)": open a front-app test file first,
+  //   then F5 with this config. Runs only that file (--no-file-parallelism keeps the
+  //   inspector attach deterministic). Node pool only - see note above for Workers pool.
   "version": "0.2.0",
   "configurations": [
+    {
+      "name": "Debug Vitest (front-app, current file)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/front-app",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "exec",
+        "vitest",
+        "run",
+        "--no-file-parallelism",
+        "${relativeFile}"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    },
     {
       "name": "Launch front-app (Chrome)",
       "type": "chrome",

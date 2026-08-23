@@ -12,6 +12,16 @@ if (!rootElement) {
   throw new Error("Missing #root element");
 }
 
+window.addEventListener("vite:preloadError", (event) => {
+  const key = "vite-preload-error-reloaded";
+  if (sessionStorage.getItem(key)) {
+    event.preventDefault();
+    return;
+  }
+  sessionStorage.setItem(key, String(Date.now()));
+  window.location.reload();
+});
+
 createRoot(rootElement).render(
   <StrictMode>
     <ErrorBoundary>

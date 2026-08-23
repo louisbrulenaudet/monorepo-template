@@ -13,7 +13,9 @@ const LazyAppDevtools = import.meta.env.DEV
 function RootLayout() {
   return (
     <>
-      <Outlet />
+      <div className="mx-auto max-w-7xl p-8 text-center">
+        <Outlet />
+      </div>
       {LazyAppDevtools ? (
         <Suspense fallback={null}>
           <LazyAppDevtools />

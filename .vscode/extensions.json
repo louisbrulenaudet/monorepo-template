@@ -5,11 +5,11 @@
     "bradlc.vscode-tailwindcss",
     "vitest.explorer",
     "streetsidesoftware.code-spell-checker",
+    "github.vscode-github-actions"
   ],
   "unwantedRecommendations": [
     "esbenp.prettier-vscode",
     "biomejs.biome",
-    "dbaeumer.vscode-eslint",
-    "github.vscode-github-actions"
+    "dbaeumer.vscode-eslint"
   ]
 }

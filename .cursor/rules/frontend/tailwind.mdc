@@ -51,6 +51,8 @@ Styling for the React SPAs. Tailwind **v4**, CSS-first (no `tailwind.config.js`)
 ## Custom styles: `@apply`, `@layer`, `@utility`
 
 - `@apply` lives in the **global `index.css` only** - base element styles go in `@layer base`. Do not scatter per-feature `.css` files that `@apply`.
+- `@layer base` is for **true global resets only** (`body`, `a`, ...). App-shell layout (the `max-w-*`/`p-8` wrapper) and per-page type sizing are **utilities in JSX**: shell on the `RootLayout` wrapper in `__root.tsx`, heading sizes on the page's `<h1>` - never `#root`/`h1` element rules in base CSS.
+- Font stacks are tokenized: define `@theme { --font-sans: ... }` (preflight applies it to `html`; `font-sans` utilities stay consistent with body copy) instead of `font-family` on `:root`.
 - New reusable utilities → `@utility name { ... }` (participates with variants). New variants → `@custom-variant`.
 - A separately-bundled stylesheet (CSS module, framework scoped `<style>`) that uses `@apply`/`@variant` must first `@reference "<entry>.css";` - but prefer plain `var(--color-*)` there; `@reference` reprocesses the file and slows builds.
 - Docs: https://tailwindcss.com/docs/functions-and-directives , https://tailwindcss.com/docs/adding-custom-styles

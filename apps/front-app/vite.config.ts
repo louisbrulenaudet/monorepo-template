@@ -1,12 +1,11 @@
 // apps/front-app/vite.config.ts
 
 import { cloudflare } from "@cloudflare/vite-plugin";
-import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import react, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { writeFileSync } from "node:fs";
+import react from "@vitejs/plugin-react";
+import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { visualizer } from "rollup-plugin-visualizer";
@@ -89,9 +88,9 @@ function cspHeaders(apiBaseUrl: string): string {
   ].join("\n");
 }
 
-function generatedHeadersPlugin(mode: string, command: string) {
+function generatedBuildArtifactsPlugin(mode: string, command: string) {
   return {
-    name: "generated-security-headers",
+    name: "generated-build-artifacts",
     apply: "build" as const,
     closeBundle() {
       if (command !== "build") {
@@ -101,6 +100,14 @@ function generatedHeadersPlugin(mode: string, command: string) {
       const isStaticAnalysis = process.argv.some((arg) => arg.includes("knip"));
       if (isStaticAnalysis) {
         return;
+      }
+
+      // `hidden` sourcemaps stay on the CI artifact for symbolication but must
+      // never be uploaded as public Workers Assets.
+      const assetsIgnorePath = path.resolve(appDir, "dist/.assetsignore");
+      const assetsIgnore = readFileSync(assetsIgnorePath, "utf-8");
+      if (!assetsIgnore.split("\n").includes("*.map")) {
+        writeFileSync(assetsIgnorePath, `${assetsIgnore.trimEnd()}\n*.map\n`);
       }
 
       const env = loadEnv(mode, appDir, "VITE_");
@@ -129,11 +136,11 @@ export default defineConfig(({ command, mode }) => {
     tanstackRouter({
       autoCodeSplitting: true,
     }),
-    react(),
-    babel({ presets: [reactCompilerPreset()] }),
+    // Native (Rust) React Compiler via oxc-transform-react - no Babel pass.
+    react({ compiler: true }),
     tailwindcss(),
     cloudflare(),
-    generatedHeadersPlugin(mode, command),
+    generatedBuildArtifactsPlugin(mode, command),
   ];
 
   if (analyzeBundle) {
@@ -168,7 +175,9 @@ export default defineConfig(({ command, mode }) => {
       // `modulePreload.polyfill` at its default (true) keeps preload hints
       // working on browsers that predate native `<link rel="modulepreload">`.
       minify: "oxc",
-      sourcemap: mode === "development" ? "inline" : false,
+      // `hidden`: maps are generated but not referenced from the bundle -
+      // enables error-tracking symbolication without public exposure.
+      sourcemap: mode === "development" ? "inline" : "hidden",
       cssCodeSplit: true,
       assetsInlineLimit: 4096,
       reportCompressedSize: false,

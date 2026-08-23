@@ -14,8 +14,6 @@
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "oxc.lint.run": "onType",
   "oxc.requireConfig": true,
-  "oxc.typeAware": true,
-  "oxc.unusedDisableDirectives": "deny",
   "oxc.fixKind": "safe_fix",
   "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode",
