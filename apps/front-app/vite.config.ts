@@ -186,6 +186,16 @@ export default defineConfig(({ command, mode }) => {
       chunkSizeWarningLimit: 500,
       rolldownOptions: {
         ...(analyzeBundle ? { devtools: {} } : {}),
+        onLog(level, log, log2) {
+          if (
+            level === "warn" &&
+            log.code === "SOURCEMAP_BROKEN" &&
+            log.message.includes("(vite:css)")
+          ) {
+            return;
+          }
+          log2(level, log);
+        },
         output: {
           codeSplitting: {
             groups: [
