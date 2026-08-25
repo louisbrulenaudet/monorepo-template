@@ -41,21 +41,13 @@ jobs:
       # Remote-cache artifact signing (turbo.json remoteCache.signature + longerSignatureKey).
       # Repo-level secret; must be >= 32 bytes and identical to local machines' value.
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-      # actions/checkout materializes branches as origin/<name> only. Turbo reads
-      # GITHUB_BASE_REF as a bare name ("main"), which is not a local revision -
-      # without this, --affected falls back to "everything changed".
       TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
 
     steps:
-      # Every `uses:` is pinned to a full-length commit SHA with the tag in a trailing comment, and
-      # every checkout sets `persist-credentials: false`. Both are load-bearing.
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          # `--affected` diffs base..HEAD via git. A shallow checkout cannot
-          # resolve that range, so Turborepo falls back to "everything changed".
-          # Full history with blobless fetch keeps it correct and still fast.
           fetch-depth: 0
           filter: blob:none
 
@@ -65,7 +57,6 @@ jobs:
           runtime: node@24
           cache: true
           cache-dependency-path: pnpm-lock.yaml
-          # Default install is not `--frozen-lockfile`; keep reproducibility explicit.
           install: false
 
       - name: Install dependencies
@@ -94,8 +85,6 @@ jobs:
               VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
             run: pnpm turbo run check-types test build --affected
 
-      # front-app needs dist/ from the build step; worker-api build is already a dry-run.
-      # No Cloudflare credentials required: --dry-run only bundles/validates Wrangler config.
       - name: Wrangler deploy dry-run
         env:
           VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
