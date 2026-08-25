@@ -1,8 +1,6 @@
 ---
 name: review-code-quality
-description: >
-  Lint, style, maintainability review. USE WHEN: user runs /review-code-quality or explicitly asks for this review.
-  DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review.
+description: "Lint, style, maintainability review. USE WHEN: user runs /review-code-quality or explicitly asks for this review. DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review."
 disable-model-invocation: true
 ---
 

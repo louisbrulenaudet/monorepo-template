@@ -1,7 +1,6 @@
 ---
 name: privileged-legal-data
-description: |
-  Handling client-privileged and matter-identifying data in this monorepo's Workers and SPA. Triggers on: logging, tracing, error responses, cache keys, queue or KV payloads, retention, tenancy or matter isolation, prompt construction from client documents, third-party API calls carrying client content, and any review of a route that touches client data. Use when adding or reviewing a handler, a logger call, a cache key, a queue message, or an LLM prompt built from user-supplied documents.
+description: "Handling client-privileged and matter-identifying data in this monorepo's Workers and SPA. Triggers on: logging, tracing, error responses, cache keys, queue or KV payloads, retention, tenancy or matter isolation, prompt construction from client documents, third-party API calls carrying client content, and any review of a route that touches client data. Use when adding or reviewing a handler, a logger call, a cache key, a queue message, or an LLM prompt built from user-supplied documents."
 metadata:
   source: project-owned
 ---

@@ -1,8 +1,6 @@
 ---
 name: review-performance
-description: >
-  Performance-focused review. USE WHEN: user runs /review-performance or explicitly asks for this review.
-  DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review.
+description: "Performance-focused review. USE WHEN: user runs /review-performance or explicitly asks for this review. DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review."
 disable-model-invocation: true
 ---
 

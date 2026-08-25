@@ -1,7 +1,6 @@
 ---
 name: monorepo-agent-setup
-description: >
-  USE WHEN: editing Cursor/Claude agent config, rules, hooks, skills, MCP, subagents, slash commands, or dual-tree sync; or when asking how Claude vs Cursor instructions are laid out in this monorepo. DO NOT USE WHEN: implementing app features, Workers, or frontend UI unless the task is specifically about agent tooling.
+description: "USE WHEN: editing Cursor/Claude agent config, rules, hooks, skills, MCP, subagents, slash commands, or dual-tree sync; or when asking how Claude vs Cursor instructions are laid out in this monorepo. DO NOT USE WHEN: implementing app features, Workers, or frontend UI unless the task is specifically about agent tooling."
 disable-model-invocation: true
 ---
 
@@ -19,6 +18,7 @@ Canonical layout and sync policy for **Cursor** and **Claude Code** in this repo
 | Hook scripts | [`hooks/`](../../../hooks/) (shared) | [`hooks/`](../../../hooks/) (shared) |
 | Subagents | [`.claude/agents/`](../../../.claude/agents/) | [`.cursor/agents/`](../../../.cursor/agents/) |
 | Review workflows | Skills under `.agents/skills/review*` (symlink) | Same skills under `.agents/skills/review*` |
+| Dependency-scoped reviews | `/review-<dep>` skills under `.agents/skills/review-<dep>/` (symlink) - one per dev dependency (claude-code, cursor, vite, oxc, typescript, turborepo, pnpm, wrangler, hono, tailwind, vitest, tanstack-router, tanstack-query, react, zod, knip, syncpack) | Same |
 | Deep skills | Symlinks → [`.agents/skills/`](../../) | [`.agents/skills/`](../../) (source of truth) |
 | Nested app guides | `CLAUDE.md` per app/package | `AGENTS.md` per app/package |
 
@@ -57,6 +57,15 @@ When changing agent setup, keep both tools in sync:
 3. **Hooks:** edit scripts only under `hooks/`; update both `.cursor/hooks.json` and `.claude/settings.json` when wiring changes.
 4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json` (when present). Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `privileged-legal-data`, `front-vitest`, `review-*`) live once under `.agents/skills/`.
 5. **Review skills:** edit `.agents/skills/review*/SKILL.md` (self-contained; Claude via symlink).
+   Two families: **dimension** reviews (`review`, `review-architecture`, `review-ci`, `review-code-quality`,
+   `review-configuration`, `review-performance`, `review-security`, `review-seo`, `review-ui`) and
+   **dependency-scoped stack reviews** (`review-claude-code`, `review-cursor`, `review-vite`, `review-oxc`,
+   `review-typescript`, `review-turborepo`, `review-pnpm`, `review-wrangler`, `review-hono`, `review-tailwind`,
+   `review-vitest`, `review-tanstack-router`, `review-tanstack-query`, `review-react`, `review-zod`,
+   `review-knip`, `review-syncpack`). Both share the same output contract (Critical / Improvements / Optional plan)
+   and `disable-model-invocation: true` - human-only. Dependency-scoped skills mandate ground-truth retrieval
+   (Context7 MCP → Firecrawl restricted to official domains → official changelogs) before suggestions;
+   no hard-coded doc URLs, cite sources per finding.
    `review-*` and `pnpm` set `disable-model-invocation: true`, so **only a human can run them** -
    they cannot be preloaded into a subagent's `skills:` field or invoked through the Skill tool.
    Keep it that way for the whole-repo review deep dives; do not add it to a skill an agent needs.
@@ -85,6 +94,7 @@ When changing agent setup, keep both tools in sync:
 
 - **Rules:** 25 mirrored basenames (only `core/guardrails` always-on); `tests/` holds vitest + hono-workers + front-react (DOM/RTL depth in skill `front-vitest`); `ops/` holds `ci` + `cd`. No `drizzle-orm` rule until a DB-owning worker lands.
 - **Subagents:** `verifier`, `bundle-analyzer`, `docs-researcher`.
+- **Skills:** 25 mirrored basenames plus 17 dependency-scoped `/review-<dep>` stack reviews (see Review skills above); deep skills (`turborepo`, `wrangler`, TanStack family) consulted as context by their matching review skill.
 - **Cursor hooks:** `beforeShellExecution` (git guards, `failClosed`), `afterFileEdit` (format/lint), `sessionStart`.
 - **Claude hooks:** PreToolUse Bash (same git guards), PostToolUse Edit\|Write (format/lint), InstructionsLoaded.
 - **MCP:** `cloudflare-docs`, `context7` (project). Keep the Cursor Cloudflare **plugin** disabled unless you need account-scoped bindings/builds/observability MCP (those trigger OAuth login); do not double-register Context7 via plugin.

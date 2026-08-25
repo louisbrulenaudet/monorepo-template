@@ -1,7 +1,6 @@
 ---
 name: pnpm
-description: |
-  pnpm workspace and dependency management for this monorepo. Triggers on: pnpm install, pnpm add/remove/update, workspace protocol, catalogs, filtering, lockfile, hoisting, allowBuilds, minimumReleaseAge, CI install failures, and dependency version drift. Use when user or agent: adds/removes packages, scaffolds workspace packages, debugs install/hoisting issues, updates shared tool versions, or changes pnpm-workspace.yaml.
+description: "pnpm workspace and dependency management for this monorepo. Triggers on: pnpm install, pnpm add/remove/update, workspace protocol, catalogs, filtering, lockfile, hoisting, allowBuilds, minimumReleaseAge, CI install failures, and dependency version drift. Use when user or agent: adds/removes packages, scaffolds workspace packages, debugs install/hoisting issues, updates shared tool versions, or changes pnpm-workspace.yaml."
 metadata:
   source: project-owned
 disable-model-invocation: true

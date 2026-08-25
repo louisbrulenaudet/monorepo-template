@@ -1,11 +1,6 @@
 ---
 name: skills-update
-description: >
-  USE WHEN: updating locked agent skills from skills-lock.json, refreshing
-  upstream skill content, or running npx skills update for project skills.
-  DO NOT USE WHEN: adding new skills (use npx skills add with explicit approval),
-  running bare npx skills update without skill names, or updating project-local
-  skills that are not listed in skills-lock.json.
+description: "USE WHEN: updating locked agent skills from skills-lock.json, refreshing upstream skill content, or running npx skills update for project skills. DO NOT USE WHEN: adding new skills (use npx skills add with explicit approval), running bare npx skills update without skill names, or updating project-local skills that are not listed in skills-lock.json."
 disable-model-invocation: true 
 ---
 

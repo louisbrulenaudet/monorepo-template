@@ -1,12 +1,6 @@
 ---
 name: front-vitest
-description: >
-  Depth for Vitest tests of front-* React 19 SPAs when DOM, RTL, TanStack Query
-  hooks, or TanStack Router route-tree tests are needed. USE WHEN: adding jsdom
-  or testing-library, writing tsx render or renderHook tests, testing
-  createMemoryHistory plus RouterProvider, Suspense UI, or React 19 act fixtures.
-  DO NOT USE WHEN: Node-only services or queryOptions unit tests - follow the
-  front-react path rule instead - or Workers pool tests.
+description: "Depth for Vitest tests of front-* React 19 SPAs when DOM, RTL, TanStack Query hooks, or TanStack Router route-tree tests are needed. USE WHEN: adding jsdom or testing-library, writing tsx render or renderHook tests, testing createMemoryHistory plus RouterProvider, Suspense UI, or React 19 act fixtures. DO NOT USE WHEN: Node-only services or queryOptions unit tests - follow the front-react path rule instead - or Workers pool tests."
 metadata:
   source: project-owned
 ---

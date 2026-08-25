@@ -1,8 +1,6 @@
 ---
 name: review-configuration
-description: >
-  Config, env, wrangler review. USE WHEN: user runs /review-configuration or explicitly asks for this review.
-  DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review.
+description: "Config, env, wrangler review. USE WHEN: user runs /review-configuration or explicitly asks for this review. DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review."
 disable-model-invocation: true
 ---
 
