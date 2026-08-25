@@ -148,6 +148,10 @@ Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `mo
 
 Three read-only agents - `verifier`, `bundle-analyzer`, `docs-researcher`. Descriptions load from `.claude/agents/*.md`; do not restate them here. Add more under `.claude/agents/` / `.cursor/agents/` when new surfaces land (see `monorepo-agent-setup`).
 
+### Dependency-scoped stack reviews
+
+Beyond the dimension reviews (`/review-*`), one human-only `/review-<dep>` command exists per dev dependency (`review-claude-code`, `review-cursor`, `review-vite`, `review-oxc`, `review-typescript`, `review-turborepo`, `review-pnpm`, `review-wrangler`, `review-hono`, `review-tailwind`, `review-vitest`, `review-tanstack-router`, `review-tanstack-query`, `review-react`, `review-zod`, `review-knip`, `review-syncpack`). Run them periodically to verify each tool's config still follows current best practices: every skill mandates ground-truth retrieval (Context7 MCP → official docs) before suggesting changes and outputs a Critical / Improvements / Optional plan.
+
 ### When to delegate
 
 | Reach for | When |
