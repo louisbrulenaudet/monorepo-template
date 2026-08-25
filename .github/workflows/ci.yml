@@ -80,6 +80,12 @@ jobs:
           - name: Types check
             run: pnpm run types:check
 
+          - name: Knip
+            run: pnpm run knip && pnpm run knip:production
+
+          - name: Syncpack
+            run: pnpm run deps:check && pnpm run deps:format --check
+
           - name: Typecheck, test, and build
             env:
               VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
