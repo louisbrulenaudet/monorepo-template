@@ -1,0 +1,50 @@
+name: Changeset PR status
+
+on:
+  pull_request_target:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+env:
+  DO_NOT_TRACK: "1"
+  TELEMETRY_DISABLED: "1"
+
+jobs:
+  pr-status:
+    if: github.event.pull_request.head.repo.full_name == github.repository && !startsWith(github.head_ref, 'changeset-release/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      comment-body: ${{ steps.pr-status.outputs.comment-body }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        with:
+          runtime: node@24
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - id: pr-status
+        uses: changesets/action/pr-status@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+
+  pr-comment:
+    if: github.event.pull_request.head.repo.full_name == github.repository && !startsWith(github.head_ref, 'changeset-release/')
+    needs: pr-status
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: changesets/action/pr-comment@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+        with:
+          body: ${{ needs.pr-status.outputs.comment-body }}

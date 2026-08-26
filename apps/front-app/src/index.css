@@ -101,6 +101,18 @@
   }
 }
 
+@utility squircle-button {
+  border-radius: 2rem;
+
+  @supports (corner-shape: squircle) {
+    corner-shape: squircle;
+  }
+}
+
+@utility copy-prompt-label {
+  white-space: nowrap;
+}
+
 @layer base {
   a {
     @apply font-medium text-primary no-underline hover:text-primary/80;

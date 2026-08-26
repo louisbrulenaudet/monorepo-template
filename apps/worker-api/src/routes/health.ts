@@ -1,4 +1,6 @@
+import type { Context } from "hono";
 import { Hono } from "hono";
+import { version } from "../../package.json";
 
 type HealthEnv = {
   Bindings: Env;
@@ -6,12 +8,13 @@ type HealthEnv = {
 
 const health = new Hono<HealthEnv>();
 
-health.get("/", (c) => {
-  return c.json({ status: "ok" as const }, 200, {
+function getHealth(c: Context<HealthEnv>): Response {
+  return c.json({ status: "ok" as const, version }, 200, {
     "Cache-Control": "no-store",
-    // Opaque infrastructure metadata for smoke / override verification.
     "X-Worker-Version-Id": c.env.CF_VERSION_METADATA.id,
   });
-});
+}
+
+health.get("/", getHealth);
 
 export default health;

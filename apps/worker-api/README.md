@@ -12,7 +12,7 @@ Public HTTP API gateway for the monorepo. `front-app` and external clients call 
 The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev port **8700**, and a minimal set of `vars` (e.g. `ENVIRONMENT`, local `CORS_ORIGINS`).
 
 What you can run today:
-- Health endpoint at `GET /api/v1/health`
+- Health endpoint at `GET /api/v1/health` (returns release semver in `version`; `X-Worker-Version-Id` header carries the opaque wrangler version id)
 - Every response carries an `X-Request-Id` header, and error responses return `{ error, requestId }`. Per-request access logging comes from native Workers observability; failures log structured JSON with the request id for correlation.
 - Local/dev `CORS_ORIGINS` is `http://localhost:5174` (and exposes `X-Request-Id`). Staging/production **require** a comma-separated allowlist in `wrangler.jsonc` `vars` (e.g. `https://app.example.com`); an empty value fails closed with `503` on `/api/*` (no permissive `*`).
 - A 15 s request timeout returns `504`, and a `Server-Timing` header is added in non-production for local profiling.
@@ -42,31 +42,56 @@ What you can add as you grow the repo:
 ```
 apps/worker-api/
 ├── src/
-│   ├── routes/           # One route module per feature
+│   ├── middlewares/        # Env-dependent Hono middleware wrappers
+│   │   ├── cors.ts
+│   │   ├── cors-origins.ts # CORS_ORIGINS allowlist parsing (fail-closed)
+│   │   └── csrf.ts         # Origin / Sec-Fetch-Site gate on unsafe methods
+│   ├── routes/             # One route module per feature (created per feature)
 │   │   └── health.ts
-│   ├── enums/            # Worker-local value sets (`as const`)
-│   └── index.ts          # Middleware stack + route mounts
-├── tests/                # Vitest (Cloudflare pool / workerd)
+│   └── index.ts            # Middleware stack + route mounts
+├── tests/                  # Vitest (Cloudflare pool / workerd)
 │   ├── env.d.ts
 │   └── tsconfig.json
-├── vitest.config.mts     # defineWorkersConfig from @repo/vitest-config/workers
+├── vitest.config.mts       # defineWorkersConfig from @repo/vitest-config/workers
 ├── wrangler.jsonc
 ├── worker-configuration.d.ts
 ├── .dev.vars.example
 └── README.md
 ```
 
+`src/enums/` is created on first use when a worker-local `as const` value set is needed; promote shared value sets to `@repo/enums-common`.
+
 ## Request path
 
+Middleware runs top-down exactly as registered in `src/index.ts`; the `/api/v1` router applies its own stack before mounting feature routes.
+
 ```mermaid
-flowchart LR
-  Client["Client_or_front-app"] --> Mw["CORS_and_middleware"]
-  Mw --> Routes["Route_handlers"]
-  Routes --> Zod["Zod_zValidator"]
-  Zod --> Handler["Handler"]
-  Handler -.-> Rpc["worker-*_RPC"]
-  Handler --> JSON["JSON_response"]
+flowchart TB
+  Client["Client / front-app"] --> ReqId["requestId<br/>resolveCorrelationId():<br/>accept opaque X-Request-Id or mint one"]
+  ReqId --> SetHeader["X-Request-Id response header"]
+  SetHeader --> NotAllowed["methodNotAllowed (405)"]
+  NotAllowed --> SecureHeaders["secureHeaders<br/>(CSP default-src 'none', frame-ancestors, permissions-policy)"]
+  SecureHeaders --> Cors["corsMiddleware (/api/*)<br/>allowlist from CORS_ORIGINS;<br/>empty + non-dev env fails closed (503)"]
+  Cors --> Csrf["csrfMiddleware (/api/*)<br/>origin gate on unsafe methods;<br/>skips OPTIONS preflight"]
+  Csrf --> Api["/api/v1 router"]
+
+  subgraph apiStack ["api router middleware"]
+    direction TB
+    Timing["timing - Server-Timing header<br/>(non-production only)"] --> Timeout["timeout 15 s (504)<br/>races but does not cancel the handler"]
+    Timeout --> BodyLimit["bodyLimit 3 MB (413)"]
+    BodyLimit --> Pretty["prettyJSON (non-production only)"]
+  end
+
+  Api --> Timing
+  Pretty --> Routes["Route handler (src/routes/&lt;feature&gt;.ts)"]
+  Routes -.->|"future service binding"| Rpc["worker-* RPC"]
+  Routes --> Json["Typed JSON + requestId on errors"]
 ```
+
+Notes:
+- The timeout races the handler without cancelling it and cannot wrap streaming responses.
+- `ENVIRONMENT === "production"` skips both `timing` and `prettyJSON`.
+- Errors flow through `app.onError`: `HTTPException` messages pass through; unexpected errors log structured JSON with the request id and return a generic `"Internal server error"`.
 
 ## Development Ports
 
@@ -104,7 +129,7 @@ curl -s "http://localhost:8700/api/v1/health"
 
 Expected response:
 ```json
-{ "status": "ok" }
+{ "status": "ok", "version": "0.0.0" }
 ```
 
 ### Adding an endpoint

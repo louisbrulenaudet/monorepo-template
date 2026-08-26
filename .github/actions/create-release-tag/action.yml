@@ -1,0 +1,30 @@
+name: Create release tag
+description: Tags HEAD vX.Y.Z with the shared app version; fails on version drift, skips when the tag exists.
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve release version
+      id: version
+      shell: bash
+      run: |
+        set -euo pipefail
+        api_version="$(node "${{ github.action_path }}/read-release-version.mjs")"
+        echo "version=${api_version}" >> "$GITHUB_OUTPUT"
+
+    - name: Tag released version
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        set -euo pipefail
+        tag="v${VERSION}"
+        if gh api "repos/${{ github.repository }}/git/ref/tags/${tag}" > /dev/null 2>&1; then
+          echo "Tag ${tag} already exists; nothing to release."
+          exit 0
+        fi
+        echo "Creating tag ${tag} at ${GITHUB_SHA}"
+        gh api "repos/${{ github.repository }}/git/refs" \
+          -f "ref=refs/tags/${tag}" \
+          -f "sha=${GITHUB_SHA}"

@@ -127,8 +127,30 @@ Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev
 | `pnpm knip:agent` | Knip with `--reporter symbols` - one machine-readable line per unused symbol, for agents |
 | `pnpm deps:check` | syncpack lint - third-party deps must use `catalog:` specifiers; internal `@repo/**` links must use `workspace:*`; peer ranges exempt (inside `pnpm run ci`) |
 | `pnpm deps:fix` | Autofix syncpack findings (`syncpack fix`); `pnpm deps:format --check` verifies `package.json` field ordering in CI, run `pnpm deps:format` to normalize |
+| `pnpm changeset` | Add a changeset (version intent + changelog entry) for the current PR - required when touching deployable apps |
 
 **Dependency workflow:** add every new third-party dependency to the pnpm catalog in `pnpm-workspace.yaml` and reference it as `"catalog:"` (one-offs outside the catalog install fine via `catalogMode: prefer` but fail `syncpack lint`). Internal packages always use `"workspace:*"`. Run `pnpm deps:fix` when lint flags version drift, and keep `package.json` field ordering normalized with `pnpm deps:format`.
+
+### Releases
+
+[Changesets](https://changesets.dev) drives versioning for the deployable apps (same pattern as Vite, Astro, and cloudflare/workers-sdk). One shared release version: `front-app` and `worker-api` are a `fixed` group in `.changeset/config.json`, so they always bump together.
+
+```text
+PR + .changeset/*.md ── merge to main ──► Release workflow:
+  pending changesets  → "chore: release" PR (bumps versions, CHANGELOGs)
+  no pending changesets → tag vX.Y.Z on main ──► CD workflow (tag-triggered):
+  upload wrangler versions --tag X.Y.Z → promote @100% → smoke test
+  → GitHub Release (changelog + wrangler version IDs) + GitHub Deployment (production)
+```
+
+Rules:
+
+- **Every PR that changes a deployable app ships a changeset** (`pnpm changeset`; pick patch/minor/major). Non-blocking reminder via the Changesets PR status comment; use `pnpm changeset --empty` for no-release changes. Docs/tests/tooling-only PRs do not need one.
+- **Merging the `chore: release` PR is the release act**: it bumps versions and pushes tag `vX.Y.Z`, which triggers production CD. Do not push `v*` tags by hand unless intentionally deploying an existing release.
+- **Runtime versions**: `/api/v1/health` returns `{ status, version }` (semver from `package.json`, inlined at build); `front-app` renders it in the root footer; `X-Worker-Version-Id` stays the opaque wrangler version id.
+- **Rollback**: `pnpm --filter=<app> exec wrangler rollback --env production`; redeploy any prior release with CD's `workflow_dispatch` + tag input.
+- **Prerequisites (one-time repo settings)**: enable *Actions → General → Allow GitHub Actions to create and approve pull requests*; exempt `changeset-release/main` from required status checks in branch protection (GITHUB_TOKEN pushes do not trigger CI).
+- CD remains paused behind the leading `false &&` guard in `.github/workflows/cd.yml` until production GitHub Environment secrets exist (see [Contribution](#contribution)).
 
 ### Scoping
 

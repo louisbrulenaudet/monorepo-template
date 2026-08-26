@@ -22,7 +22,10 @@ describe("GET /api/v1/health", () => {
     expect(requestId).toBeTruthy();
 
     const body: unknown = await response.json();
-    expect(HealthResponseSchema.parse(body)).toEqual({ status: "ok" });
+    expect(HealthResponseSchema.parse(body)).toEqual({
+      status: "ok",
+      version: expect.stringMatching(/^\d+\.\d+\.\d+/),
+    });
   });
 
   it("echoes a valid client X-Request-Id for SPA correlation", async () => {

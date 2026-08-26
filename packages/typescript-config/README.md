@@ -131,13 +131,23 @@ packages/typescript-config/
 
 ## Configuration Inheritance
 
+Solid edges: preset inheritance. Dashed edges: today's consumers.
+
 ```mermaid
 flowchart TD
-  Strict[strict_json]
-  Strict --> Library[library_json]
-  Library --> Workers[workers_json]
-  Strict --> ViteReact[vite-react_json]
-  Strict --> ViteNode[vite-node_json]
+  Strict["strict.json<br/>(canonical - never extended directly)"]
+
+  Strict --> Library["library.json<br/>(runtime-neutral JIT libraries)"]
+  Library --> Workers["workers.json<br/>(thin role alias)"]
+  Strict --> ViteReact["vite-react.json"]
+  Strict --> ViteNode["vite-node.json"]
+
+  Libs["@repo/dtos-common<br/>@repo/enums-common<br/>@repo/correlation-id"] -.-> Library
+  GatewayApp["apps/worker-api"] -.-> Workers
+  FrontApp["apps/front-app<br/>tsconfig.app.json"] -.-> ViteReact
+  FrontNode["apps/front-app<br/>tsconfig.node.json"] -.-> ViteNode
+
+  style Strict fill:#f3e5f5
 ```
 
 Agent-focused notes: [AGENTS.md](AGENTS.md).

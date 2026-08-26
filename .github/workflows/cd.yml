@@ -1,12 +1,16 @@
 name: CD
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-    branches: [main]
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to deploy (e.g. v0.1.0)"
+        required: true
+        type: string
 
-# Deny by default; the deploy job re-grants contents read.
 permissions: {}
 
 concurrency:
@@ -18,62 +22,48 @@ env:
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
   TURBO_UI: "false"
-  # Within-job Node V8 bytecode cache; turbo passThroughEnv must list this (strict mode).
   NODE_COMPILE_CACHE: ${{ runner.temp }}/node-compile-cache
 
 jobs:
   deploy:
     name: Deploy production Workers
-    # CD paused: production GitHub Environment secrets are not configured yet.
-    # Re-enable by removing the leading false && below.
-    if: >-
-      false &&
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main'
+    # CD paused: remove `false &&` once production Environment secrets exist.
+    if: false && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: production
     permissions:
-      contents: read
+      contents: write # GitHub Release
+      deployments: write # GitHub Deployment + status
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-      # Remote-cache artifact signing (turbo.json remoteCache.signature + longerSignatureKey).
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       NODE_ENV: production
-      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.HEAD_SHA }}
+          ref: ${{ env.TAG }}
           persist-credentials: false
           fetch-depth: 1
 
-      # Skip unless HEAD_SHA is still tip of main.
-      - name: Skip stale deploy
-        id: tip
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Resolve release version
         run: |
           set -euo pipefail
-          tip="$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)"
-          if [ "$tip" != "$HEAD_SHA" ]; then
-            echo "Skipping stale deploy: $HEAD_SHA is not tip of main ($tip)"
-            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-          fi
+          case "$TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::TAG must look like vX.Y.Z, got: $TAG" >&2; exit 1 ;;
+          esac
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
 
-      # Credentials overlap with pnpm/setup; install stays after setup.
       - parallel:
           - name: Require Cloudflare credentials
-            if: steps.tip.outputs.should_deploy == 'true'
             run: |
               if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
                 echo "ERROR: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required for CD" >&2
@@ -85,7 +75,6 @@ jobs:
               fi
 
           - name: Setup pnpm and Node.js
-            if: steps.tip.outputs.should_deploy == 'true'
             uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
             with:
               runtime: node@24
@@ -93,108 +82,68 @@ jobs:
               cache-dependency-path: pnpm-lock.yaml
               install: false
 
-      - name: Install dependencies
-        if: steps.tip.outputs.should_deploy == 'true'
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      - name: Build production artifacts
-        if: steps.tip.outputs.should_deploy == 'true'
-        run: pnpm turbo run build --filter=worker-api --filter=front-app
+      - run: pnpm turbo run build --filter=worker-api --filter=front-app
 
-      # versions upload does not apply routes, custom domains, or cron triggers.
-      # When those are added to wrangler.jsonc, also run:
+      # When wrangler.jsonc gains routes/custom domains/cron triggers, also run:
       #   pnpm --filter="$app" exec wrangler triggers deploy --env production
-      # Uploads are independent; promotes stay sequential (worker-api then front-app).
       - parallel:
           - name: Upload worker-api
             id: upload-api
-            if: steps.tip.outputs.should_deploy == 'true'
             run: |
               set -euo pipefail
               out="$(mktemp)"
-              echo "::group::worker-api versions upload"
               WRANGLER_OUTPUT_FILE_PATH="$out" pnpm --filter=worker-api run upload -- \
-                --strict \
-                --tag "$HEAD_SHA" \
-                --message "cd ${HEAD_SHA}"
-              echo "::endgroup::"
-              version_id="$(
-                node --input-type=module -e '
-                  import { readFileSync } from "node:fs";
-                  const lines = readFileSync(process.argv[1], "utf8")
-                    .split("\n")
-                    .map((line) => line.trim())
-                    .filter(Boolean)
-                    .map((line) => JSON.parse(line));
-                  const hit = [...lines]
-                    .reverse()
-                    .find((entry) => entry?.type === "version-upload" && entry.version_id);
-                  if (!hit) {
-                    console.error("wrangler versions upload did not emit version-upload.version_id");
-                    process.exit(1);
-                  }
-                  process.stdout.write(String(hit.version_id));
-                ' "$out"
-              )"
+                --strict --tag "$VERSION" --message "release $VERSION (${GITHUB_SHA})"
+              version_id="$(jq -r -s 'map(select(.type == "version-upload" and .version_id)) | last | .version_id' "$out")"
+              if [ -z "$version_id" ] || [ "$version_id" = "null" ]; then
+                echo "::error::wrangler versions upload did not emit version-upload.version_id" >&2
+                exit 1
+              fi
+              echo "version-id=${version_id}" >> "$GITHUB_OUTPUT"
               rm -f "$out"
-              echo "version_id=${version_id}" >> "$GITHUB_OUTPUT"
 
           - name: Upload front-app
             id: upload-front
-            if: steps.tip.outputs.should_deploy == 'true'
             run: |
               set -euo pipefail
               out="$(mktemp)"
-              echo "::group::front-app versions upload"
               WRANGLER_OUTPUT_FILE_PATH="$out" pnpm --filter=front-app run upload -- \
-                --strict \
-                --tag "$HEAD_SHA" \
-                --message "cd ${HEAD_SHA}"
-              echo "::endgroup::"
-              version_id="$(
-                node --input-type=module -e '
-                  import { readFileSync } from "node:fs";
-                  const lines = readFileSync(process.argv[1], "utf8")
-                    .split("\n")
-                    .map((line) => line.trim())
-                    .filter(Boolean)
-                    .map((line) => JSON.parse(line));
-                  const hit = [...lines]
-                    .reverse()
-                    .find((entry) => entry?.type === "version-upload" && entry.version_id);
-                  if (!hit) {
-                    console.error("wrangler versions upload did not emit version-upload.version_id");
-                    process.exit(1);
-                  }
-                  process.stdout.write(String(hit.version_id));
-                ' "$out"
-              )"
+                --strict --tag "$VERSION" --message "release $VERSION (${GITHUB_SHA})"
+              version_id="$(jq -r -s 'map(select(.type == "version-upload" and .version_id)) | last | .version_id' "$out")"
+              if [ -z "$version_id" ] || [ "$version_id" = "null" ]; then
+                echo "::error::wrangler versions upload did not emit version-upload.version_id" >&2
+                exit 1
+              fi
+              echo "version-id=${version_id}" >> "$GITHUB_OUTPUT"
               rm -f "$out"
-              echo "version_id=${version_id}" >> "$GITHUB_OUTPUT"
 
       - name: Promote worker-api @100%
-        if: steps.tip.outputs.should_deploy == 'true'
         run: |
           set -euo pipefail
-          echo "::group::worker-api versions deploy ${{ steps.upload-api.outputs.version_id }}@100%"
           pnpm --filter=worker-api run promote -- \
-            "${{ steps.upload-api.outputs.version_id }}@100%" --yes
-          echo "::endgroup::"
+            "${{ steps.upload-api.outputs.version-id }}@100%" --yes
 
       - name: Promote front-app @100%
-        if: steps.tip.outputs.should_deploy == 'true'
         run: |
           set -euo pipefail
-          echo "::group::front-app versions deploy ${{ steps.upload-front.outputs.version_id }}@100%"
           if ! pnpm --filter=front-app run promote -- \
-            "${{ steps.upload-front.outputs.version_id }}@100%" --yes; then
+            "${{ steps.upload-front.outputs.version-id }}@100%" --yes; then
             echo "::error::front-app deploy failed after worker-api may already be live at 100%. Rollback with: pnpm --filter=worker-api exec wrangler rollback --env production"
             exit 1
           fi
-          echo "::endgroup::"
 
       - name: Smoke production health
-        if: steps.tip.outputs.should_deploy == 'true'
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --max-time 30 "${VITE_API_BASE_URL}/api/v1/health"
+
+      - name: Record GitHub Release and Deployment
+        uses: ./.github/actions/record-release
+        with:
+          tag: ${{ env.TAG }}
+          version: ${{ env.VERSION }}
+          worker-api-version-id: ${{ steps.upload-api.outputs.version-id }}
+          front-app-version-id: ${{ steps.upload-front.outputs.version-id }}
+          url: ${{ vars.VITE_API_BASE_URL }}

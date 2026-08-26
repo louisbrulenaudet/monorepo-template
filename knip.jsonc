@@ -8,6 +8,10 @@
         "@tanstack/react-devtools!",
         "@tanstack/react-query-devtools!",
         "@tanstack/react-router-devtools!",
+        "@vitejs/devtools-oxc!",
+        "@vitejs/devtools-vite!",
+        "@vitejs/devtools-vitest!",
+        "@vitest/ui!",
         "tailwindcss!",
       ],
       "project": [
@@ -17,6 +21,10 @@
     },
     "apps/worker-api": {
       "ignoreDependencies": ["cloudflare"],
+    },
+    ".": {
+      // Referenced from .github/actions/**/action.yml run steps.
+      "entry": [".github/actions/**/*.mjs!"],
     },
     "packages/vitest-config": {
       "ignoreFiles": ["src/package-root.d.ts"],

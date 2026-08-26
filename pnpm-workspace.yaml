@@ -7,6 +7,8 @@ packages:
 catalogMode: prefer
 
 catalog:
+  '@changesets/changelog-github': ^1.0.0
+  '@changesets/cli': ^3.0.1
   '@cloudflare/vite-plugin': ^1.53.1
   '@cloudflare/vitest-plugin': ^1.0.0
   '@tailwindcss/vite': ^4.3.3
@@ -21,8 +23,12 @@ catalog:
   '@types/node': 26.2.0
   '@types/react': ^19.2.18
   '@types/react-dom': ^19.2.4
-  '@vitejs/devtools': ^0.5.2
-  '@vitejs/devtools-rolldown': ^0.5.2
+  '@vitejs/devtools': ^0.6.1
+  '@vitejs/devtools-oxc': ^0.6.1
+  '@vitejs/devtools-rolldown': ^0.6.1
+  '@vitejs/devtools-vite': ^0.6.1
+  '@vitejs/devtools-vitest': ^0.6.1
+  '@vitest/ui': ^4.1.11
   '@vitejs/plugin-react': ^6.1.0
   cross-env: ^10.1.0
   eslint-plugin-better-tailwindcss: ^4.7.0

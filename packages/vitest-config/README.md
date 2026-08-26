@@ -10,6 +10,36 @@ Shared Vitest configuration factories for the monorepo. Apps call these helpers 
 
 `@repo/vitest-config` standardizes Vitest setup so every app gets the same mock cleanup and `tests/**/*.test.ts` layout, while keeping **Node** and **Cloudflare Workers** entry points separate. Front apps never resolve `@cloudflare/vitest-plugin`; Worker apps never inherit Node `pool` / `isolate: false`.
 
+```mermaid
+flowchart LR
+  subgraph apps ["Consuming apps"]
+    direction LR
+    FrontApp["front-* SPA<br/>(today: front-app)"]
+    WorkerApps["worker-* / queue-* /<br/>webhook-* / mcp-*<br/>(today: worker-api)"]
+  end
+
+  subgraph pkg ["@repo/vitest-config"]
+    direction LR
+    NodeEntry["src/index.ts<br/>defineNodeConfig"]
+    WorkersEntry["src/workers.ts<br/>defineWorkersConfig"]
+    Shared["sharedTestDefaults<br/>restoreMocks · clearMocks · unstubEnvs ·<br/>unstubGlobals · tests/**/*.test.ts"]
+    Pr["resolvePackageRoot<br/>(src/package-root.js)"]
+  end
+
+  Plugin["@cloudflare/vitest-plugin<br/>(optional peer, Workers entry only)"]
+
+  FrontApp -- "@repo/vitest-config" --> NodeEntry
+  WorkerApps -- "@repo/vitest-config/workers" --> WorkersEntry
+  NodeEntry --> Shared
+  WorkersEntry --> Shared
+  NodeEntry --> Pr
+  WorkersEntry --> Pr
+  WorkersEntry --> Plugin
+
+  style FrontApp fill:#e8f5e9
+  style WorkerApps fill:#fff3e0
+```
+
 ## Features
 
 - **Dual entry points** - `@repo/vitest-config` (Node) and `@repo/vitest-config/workers` (Cloudflare pool)
@@ -151,6 +181,21 @@ Apps own Vitest; Turbo caches `test` (`vitest run`) and runs `test:watch` as per
 ## Unit vs integration
 
 Cloudflare recommends the Workers Vitest pool for **unit** tests (this package) and Wrangler `createTestHarness()` for **multi-Worker integration** tests against production builds. Do not replace pool suites with the harness for single-Worker routes. Harness scaffolding notes live in [AGENTS.md](AGENTS.md).
+
+```mermaid
+flowchart TD
+  Start["New test suite"] --> Kind{"What are you testing?"}
+
+  Kind -->|"front-* SPA logic"| Node["defineNodeConfig (Node)<br/>tests/ in the front app"]
+  Kind -->|"One Worker: handlers, helpers,<br/>single-Worker routes"| Pool["Workers Vitest pool<br/>defineWorkersConfig - runs inside workerd<br/>env + exports from cloudflare:workers"]
+  Kind -->|"Multi-Worker production builds:<br/>gateway HTTP to worker-* RPC"| HarnessGate{"Second Worker bound via<br/>a service binding exists?"}
+
+  HarnessGate -->|"No - keep pool suites"| Pool
+  HarnessGate -->|Yes| TestHarness["Wrangler createTestHarness()<br/>from a Node Vitest suite<br/>(see AGENTS.md checklist)"]
+
+  style Pool fill:#fff3e0
+  style TestHarness fill:#e8f5e9
+```
 
 ## Best Practices
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ApiHealthIndicator } from "#/components/feedback/ApiHealthIndicator";
 import { Button } from "#/components/ui/Button";
 import { Card } from "#/components/ui/Card";
+import { CopyPromptButton } from "#/components/ui/CopyPromptButton";
 import { useApiHealth } from "#/hooks/use-api-health";
 
 /** Intrinsic sizes match SVG viewBox aspect at CSS `h-24` (96px). */
@@ -75,6 +76,10 @@ export function HomePage() {
       <Card variant="subtle" className="mt-6">
         <ApiHealthIndicator status={apiHealthStatus} />
       </Card>
+
+      <div className="mt-6">
+        <CopyPromptButton />
+      </div>
 
       <p className="mt-6 text-sm text-muted-foreground">
         Click on the Vite and React logos to learn more

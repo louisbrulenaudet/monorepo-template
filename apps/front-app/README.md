@@ -17,19 +17,21 @@ React SPA for the monorepo, built with Vite and deployed on Cloudflare Workers (
 apps/front-app/
 ├── src/
 │   ├── components/
-│   │   ├── feedback/              # API health indicator UI (example)
+│   │   ├── devtools/              # Dev-only tooling UI (TanStack devtools mount)
+│   │   ├── feedback/              # API health indicator, error boundaries (example)
 │   │   └── ui/                    # Small reusable UI primitives
 │   ├── config/
-│   │   └── env.ts                 # Environment + defaults (API base URL)
+│   │   ├── env.ts                 # Environment + defaults (API base URL)
+│   │   └── query-client.ts        # TanStack Query client instance
 │   ├── enums/                     # Frontend enums
-│   ├── hooks/                     # React hooks
+│   ├── hooks/                     # React hooks (use-<feature>.ts)
 │   ├── routes/                    # TanStack file routes (loaders, guards)
 │   ├── pages/                     # Page UI (imported by *.lazy.tsx)
 │   ├── routeTree.gen.ts           # Generated route tree (commit this file)
 │   ├── router.tsx                 # TanStack Router instance
 │   ├── services/
-│   │   └── worker-api/            # Typed HTTP calls to worker-api
-│   ├── utils/                     # Shared utilities (fetch wrapper, helpers)
+│   │   └── worker-api/            # Typed HTTP calls + queryOptions per feature
+│   ├── utils/                     # Shared utilities (fetch wrapper, correlation-id session wrapper, helpers)
 │   ├── main.tsx                   # React entry (RouterProvider)
 │   └── index.css                  # Tailwind entry + global styles
 ├── tests/                         # Vitest suites mirroring src/ (Node)
@@ -52,16 +54,29 @@ apps/front-app/
 
 ### Architecture (diagram)
 
+Data flow for the shipped health-check feature; new features follow the same chain (see [AGENTS.md](AGENTS.md) "Adding a Feature").
+
 ```mermaid
 flowchart LR
-  Env[env_ts] --> BaseUrl[apiBaseUrl]
-  BaseUrl --> Services[src/services/worker-api]
-  Services --> Fetch[fetchJsonWithSchema]
-  Fetch --> API[worker-api_HTTP]
-  API --> UI[React_UI]
+  Router["TanStack Router<br/>src/routes/* + router.tsx"] --> Hooks["src/hooks/<br/>use-api-health.ts"]
+  QueryClient["src/config/query-client.ts"] --> Hooks
+  Env["src/config/env.ts<br/>VITE_API_BASE_URL → apiBaseUrl"] --> Svc
+  Hooks --> QO["src/services/worker-api/<br/>health-query-options.ts"]
+  QO --> Svc["src/services/worker-api/health.ts"]
+  Svc --> Fetch["src/utils/fetch-api.ts<br/>fetchJsonWithSchema"]
+  Fetch -- "GET /api/v1/health<br/>X-Request-Id from utils/correlation-id" --> API["worker-api :8700 (HTTP only)"]
+  API --> Parse["@repo/dtos-common/api<br/>HealthResponseSchema parse"]
+  Parse --> UI["React UI<br/>components/feedback/ApiHealthIndicator"]
+
+  style API fill:#fff3e0
 ```
 
-More detail for agents: [AGENTS.md](AGENTS.md).
+Key rules visible in this diagram:
+
+- The gateway origin comes **only** from `src/config/env.ts` - never hardcoded elsewhere.
+- Every request carries an opaque `X-Request-Id` minted via `@repo/correlation-id` (session persistence stays in `src/utils/correlation-id.ts`).
+- Responses are parsed with shared Zod schemas (`@repo/dtos-common/api`) before reaching UI state.
+- `worker-*` is reached, if ever, through `worker-api` over HTTP - no service bindings from the SPA.
 
 ### Tech Stack
 
@@ -78,7 +93,7 @@ More detail for agents: [AGENTS.md](AGENTS.md).
 
 ## Prerequisites
 
-- Node.js **22+** (see root `package.json` `engines`)
+- Node.js **24** (see root `package.json` `engines`)
 - pnpm (repo pins `pnpm` in root `package.json` `packageManager`)
 - Cloudflare account + Wrangler login (only needed for deployment)
 

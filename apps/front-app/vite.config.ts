@@ -185,7 +185,7 @@ export default defineConfig(({ command, mode }) => {
       reportCompressedSize: false,
       chunkSizeWarningLimit: 500,
       rolldownOptions: {
-        ...(analyzeBundle ? { devtools: {} } : {}),
+        devtools: {},
         onLog(level, log, log2) {
           if (
             level === "warn" &&

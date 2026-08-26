@@ -11,13 +11,17 @@ describe("getHealth", () => {
   it("GETs /api/v1/health and returns the shared contract", async () => {
     const fetchMock = vi.fn<typeof fetch>(() =>
       Promise.resolve(
-        Response.json({ status: "ok" }, { status: 200, statusText: "OK" }),
+        Response.json(
+          { status: "ok", version: "0.0.0" },
+          { status: 200, statusText: "OK" },
+        ),
       ),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getHealth({ dedupe: false, timeoutMs: 0 })).resolves.toEqual({
       status: "ok",
+      version: "0.0.0",
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);

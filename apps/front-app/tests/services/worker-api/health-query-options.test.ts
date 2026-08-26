@@ -28,7 +28,10 @@ describe("healthQueryOptions", () => {
       "fetch",
       vi.fn<() => Promise<Response>>(() =>
         Promise.resolve(
-          Response.json({ status: "ok" }, { status: 200, statusText: "OK" }),
+          Response.json(
+            { status: "ok", version: "0.0.0" },
+            { status: 200, statusText: "OK" },
+          ),
         ),
       ),
     );
@@ -37,11 +40,12 @@ describe("healthQueryOptions", () => {
 
     await expect(queryClient.fetchQuery(healthQueryOptions)).resolves.toEqual({
       status: "ok",
+      version: "0.0.0",
     });
 
     // Mirrors apps/front-app/src/routes/index.tsx loader.
     await expect(
       queryClient.ensureQueryData(healthQueryOptions),
-    ).resolves.toEqual({ status: "ok" });
+    ).resolves.toEqual({ status: "ok", version: "0.0.0" });
   });
 });

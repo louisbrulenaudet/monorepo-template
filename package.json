@@ -3,6 +3,8 @@
   "description": "pnpm + Turborepo monorepo starter with Cloudflare Workers, Hono HTTP gateway, and React (Vite) frontend.",
   "version": "0.0.0",
   "devDependencies": {
+    "@changesets/changelog-github": "catalog:",
+    "@changesets/cli": "catalog:",
     "cross-env": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
     "knip": "catalog:",
@@ -47,6 +49,7 @@
     "audit": "pnpm audit --audit-level=high",
     "boundaries": "turbo boundaries",
     "build": "turbo run build",
+    "changeset": "changeset",
     "check": "pnpm run lint:check && pnpm run format:check",
     "check-types": "turbo run check-types",
     "ci": "pnpm run boundaries && pnpm run deps:check && pnpm run deps:format --check && pnpm run knip && pnpm run knip:production && pnpm run lint:check && pnpm run format:check && pnpm run types:check && cross-env VITE_API_BASE_URL=https://worker-api-ci.monorepo-template.workers.dev turbo run check-types test build && pnpm run audit",
