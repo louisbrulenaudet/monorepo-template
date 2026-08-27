@@ -2,9 +2,6 @@ name: Create release tag
 description: Tags HEAD vX.Y.Z with the shared app version; fails on version drift, skips when the tag exists.
 
 outputs:
-  version:
-    description: "The shared app version (semver, no leading v)."
-    value: ${{ steps.version.outputs.version }}
   tag:
     description: "The release tag (vX.Y.Z)."
     value: ${{ steps.tag.outputs.tag }}

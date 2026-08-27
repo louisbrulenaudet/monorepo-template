@@ -1,7 +1,6 @@
 ---
 paths:
   - "knip.jsonc"
-  - ".github/workflows/ci.yml"
 ---
 
 # Knip Configuration & Policy

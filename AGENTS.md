@@ -157,8 +157,8 @@ Rules:
 - **The tag is the idempotency key.** Re-running `Release` on an already-tagged commit reports `created=false` and skips the deploy; redeploy on purpose with CD's `workflow_dispatch` + tag input.
 - **Runtime versions**: `/api/v1/health` returns `{ status, version }` (semver from `package.json`, inlined at build); `front-app` renders it in the root footer; `X-Worker-Version-Id` stays the opaque wrangler version id.
 - **Rollback**: `pnpm --filter=<app> exec wrangler rollback --env production`; redeploy any prior release with CD's `workflow_dispatch` + tag input.
-- **Prerequisites (one-time repo setting)**: enable *Actions → General → Allow GitHub Actions to create and approve pull requests*. No branch-protection exemption is needed - CI skips `changeset-release/**` head branches by job condition, and `gate` validates the release commit after merge.
-- CD remains paused behind a single `if: false` on the deploy job in `.github/workflows/cd.yml` until production GitHub Environment secrets exist (see [Contribution](#contribution)).
+- **Prerequisites (one-time repo setting)**: enable *Actions → General → Allow GitHub Actions to create and approve pull requests*. CI skips `changeset-release/**` head branches by job condition and `gate` validates the release commit after merge, so a required check reports skipped rather than red - but note that a `pull_request` run on a bot-authored branch is created in the `action_required` state, so it still needs one "Approve and run" click unless you exempt the branch in branch protection.
+- CD remains paused by the repository variable `CD_ENABLED`, checked by `release.yml`'s `deploy` job; set it to `true` alongside the production GitHub Environment secrets (see [Contribution](#contribution)). It is gated at the caller on purpose - a job skipped inside a `workflow_call` target reports success, which would leave a green Release with the tag cut and nothing shipped.
 
 Depth: `.claude/rules/ops/release.md` / `.cursor/rules/ops/release.mdc`; contributor-facing walkthrough in [`.changeset/README.md`](.changeset/README.md).
 
@@ -224,4 +224,4 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 - Run `pnpm run ci` before opening a PR.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
-- Continuous deployment: [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is called by `release.yml` once a release tag is cut, and runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for `worker-api` and `front-app`. **CD is paused** until production GitHub Environment secrets are configured; the deploy job carries a single `if: false` - delete that one line to arm it and leave upload / promote as-is.
+- Continuous deployment: [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is called by `release.yml` once a release tag is cut, and runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for `worker-api` and `front-app`. **CD is paused** until production GitHub Environment secrets are configured; set the repository variable `CD_ENABLED` to `true` to arm it and leave upload / promote as-is.

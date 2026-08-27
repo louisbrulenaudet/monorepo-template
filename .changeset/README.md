@@ -27,7 +27,7 @@ The `Changeset PR status` workflow comments on every PR with what will and will 
 
 `front-app` and `worker-api` are a `fixed` group, so they **always share one version** and bump together even when only one has a changeset. That is what makes a single `vX.Y.Z` tag a valid release coordinate, and `create-release-tag` fails closed if the two ever drift.
 
-A changeset naming a `@repo/*` package patch-bumps both apps via `updateInternalDependencies: "patch"` and therefore ships a deploy. This is intended for the contract and runtime packages. For `@repo/typescript-config` and `@repo/vitest-config` it is slightly over-eager — a build-time-only edit ships a rebuild — which is harmless and is not configured around, because `ignore` cannot express it: a non-ignored package may not depend on an ignored one, and every app depends on `typescript-config`.
+A changeset naming `@repo/dtos-common`, `@repo/enums-common`, or `@repo/correlation-id` patch-bumps both apps via `updateInternalDependencies: "patch"` and therefore ships a deploy — which is the point, since those are wire contracts and shared runtime code. `@repo/typescript-config` and `@repo/vitest-config` do **not** cascade: they are devDependencies only, and Changesets does not propagate a bump across a devDependency edge. A changeset for either versions just that package.
 
 ## The release PR
 

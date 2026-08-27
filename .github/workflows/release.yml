@@ -134,10 +134,13 @@ jobs:
 
   # `created` is false when the tag already existed, so re-running never re-deploys.
   # Redeploy an existing tag with cd.yml's workflow_dispatch.
+  # CD_ENABLED gates production: set the repository variable to 'true' in the same act as
+  # adding the `production` Environment secrets. Unset leaves this job `skipped`, which is
+  # visible - a paused job inside cd.yml reported success to this caller instead.
   deploy:
     name: Deploy release
     needs: tag
-    if: needs.tag.outputs.created == 'true'
+    if: needs.tag.outputs.created == 'true' && vars.CD_ENABLED == 'true'
     permissions:
       contents: write
       deployments: write

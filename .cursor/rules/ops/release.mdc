@@ -45,4 +45,4 @@ push to main ──► Release  (concurrency release-main, queue: max, never can
 ## Repo settings this depends on
 
 - *Actions → General → Allow GitHub Actions to create and approve pull requests* enabled.
-- `production` GitHub Environment holding `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` and the `VITE_API_BASE_URL` variable. CD stays paused (`if: false` on the deploy job) until they exist.
+- `production` GitHub Environment holding `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` and the `VITE_API_BASE_URL` variable. CD stays paused until they exist: the `deploy` job also requires the repository variable `CD_ENABLED == 'true'`, gated at the caller because a job skipped inside a `workflow_call` target reports success.
