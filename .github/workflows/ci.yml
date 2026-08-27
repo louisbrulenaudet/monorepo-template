@@ -1,9 +1,8 @@
 name: CI
 
 on:
-  # PRs are the gate for feature work. Pushes to `main` are validated by the
-  # `gate` job in release.yml, which calls this workflow - so `push:` is
-  # deliberately absent and main is never checked twice for one commit.
+  # No `push:` - pushes to `main` run through release.yml's `gate`, which calls this
+  # workflow, so a commit is never validated twice.
   pull_request:
   workflow_call:
     secrets:
@@ -13,13 +12,10 @@ on:
         required: false
   workflow_dispatch:
 
-# Deny by default; the CI job re-grants `contents: read` and `actions: write`
-# (artifacts on failure only).
 permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  # Pull requests only - never a push to `main`.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -31,11 +27,9 @@ env:
 jobs:
   ci:
     name: Lint, typecheck, test, and build
-    # The version PR is authored by GITHUB_TOKEN and its content is validated by
-    # release.yml's `gate` on the merge commit, before any tag is cut. Skipping
-    # here keeps it from sitting as a permanently pending required check.
+    # The version PR is validated by release.yml's `gate` on the merge commit, before
+    # any tag is cut; skipping here avoids a permanently pending required check.
     if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
-    # Pinned, not `ubuntu-latest`; Dependabot does not manage runner labels.
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -44,11 +38,9 @@ jobs:
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-      # Remote-cache artifact signing (turbo.json remoteCache.signature + longerSignatureKey).
-      # Repo-level secret; must be >= 32 bytes and identical to local machines' value.
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-      # Only PRs run `--affected`; every other event checks the full graph, so no
-      # base is needed (and `github.event.before` is all-zeros on a new branch).
+      # Empty off PRs on purpose: the full-graph path needs no base, and
+      # `github.event.before` is all-zeros on a new branch.
       TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
 
     steps:
@@ -67,9 +59,8 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
           install: false
 
-      # Within-job Node V8 bytecode cache; turbo passThroughEnv lists it (strict mode).
-      # Must be set from a step: `runner` / $RUNNER_TEMP is unavailable in workflow-
-      # and job-level `env:`, and referencing it there makes the file unparseable.
+      # Must come from a step: `runner` / $RUNNER_TEMP is unavailable in workflow- and
+      # job-level `env:`, and referencing it there makes the file unparseable.
       - name: Enable Node compile cache
         run: echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
 
@@ -79,8 +70,6 @@ jobs:
       - name: Dependency audit
         run: pnpm run audit
 
-      # One turbo CLI for check-types/test/build (avoids oversubscribing the runner with
-      # two concurrency:100% processes). OXC, boundaries, and types:check stay in parallel.
       - parallel:
           - name: Boundaries
             run: pnpm run boundaries
@@ -100,7 +89,6 @@ jobs:
           - name: Syncpack
             run: pnpm run deps:check && pnpm run deps:format --check
 
-          # PRs check what changed; the release gate and manual runs check everything.
           - name: Typecheck, test, and build (affected)
             if: github.event_name == 'pull_request'
             env:

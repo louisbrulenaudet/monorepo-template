@@ -1,9 +1,8 @@
 name: CD
 
 on:
-  # Never `push: tags:`. The release tag is created with GITHUB_TOKEN, and events
-  # created by that token do not start workflow runs, so a tag trigger is dead code.
-  # release.yml calls this workflow directly once it has cut the tag.
+  # No `push: tags:` - the release tag is created with GITHUB_TOKEN, and events from
+  # that token do not start workflow runs, so a tag trigger would be dead code.
   workflow_call:
     inputs:
       tag:
@@ -11,9 +10,8 @@ on:
         required: true
         type: string
     secrets:
-      # Cloudflare credentials are deliberately absent: they live on the
-      # `production` Environment and are resolved by the job below, never passed
-      # in by a caller.
+      # Cloudflare credentials are absent on purpose: they live on the `production`
+      # Environment and are resolved by the job, never passed in by a caller.
       TURBO_TOKEN:
         required: false
       TURBO_REMOTE_CACHE_SIGNATURE_KEY:
@@ -30,8 +28,8 @@ permissions: {}
 concurrency:
   group: cd-production
   cancel-in-progress: false
-  # Queue instead of dropping: with the default `queue: single`, a third trigger
-  # replaces the pending one and that release is silently lost.
+  # Not the default `single`, under which a third trigger replaces the pending one
+  # and that release is silently dropped.
   queue: max
 
 env:
@@ -99,8 +97,8 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
           install: false
 
-      # Must be set from a step: `runner` / $RUNNER_TEMP is unavailable in workflow-
-      # and job-level `env:`, and referencing it there makes the file unparseable.
+      # Must come from a step: `runner` / $RUNNER_TEMP is unavailable in workflow- and
+      # job-level `env:`, and referencing it there makes the file unparseable.
       - name: Enable Node compile cache
         run: echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
 
@@ -161,8 +159,8 @@ jobs:
           set -euo pipefail
           curl --fail --silent --show-error --max-time 30 "${VITE_API_BASE_URL}/api/v1/health"
 
-      # The deployment record is created by GitHub for the `production` environment
-      # declared above; only the Release is ours to write.
+      # GitHub creates the deployment record from the `environment:` above; only the
+      # Release is ours to write.
       - name: Create GitHub Release
         env:
           WORKER_API_VERSION_ID: ${{ steps.upload-api.outputs.version-id }}
