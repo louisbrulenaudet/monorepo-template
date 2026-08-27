@@ -1,0 +1,15 @@
+---
+paths:
+  - "**/*.md"
+  - "**/*.mdc"
+---
+
+# Markdown Style
+
+Markdown in this repo is **not hard-wrapped**. One line per paragraph, one line per list item, one line per table row. Existing files run 250-700 characters on a single line and that is correct, not a defect to fix. There is no markdown formatter - `oxfmt` does not touch `.md` - so nothing will reflow this for you and nothing will reflow it back.
+
+- **Never split a sentence across lines, and never reflow a paragraph to a column limit.** A paragraph is one line, however long. A bullet is one line, however long.
+- **Frontmatter string values stay on one line too.** Do not fold a long `description:` across continuation lines.
+- **Structural lines keep their own line:** headings, table rows, and the contents of fenced code blocks.
+- **A GitHub alert marker stays on its own line above its body:** `> [!NOTE]` then `> <body>`. Collapsing the marker onto the body line stops GitHub rendering it as an alert.
+- Applies to every `.md` and `.mdc` in the repo, including `README.md`, `AGENTS.md`, `CLAUDE.md`, `.changeset/**`, and both rule trees.
