@@ -24,9 +24,7 @@
     ".": {
       // Referenced from .github/actions/**/action.yml run steps.
       "entry": [".github/actions/**/*.mjs!"],
-      // Launched as a CLI by the Vite DevTools Vitest dock, never imported.
-      // Lives at the root because `@vitejs/devtools-vitest` probes for it at
-      // the pnpm workspace root, not the app dir (see rules/quality/knip.md).
+      // Vite DevTools Vitest dock CLI; must stay at the root (rules/quality/knip.md).
       "ignoreDependencies": ["@vitest/ui"],
     },
     "packages/vitest-config": {
