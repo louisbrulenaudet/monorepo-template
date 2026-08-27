@@ -1,7 +1,7 @@
 ---
-description: "Knip dead-code policy: why each override in root knip.jsonc exists, and how to keep both the default and production passes green."
-globs: knip.jsonc,.github/workflows/ci.yml
-alwaysApply: false
+paths:
+  - "knip.jsonc"
+  - ".github/workflows/ci.yml"
 ---
 
 # Knip Configuration & Policy

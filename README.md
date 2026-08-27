@@ -375,10 +375,7 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ### Releases
 
-Versioning is [Changesets](https://changesets.dev). `front-app` and `worker-api` are a
-`fixed` group, so they always share one version - which is what makes a single `vX.Y.Z` tag a
-valid release coordinate. **Nothing is published to npm**: every workspace is `private: true`.
-A release is a git tag plus a Cloudflare Workers promote.
+Versioning is [Changesets](https://changesets.dev). `front-app` and `worker-api` are a `fixed` group, so they always share one version - which is what makes a single `vX.Y.Z` tag a valid release coordinate. **Nothing is published to npm**: every workspace is `private: true`. A release is a git tag plus a Cloudflare Workers promote.
 
 ```text
 PR ──► CI (--affected) + advisory "does this need a changeset?" comment
@@ -393,38 +390,27 @@ merge to main ──► Release workflow
 
 Day to day:
 
-1. Add `pnpm changeset` to any PR that changes `apps/*` or a shared contract package. Use
-   `pnpm changeset --empty` when a change to a deployable should not ship a release.
+1. Add `pnpm changeset` to any PR that changes `apps/*` or a shared contract package. Use `pnpm changeset --empty` when a change to a deployable should not ship a release.
 2. Check what is queued at any time with `pnpm release:status`.
-3. **Merging the `chore: release` PR is the release act.** It lands the version bumps and
-   CHANGELOGs on `main`; `gate` validates that commit; then the tag is cut and CD runs.
+3. **Merging the `chore: release` PR is the release act.** It lands the version bumps and CHANGELOGs on `main`; `gate` validates that commit; then the tag is cut and CD runs.
 
 > [!IMPORTANT]
-> Do not push commits to `changeset-release/main`. That branch is reset from the `main` tip
-> and force-pushed on every push to `main`, so edits are discarded. Corrections belong in a
-> new changeset on `main`.
+> Do not push commits to `changeset-release/main`. That branch is reset from the `main` tip and force-pushed on every push to `main`, so edits are discarded. Corrections belong in a new changeset on `main`.
 
-Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md). Pipeline invariants:
-[`.claude/rules/ops/release.md`](.claude/rules/ops/release.md).
+Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md). Pipeline invariants: [`.claude/rules/ops/release.md`](.claude/rules/ops/release.md).
 
 ### Deploys
 
-[`.github/workflows/cd.yml`](.github/workflows/cd.yml) is **called by the Release workflow**
-once a tag is cut - it is not tag-triggered, because tags created with `GITHUB_TOKEN` do not
-start workflow runs. It runs, against the tagged commit, in the `production` GitHub
-Environment:
+[`.github/workflows/cd.yml`](.github/workflows/cd.yml) is **called by the Release workflow** once a tag is cut - it is not tag-triggered, because tags created with `GITHUB_TOKEN` do not start workflow runs. It runs, against the tagged commit, in the `production` GitHub Environment:
 
 1. `wrangler versions upload --env production` (with `--strict`, commit `--tag` / `--message`)
 2. `wrangler versions deploy <version-id>@100% --yes --env production`
 3. `curl` the `/api/v1/health` smoke check, then create the GitHub Release
 
-for `worker-api` and `front-app`. Uploads run in parallel; promotes stay sequential
-(`worker-api` first) so a partial production state is attributable.
+for `worker-api` and `front-app`. Uploads run in parallel; promotes stay sequential (`worker-api` first) so a partial production state is attributable.
 
 > [!NOTE]
-> **CD is paused** until production Environment secrets are configured. The deploy job carries
-> a single `if: false`; delete that one line to arm it. Until then, use the local helpers
-> below.
+> **CD is paused** until production Environment secrets are configured. The deploy job carries a single `if: false`; delete that one line to arm it. Until then, use the local helpers below.
 
 Recovering from a failed release:
 
