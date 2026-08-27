@@ -156,6 +156,13 @@ Notes:
    ```
 2. Verify the API: `GET` `http://localhost:8700/api/v1/health`
 3. Open the frontend: `http://localhost:5174`
+4. Optional - build once so the Vite DevTools Rolldown dock has data:
+   ```sh
+   pnpm turbo run build --filter=front-app
+   ```
+   Rolldown only writes its logs to `node_modules/.rolldown` during a build, so
+   until then the dock is empty and the dev server logs `RDDT0001`. Vite's
+   DevTools dock starts hidden - press **Shift+Alt+D** to reveal it.
 
 Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scoping](#scoping-pnpm--turborepo)).
 

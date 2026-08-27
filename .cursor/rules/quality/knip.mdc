@@ -28,6 +28,10 @@ Root `knip.jsonc` is intentionally comment-free; every override's rationale live
 
 - `ignoreDependencies: ["cloudflare"]` - `import ... from "cloudflare:workers"` in Workers-pool tests is a runtime protocol specifier resolving to no npm package.
 
+### Root (`"."`)
+
+- `ignoreDependencies: ["@vitest/ui"]` (both passes) - launched as a CLI by the Vite DevTools Vitest dock, never imported, and the root has no Vitest config for Knip's vitest plugin to bind to. It lives at the workspace root rather than in `apps/front-app` because `@vitejs/devtools-vitest` probes for it with `isPackageExists("@vitest/ui", { paths: [workspaceRoot] })` while `@vitejs/devtools` core probes integrations against the app `cwd`; under pnpm's isolated layout an app-local install is invisible to that probe and the dock fails with `VTDT0001`. Do not move it back.
+
 ### packages/vitest-config
 
 - `ignoreFiles: ["src/package-root.d.ts"]` - sidecar type declarations for `package-root.js`; unlike `ignore`, the file stays analyzed for exports/types/unresolved issues.

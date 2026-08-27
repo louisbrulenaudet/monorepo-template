@@ -31,7 +31,6 @@
     "@vitejs/devtools-vite": "catalog:",
     "@vitejs/devtools-vitest": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "@vitest/ui": "catalog:",
     "oxc-transform-react": "catalog:",
     "rollup-plugin-visualizer": "catalog:",
     "tailwindcss": "catalog:",

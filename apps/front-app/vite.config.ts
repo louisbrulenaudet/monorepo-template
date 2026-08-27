@@ -134,7 +134,9 @@ export default defineConfig(({ command, mode }) => {
 
   const plugins: PluginOption[] = [
     devtools({ consolePiping: { enabled: false } }),
-    DevTools(),
+    // `passive`: Vite's floating dock stays hidden until Shift+Alt+D so it does
+    // not overlap TanStack's. Revealing once persists per-origin.
+    DevTools({ embeddedVisibility: "passive" }),
     tanstackRouter({
       autoCodeSplitting: true,
     }),
@@ -185,6 +187,13 @@ export default defineConfig(({ command, mode }) => {
       reportCompressedSize: false,
       chunkSizeWarningLimit: 500,
       rolldownOptions: {
+        // Required - do not remove. `@vitejs/devtools` only seeds this
+        // (`rolldownOptions.devtools ??= {}`) from DevToolsBuildIntegration,
+        // which Vite registers solely when the top-level `devtools` config key
+        // is enabled. This app runs DevTools as a plugin instead, so that key
+        // is absent, the build integration never loads, and without this line
+        // no build writes `node_modules/.rolldown` - leaving the Rolldown dock
+        // empty with RDDT0001. Verified by diffing session dirs either way.
         devtools: {},
         onLog(level, log, log2) {
           if (
