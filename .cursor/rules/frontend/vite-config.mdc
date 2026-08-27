@@ -20,6 +20,14 @@ globs: apps/front-*/vite.config.ts
 `devtools` → `tanstackRouter` (**before** `react`) → `react({ compiler: true })` (native Rust React Compiler via optional peer `oxc-transform-react`; no Babel pass) → `tailwindcss` → `cloudflare` → build-only (`apply: "build"`) → conditional via spread. Falsy plugins are skipped. Compiler on → less manual memoization ([react.mdc](react.mdc)).
 Do not configure `auxiliaryWorkers` on `front-*` to embed `worker-api` or other backends - HTTP-only SPA boundary.
 
+## DevTools
+
+- `DevTools()` (embedded plugin) and the top-level `devtools` config key are alternatives, not complements - enabling the key registers a *second* DevTools instance on serve and calls `start()` on build. Stay on the plugin.
+- Keep `build.rolldownOptions.devtools` set explicitly. `@vitejs/devtools` only seeds it from `DevToolsBuildIntegration`, which Vite registers when the top-level `devtools` key is enabled; that key is absent here, so without the explicit flag no build writes `node_modules/.rolldown` and the Rolldown dock stays empty (`RDDT0001`). Populate it with one `build`.
+- `embeddedVisibility: "passive"` keeps Vite's floating dock clear of TanStack's; **Shift+Alt+D** reveals it.
+- The `devframe auth code` banner is the client auth handshake, not an error. `clientAuthTokens` is readable only from the top-level key, so it stays un-pre-approved; never set `clientAuth: false` - it exposes the dev server and filesystem to any browser that can reach the port.
+- `@vitest/ui` stays a **root** devDependency: `@vitejs/devtools-vitest` probes for it at the pnpm workspace root, so an app-local install fails the Vitest dock with `VTDT0001` ([knip.md](../quality/knip.mdc)).
+
 ## Monorepo
 
 - `server.fs.strict: true`, `server.fs.allow: [repoRoot]` (`path.resolve(appDir, "../..")`) for `@repo/*`.
