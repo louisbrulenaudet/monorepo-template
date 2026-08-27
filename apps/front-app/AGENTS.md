@@ -76,6 +76,27 @@ Local env: `cp .env.example .env.local` (and `.env.production.example` for prod 
 | `pnpm -w check-types` | Verify route generation and typecheck the workspace |
 | `pnpm analyze` | Bundle stats (`dist/stats.html`) |
 
+### Vite DevTools
+
+`pnpm dev` mounts Vite DevTools (embedded) alongside TanStack's panel. Vite's dock
+starts hidden - reveal it with **Shift+Alt+D**.
+
+The Rolldown dock reads build logs from `node_modules/.rolldown`, which only a
+**build** writes. On a fresh clone it is empty and the server logs `RDDT0001`;
+run `pnpm -w turbo run build --filter=front-app` once to populate it. This is
+expected, not a misconfiguration.
+
+The `devframe auth code NNNNNN` banner on each restart is the DevTools client
+auth handshake, not an error. It is not pre-approved: `clientAuthTokens` is only
+readable from the top-level `devtools` config key, and enabling that key makes
+Vite register a *second* DevTools instance on serve and call `start()` on build.
+Keep the OTP; do not set `clientAuth: false` (it opens the dev server and
+filesystem to any browser that can reach the port).
+
+`@vitest/ui` is a **root** devDependency, not an app one: `@vitejs/devtools-vitest`
+probes for it at the pnpm workspace root rather than the app dir, and installing
+it app-locally makes the Vitest dock fail with `VTDT0001`. Keep it at the root.
+
 In-app absolute imports use package.json `imports` (`#/*` → `./src/*`), e.g. `import { Button } from "#/components/ui/Button"`.
 
 ## Contribution

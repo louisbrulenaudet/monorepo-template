@@ -5,6 +5,7 @@
   "devDependencies": {
     "@changesets/changelog-github": "catalog:",
     "@changesets/cli": "catalog:",
+    "@vitest/ui": "catalog:",
     "cross-env": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
     "knip": "catalog:",
