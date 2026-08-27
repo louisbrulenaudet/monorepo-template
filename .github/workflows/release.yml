@@ -9,8 +9,8 @@ permissions: {}
 concurrency:
   group: release-main
   cancel-in-progress: false
-  # Queue instead of dropping: with the default `queue: single`, a third push
-  # replaces the pending run and that release is silently lost.
+  # Not the default `single`, under which a third push replaces the pending run and
+  # that release is silently dropped.
   queue: max
 
 env:
@@ -19,9 +19,8 @@ env:
   WRANGLER_SEND_METRICS: "false"
 
 jobs:
-  # Runs on EVERY push to main, in both modes. While a release PR is open the mode
-  # is always `version`, so a gate placed only on the release branch would leave
-  # main unvalidated for the whole life of that PR.
+  # Runs in both modes. While a release PR is open the mode is always `version`, so a
+  # gate placed only on the release path would leave main unvalidated for its whole life.
   gate:
     name: Validate main
     permissions:
@@ -55,10 +54,6 @@ jobs:
       - id: select-mode
         uses: changesets/action/select-mode@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
 
-  # Resets `changeset-release/main` from the current main tip, re-runs
-  # `changeset version`, and force-pushes one commit - so the PR always reflects
-  # all of main plus all pending changesets, and manual edits to that branch are
-  # discarded on the next push to main.
   version:
     name: Open release PR
     needs: select-mode
@@ -86,16 +81,12 @@ jobs:
           commit-message: "chore(release): version packages"
           pr-title: "chore: release"
         env:
-          # Not for the action (it uses its own `github-token` input, and the docs
-          # state this env var does not configure it) - this is for the
-          # @changesets/changelog-github generator, which reads GITHUB_TOKEN from
-          # the `changeset version` child process to resolve commit/PR authors.
+          # Not for the action, which uses its own `github-token` input - this is read by
+          # @changesets/changelog-github inside the `changeset version` child process.
           GITHUB_TOKEN: ${{ github.token }}
 
-      # The action's own PR body says the packages will be published to npm.
-      # Nothing here publishes to npm, so state what merging actually does.
-      # --edit-last --create-if-none keeps this to one comment across the many
-      # times this job re-runs while the release PR is open.
+      # --edit-last --create-if-none keeps this to one comment across the many times this
+      # job re-runs while the release PR is open.
       - name: Correct the release PR contract
         if: steps.version.outputs.pr-number != ''
         env:
@@ -141,9 +132,8 @@ jobs:
       - id: tag
         uses: ./.github/actions/create-release-tag
 
-  # The tag is the idempotency key: `created` is false when it already existed, so
-  # re-running this workflow never re-deploys. To redeploy a tag on purpose, use
-  # cd.yml's workflow_dispatch.
+  # `created` is false when the tag already existed, so re-running never re-deploys.
+  # Redeploy an existing tag with cd.yml's workflow_dispatch.
   deploy:
     name: Deploy release
     needs: tag

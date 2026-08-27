@@ -1,9 +1,8 @@
 name: Changeset PR status
 
 on:
-  # `pull_request`, not `pull_request_target`. The base-context trigger only earns
-  # its risk when it is used to support forks, and the comment job below cannot
-  # post on a fork PR anyway (read-only token), so forks stay excluded either way.
+  # `pull_request`, not `pull_request_target`: the base-context trigger only earns its
+  # risk when supporting forks, and the comment job cannot post on a fork PR anyway.
   pull_request:
 
 permissions: {}
@@ -17,8 +16,6 @@ env:
   TELEMETRY_DISABLED: "1"
 
 jobs:
-  # pr-status fetches the PR head ref into a temporary detached worktree itself,
-  # so a plain checkout is enough to infer the changed files and packages.
   pr-status:
     if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
     runs-on: ubuntu-24.04
@@ -42,7 +39,6 @@ jobs:
       - id: pr-status
         uses: changesets/action/pr-status@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
 
-  # Holds the only write scope in this workflow and checks out nothing.
   pr-comment:
     if: ${{ !startsWith(github.head_ref, 'changeset-release/') && github.event.pull_request.head.repo.full_name == github.repository }}
     needs: pr-status
