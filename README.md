@@ -410,9 +410,9 @@ Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md). Pipelin
 for `worker-api` and `front-app`. Uploads run in parallel; promotes stay sequential (`worker-api` first) so a partial production state is attributable.
 
 > [!NOTE]
-> **CD is paused** until production Environment secrets are configured. The deploy job carries a single `if: false`; delete that one line to arm it. Until then, use the local helpers below.
+> **CD is paused** until production Environment secrets are configured. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them. Until then, use the local helpers below.
 
-Recovering from a failed release:
+Recovering from a failed release (full table in [`.claude/rules/ops/release.md`](.claude/rules/ops/release.md)):
 
 | Fails | Do this |
 | --- | --- |
@@ -427,6 +427,7 @@ Recovering from a failed release:
 | `CLOUDFLARE_API_TOKEN` | secret | Wrangler auth |
 | `CLOUDFLARE_ACCOUNT_ID` | secret | Target account |
 | `VITE_API_BASE_URL` | variable | Production API origin baked into `front-app` |
+| `CD_ENABLED` | variable | Must be `true` for `release.yml` to call CD; unset leaves the deploy job skipped |
 
 **API token permissions** (scoped token; do not use a global API key):
 

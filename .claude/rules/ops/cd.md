@@ -1,7 +1,6 @@
 ---
 paths:
-  - ".github/workflows/**"
-  - ".github/CODEOWNERS"
+  - ".github/workflows/cd.yml"
 ---
 
 # Continuous Deployment
@@ -12,7 +11,7 @@ Weakening a deploy gate or shipping with missing credentials is covered by [`gua
 
 ## Status
 
-**CD is paused** until the `production` GitHub Environment secrets are configured. The deploy job carries a single `if: false`; delete that one line to arm it and leave everything else alone. The rest of this rule describes the pipeline once armed.
+**CD is paused** until the `production` GitHub Environment secrets are configured. The pause is the repository variable `CD_ENABLED`, checked by `release.yml`'s `deploy` job - set it to `true` in the same act as adding the secrets. It deliberately does **not** live in this workflow: a job skipped inside a `workflow_call` target reports *success* to the caller, so a paused CD used to leave a green Release run with the tag already cut and nothing shipped. Gating at the caller makes the skip visible, and keeps `workflow_dispatch` usable for a manual redeploy.
 
 ## Trigger
 

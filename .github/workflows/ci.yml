@@ -42,6 +42,7 @@ jobs:
       # Empty off PRs on purpose: the full-graph path needs no base, and
       # `github.event.before` is all-zeros on a new branch.
       TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
+      VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
 
     steps:
       - name: Checkout repository
@@ -67,10 +68,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Dependency audit
-        run: pnpm run audit
-
       - parallel:
+          - name: Dependency audit
+            run: pnpm run audit
+
           - name: Boundaries
             run: pnpm run boundaries
 
@@ -91,19 +92,13 @@ jobs:
 
           - name: Typecheck, test, and build (affected)
             if: github.event_name == 'pull_request'
-            env:
-              VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
             run: pnpm turbo run check-types test build --affected
 
           - name: Typecheck, test, and build (full graph)
             if: github.event_name != 'pull_request'
-            env:
-              VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
             run: pnpm turbo run check-types test build
 
       - name: Wrangler deploy dry-run
-        env:
-          VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
         run: pnpm turbo run deploy --filter=front-app -- --dry-run
 
       - name: Upload build artifacts on failure
@@ -113,6 +108,7 @@ jobs:
           name: ci-failure-build-${{ github.run_id }}
           path: |
             apps/*/dist/**
-            .turbo/**
+            .turbo/*.log
+            apps/*/.turbo/*.log
           if-no-files-found: ignore
           retention-days: 7

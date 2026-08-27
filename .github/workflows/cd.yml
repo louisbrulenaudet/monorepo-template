@@ -41,8 +41,6 @@ env:
 jobs:
   deploy:
     name: Deploy production Workers
-    # CD paused: delete this one line once the `production` Environment secrets exist.
-    if: false
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
@@ -175,8 +173,9 @@ jobs:
             echo "- worker-api version id: \`${WORKER_API_VERSION_ID}\`"
             echo "- front-app version id: \`${FRONT_APP_VERSION_ID}\`"
             echo "- URL: ${VITE_API_BASE_URL}"
-            changelog="apps/worker-api/CHANGELOG.md"
-            if [ -f "$changelog" ]; then
+            for app in worker-api front-app; do
+              changelog="apps/${app}/CHANGELOG.md"
+              [ -f "$changelog" ] || continue
               excerpt="$(
                 awk -v ver="$VERSION" '
                   $0 == "## " ver { flag = 1; next }
@@ -184,8 +183,11 @@ jobs:
                   flag { print }
                 ' "$changelog"
               )"
-              [ -n "$excerpt" ] && { echo; echo "$excerpt"; }
-            fi
+              [ -n "$(printf '%s' "$excerpt" | tr -d '[:space:]')" ] || continue
+              echo
+              echo "### ${app}"
+              echo "$excerpt"
+            done
           } > "$notes"
 
           if gh release view "$TAG" > /dev/null 2>&1; then
