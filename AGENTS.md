@@ -128,29 +128,39 @@ Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev
 | `pnpm deps:check` | syncpack lint - third-party deps must use `catalog:` specifiers; internal `@repo/**` links must use `workspace:*`; peer ranges exempt (inside `pnpm run ci`) |
 | `pnpm deps:fix` | Autofix syncpack findings (`syncpack fix`); `pnpm deps:format --check` verifies `package.json` field ordering in CI, run `pnpm deps:format` to normalize |
 | `pnpm changeset` | Add a changeset (version intent + changelog entry) for the current PR - required when touching deployable apps |
+| `pnpm release:status` | Read-only release state: pending changesets and the next versions (`changeset status --verbose`) - deliberately **not** in `pnpm run ci`, it exits 1 when changed packages lack a changeset |
 
 **Dependency workflow:** add every new third-party dependency to the pnpm catalog in `pnpm-workspace.yaml` and reference it as `"catalog:"` (one-offs outside the catalog install fine via `catalogMode: prefer` but fail `syncpack lint`). Internal packages always use `"workspace:*"`. Run `pnpm deps:fix` when lint flags version drift, and keep `package.json` field ordering normalized with `pnpm deps:format`.
 
 ### Releases
 
-[Changesets](https://changesets.dev) drives versioning for the deployable apps (same pattern as Vite, Astro, and cloudflare/workers-sdk). One shared release version: `front-app` and `worker-api` are a `fixed` group in `.changeset/config.json`, so they always bump together.
+[Changesets](https://changesets.dev) drives versioning for the deployable apps (same pattern as Vite, Astro, and cloudflare/workers-sdk). One shared release version: `front-app` and `worker-api` are a `fixed` group in `.changeset/config.json`, so they always bump together, which is what makes a single `vX.Y.Z` tag a valid release coordinate. **Nothing is published to npm** - every workspace is `private: true`; a release is a git tag plus a Cloudflare Workers promote.
 
 ```text
-PR + .changeset/*.md ── merge to main ──► Release workflow:
-  pending changesets  → "chore: release" PR (bumps versions, CHANGELOGs)
-  no pending changesets → tag vX.Y.Z on main ──► CD workflow (tag-triggered):
-  upload wrangler versions --tag X.Y.Z → promote @100% → smoke test
-  → GitHub Release (changelog + wrangler version IDs) + GitHub Deployment (production)
+PR ──► CI (pull_request, --affected) + advisory changeset-status comment
+
+merge to main ──► Release workflow
+  gate         ALWAYS: calls ci.yml on the merge commit (full graph)
+  select-mode  pending changesets? → "chore: release" PR (versions + CHANGELOGs)   [END]
+               none?               → tag vX.Y.Z (needs gate) → newly created?
+                                       → CD (called directly, not tag-triggered):
+                                         wrangler versions upload --tag X.Y.Z
+                                         → promote @100% → smoke → GitHub Release
 ```
 
 Rules:
 
 - **Every PR that changes a deployable app ships a changeset** (`pnpm changeset`; pick patch/minor/major). Non-blocking reminder via the Changesets PR status comment; use `pnpm changeset --empty` for no-release changes. Docs/tests/tooling-only PRs do not need one.
-- **Merging the `chore: release` PR is the release act**: it bumps versions and pushes tag `vX.Y.Z`, which triggers production CD. Do not push `v*` tags by hand unless intentionally deploying an existing release.
+- **Merging the `chore: release` PR is the release act**: it lands the bumps on `main`, where `gate` validates the commit and only then is tag `vX.Y.Z` cut and handed to CD. Do not push `v*` tags by hand.
+- **The release PR branch is force-pushed, not accumulated.** Every push to `main` resets `changeset-release/main` from the tip, re-runs `changeset version`, and force-pushes one commit - so it always reflects all of `main` plus all pending changesets, and manual edits to that branch are discarded. Corrections go in a new changeset on `main`.
+- **CD is never tag-triggered.** Tags created with `GITHUB_TOKEN` do not start workflow runs, so `release.yml` calls `cd.yml` directly. Adding a `push: tags:` trigger back is dead code.
+- **The tag is the idempotency key.** Re-running `Release` on an already-tagged commit reports `created=false` and skips the deploy; redeploy on purpose with CD's `workflow_dispatch` + tag input.
 - **Runtime versions**: `/api/v1/health` returns `{ status, version }` (semver from `package.json`, inlined at build); `front-app` renders it in the root footer; `X-Worker-Version-Id` stays the opaque wrangler version id.
 - **Rollback**: `pnpm --filter=<app> exec wrangler rollback --env production`; redeploy any prior release with CD's `workflow_dispatch` + tag input.
-- **Prerequisites (one-time repo settings)**: enable *Actions → General → Allow GitHub Actions to create and approve pull requests*; exempt `changeset-release/main` from required status checks in branch protection (GITHUB_TOKEN pushes do not trigger CI).
-- CD remains paused behind the leading `false &&` guard in `.github/workflows/cd.yml` until production GitHub Environment secrets exist (see [Contribution](#contribution)).
+- **Prerequisites (one-time repo setting)**: enable *Actions → General → Allow GitHub Actions to create and approve pull requests*. No branch-protection exemption is needed - CI skips `changeset-release/**` head branches by job condition, and `gate` validates the release commit after merge.
+- CD remains paused behind a single `if: false` on the deploy job in `.github/workflows/cd.yml` until production GitHub Environment secrets exist (see [Contribution](#contribution)).
+
+Depth: `.claude/rules/ops/release.md` / `.cursor/rules/ops/release.mdc`; contributor-facing walkthrough in [`.changeset/README.md`](.changeset/README.md).
 
 ### Scoping
 
@@ -214,4 +224,4 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 - Run `pnpm run ci` before opening a PR.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
-- Continuous deployment: after green CI on `main`, [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is designed to run `wrangler versions upload` then `wrangler versions deploy <id>@100%` for `worker-api` and `front-app`. **CD is paused** until production GitHub Environment secrets are configured; the deploy job condition is hard-disabled (leading `false` short-circuit) - re-enable by removing that guard (leave tip-check / upload / promote as-is).
+- Continuous deployment: [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is called by `release.yml` once a release tag is cut, and runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for `worker-api` and `front-app`. **CD is paused** until production GitHub Environment secrets are configured; the deploy job carries a single `if: false` - delete that one line to arm it and leave upload / promote as-is.

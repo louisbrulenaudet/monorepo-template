@@ -72,6 +72,7 @@
     "prepare": "vp config --no-agent",
     "preview": "turbo run preview --filter=front-app",
     "promote": "turbo run promote --filter=worker-api --filter=front-app",
+    "release:status": "changeset status --verbose",
     "skills-update": "bash .agents/skills/skills-update/scripts/update-locked-skills.sh",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",

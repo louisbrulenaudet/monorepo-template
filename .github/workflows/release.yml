@@ -7,8 +7,11 @@ on:
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: release-main
   cancel-in-progress: false
+  # Queue instead of dropping: with the default `queue: single`, a third push
+  # replaces the pending run and that release is silently lost.
+  queue: max
 
 env:
   DO_NOT_TRACK: "1"
@@ -16,6 +19,19 @@ env:
   WRANGLER_SEND_METRICS: "false"
 
 jobs:
+  # Runs on EVERY push to main, in both modes. While a release PR is open the mode
+  # is always `version`, so a gate placed only on the release branch would leave
+  # main unvalidated for the whole life of that PR.
+  gate:
+    name: Validate main
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/ci.yml
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+
   select-mode:
     name: Detect changesets
     runs-on: ubuntu-24.04
@@ -39,6 +55,10 @@ jobs:
       - id: select-mode
         uses: changesets/action/select-mode@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
 
+  # Resets `changeset-release/main` from the current main tip, re-runs
+  # `changeset version`, and force-pushes one commit - so the PR always reflects
+  # all of main plus all pending changesets, and manual edits to that branch are
+  # discarded on the next push to main.
   version:
     name: Open release PR
     needs: select-mode
@@ -60,24 +80,80 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
           install: false
       - run: pnpm install --frozen-lockfile
-      - uses: changesets/action/version@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+      - id: version
+        uses: changesets/action/version@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
         with:
           commit-message: "chore(release): version packages"
           pr-title: "chore: release"
         env:
+          # Not for the action (it uses its own `github-token` input, and the docs
+          # state this env var does not configure it) - this is for the
+          # @changesets/changelog-github generator, which reads GITHUB_TOKEN from
+          # the `changeset version` child process to resolve commit/PR authors.
           GITHUB_TOKEN: ${{ github.token }}
+
+      # The action's own PR body says the packages will be published to npm.
+      # Nothing here publishes to npm, so state what merging actually does.
+      # --edit-last --create-if-none keeps this to one comment across the many
+      # times this job re-runs while the release PR is open.
+      - name: Correct the release PR contract
+        if: steps.version.outputs.pr-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.version.outputs.pr-number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR_NUMBER" --edit-last --create-if-none --body-file - <<'BODY'
+          ### What merging this PR does
+
+          **No npm publish happens.** Every workspace in this repo is `private: true`; there is
+          no `publishConfig` and no registry configured. Disregard the "published to npm
+          automatically" line in the description above.
+
+          Merging this PR:
+
+          1. lands the version bumps and `CHANGELOG.md` entries on `main`;
+          2. makes the `Release` workflow validate that commit with full-graph CI;
+          3. cuts the tag `v<version>` at it - the single release coordinate for both apps;
+          4. hands that tag to `CD`, which uploads and promotes both Workers to 100%.
+
+          Do not push edits to `changeset-release/main`: this branch is reset from the `main`
+          tip and force-pushed on every push to `main`, so the commit would be discarded.
+          Corrections belong in a new changeset on `main`.
+          BODY
 
   tag:
     name: Tag release
-    needs: select-mode
+    needs: [select-mode, gate]
     if: needs.select-mode.outputs.mode != 'version'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      created: ${{ steps.tag.outputs.created }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 1
-      - uses: ./.github/actions/create-release-tag
+      - id: tag
+        uses: ./.github/actions/create-release-tag
+
+  # The tag is the idempotency key: `created` is false when it already existed, so
+  # re-running this workflow never re-deploys. To redeploy a tag on purpose, use
+  # cd.yml's workflow_dispatch.
+  deploy:
+    name: Deploy release
+    needs: tag
+    if: needs.tag.outputs.created == 'true'
+    permissions:
+      contents: write
+      deployments: write
+    uses: ./.github/workflows/cd.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

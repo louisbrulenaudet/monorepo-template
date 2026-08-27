@@ -1,9 +1,23 @@
 name: CD
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  # Never `push: tags:`. The release tag is created with GITHUB_TOKEN, and events
+  # created by that token do not start workflow runs, so a tag trigger is dead code.
+  # release.yml calls this workflow directly once it has cut the tag.
+  workflow_call:
+    inputs:
+      tag:
+        description: "Release tag to deploy (e.g. v0.1.0)"
+        required: true
+        type: string
+    secrets:
+      # Cloudflare credentials are deliberately absent: they live on the
+      # `production` Environment and are resolved by the job below, never passed
+      # in by a caller.
+      TURBO_TOKEN:
+        required: false
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY:
+        required: false
   workflow_dispatch:
     inputs:
       tag:
@@ -16,25 +30,29 @@ permissions: {}
 concurrency:
   group: cd-production
   cancel-in-progress: false
+  # Queue instead of dropping: with the default `queue: single`, a third trigger
+  # replaces the pending one and that release is silently lost.
+  queue: max
 
 env:
   DO_NOT_TRACK: "1"
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
   TURBO_UI: "false"
-  NODE_COMPILE_CACHE: ${{ runner.temp }}/node-compile-cache
 
 jobs:
   deploy:
     name: Deploy production Workers
-    # CD paused: remove `false &&` once production Environment secrets exist.
-    if: false && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # CD paused: delete this one line once the `production` Environment secrets exist.
+    if: false
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    environment: production
+    environment:
+      name: production
+      url: ${{ vars.VITE_API_BASE_URL }}
     permissions:
       contents: write # GitHub Release
-      deployments: write # GitHub Deployment + status
+      deployments: write # deployment record for the `production` environment
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -43,13 +61,13 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       NODE_ENV: production
-      TAG: ${{ inputs.tag || github.ref_name }}
+      TAG: ${{ inputs.tag }}
       GH_TOKEN: ${{ github.token }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.TAG }}
+          ref: ${{ inputs.tag }}
           persist-credentials: false
           fetch-depth: 1
 
@@ -62,25 +80,29 @@ jobs:
           esac
           echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
 
-      - parallel:
-          - name: Require Cloudflare credentials
-            run: |
-              if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-                echo "ERROR: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required for CD" >&2
-                exit 1
-              fi
-              if [ -z "$VITE_API_BASE_URL" ]; then
-                echo "ERROR: repository variable VITE_API_BASE_URL is required for front-app" >&2
-                exit 1
-              fi
+      - name: Require Cloudflare credentials
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "ERROR: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required for CD" >&2
+            exit 1
+          fi
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "ERROR: repository variable VITE_API_BASE_URL is required for front-app" >&2
+            exit 1
+          fi
 
-          - name: Setup pnpm and Node.js
-            uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
-            with:
-              runtime: node@24
-              cache: true
-              cache-dependency-path: pnpm-lock.yaml
-              install: false
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        with:
+          runtime: node@24
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      # Must be set from a step: `runner` / $RUNNER_TEMP is unavailable in workflow-
+      # and job-level `env:`, and referencing it there makes the file unparseable.
+      - name: Enable Node compile cache
+        run: echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
 
       - run: pnpm install --frozen-lockfile
 
@@ -139,11 +161,38 @@ jobs:
           set -euo pipefail
           curl --fail --silent --show-error --max-time 30 "${VITE_API_BASE_URL}/api/v1/health"
 
-      - name: Record GitHub Release and Deployment
-        uses: ./.github/actions/record-release
-        with:
-          tag: ${{ env.TAG }}
-          version: ${{ env.VERSION }}
-          worker-api-version-id: ${{ steps.upload-api.outputs.version-id }}
-          front-app-version-id: ${{ steps.upload-front.outputs.version-id }}
-          url: ${{ vars.VITE_API_BASE_URL }}
+      # The deployment record is created by GitHub for the `production` environment
+      # declared above; only the Release is ours to write.
+      - name: Create GitHub Release
+        env:
+          WORKER_API_VERSION_ID: ${{ steps.upload-api.outputs.version-id }}
+          FRONT_APP_VERSION_ID: ${{ steps.upload-front.outputs.version-id }}
+        run: |
+          set -euo pipefail
+          notes="$(mktemp)"
+          {
+            echo "Deployed \`worker-api\` and \`front-app\` @ \`${VERSION}\` to production."
+            echo
+            echo "- Commit: ${GITHUB_SHA}"
+            echo "- worker-api version id: \`${WORKER_API_VERSION_ID}\`"
+            echo "- front-app version id: \`${FRONT_APP_VERSION_ID}\`"
+            echo "- URL: ${VITE_API_BASE_URL}"
+            changelog="apps/worker-api/CHANGELOG.md"
+            if [ -f "$changelog" ]; then
+              excerpt="$(
+                awk -v ver="$VERSION" '
+                  $0 == "## " ver { flag = 1; next }
+                  /^## / && flag { exit }
+                  flag { print }
+                ' "$changelog"
+              )"
+              [ -n "$excerpt" ] && { echo; echo "$excerpt"; }
+            fi
+          } > "$notes"
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TAG" --notes-file "$notes"
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file "$notes" --verify-tag
+          fi
+          rm -f "$notes"

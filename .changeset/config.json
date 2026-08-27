@@ -1,12 +1,16 @@
 {
   "changelog": [
     "@changesets/changelog-github",
-    { "repo": "louisbrulenaudet/monorepo-template" }
+    {
+      "repo": "louisbrulenaudet/monorepo-template"
+    }
   ],
   "commit": false,
   "baseBranch": "main",
-  "access": "restricted",
-  "privatePackages": { "version": true, "tag": false },
+  "privatePackages": {
+    "version": true,
+    "tag": false
+  },
   "fixed": [["front-app", "worker-api"]],
   "updateInternalDependencies": "patch",
   "ignore": [],
