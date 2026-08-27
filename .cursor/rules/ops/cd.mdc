@@ -1,49 +1,111 @@
 ---
-description: GitHub Actions CD - workflow_run after CI on main, tip-of-main skip, Cloudflare versions upload then 100% promote, scoped API token, production environment, no wrangler-action
+description: GitHub Actions CD - called by release.yml after the tag, no push-tags trigger, Cloudflare versions upload then 100% promote, scoped API token on the production environment, GitHub-owned deployment record
 globs: .github/workflows/**,.github/CODEOWNERS
 alwaysApply: false
 ---
 
 # Continuous Deployment
 
-The pipeline is `.github/workflows/cd.yml`. Read it for the step list; a prose copy here would only drift out of date. CI gates that must stay green first are `ops/ci`. Human-facing secret/variable tables live in the README deploy section; Wrangler secrets vs vars are `backend/workers-config`.
+The pipeline is [`.github/workflows/cd.yml`](../../../.github/workflows/cd.yml). Read it for
+the step list; a prose copy here would only drift. How a release reaches it:
+[`ops/release.md`](release.mdc). CI invariants: [`ops/ci.md`](ci.mdc). Human-facing
+secret/variable tables: the README deploy section. Wrangler secrets vs vars:
+[`backend/workers-config.md`](../backend/workers-config.mdc).
 
-Weakening a deploy gate or shipping with missing credentials is covered by `guardrails` and is never the answer here either.
+Weakening a deploy gate or shipping with missing credentials is covered by
+[`guardrails.md`](../core/guardrails.mdc) and is never the answer here either.
 
 ## Status
 
-**CD is paused** until production GitHub Environment secrets are configured. The deploy job condition is hard-disabled (leading `false` short-circuit); re-enable by removing that guard (leave tip-check / upload / promote as-is). The rest of this rule describes the intended pipeline once re-enabled.
+**CD is paused** until the `production` GitHub Environment secrets are configured. The deploy
+job carries a single `if: false`; delete that one line to arm it and leave everything else
+alone. The rest of this rule describes the pipeline once armed.
 
-## Trigger and tip-of-main
+## Trigger
 
-- **When enabled, CD runs on `workflow_run` after CI `completed`, and only when that CI was a successful `push` to `main`.** Deploy secrets stay off PR CI. Do not deploy from `pull_request` or `pull_request_target` (the latter especially - base-branch context plus untrusted checkout is a pwn pattern).
-- **Concurrency group is `cd-production` with `cancel-in-progress: false`.** Cancelling would drop an in-flight production ship; queuing is intentional.
-- **That combination can let a slower older CI finish after a newer tip.** The "Skip stale deploy" step compares `HEAD_SHA` (from the triggering run, via job `env:`) to the current tip of `main` and no-ops when stale. Do not remove it as redundant with concurrency.
-- **Checkout uses `ref: ${{ env.HEAD_SHA }}`**, not whatever the default branch tip is at job start - the ship must match the green CI commit.
+- **`workflow_call` and `workflow_dispatch` only.** `release.yml` calls this workflow after it
+  has cut the tag and confirmed it did not already exist; `workflow_dispatch` takes a `tag`
+  input and is the redeploy/rollforward path.
+- **There is no `push: tags:` trigger, and adding one is a regression.** The release tag is
+  created with `GITHUB_TOKEN`, and events created by that token do not start workflow runs, so
+  a tag trigger never fires (GitHub `GITHUB_TOKEN` docs; changesets/action#669,
+  changesets/changesets#1545). Zero tags existed while that dead trigger was the only path.
+- Do not deploy from `pull_request` or `pull_request_target` (the latter especially - base
+  context plus untrusted checkout is a pwn pattern).
+- **Concurrency is `cd-production`, `cancel-in-progress: false`, `queue: max`.** Cancelling
+  would drop an in-flight ship; and with the default `queue: single` a third trigger replaces
+  the pending one, silently losing that release.
+- **Checkout uses `ref: ${{ inputs.tag }}`** - the ship must match the tagged commit, not
+  whatever the branch tip is at job start.
 
 ## Auth and environment
 
-- **Job uses GitHub Environment `production`.** Protection rules and environment secrets belong there; do not move Cloudflare credentials into unprotected repository secrets "for convenience" without an explicit decision.
-- **`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are required secrets** - the workflow fails closed if either is empty. Use a **scoped** Workers API token (Cloudflare: Edit Cloudflare Workers / account-scoped), never a Global API Key, never a value committed to the repo. Secrets Store Edit is only needed if the Worker binds Secrets Store - see README.
-- **`VITE_API_BASE_URL` is a repository/environment *variable*, not a secret** - it is public build-time config for `front-app`. Still required; empty fails the gate.
-- **Wrangler auth in CI is non-interactive** via those env vars ([Cloudflare GitHub Actions guide](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)). Do not add `wrangler login` to CD.
+- **The job declares `environment: {name: production, url: …}`.** Protection rules, required
+  reviewers, and environment secrets belong there. Do not move Cloudflare credentials into
+  unprotected repository secrets "for convenience".
+- **Cloudflare credentials are never passed in by a caller.** `on.workflow_call.secrets`
+  declares only `TURBO_TOKEN` and `TURBO_REMOTE_CACHE_SIGNATURE_KEY`;
+  `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` are resolved from the `production`
+  environment by the job itself. Never switch the caller to `secrets: inherit`.
+- **Both Cloudflare values are required** - the workflow fails closed if either is empty. Use
+  a **scoped** Workers API token (Edit Cloudflare Workers, account-scoped), never a Global API
+  Key, never a committed value. Secrets Store Edit only if the Worker binds Secrets Store.
+- **`VITE_API_BASE_URL` is a repository/environment *variable*, not a secret** - public
+  build-time config for `front-app`, and the `environment.url`. Still required; empty fails.
+- **Wrangler auth in CI is non-interactive** via those env vars
+  ([Cloudflare GitHub Actions guide](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)).
+  Do not add `wrangler login` to CD.
+- **No OIDC, and that is correct.** Cloudflare has no OIDC path here, and npm trusted
+  publishing is npm-CLI-specific and irrelevant - nothing in this repo is published to npm.
+  `id-token: write` would be privilege with no consumer.
 
 ## Versions upload, then promote
 
-- **This repo does not use `wrangler deploy` or `cloudflare/wrangler-action` in CD.** Package scripts `upload` / `promote` call `wrangler versions upload` then `wrangler versions deploy …@100% --yes` against the workspace-pinned Wrangler. That keeps the CLI version identical to local and avoids a second floating action pin.
-- **Upload is machine-readable:** `WRANGLER_OUTPUT_FILE_PATH` captures JSON lines; CD parses `type === "version-upload"` for `version_id`. Do not replace that with scraping stdout banners.
-- **Keep `--strict`, and tag/message with `$HEAD_SHA`** (already in `env:` - never interpolate raw `github.ref_name` into the shell). Cloudflare: `--strict` makes upload/deploy more defensive in non-interactive CI (blocks conflicting remote overrides) - do not drop it to force green.
-- **Traffic policy today is 100%.** Gradual percentages exist in Wrangler; do not add them casually without observability and a rollback runbook. Current CD is upload → promote `@100%`.
-- **`versions upload` does not apply routes, custom domains, or cron triggers** ([Cloudflare deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)). When those land in `wrangler.jsonc`, also run `wrangler triggers deploy --env production` (comment already in the workflow). Omitting that ships code without the trigger change.
-- **Uploads may run in `parallel:`; promotes stay sequential.** `worker-api` then `front-app` at `@100%`. If front fails after API is already live, production can be split - the workflow's error names the rollback (`wrangler rollback --env production` on worker-api). Do not reorder or parallelize the two promotes without handling that partial state.
-- **Credential gate may `parallel:` with `pnpm/setup`.** Install stays after setup.
+- **This repo does not use `wrangler deploy` or `cloudflare/wrangler-action` in CD.** Package
+  scripts `upload` / `promote` call `wrangler versions upload` then
+  `wrangler versions deploy …@100% --yes` against the workspace-pinned Wrangler, keeping the
+  CLI identical to local and avoiding a second floating action pin.
+- **Upload is machine-readable:** `WRANGLER_OUTPUT_FILE_PATH` captures JSON lines; CD parses
+  `type === "version-upload"` for `version_id`. Do not replace that with scraping stdout.
+- **Keep `--strict`, and tag/message with the release version + `GITHUB_SHA`.** Cloudflare:
+  `--strict` makes upload/deploy more defensive in non-interactive CI - do not drop it to
+  force green.
+- **Traffic policy today is 100%.** Gradual percentages exist; do not add them without
+  observability and a rollback runbook.
+- **`versions upload` does not apply routes, custom domains, or cron triggers**
+  ([deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)).
+  When those land in `wrangler.jsonc`, also run `wrangler triggers deploy --env production`
+  (comment already in the workflow).
+- **Uploads may run in `parallel:`; promotes stay sequential.** `worker-api` then `front-app`
+  at `@100%`. If front fails after API is live, production can be split - the workflow's error
+  names the rollback (`wrangler rollback --env production`). Do not reorder or parallelize the
+  two promotes without handling that partial state.
+
+## Release and deployment records
+
+- **The deployment record is created by GitHub**, because the job references an environment
+  ("when a workflow job that references an environment runs, it creates a deployment object").
+  Do **not** re-create deployments through the REST API: an earlier version of this pipeline
+  did, producing a duplicate record and marking GitHub's own one inactive.
+- **Only the GitHub Release is ours to write** - created/updated in-workflow with
+  `gh release create --verify-tag`, with the matching `apps/worker-api/CHANGELOG.md` section
+  appended when present.
 
 ## Same hardening as CI
 
-- SHA-pinned `uses:` with `# vX.Y.Z` comments; `persist-credentials: false` on checkout; workflow `permissions: {}` and job `contents: read` only; runner `ubuntu-24.04`; frozen `pnpm install`; Node `24` via `pnpm/setup`; telemetry flags off. Multi-line shell uses `set -euo pipefail`. See `ops/ci` for the full rationale - do not diverge "just for CD".
+SHA-pinned `uses:` with `# vX.Y.Z` comments; `persist-credentials: false` on checkout;
+workflow `permissions: {}` with per-job re-grants (`contents: write` for the Release,
+`deployments: write` for the environment record); runner `ubuntu-24.04`; frozen
+`pnpm install`; Node `24` via `pnpm/setup`; telemetry off. Multi-line shell uses
+`set -euo pipefail`. `$RUNNER_TEMP` only ever from a step - see the expression-context section
+in [`ops/ci.md`](ci.mdc), which is what broke this file once. Do not diverge "just for CD".
 
 ## What is deliberately not used
 
-- **Workers Builds** - external GitHub Actions is the chosen path so CI and CD share one pipeline and tip-check. Do not dual-enable Cloudflare Builds on the same production Workers without removing this workflow's promote path (double deploys).
-- **Baking secrets into `wrangler.jsonc` `vars` or workflow YAML** - runtime secrets stay in Cloudflare; build secrets stay in GitHub Environments (`workers-config`).
-- **Deploying every CI success on a PR** - the `workflow_run` `if:` requires `push` to `main` on purpose.
+- **Workers Builds** - external GitHub Actions is the chosen path so CI and CD share one
+  pipeline. Do not dual-enable Cloudflare Builds on the same production Workers.
+- **Baking secrets into `wrangler.jsonc` `vars` or workflow YAML** - runtime secrets stay in
+  Cloudflare; build secrets stay in GitHub Environments
+  ([`workers-config.md`](../backend/workers-config.mdc)).
+- **Deploying every green `main`** - only a newly created release tag deploys, gated on
+  `create-release-tag`'s `created` output.

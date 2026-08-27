@@ -174,6 +174,8 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 | `pnpm test` | Vitest via `turbo run test` (per-app; Node or Cloudflare pool) |
 | `pnpm test:watch` | Vitest watch via `turbo run test:watch` (humans; persistent, uncached) |
 | `pnpm boundaries` | Check package dependency tags against `turbo.json` |
+| `pnpm changeset` | Record a release intent for the current PR (interactive) |
+| `pnpm release:status` | Read-only: pending changesets and the next versions |
 | `pnpm deploy` | Deploy all apps/workers (via Turborepo) |
 | `pnpm build` | Build all packages and apps (via Turborepo) |
 | `pnpm format:fix` | Auto-fix formatting with oxfmt |
@@ -369,17 +371,68 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 }
 ```
 
-## 4. Deploy Your Workers
+## 4. Release and Deploy Your Workers
 
-On merge to `main`, after the **CI** workflow succeeds, the **CD** workflow ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)) is designed to build and ship production (GitHub Environment `production`):
+### Releases
+
+Versioning is [Changesets](https://changesets.dev). `front-app` and `worker-api` are a
+`fixed` group, so they always share one version - which is what makes a single `vX.Y.Z` tag a
+valid release coordinate. **Nothing is published to npm**: every workspace is `private: true`.
+A release is a git tag plus a Cloudflare Workers promote.
+
+```text
+PR ──► CI (--affected) + advisory "does this need a changeset?" comment
+
+merge to main ──► Release workflow
+  gate         ALWAYS: runs CI on the merge commit, full graph
+  select-mode  changesets pending? → open/update the "chore: release" PR   [END]
+               none?               → tag vX.Y.Z (after gate) → newly created?
+                                       → CD: versions upload --tag X.Y.Z
+                                         → promote @100% → smoke → GitHub Release
+```
+
+Day to day:
+
+1. Add `pnpm changeset` to any PR that changes `apps/*` or a shared contract package. Use
+   `pnpm changeset --empty` when a change to a deployable should not ship a release.
+2. Check what is queued at any time with `pnpm release:status`.
+3. **Merging the `chore: release` PR is the release act.** It lands the version bumps and
+   CHANGELOGs on `main`; `gate` validates that commit; then the tag is cut and CD runs.
+
+> [!IMPORTANT]
+> Do not push commits to `changeset-release/main`. That branch is reset from the `main` tip
+> and force-pushed on every push to `main`, so edits are discarded. Corrections belong in a
+> new changeset on `main`.
+
+Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md). Pipeline invariants:
+[`.claude/rules/ops/release.md`](.claude/rules/ops/release.md).
+
+### Deploys
+
+[`.github/workflows/cd.yml`](.github/workflows/cd.yml) is **called by the Release workflow**
+once a tag is cut - it is not tag-triggered, because tags created with `GITHUB_TOKEN` do not
+start workflow runs. It runs, against the tagged commit, in the `production` GitHub
+Environment:
 
 1. `wrangler versions upload --env production` (with `--strict`, commit `--tag` / `--message`)
 2. `wrangler versions deploy <version-id>@100% --yes --env production`
+3. `curl` the `/api/v1/health` smoke check, then create the GitHub Release
 
-for `worker-api` and `front-app`. CD skips if the CI commit is no longer the tip of `main` (avoids stale overwrites).
+for `worker-api` and `front-app`. Uploads run in parallel; promotes stay sequential
+(`worker-api` first) so a partial production state is attributable.
 
 > [!NOTE]
-> **CD is paused** until production Environment secrets are configured. The deploy job condition is hard-disabled (leading `false` short-circuit); re-enable by removing that guard (leave tip-check / upload / promote as-is). Until then, use the local helpers below.
+> **CD is paused** until production Environment secrets are configured. The deploy job carries
+> a single `if: false`; delete that one line to arm it. Until then, use the local helpers
+> below.
+
+Recovering from a failed release:
+
+| Fails | Do this |
+| --- | --- |
+| `gate` is red | Fix on a PR. No tag and no deploy happened. |
+| Tag already exists | Nothing to do - the deploy is skipped by design, not failing. |
+| Upload / promote / smoke | The tag stands. Re-run CD via `workflow_dispatch` with the tag, or `pnpm --filter=<app> exec wrangler rollback --env production`. |
 
 **GitHub secrets / variables** (repo-level or on the `production` environment):
 

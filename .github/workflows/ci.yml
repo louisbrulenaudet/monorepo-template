@@ -1,12 +1,16 @@
 name: CI
 
 on:
-  # Unfiltered push is intentional: branch filters on a PR-only rewrite of
-  # this workflow did not fire (main still has the old push-only triggers),
-  # which left the ruleset check pending forever. pull_request covers PRs
-  # once this lands on main; push covers branch heads in the meantime.
-  push:
+  # PRs are the gate for feature work. Pushes to `main` are validated by the
+  # `gate` job in release.yml, which calls this workflow - so `push:` is
+  # deliberately absent and main is never checked twice for one commit.
   pull_request:
+  workflow_call:
+    secrets:
+      TURBO_TOKEN:
+        required: false
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY:
+        required: false
   workflow_dispatch:
 
 # Deny by default; the CI job re-grants `contents: read` and `actions: write`
@@ -23,12 +27,14 @@ env:
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
   TURBO_UI: "false"
-  # Within-job Node V8 bytecode cache; turbo passThroughEnv must list this (strict mode).
-  NODE_COMPILE_CACHE: ${{ runner.temp }}/node-compile-cache
 
 jobs:
   ci:
     name: Lint, typecheck, test, and build
+    # The version PR is authored by GITHUB_TOKEN and its content is validated by
+    # release.yml's `gate` on the merge commit, before any tag is cut. Skipping
+    # here keeps it from sitting as a permanently pending required check.
+    if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
     # Pinned, not `ubuntu-latest`; Dependabot does not manage runner labels.
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -41,7 +47,9 @@ jobs:
       # Remote-cache artifact signing (turbo.json remoteCache.signature + longerSignatureKey).
       # Repo-level secret; must be >= 32 bytes and identical to local machines' value.
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-      TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+      # Only PRs run `--affected`; every other event checks the full graph, so no
+      # base is needed (and `github.event.before` is all-zeros on a new branch).
+      TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
 
     steps:
       - name: Checkout repository
@@ -58,6 +66,12 @@ jobs:
           cache: true
           cache-dependency-path: pnpm-lock.yaml
           install: false
+
+      # Within-job Node V8 bytecode cache; turbo passThroughEnv lists it (strict mode).
+      # Must be set from a step: `runner` / $RUNNER_TEMP is unavailable in workflow-
+      # and job-level `env:`, and referencing it there makes the file unparseable.
+      - name: Enable Node compile cache
+        run: echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -86,10 +100,18 @@ jobs:
           - name: Syncpack
             run: pnpm run deps:check && pnpm run deps:format --check
 
-          - name: Typecheck, test, and build
+          # PRs check what changed; the release gate and manual runs check everything.
+          - name: Typecheck, test, and build (affected)
+            if: github.event_name == 'pull_request'
             env:
               VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
             run: pnpm turbo run check-types test build --affected
+
+          - name: Typecheck, test, and build (full graph)
+            if: github.event_name != 'pull_request'
+            env:
+              VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
+            run: pnpm turbo run check-types test build
 
       - name: Wrangler deploy dry-run
         env:
