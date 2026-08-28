@@ -134,7 +134,7 @@ export default defineConfig(({ command, mode }) => {
 
   const plugins: PluginOption[] = [
     devtools({ consolePiping: { enabled: false } }),
-    DevTools({ embeddedVisibility: "passive" }),
+    DevTools({ embeddedVisibility: "normal" }),
     tanstackRouter({
       autoCodeSplitting: true,
     }),
@@ -162,23 +162,12 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins,
-
-    // In-app absolute imports use package.json `"imports"` (`#/*` → `./src/*`).
-    // Vite resolves that field natively - do not mirror aliases here.
-
     css: {
       devSourcemap: true,
     },
 
     build: {
-      // `target` intentionally unset - inherit Vite 8's default
-      // `baseline-widely-available` (Chrome/Edge 111, Firefox 114, Safari 16.4):
-      // modern output with safe global reach for a CDN-distributed SPA. Leaving
-      // `modulePreload.polyfill` at its default (true) keeps preload hints
-      // working on browsers that predate native `<link rel="modulepreload">`.
       minify: "oxc",
-      // `hidden`: maps are generated but not referenced from the bundle -
-      // enables error-tracking symbolication without public exposure.
       sourcemap: mode === "development" ? "inline" : "hidden",
       cssCodeSplit: true,
       assetsInlineLimit: 4096,
