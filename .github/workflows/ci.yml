@@ -34,7 +34,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      actions: write
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -69,7 +68,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - parallel:
+          # PR-only: the release gate must stay a pure function of the commit.
           - name: Dependency audit
+            if: github.event_name == 'pull_request'
             run: pnpm run audit
 
           - name: Boundaries
