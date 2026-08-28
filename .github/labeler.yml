@@ -14,6 +14,10 @@ worker-api:
   - changed-files:
       - any-glob-to-any-file: apps/worker-api/**
 
+correlation-id:
+  - changed-files:
+      - any-glob-to-any-file: packages/correlation-id/**
+
 dtos-common:
   - changed-files:
       - any-glob-to-any-file: packages/dtos-common/**
@@ -40,6 +44,10 @@ docs:
 ci:
   - changed-files:
       - any-glob-to-any-file: .github/**
+
+release:
+  - changed-files:
+      - any-glob-to-any-file: .changeset/**
 
 hooks:
   - changed-files:

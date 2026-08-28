@@ -25,18 +25,6 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
         VERSION: ${{ steps.version.outputs.version }}
-      run: |
-        set -euo pipefail
-        tag="v${VERSION}"
-        echo "tag=${tag}" >> "$GITHUB_OUTPUT"
-        if gh api "repos/${{ github.repository }}/git/ref/tags/${tag}" > /dev/null 2>&1; then
-          echo "Tag ${tag} already exists; nothing to release."
-          echo "created=false" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-        echo "Creating tag ${tag} at ${GITHUB_SHA}"
-        gh api "repos/${{ github.repository }}/git/refs" \
-          -f "ref=refs/tags/${tag}" \
-          -f "sha=${GITHUB_SHA}"
-        echo "created=true" >> "$GITHUB_OUTPUT"
+      run: bash "${{ github.action_path }}/create-release-tag.sh"

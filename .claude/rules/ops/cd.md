@@ -19,12 +19,12 @@ Weakening a deploy gate or shipping with missing credentials is covered by [`gua
 - **There is no `push: tags:` trigger, and adding one is a regression.** The release tag is created with `GITHUB_TOKEN`, and events created by that token do not start workflow runs, so a tag trigger never fires (GitHub `GITHUB_TOKEN` docs; changesets/action#669, changesets/changesets#1545). Zero tags existed while that dead trigger was the only path.
 - Do not deploy from `pull_request` or `pull_request_target` (the latter especially - base context plus untrusted checkout is a pwn pattern).
 - **Concurrency is `cd-production`, `cancel-in-progress: false`, `queue: max`.** Cancelling would drop an in-flight ship; and with the default `queue: single` a third trigger replaces the pending one, silently losing that release.
-- **Checkout uses `ref: ${{ inputs.tag }}`** - the ship must match the tagged commit, not whatever the branch tip is at job start.
+- **Checkout uses `ref: ${{ inputs.tag }}`** - the ship must match the tagged commit, not whatever the branch tip is at job start. The tag must be exactly `vX.Y.Z`: a changesets pre-mode tag (`v1.0.0-next.0`) fails closed at `Resolve release version` instead of shipping @100%, and that red run is by design. `RELEASE_SHA` (the tagged commit) is what upload messages and Release notes record - `GITHUB_SHA` points at the dispatching ref on `workflow_dispatch` redeploys.
 
 ## Auth and environment
 
 - **The job declares `environment: {name: production, url: …}`.** Protection rules, required reviewers, and environment secrets belong there. Do not move Cloudflare credentials into unprotected repository secrets "for convenience".
-- **Cloudflare credentials are never passed in by a caller.** `on.workflow_call.secrets` declares only `TURBO_TOKEN` and `TURBO_REMOTE_CACHE_SIGNATURE_KEY`; `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` are resolved from the `production` environment by the job itself. Never switch the caller to `secrets: inherit`.
+- **Cloudflare credentials are never passed in by a caller.** `on.workflow_call.secrets` declares only `TURBO_TOKEN` and `TURBO_REMOTE_CACHE_SIGNATURE_KEY`; `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` are resolved from the `production` environment by the individual wrangler steps via step-level `env:` - install, build, and smoke never see them. Never switch the caller to `secrets: inherit`, and never lift the credentials back to job-level `env:`. A new wrangler step must copy the two-line credentials `env:` block - the `Require deploy inputs` gate only vouches for its own copy.
 - **Both Cloudflare values are required** - the workflow fails closed if either is empty. Use a **scoped** Workers API token (Edit Cloudflare Workers, account-scoped), never a Global API Key, never a committed value. Secrets Store Edit only if the Worker binds Secrets Store.
 - **`VITE_API_BASE_URL` is a repository/environment *variable*, not a secret** - public build-time config for `front-app`, and the `environment.url`. Still required; empty fails.
 - **Wrangler auth in CI is non-interactive** via those env vars ([Cloudflare GitHub Actions guide](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)). Do not add `wrangler login` to CD.
@@ -34,9 +34,9 @@ Weakening a deploy gate or shipping with missing credentials is covered by [`gua
 
 - **This repo does not use `wrangler deploy` or `cloudflare/wrangler-action` in CD.** Package scripts `upload` / `promote` call `wrangler versions upload` then `wrangler versions deploy …@100% --yes` against the workspace-pinned Wrangler, keeping the CLI identical to local and avoiding a second floating action pin.
 - **Upload is machine-readable:** `WRANGLER_OUTPUT_FILE_PATH` captures JSON lines; CD parses `type === "version-upload"` for `version_id`. Do not replace that with scraping stdout.
-- **Keep `--strict`, and tag/message with the release version + `GITHUB_SHA`.** Cloudflare: `--strict` makes upload/deploy more defensive in non-interactive CI - do not drop it to force green.
+- **Keep `--strict`, and tag/message with the release version + `RELEASE_SHA` (the tagged commit).** Cloudflare: `--strict` makes upload/deploy more defensive in non-interactive CI - do not drop it to force green.
 - **Traffic policy today is 100%.** Gradual percentages exist; do not add them without observability and a rollback runbook.
-- **`versions upload` does not apply routes, custom domains, or cron triggers** ([deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)). When those land in `wrangler.jsonc`, also run `wrangler triggers deploy --env production` (comment already in the workflow).
+- **`versions upload` does not apply routes, custom domains, or cron triggers** ([deployment management](https://developers.cloudflare.com/workers/versions-and-deployments/deployment-management/)). When those land in `wrangler.jsonc`, also run `wrangler triggers deploy --env production` (comment beside the upload in `upload-version.sh`).
 - **Uploads may run in `parallel:`; promotes stay sequential.** `worker-api` then `front-app` at `@100%`. If front fails after API is live, production can be split - the workflow's error names the rollback (`wrangler rollback --env production`). Do not reorder or parallelize the two promotes without handling that partial state.
 
 ## Release and deployment records
@@ -46,7 +46,7 @@ Weakening a deploy gate or shipping with missing credentials is covered by [`gua
 
 ## Same hardening as CI
 
-SHA-pinned `uses:` with `# vX.Y.Z` comments; `persist-credentials: false` on checkout; workflow `permissions: {}` with per-job re-grants (`contents: write` for the Release, `deployments: write` for the environment record); runner `ubuntu-24.04`; frozen `pnpm install`; Node `24` via `pnpm/setup`; telemetry off. Multi-line shell uses `set -euo pipefail`. `$RUNNER_TEMP` only ever from a step - see the expression-context section in [`ops/ci.md`](ci.md), which is what broke this file once. Do not diverge "just for CD".
+SHA-pinned `uses:` with `# vX.Y.Z` comments; `persist-credentials: false` on checkout; workflow `permissions: {}` with per-job re-grants (`contents: write` for the Release, `deployments: write` for the environment record); runner `ubuntu-24.04`; frozen `pnpm install`; Node `24` via `pnpm/setup`; telemetry off. Step bodies live as scripts per the convention in [`ops/ci.md`](ci.md); the promotes and the smoke curl stay inline so the deploy-order coupling stays visible in the workflow. `$RUNNER_TEMP` only ever from a step - see the expression-context section in [`ops/ci.md`](ci.md), which is what broke this file once. Do not diverge "just for CD".
 
 ## What is deliberately not used
 

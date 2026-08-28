@@ -377,15 +377,16 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 Versioning is [Changesets](https://changesets.dev). `front-app` and `worker-api` are a `fixed` group, so they always share one version - which is what makes a single `vX.Y.Z` tag a valid release coordinate. **Nothing is published to npm**: every workspace is `private: true`. A release is a git tag plus a Cloudflare Workers promote.
 
-```text
-PR ──► CI (--affected) + advisory "does this need a changeset?" comment
-
-merge to main ──► Release workflow
-  gate         ALWAYS: runs CI on the merge commit, full graph
-  select-mode  changesets pending? → open/update the "chore: release" PR   [END]
-               none?               → tag vX.Y.Z (after gate) → newly created?
-                                       → CD: versions upload --tag X.Y.Z
-                                         → promote @100% → smoke → GitHub Release
+```mermaid
+flowchart LR
+  PR["PR + changeset"] -->|"CI --affected +<br/>changeset status comment"| M["merge to main"]
+  M --> G["gate<br/>full-graph CI, always"]
+  M --> S["select-mode"]
+  S -->|"changesets pending"| V["chore: release PR<br/>(branch reset + force-pushed)"]
+  V -->|merge| M
+  S -->|"none pending"| T["create-release-tag<br/>idempotent vX.Y.Z"]
+  G --> T
+  T -->|"newly created +<br/>CD_ENABLED"| D["CD: versions upload --tag X.Y.Z<br/>promote @100% → smoke → GitHub Release"]
 ```
 
 Day to day:
@@ -410,7 +411,7 @@ Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md). Pipelin
 for `worker-api` and `front-app`. Uploads run in parallel; promotes stay sequential (`worker-api` first) so a partial production state is attributable.
 
 > [!NOTE]
-> **CD is paused** until production Environment secrets are configured. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them. Until then, use the local helpers below.
+> **CD is paused** until production Environment secrets are configured. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them. Until then, use the local helpers below. Before real traffic, also set `CORS_ORIGINS` in `apps/worker-api/wrangler.jsonc` under `env.production.vars` - it ships empty, which fails closed (`/api/*` returns 503, so the CD smoke check fails after both Workers are promoted), and because vars ship inside the uploaded version the fix needs a new release, not a CD re-run.
 
 Recovering from a failed release (full table in [`.claude/rules/ops/release.md`](.claude/rules/ops/release.md)):
 

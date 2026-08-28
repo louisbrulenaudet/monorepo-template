@@ -25,7 +25,6 @@ jobs:
     name: Validate main
     permissions:
       contents: read
-      actions: write
     uses: ./.github/workflows/ci.yml
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -44,13 +43,8 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
-      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
-        with:
-          runtime: node@24
-          cache: true
-          cache-dependency-path: pnpm-lock.yaml
-          install: false
-      - run: pnpm install --frozen-lockfile
+      # No pnpm/setup or install: select-mode is a bundled action and, unlike
+      # changesets/action/version, does not need @changesets/cli resolvable.
       - id: select-mode
         uses: changesets/action/select-mode@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
 
@@ -67,7 +61,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 1
+          # Full history: changelog commit attribution (@changesets/git
+          # getCommitsThatAddFiles) loops `git fetch --deepen=50` in shallow clones,
+          # an anonymous fetch under persist-credentials: false. blob:none keeps it cheap.
+          fetch-depth: 0
+          filter: blob:none
       - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
           runtime: node@24
@@ -85,33 +83,12 @@ jobs:
           # @changesets/changelog-github inside the `changeset version` child process.
           GITHUB_TOKEN: ${{ github.token }}
 
-      # --edit-last --create-if-none keeps this to one comment across the many times this
-      # job re-runs while the release PR is open.
       - name: Correct the release PR contract
         if: steps.version.outputs.pr-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.version.outputs.pr-number }}
-        run: |
-          set -euo pipefail
-          gh pr comment "$PR_NUMBER" --edit-last --create-if-none --body-file - <<'BODY'
-          ### What merging this PR does
-
-          **No npm publish happens.** Every workspace in this repo is `private: true`; there is
-          no `publishConfig` and no registry configured. Disregard the "published to npm
-          automatically" line in the description above.
-
-          Merging this PR:
-
-          1. lands the version bumps and `CHANGELOG.md` entries on `main`;
-          2. makes the `Release` workflow validate that commit with full-graph CI;
-          3. cuts the tag `v<version>` at it - the single release coordinate for both apps;
-          4. hands that tag to `CD`, which uploads and promotes both Workers to 100%.
-
-          Do not push edits to `changeset-release/main`: this branch is reset from the `main`
-          tip and force-pushed on every push to `main`, so the commit would be discarded.
-          Corrections belong in a new changeset on `main`.
-          BODY
+        run: bash .github/actions/release/comment-release-pr-contract.sh
 
   tag:
     name: Tag release
