@@ -3,5 +3,5 @@ import { healthQueryOptions } from "#/services/worker-api/health-query-options";
 
 export const Route = createFileRoute("/")({
   loader: ({ context: { queryClient } }) =>
-    queryClient.ensureQueryData(healthQueryOptions),
+    queryClient.query({ ...healthQueryOptions, staleTime: "static" }),
 });

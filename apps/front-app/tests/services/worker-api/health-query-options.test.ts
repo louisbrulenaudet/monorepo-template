@@ -23,7 +23,7 @@ describe("healthQueryOptions", () => {
     expect(healthQueryOptions.queryKey).toEqual(["worker-api", "health"]);
   });
 
-  it("fetchQuery and ensureQueryData return the shared health contract", async () => {
+  it("query and static-staleTime query return the shared health contract", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn<() => Promise<Response>>(() =>
@@ -38,14 +38,14 @@ describe("healthQueryOptions", () => {
 
     const queryClient = createTestQueryClient();
 
-    await expect(queryClient.fetchQuery(healthQueryOptions)).resolves.toEqual({
+    await expect(queryClient.query(healthQueryOptions)).resolves.toEqual({
       status: "ok",
       version: "0.0.0",
     });
 
     // Mirrors apps/front-app/src/routes/index.tsx loader.
     await expect(
-      queryClient.ensureQueryData(healthQueryOptions),
+      queryClient.query({ ...healthQueryOptions, staleTime: "static" }),
     ).resolves.toEqual({ status: "ok", version: "0.0.0" });
   });
 });

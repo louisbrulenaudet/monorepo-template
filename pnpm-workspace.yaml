@@ -9,46 +9,46 @@ catalogMode: prefer
 catalog:
   '@changesets/changelog-github': ^1.0.0
   '@changesets/cli': ^3.0.1
-  '@cloudflare/vite-plugin': ^1.53.1
-  '@cloudflare/vitest-plugin': ^1.0.0
+  '@cloudflare/vite-plugin': ^1.54.2
+  '@cloudflare/vitest-plugin': ^1.1.2
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
   '@tanstack/react-devtools': ^0.10.12
-  '@tanstack/react-query': ^5.101.4
-  '@tanstack/react-query-devtools': ^5.101.4
-  '@tanstack/react-router': ^1.170.31
+  '@tanstack/react-query': ^5.102.8
+  '@tanstack/react-query-devtools': ^5.102.8
+  '@tanstack/react-router': ^1.170.32
   '@tanstack/react-router-devtools': ^1.167.1
-  '@tanstack/router-cli': 1.167.32
-  '@tanstack/router-plugin': ^1.168.34
-  '@types/node': 26.2.0
+  '@tanstack/router-cli': 1.167.33
+  '@tanstack/router-plugin': ^1.168.35
+  '@types/node': 26.4.0
   '@types/react': ^19.2.18
-  '@types/react-dom': ^19.2.4
-  '@vitejs/devtools': ^0.6.1
-  '@vitejs/devtools-oxc': ^0.6.1
-  '@vitejs/devtools-rolldown': ^0.6.1
-  '@vitejs/devtools-vite': ^0.6.1
-  '@vitejs/devtools-vitest': ^0.6.1
+  '@types/react-dom': ^19.2.5
+  '@vitejs/devtools': ^0.6.2
+  '@vitejs/devtools-oxc': ^0.6.2
+  '@vitejs/devtools-rolldown': ^0.6.2
+  '@vitejs/devtools-vite': ^0.6.2
+  '@vitejs/devtools-vitest': ^0.6.2
   '@vitest/ui': ^4.1.11
-  '@vitejs/plugin-react': ^6.1.0
+  '@vitejs/plugin-react': ^6.1.1
   cross-env: ^10.1.0
   eslint-plugin-better-tailwindcss: ^4.7.0
-  hono: ^4.13.3
-  knip: ^6.32.0
-  oxc-transform-react: ^0.145.0
-  oxfmt: ^0.64.0
-  oxlint: ^1.79.0
+  hono: ^4.13.5
+  knip: ^6.32.3
+  oxc-transform-react: ^0.147.0
+  oxfmt: ^0.65.0
+  oxlint: ^1.80.0
   oxlint-tsgolint: ^7.0.2001
   react: ^19.2.8
   react-dom: ^19.2.8
   rollup-plugin-visualizer: ^7.1.1
   syncpack: ^15.3.3
   tailwindcss: ^4.3.3
-  turbo: 2.10.11
+  turbo: 2.10.12
   typescript: ^7.0.2
   vite: ^8.2.2
-  vite-plus: 0.2.9
+  vite-plus: 0.3.0
   vitest: ^4.1.11
-  wrangler: ^4.125.0
+  wrangler: ^4.127.1
   zod: ^4.4.3
 
 auditConfig:
