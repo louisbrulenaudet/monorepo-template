@@ -8,8 +8,6 @@ export default defineNodeConfig({
   root,
   test: {
     dir: root,
-    // A suite exists: an include-glob mismatch must fail loudly instead of
-    // replaying green.
     passWithNoTests: false,
   },
 });

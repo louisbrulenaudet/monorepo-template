@@ -38,6 +38,7 @@ Changing a member's **serialized string value** is a breaking contract change - 
 |---------|-------------|
 | `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
 | `pnpm check-types` | TypeScript |
+| `pnpm -w turbo run test --filter=@repo/enums-common` | Vitest (Node), `vitest run` - config present, no suite yet |
 
 ## Contribution
 

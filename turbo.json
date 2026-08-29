@@ -30,8 +30,7 @@
       "NODE_ENV",
       "NODE_COMPILE_CACHE",
       "NODE_DISABLE_COMPILE_CACHE",
-      // Wrangler telemetry opt-out must reach `turbo run dev` under strict envMode;
-      // the Claude Code sandbox only allows registry.npmjs.org egress.
+      // Wrangler telemetry opt-out must reach `turbo run dev` under strict envMode.
       "WRANGLER_SEND_METRICS"
     ]
   },

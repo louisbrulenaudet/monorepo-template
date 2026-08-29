@@ -249,10 +249,8 @@ pc_operands() {
       *) printf '%s\n' "$1"; shift ;;
     esac
   done
-  # Never leak a non-zero status. Every `[ $# -gt 0 ] && shift` above fails when
-  # its value-taking token is LAST - `git add foo.txt 2>&1` segments at the `&`,
-  # leaving a trailing `2>`. Callers assign this in a bare `ops=$(pc_operands …)`,
-  # where `set -e` turns that status into a guard fault that blocks the command.
+  # Load-bearing: a trailing `[ $# -gt 0 ] && shift` exits 1, and callers assign
+  # this bare (`ops=$(pc_operands …)`), so `set -e` turns it into a guard fault.
   return 0
 }
 

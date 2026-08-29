@@ -1,6 +1,6 @@
 {
   "name": "@repo/correlation-id",
-  "description": "Opaque UUID correlation ids for SPA \u2194 gateway log correlation (X-Request-Id).",
+  "description": "Opaque UUID correlation ids for SPA ↔ gateway log correlation (X-Request-Id).",
   "version": "0.0.0",
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

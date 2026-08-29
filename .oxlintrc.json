@@ -292,7 +292,7 @@
         "max-lines-per-function": "off",
         "import/no-unassigned-import": [
           "error",
-          { "allow": ["@testing-library/jest-dom/vitest"] }
+          { "allow": ["**/*.css", "@testing-library/jest-dom/vitest"] }
         ],
         "typescript/no-explicit-any": "off",
         "typescript/no-non-null-assertion": "off",

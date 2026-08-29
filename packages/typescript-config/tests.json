@@ -3,6 +3,15 @@
   "compilerOptions": {
     "tsBuildInfoFile": "${configDir}/../node_modules/.tmp/tsconfig.tests.tsbuildinfo"
   },
-  "include": ["${configDir}/**/*.ts", "${configDir}/../src/**/*.ts"],
-  "exclude": ["${configDir}/../node_modules", "${configDir}/../dist"]
+  "include": [
+    "${configDir}/**/*.ts",
+    "${configDir}/**/*.tsx",
+    "${configDir}/../src/**/*.ts",
+    "${configDir}/../src/**/*.tsx"
+  ],
+  "exclude": [
+    "${configDir}/node_modules",
+    "${configDir}/../node_modules",
+    "${configDir}/../dist"
+  ]
 }

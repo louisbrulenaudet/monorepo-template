@@ -24,8 +24,9 @@ apps/front-app/
 │   ├── config/          # env.ts, query-client.ts
 │   ├── utils/           # fetch-api, correlation-id (SPA session wrapper)
 │   └── enums/           # Frontend-only value sets (`as const`)
-├── tests/               # Vitest suites mirroring src/ (Node)
+├── tests/               # Vitest suites mirroring src/ (Node; DOM suites opt in per file)
 ├── vitest.config.ts     # defineNodeConfig from @repo/vitest-config
+├── vitest.setup.ts      # jest-dom matchers, React 19 act flag, RTL cleanup
 ├── tests/tsconfig.json  # Included in check-types
 ├── vite.config.ts
 └── wrangler.jsonc

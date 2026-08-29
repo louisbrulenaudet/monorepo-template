@@ -58,6 +58,7 @@ Prefer additive changes. Full workflow and layer rules: `contracts/contracts`.
 |---------|-------------|
 | `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
 | `pnpm check-types` | TypeScript |
+| `pnpm -w turbo run test --filter=@repo/dtos-common` | Vitest (Node), `vitest run` - config present, no suite yet |
 
 ## Contribution
 
