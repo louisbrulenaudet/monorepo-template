@@ -8,7 +8,7 @@ Shared Vitest configuration factories for the monorepo. Apps call these helpers 
 
 ## Purpose
 
-`@repo/vitest-config` standardizes Vitest setup so every app gets the same mock cleanup and `tests/**/*.test.ts` layout, while keeping **Node** and **Cloudflare Workers** entry points separate. Front apps never resolve `@cloudflare/vitest-plugin`; Worker apps never inherit Node `pool` / `isolate: false`.
+`@repo/vitest-config` standardizes Vitest setup so every app gets the same mock cleanup and `tests/` layout, while keeping **Node** and **Cloudflare Workers** entry points separate. Front apps never resolve `@cloudflare/vitest-plugin`; Worker apps never inherit Node `pool` / `isolate: false`.
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
     direction LR
     NodeEntry["src/index.ts<br/>defineNodeConfig"]
     WorkersEntry["src/workers.ts<br/>defineWorkersConfig"]
-    Shared["sharedTestDefaults<br/>restoreMocks · clearMocks · unstubEnvs ·<br/>unstubGlobals · tests/**/*.test.ts"]
+    Shared["sharedTestDefaults<br/>restoreMocks · clearMocks · unstubEnvs ·<br/>unstubGlobals · tests/ layout"]
     Pr["resolvePackageRoot<br/>(src/package-root.js)"]
   end
 
@@ -44,7 +44,7 @@ flowchart LR
 
 - **Dual entry points** - `@repo/vitest-config` (Node) and `@repo/vitest-config/workers` (Cloudflare pool)
 - **Mock hygiene** - `restoreMocks`, `clearMocks`, `unstubEnvs`, `unstubGlobals` on every suite
-- **Consistent includes** - `tests/**/*.test.ts` with `passWithNoTests: true`
+- **Consistent includes** - `tests/**/*.test.{ts,tsx}` (Node) / `tests/**/*.test.ts` (Workers), `passWithNoTests: true` by default; packages with suites override it to `false`
 - **Node performance defaults** - `pool: "threads"`, `isolate: false`, `experimental.fsModuleCache`
 - **Workers pool wrapper** - `defineWorkersConfig` wraps `cloudflareTest({ wrangler })`
 - **Agent / CI reporters untouched** - no custom `reporters` (Vitest 4.1 auto `agent` + GitHub Actions summary)
@@ -202,7 +202,7 @@ flowchart TD
 1. **Import the right entry** - Node never imports `/workers`; Workers never use `defineNodeConfig`
 2. **Do not set `reporters` in shared defaults** - breaks Vitest 4.1 agent / GHA auto detection
 3. **Never set `isolate: false` or a Node `pool` in Workers config** - Cloudflare keeps per-file storage isolation
-4. **Keep suites under `tests/`** - mirror source layout; `*.test.ts` only
+4. **Keep suites under `tests/`** - mirror source layout; `*.test.ts`, plus `*.test.tsx` on the Node entry
 5. **Use `vitest run` for CI / Turbo cache** - `test:watch` is for humans only
 6. **Spot-check consumers after factory changes** - `pnpm turbo run test --filter=front-app --filter=worker-api`
 7. **Do not add createTestHarness until a second Worker + service binding exists** - keep pool suites; follow AGENTS.md checklist when wiring the harness

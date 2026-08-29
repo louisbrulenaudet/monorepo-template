@@ -3,7 +3,7 @@ import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 
 declare global {
-  // eslint-visible name required by React 19's act() outside test renderers.
+  // `var` is the only declaration form that augments globalThis.
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 

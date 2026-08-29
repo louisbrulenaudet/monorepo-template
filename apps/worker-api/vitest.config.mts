@@ -10,7 +10,5 @@ const root = resolvePackageRoot(import.meta.dirname);
 
 export default defineWorkersConfig(
   { wrangler: { configPath: path.join(root, "wrangler.jsonc") } },
-  // passWithNoTests off: this app has suites, so an include-glob mismatch
-  // must fail loudly instead of replaying green.
   { root, test: { dir: root, passWithNoTests: false } },
 );

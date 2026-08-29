@@ -31,9 +31,7 @@ Setup file `apps/front-app/vitest.setup.ts` (wired via `setupFiles`): imports `@
 
 ### Vitest config for JSX
 
-A separate vitest.config.ts ignores vite.config.ts unless you mergeConfig
-https://vitest.dev/config/ . front-app's vitest.config.ts already loads
-@vitejs/plugin-react, so JSX/tsx suites work as-is.
+A separate vitest.config.ts ignores vite.config.ts unless you mergeConfig https://vitest.dev/config/ . front-app's vitest.config.ts already loads @vitejs/plugin-react, so JSX/tsx suites work as-is.
 
 Do not blindly mergeConfig the full apps/front-app/vite.config.ts - it loads
 cloudflare, prod env asserts, Devtools. Add only needed plugins. Never

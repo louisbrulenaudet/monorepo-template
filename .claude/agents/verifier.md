@@ -2,9 +2,8 @@
 name: verifier
 description: >
   Use PROACTIVELY before opening a PR or after a batch of edits: runs the repository
-  verification gate (`pnpm run ci` - lint, format, check-types, types-check, boundaries, test, build) plus
-  any test suite that exists (vitest, `pnpm test`), and reports ONLY failures that need a
-  decision. Read-only - never auto-fixes, never edits files, and keeps verbose
+  verification gate (`pnpm run ci` - lint, format, check-types, types-check, boundaries, test, build)
+  and reports ONLY failures that need a decision. Read-only - never auto-fixes, never edits files, and keeps verbose
   OXC/TypeScript/runner output out of the main context.
 # `tools` is the ONLY least-privilege gate here: this repo sets
 # `permissions.defaultMode: "acceptEdits"`, and a parent `acceptEdits` takes precedence over
