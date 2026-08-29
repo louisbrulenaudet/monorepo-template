@@ -364,6 +364,9 @@ importers:
       '@repo/vitest-config':
         specifier: workspace:*
         version: link:../vitest-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.4.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -383,6 +386,9 @@ importers:
       '@repo/vitest-config':
         specifier: workspace:*
         version: link:../vitest-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.4.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -398,6 +404,9 @@ importers:
       '@repo/vitest-config':
         specifier: workspace:*
         version: link:../vitest-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.4.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
