@@ -1,14 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../tsconfig.json",
+  "extends": ["../tsconfig.json", "@repo/typescript-config/tests.json"],
   "compilerOptions": {
     "moduleResolution": "bundler",
     "types": ["@cloudflare/vitest-plugin/types"]
   },
   "include": [
-    "./**/*.ts",
-    "../src/**/*.ts",
-    "../worker-configuration.d.ts",
-    "../types.d.ts"
+    "${configDir}/**/*.ts",
+    "${configDir}/../src/**/*.ts",
+    "${configDir}/../worker-configuration.d.ts",
+    "${configDir}/../types.d.ts"
   ]
 }

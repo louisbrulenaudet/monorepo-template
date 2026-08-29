@@ -1,16 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../tsconfig.app.json",
+  "extends": ["../tsconfig.app.json", "@repo/typescript-config/tests.json"],
   "compilerOptions": {
-    "types": ["vite/client"],
-    "tsBuildInfoFile": "${configDir}/../node_modules/.tmp/tsconfig.tests.tsbuildinfo"
+    "types": ["vite/client"]
   },
   "include": [
-    "./**/*.ts",
-    "./**/*.tsx",
-    "../src/**/*.ts",
-    "../src/**/*.tsx",
-    "../vitest.setup.ts"
-  ],
-  "exclude": ["node_modules", "dist"]
+    "${configDir}/**/*.ts",
+    "${configDir}/**/*.tsx",
+    "${configDir}/../src/**/*.ts",
+    "${configDir}/../src/**/*.tsx",
+    "${configDir}/../vitest.setup.ts"
+  ]
 }
