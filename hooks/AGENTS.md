@@ -92,6 +92,7 @@ A guard that cannot evaluate must not wave a command through. Missing `jq`/`awk`
 
 - The `trap` is installed **before** the library is sourced, and the fault path uses only shell builtins (`printf`, `${0##*/}`) so a broken `PATH` still yields exit 2 rather than exit 1.
 - A syntax error in a guard or in the library **denies every Bash command** until it is fixed. Run the manual test in [README.md](README.md#manual-test-before-wiring) after any edit.
+- **Parser functions must never return a non-zero status.** Guards call them as bare assignments (`cs_ops=$(pc_operands "$@")`), where `set -e` promotes that status to a guard fault - a *silent* denial of a legitimate command, not a syntax error you would notice. This is why `pc_operands` ends in an explicit `return 0`; a trailing `[ $# -gt 0 ] && shift` would otherwise fail whenever its value-taking token is last. Regression case: `git add foo.txt 2>&1` (segmentation splits at the `&`, leaving a bare `2>`) must **allow**.
 
 Empty or absent stdin still **allows**: no payload is not evidence of wrongdoing.
 
