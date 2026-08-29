@@ -5,6 +5,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@repo/vitest-config": "workspace:*",
+    "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
@@ -29,7 +30,7 @@
   },
   "private": true,
   "scripts": {
-    "check-types": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "format": "pnpm -w exec oxfmt --check packages/correlation-id",
     "format:fix": "pnpm -w exec oxfmt packages/correlation-id",
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/correlation-id",
