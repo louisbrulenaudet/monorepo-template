@@ -121,9 +121,7 @@
       "Edit(**/id_ed25519)",
       "Edit(**/credentials.json)",
       "Edit(**/secrets.json)",
-      "Agent(statusline-setup)",
-      "Agent(ci-verifier)",
-      "Agent(test-runner)"
+      "Agent(statusline-setup)"
     ],
     "ask": [
       "Bash(git push:*)",
@@ -270,6 +268,8 @@
     ]
   },
   "env": {
-    "CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION": "40"
+    "CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION": "40",
+    "TURBO_TELEMETRY_DISABLED": "1",
+    "WRANGLER_SEND_METRICS": "false"
   }
 }

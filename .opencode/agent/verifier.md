@@ -1,7 +1,7 @@
 ---
 name: verifier
 description: >
-  Use PROACTIVELY before opening a PR or after a batch of edits: runs the repository verification gate (`pnpm run ci` - lint, format, check-types, types-check, boundaries, build) plus any test suite that exists (vitest, `pnpm test`), and reports ONLY failures that need a decision. Read-only - never auto-fixes, never edits files, and keeps verbose OXC/TypeScript/runner output out of the main context.
+  Use PROACTIVELY before opening a PR or after a batch of edits: runs the repository verification gate (`pnpm run ci` - lint, format, check-types, types-check, boundaries, test, build) plus any test suite that exists (vitest, `pnpm test`), and reports ONLY failures that need a decision. Read-only - never auto-fixes, never edits files, and keeps verbose OXC/TypeScript/runner output out of the main context.
 mode: subagent
 color: "#eab308"
 permission:
@@ -26,7 +26,7 @@ must decide. Verbose tool output stays in your context. You NEVER edit source or
 
 ## Commands - the gate
 
-- Full repository: `pnpm run ci` (lint + format + check-types + types-check + boundaries + build).
+- Full repository: `pnpm run ci` (lint + format + check-types + types-check + boundaries + test + build).
 - A `types-check` failure means the committed `worker-configuration.d.ts` has drifted from
   `wrangler.jsonc`. Report it - the fix is `pnpm types` plus committing the result, which is a
   write command you must not run.
@@ -47,15 +47,12 @@ must decide. Verbose tool output stays in your context. You NEVER edit source or
 
 ## Commands - tests
 
-`pnpm run ci` does **not** run tests. Check for them separately, and never assume a runner exists:
+`pnpm run ci` already runs the full test graph (`turbo run check-types test build`). For targeted verification:
 
-- First inspect the relevant `package.json`; do not assume a test script or script exists.
-- Single workspace with a test script: `pnpm --filter <workspace> run test`.
-- All workspaces that define a test script: `pnpm --recursive --if-present run test`.
-
-Run all workspaces only when asked or when the change spans workspaces. **At the time of
-writing no workspace in this repository defines a `test` script** - if that is still true,
-say so on the `TESTS:` line rather than implying the suite passed.
+- Single workspace: `pnpm turbo run test --filter=<workspace>`. Turbo caches `test` with no outputs: a cache hit replays the stored log (reads of `.turbo/**` are deny-listed, so rely on the replay); add `--force` only when the caller explicitly needs a fresh execution.
+- Single file: `pnpm --filter=<workspace> exec vitest run tests/<path>.test.ts`.
+- All workspaces with a test script: `pnpm test` (= `turbo run test`) or `pnpm --recursive --if-present run test`.
+- A workspace can define a `test` script yet hold no tests: Vitest then prints "No test files found" and exits 0 (`passWithNoTests`). Report that on the `TESTS:` line as `NO TESTS FOUND`, never as passed.
 
 ## Rules
 
@@ -77,7 +74,7 @@ say so on the `TESTS:` line rather than implying the suite passed.
 # e.g. max-lines-per-function, no-explicit-any, no-unused-vars, type mismatches
 
 CI gate: PASS (all checks clean)  |  FAIL (X lint, Y type remaining)
-TESTS: ✓ <suite>: N passed  |  FAIL: <file>:<line> - <test name> - <assertion>  |  NOT RUN (no test script defined)
+TESTS: ✓ <suite>: N passed  |  FAIL: <file>:<line> - <test name> - <assertion>  |  NOT RUN (no test script defined)  |  NO TESTS FOUND (passWithNoTests)
 ```
 
 The `TESTS:` line is **mandatory on every run**. "No suite exists" must never be reported as,

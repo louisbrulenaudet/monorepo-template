@@ -16,6 +16,9 @@ packages/correlation-id/
 ├── src/
 │   ├── correlation-id.ts    # isOpaqueCorrelationId, resolveCorrelationId
 │   └── index.ts     # Named re-exports (prefer explicit export { … } over export *)
+├── tests/           # Vitest (Node) - correlation-id.test.ts
+│   └── tsconfig.json  # In check-types
+├── vitest.config.ts # defineNodeConfig from @repo/vitest-config
 ├── package.json
 ├── turbo.json       # tags: ["lib"]
 ├── README.md
@@ -37,14 +40,16 @@ packages/correlation-id/
 1. Create or extend `src/<feature>.ts` (kebab-case).
 2. Named-export from `src/index.ts`.
 3. Update consumers in the same PR.
-4. `pnpm check-types` from root.
+4. Cover the new helper in `tests/` (this package is a security boundary - the opaque-id gate must stay tested).
+5. `pnpm check-types` from root.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
-| `pnpm check-types` | TypeScript |
+| `pnpm check-types` | TypeScript (src + tests projects) |
+| `pnpm -w turbo run test --filter=@repo/correlation-id` | Vitest (Node), vitest run |
 
 ## Contribution
 

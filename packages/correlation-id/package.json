@@ -1,10 +1,12 @@
 {
   "name": "@repo/correlation-id",
-  "description": "Opaque UUID correlation ids for SPA ↔ gateway log correlation (X-Request-Id).",
+  "description": "Opaque UUID correlation ids for SPA \u2194 gateway log correlation (X-Request-Id).",
   "version": "0.0.0",
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "typescript": "catalog:"
+    "@repo/vitest-config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
@@ -27,11 +29,13 @@
   },
   "private": true,
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
     "format": "pnpm -w exec oxfmt --check packages/correlation-id",
     "format:fix": "pnpm -w exec oxfmt packages/correlation-id",
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/correlation-id",
-    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/correlation-id"
+    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/correlation-id",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "sideEffects": false,
   "type": "module",

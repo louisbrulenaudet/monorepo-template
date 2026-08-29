@@ -35,7 +35,7 @@ Changing this package is a monorepo-wide breaking change.
 3. Do not set reporters in shared defaults. That breaks Vitest 4.1 auto agent detection and the GHA github-actions summary.
 4. Node factory only: environment node, pool threads, isolate false, experimental.fsModuleCache. Never attach cloudflareTest.
 5. Workers factory only: wrap cloudflareTest. Never set isolate false, a Node pool, or a custom environment or runner.
-6. Keep mock hygiene on: restoreMocks, clearMocks, unstubEnvs, unstubGlobals, include tests/**/*.test.ts, passWithNoTests true.
+6. Keep mock hygiene on: restoreMocks, clearMocks, unstubEnvs, unstubGlobals, passWithNoTests true. Include globs diverge on purpose: the Node factory matches tests/**/*.test.{ts,tsx} (component suites must never be silently skipped), the Workers factory stays tests/**/*.test.ts (no JSX inside workerd). Apps with suites override passWithNoTests to false so a glob mismatch fails loudly; the shared true keeps test-less packages green.
 7. Do not enable coverage, blob reporters, or sharding here without an explicit follow-up that wires Turbo outputs and a merge task.
 8. After changing factories, run pnpm turbo run test --filter=front-app --filter=worker-api.
 

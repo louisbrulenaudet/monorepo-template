@@ -281,6 +281,7 @@
         "**/*.test.{ts,tsx,js,jsx}",
         "**/*.spec.{ts,tsx,js,jsx}",
         "**/tests/**/*.{ts,tsx,js,jsx}",
+        "**/vitest.setup.ts",
         "e2e/**/*.{ts,tsx,js,jsx}"
       ],
       "env": {
@@ -289,6 +290,10 @@
       },
       "rules": {
         "max-lines-per-function": "off",
+        "import/no-unassigned-import": [
+          "error",
+          { "allow": ["@testing-library/jest-dom/vitest"] }
+        ],
         "typescript/no-explicit-any": "off",
         "typescript/no-non-null-assertion": "off",
         "typescript/no-unsafe-assignment": "off",
