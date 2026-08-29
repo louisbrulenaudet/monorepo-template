@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "typescript": "catalog:"
+    "@repo/vitest-config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
@@ -30,7 +32,9 @@
     "format": "pnpm -w exec oxfmt --check packages/enums-common",
     "format:fix": "pnpm -w exec oxfmt packages/enums-common",
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/enums-common",
-    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/enums-common"
+    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/enums-common",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "sideEffects": false,
   "type": "module",

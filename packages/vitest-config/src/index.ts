@@ -13,7 +13,9 @@ export { resolvePackageRoot } from "./package-root.js";
  * summary when unset.
  */
 const sharedTestDefaults: InlineConfig = {
-  include: ["tests/**/*.test.ts"],
+  // `.tsx` matched so component suites are never silently skipped; the
+  // Workers entry deliberately stays `.ts`-only (no JSX inside workerd).
+  include: ["tests/**/*.test.{ts,tsx}"],
   restoreMocks: true,
   clearMocks: true,
   unstubEnvs: true,

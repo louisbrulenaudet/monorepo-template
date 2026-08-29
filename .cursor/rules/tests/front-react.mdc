@@ -14,4 +14,6 @@ General: [vitest.mdc](vitest.mdc). Discipline: [testing.mdc](../quality/testing.
 - Prefer Node unit tests for `services/`, `utils/`, `*-query-options`: isolated `QueryClient` with `retry: false` and `gcTime: Infinity`; exercise shared `queryOptions` via `fetchQuery` / `ensureQueryData`. Do not reuse `src/config/query-client.ts` across tests without `clear`.
 - Never hand-edit `src/routeTree.gen.ts` - regenerate with app `routes:generate` / `routes:check`.
 - Imports from `vitest` only; in-app paths via `#/*`. Typecheck via `tests/tsconfig.json` (in package `check-types`).
-- Agents: `pnpm turbo run test --filter=front-app` (non-watch). jsdom / `@testing-library/*` are not installed - load `front-vitest` and add peers before any DOM suite.
+- Agents: `pnpm turbo run test --filter=front-app` (non-watch).
+- DOM harness installed: happy-dom + `@testing-library/react` / `jest-dom` / `user-event` (catalog deps). Config-wide environment stays `node`; a DOM suite opts in per file with `// @vitest-environment happy-dom` on line 1. `vitest.setup.ts` registers the jest-dom matchers, the React 19 act flag, and `afterEach(cleanup)` (globals are off, so RTL auto-cleanup never registers). `.tsx` test files are matched. Canonical example: `tests/components/ui/button.test.tsx`. Depth: skill `front-vitest`.
+- happy-dom is the deliberate default (speed on constrained hardware). If a suite hits a happy-dom spec gap, switch that one file to `@vitest-environment jsdom` after adding the dep - do not change the config-wide environment.

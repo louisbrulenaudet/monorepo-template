@@ -21,26 +21,19 @@ act / StrictMode / forwardRef / use.
 
 ## Prerequisites
 
-Not installed in this workspace today: jsdom, happy-dom, @testing-library/react,
-@testing-library/jest-dom, @testing-library/user-event. Vitest does not bundle
-jsdom/happy-dom. Add peers via catalog / pnpm add -D and extend Vitest config
-before writing render / renderHook / .tsx suites. Do not invent a DOM suite
-under Node.
+Installed in front-app (catalog deps): happy-dom, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event, @testing-library/dom. jsdom is NOT installed - add it via the catalog only if one suite needs a per-file jsdom fallback for a happy-dom spec gap. Vitest bundles no DOM. Do not invent a DOM suite under plain Node.
 
 ## Environment and setup
 
-Keep package default environment node for existing Node suites. Prefer per-file
-control comment `@vitest-environment jsdom`.
+Keep package default environment node for existing Node suites. A DOM suite opts in per file with the control comment `// @vitest-environment happy-dom` on line 1 (installed default; jsdom only as a per-file fallback, see Prerequisites).
 
-Setup file: import `@testing-library/jest-dom/vitest` and set
-`globalThis.IS_REACT_ACT_ENVIRONMENT = true`. React act requires that flag; RTL
-sets it when used. See https://react.dev/reference/react/act .
+Setup file `apps/front-app/vitest.setup.ts` (wired via `setupFiles`): imports `@testing-library/jest-dom/vitest`, sets `globalThis.IS_REACT_ACT_ENVIRONMENT = true`, and registers `afterEach(cleanup)` - Vitest globals are off, so RTL auto-cleanup never registers, and `isolate: false` would leak DOM state across files without it. React act requires that flag; see https://react.dev/reference/react/act .
 
 ### Vitest config for JSX
 
 A separate vitest.config.ts ignores vite.config.ts unless you mergeConfig
-https://vitest.dev/config/ . JSX/tsx tests need at least @vitejs/plugin-react
-in the Vitest config.
+https://vitest.dev/config/ . front-app's vitest.config.ts already loads
+@vitejs/plugin-react, so JSX/tsx suites work as-is.
 
 Do not blindly mergeConfig the full apps/front-app/vite.config.ts - it loads
 cloudflare, prod env asserts, Devtools. Add only needed plugins. Never
@@ -129,7 +122,7 @@ ui. This app mounts provider-only. Prefer provider-only for full route-tree test
 
 | Symptom | Fix |
 |---------|-----|
-| window is not defined | Install jsdom; @vitest-environment jsdom |
+| window is not defined | Add `// @vitest-environment happy-dom` on line 1 of the test file |
 | act environment warning | Setup IS_REACT_ACT_ENVIRONMENT or use RTL |
 | JSX fails under Vitest | Add @vitejs/plugin-react to Vitest config; do not merge full app Vite config |
 | Suspended UI missing | Suspense + error boundary, or test via fetchQuery |

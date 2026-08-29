@@ -21,7 +21,7 @@ Root `knip.jsonc` is intentionally comment-free; every override's rationale live
 - `ignoreDependencies` entries are suffixed `!` = **production mode only**:
   - `@tanstack/*-devtools` - imported by `AppDevtools.tsx`, which is lazy-loaded behind `import.meta.env.DEV`; production builds never statically include them, but Knip's static graph cannot evaluate that conditional.
   - `tailwindcss` - build-time dependency consumed through `@tailwindcss/vite` + the `@import "tailwindcss"` in `src/index.css`.
-- `project` replicates the default glob plus a production-only negation (`"!tests/helpers/**!"`) so test helpers like `tests/helpers/session-storage-mock.ts` are never flagged as unused shipped code. Do not use `ignore` or `ignoreFiles` for this - `ignoreFiles` rejects the production-only `!` suffix here.
+- `project` replicates the default glob plus production-only negations (`"!tests/helpers/**!"`, `"!vitest.setup.ts!"`) so test infrastructure - helpers like `tests/helpers/session-storage-mock.ts` and the `setupFiles` entry `vitest.setup.ts` - is never flagged as unused shipped code. Do not use `ignore` or `ignoreFiles` for this - `ignoreFiles` rejects the production-only `!` suffix here.
 
 ### apps/worker-api
 

@@ -16,6 +16,7 @@
       "project": [
         "**/*.{css,js,cjs,mjs,jsx,ts,cts,mts,tsx}!",
         "!tests/helpers/**!",
+        "!vitest.setup.ts!",
       ],
     },
     "apps/worker-api": {
