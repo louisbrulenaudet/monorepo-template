@@ -194,6 +194,7 @@
     "conninfo",
     "Contentful",
     "cooldown",
+    "cpuprofile",
     "crawlability",
     "crossfade",
     "crossfades",
