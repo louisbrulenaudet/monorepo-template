@@ -83,9 +83,6 @@ is_secret_path() {
     # ENDS in .env, so a real source file called config.env.ts is untouched;
     # `*.env.*` is deliberately NOT listed for exactly that reason.
     .env | .env.* | .envrc | *.env) return 0 ;;
-    # Dot-dropped variants (`env` written instead of `.env`). `env.*` would
-    # match a source file like env.ts, so only known env-file suffixes are listed.
-    env | env.local | env.development | env.test | env.staging | env.production) return 0 ;;
     .dev.vars | .dev.vars.*) return 0 ;;
     .prod.vars | .prod.vars.*) return 0 ;;
     .staging.vars | .staging.vars.*) return 0 ;;
