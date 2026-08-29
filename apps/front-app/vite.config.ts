@@ -134,7 +134,7 @@ export default defineConfig(({ command, mode }) => {
 
   const plugins: PluginOption[] = [
     devtools({ consolePiping: { enabled: false } }),
-    DevTools({ embeddedVisibility: "normal" }),
+    DevTools({ embeddedVisibility: "passive" }),
     tanstackRouter({
       autoCodeSplitting: true,
     }),
