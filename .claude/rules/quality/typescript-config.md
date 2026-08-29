@@ -26,6 +26,7 @@ flowchart TD
 | `workers.json` | Worker apps | thin role alias of `library.json` |
 | `vite-react.json` | React SPAs | `lib` includes `DOM`, `types: ["vite/client"]`; `noEmit` |
 | `vite-node.json` | Vite build-time config only | `types: ["node"]`, no DOM; `noEmit` |
+| `tests.json` | **mixin**, appended after a runtime preset | no `lib`/`target`; tests tsbuildinfo path, `tests/` + `src/` include, exclude |
 
 ## Flags that change how you write code
 
@@ -50,6 +51,8 @@ flowchart TD
 Internal packages are **Just-in-Time**: `exports` point at source `.ts`. Typecheck is `tsc --noEmit` per package, orchestrated by Turborepo with a **transit node** so packages run in parallel while still invalidating when dependency source changes. Do **not** add TypeScript Project References, `composite`, or a root solution `tsconfig.json` - Turborepo owns the dependency graph.
 
 React SPAs use a **split layout** (`tsconfig.json` extends `tsconfig.app.json`, plus `tsconfig.node.json` for Vite config) so browser `src/**` does not inherit Node globals from `vite.config.ts`. `check-types` runs both projects with `tsc --noEmit -p ...`.
+
+Test suites are a **separate project** per package at `tests/tsconfig.json`, using array `extends`: the package's own base first, then `@repo/typescript-config/tests.json`. Keep that path and filename - TypeScript's editor lookup walks up for a file named exactly `tsconfig.json`, and each package's root config includes `src/**` only, so a root-level `tsconfig.test.json` would leave test files in no project (IDE breaks, `tsc -p` in CI still passes). `include` arrays replace rather than merge across `extends`, so a package adding roots (`.tsx`, `vitest.setup.ts`, `worker-configuration.d.ts`) respells the full list with `${configDir}` prefixes.
 
 `worker-configuration.d.ts` is committed, so a fresh clone type-checks with no generate step. Re-run `pnpm types` and commit only after editing a `wrangler.jsonc`. Day-to-day CI uses `pnpm check-types`.
 
