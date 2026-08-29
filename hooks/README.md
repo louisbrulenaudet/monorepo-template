@@ -84,6 +84,12 @@ echo '{"tool_input":{"command":"git status"}}' | sh hooks/git/guard-destructive-
 
 # Cursor mode additionally prints a JSON verdict on stdout
 echo '{"command":"git push --force"}' | CURSOR_PROJECT_DIR=$PWD sh hooks/git/guard-destructive-git.sh
+
+# Regression: a redirect must not fault the parser. Should allow (exit 0)
+echo '{"tool_input":{"command":"git add foo.txt 2>&1"}}' | sh hooks/git/guard-secret-commit.sh; echo "exit=$?"
+
+# ...and the same command naming a secret must still deny (exit 2)
+echo '{"tool_input":{"command":"git add .env 2>&1"}}' | sh hooks/git/guard-secret-commit.sh; echo "exit=$?"
 ```
 
 ## Debugging
