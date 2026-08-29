@@ -27,7 +27,7 @@ Installed in front-app (catalog deps): happy-dom, @testing-library/react, @testi
 
 Keep package default environment node for existing Node suites. A DOM suite opts in per file with the control comment `// @vitest-environment happy-dom` on line 1 (installed default; jsdom only as a per-file fallback, see Prerequisites).
 
-Setup file `apps/front-app/vitest.setup.ts` (wired via `setupFiles`): imports `@testing-library/jest-dom/vitest`, sets `globalThis.IS_REACT_ACT_ENVIRONMENT = true`, and registers `afterEach(cleanup)` - Vitest globals are off, so RTL auto-cleanup never registers, and `isolate: false` would leak DOM state across files without it. React act requires that flag; see https://react.dev/reference/react/act .
+Setup file `apps/front-app/vitest.setup.ts` (wired via `setupFiles`): sets `globalThis.IS_REACT_ACT_ENVIRONMENT = true` for every suite, then behind a `typeof document !== "undefined"` guard imports `@testing-library/jest-dom/vitest` and registers `afterEach(cleanup)` - Node suites skip the harness entirely - Vitest globals are off, so RTL auto-cleanup never registers, and `isolate: false` would leak DOM state across files without it. React act requires that flag; see https://react.dev/reference/react/act .
 
 ### Vitest config for JSX
 

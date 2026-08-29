@@ -185,3 +185,6 @@ id_ecdsa
 
 # Wrangler local startup profiles (wrangler check startup)
 *.cpuprofile
+
+# Turborepo
+.turbo
