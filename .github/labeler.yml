@@ -3,8 +3,10 @@
 
 # Skip file-based labeling on huge PRs; branch labels still apply.
 max-files-changed: 200
-# Cap new path labels per run so tree-wide diffs do not spam.
-changed-files-labels-limit: 8
+# All-or-nothing: exceeding this applies NO changed-files labels for the run, so a
+# cap below the taxonomy size (13 path labels) silently unlabels the cross-cutting
+# PRs that most need labels. `max-files-changed` above is the real spam guard.
+changed-files-labels-limit: 20
 
 front-app:
   - changed-files:
