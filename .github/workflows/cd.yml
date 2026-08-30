@@ -105,7 +105,7 @@ jobs:
         run: bash .github/actions/cd/promote-versions.sh
 
       - name: Smoke production health
-        run: curl --fail --silent --show-error --max-time 30 "${VITE_API_BASE_URL}/api/v1/health"
+        run: bash .github/actions/cd/smoke-versions.sh
 
       # GitHub creates the deployment record from the `environment:` above; only the
       # Release is ours to write.

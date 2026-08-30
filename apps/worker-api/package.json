@@ -33,6 +33,7 @@
     "prefix": "worker-",
     "devPort": 8700,
     "deployOrder": 1,
+    "healthPath": "/api/v1/health",
     "agentGuide": "AGENTS.md"
   },
   "private": true,

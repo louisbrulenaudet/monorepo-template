@@ -258,7 +258,7 @@ There is no generator CLI. Copy the closest sibling under `apps/` and wire it in
 1. **Copy** `apps/worker-api` (or another closest match) to `apps/<prefix-name>` (e.g. `apps/worker-account`).
 2. **Rename** `package.json` `name`, `wrangler.jsonc` `name`, and any display strings.
 3. **Assign ports** from the [Development ports](#development-ports) registry - set `dev.port` / `inspector_port: 0` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`.
-4. **Declare the promote order** - `monorepo.deployOrder` in `package.json`, lower first (gateways before the SPAs that call them). CD discovers apps from `apps/*` and fails closed on a missing value, so this is the only place a new app announces itself to the release pipeline.
+4. **Declare the promote order and the health probe** - `monorepo.deployOrder` in `package.json`, lower first (gateways before the SPAs that call them), plus `monorepo.healthPath`: the public path CD probes after promoting, or `null` when the app has no public HTTP surface. CD discovers apps from `apps/*` and fails closed on either value missing, so this is the only place a new app announces itself to the release pipeline.
 5. **Add** `package.json` scripts (`dev`, `deploy`, `check-types`, `types`, `types:check`, lint/format via `pnpm -w exec` from repo root) and a `turbo.json` with tags (see [AGENTS.md](AGENTS.md)).
 6. **Extend** `@repo/typescript-config/workers.json` (or the matching preset); add `.dev.vars.example`.
 7. **Install and typegen** (commit the generated `worker-configuration.d.ts` with the new Worker):
@@ -407,9 +407,9 @@ Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md). Pipelin
 
 1. `wrangler versions upload --env production` (with `--strict`, commit `--tag` / `--message`)
 2. `wrangler versions deploy <version-id>@100% --yes --env production`
-3. `curl` the `/api/v1/health` smoke check, then create the GitHub Release
+3. `curl` the gateway's declared `monorepo.healthPath` smoke check, then create the GitHub Release
 
-for every app discovered under `apps/`. Uploads and promotes both run sequentially, ordered by each app's `monorepo.deployOrder` in its `package.json` (`worker-api` 1, `front-app` 2), so the gateway is live before the SPA that calls it and a partial production state is attributable.
+for every app discovered under `apps/`. Uploads run concurrently - they change no traffic, so their order is irrelevant and a failure cannot split production. Promotes then run sequentially in each app's `monorepo.deployOrder` (`worker-api` 1, `front-app` 2), so the gateway is live before the SPA that calls it and a partial production state is attributable.
 
 > [!NOTE]
 > **CD is paused** until production Environment secrets are configured. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them. Until then, use the local helpers below. Before real traffic, also set `CORS_ORIGINS` in `apps/worker-api/wrangler.jsonc` under `env.production.vars` - it ships empty, which fails closed (`/api/*` returns 503, so the CD smoke check fails after both Workers are promoted), and because vars ship inside the uploaded version the fix needs a new release, not a CD re-run.

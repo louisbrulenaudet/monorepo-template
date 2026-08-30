@@ -13,7 +13,7 @@ pnpm prepare    # Vite+ pre-commit hooks
 pnpm dev        # all dev servers
 ```
 
-After scaffolding a new worker under `apps/`, give it a `monorepo.deployOrder` in its `package.json` (lower promotes first; gateways before the SPAs that call them) and run `pnpm install` before turbo commands. Nothing else lists apps: the changeset group, the root `--filter='./apps/*'` scripts, and CD all discover them.
+After scaffolding a new worker under `apps/`, give it a `monorepo.deployOrder` in its `package.json` (lower promotes first; gateways before the SPAs that call them) and a `monorepo.healthPath` (public probe path, or `null` for no public HTTP surface), then run `pnpm install` before turbo commands. Nothing else lists apps: the changeset group, the root `--filter='./apps/*'` scripts, and CD all discover them.
 
 ## Architecture
 
@@ -236,4 +236,4 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 - Run `pnpm run ci` before opening a PR.
 - Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
-- Continuous deployment: [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is called by `release.yml` once a release tag is cut, and runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for every app discovered under `apps/`, in `monorepo.deployOrder`. **CD is paused** until production GitHub Environment secrets are configured; set the repository variable `CD_ENABLED` to `true` to arm it and leave upload / promote as-is.
+- Continuous deployment: [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is called by `release.yml` once a release tag is cut, and runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for every app discovered under `apps/`, in `monorepo.deployOrder`, then smokes the gateway at its declared `monorepo.healthPath`. **CD is paused** until production GitHub Environment secrets are configured; set the repository variable `CD_ENABLED` to `true` to arm it and leave upload / promote as-is.
