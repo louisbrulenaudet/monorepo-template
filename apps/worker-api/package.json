@@ -1,7 +1,7 @@
 {
   "name": "worker-api",
   "description": "Public Hono HTTP gateway on Cloudflare Workers; validates requests with shared Zod contracts.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "dependencies": {
     "@hono/zod-validator": "catalog:",
     "@repo/correlation-id": "workspace:*",

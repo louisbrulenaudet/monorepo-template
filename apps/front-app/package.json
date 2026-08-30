@@ -1,7 +1,7 @@
 {
   "name": "front-app",
   "description": "React SPA (Vite + TanStack Router/Query) deployed on Cloudflare; talks to worker-api over HTTP only.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "dependencies": {
     "@repo/correlation-id": "workspace:*",
     "@repo/dtos-common": "workspace:*",
