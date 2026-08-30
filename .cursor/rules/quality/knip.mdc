@@ -17,15 +17,16 @@ Root `knip.jsonc` is intentionally comment-free; every override's rationale live
 
 ## Workspace overrides
 
-### apps/front-app
+### apps/front-*
 
 - `ignoreDependencies` entries are suffixed `!` = **production mode only**:
   - `@tanstack/*-devtools` - imported by `AppDevtools.tsx`, which is lazy-loaded behind `import.meta.env.DEV`; production builds never statically include them, but Knip's static graph cannot evaluate that conditional.
   - `tailwindcss` - build-time dependency consumed through `@tailwindcss/vite` + the `@import "tailwindcss"` in `src/index.css`.
 - `project` replicates the default glob plus production-only negations (`"!tests/helpers/**!"`, `"!vitest.setup.ts!"`) so test infrastructure - helpers like `tests/helpers/session-storage-mock.ts` and the `setupFiles` entry `vitest.setup.ts` - is never flagged as unused shipped code. Do not use `ignore` or `ignoreFiles` for this - `ignoreFiles` rejects the production-only `!` suffix here.
 
-### apps/worker-api
+### apps/!(front-*)
 
+- Every app that is not the SPA - `worker-*` today, `queue-*` / `webhook-*` / `mcp-*` when they land. A negation rather than a list of prefixes because `treatConfigHintsAsErrors: true` makes a workspace key matching nothing a hard error, so unused prefixes cannot be declared ahead of time.
 - `ignoreDependencies: ["cloudflare"]` - `import ... from "cloudflare:workers"` in Workers-pool tests is a runtime protocol specifier resolving to no npm package.
 
 ### Root (`"."`)

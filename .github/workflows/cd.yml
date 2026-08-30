@@ -90,42 +90,19 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm turbo run build --filter=worker-api --filter=front-app
+      - run: pnpm turbo run build --filter='./apps/*'
 
-      - parallel:
-          - name: Upload worker-api
-            id: upload-api
-            env:
-              APP: worker-api
-              CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-              CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-            run: bash .github/actions/cd/upload-version.sh
-
-          - name: Upload front-app
-            id: upload-front
-            env:
-              APP: front-app
-              CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-              CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-            run: bash .github/actions/cd/upload-version.sh
-
-      - name: Promote worker-api @100%
+      - name: Upload a version of every app
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          VERSION_ID: ${{ steps.upload-api.outputs.version-id }}
-        run: pnpm --filter=worker-api run promote -- "${VERSION_ID}@100%" --yes
+        run: bash .github/actions/cd/upload-versions.sh
 
-      - name: Promote front-app @100%
+      - name: Promote every app @100%
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          VERSION_ID: ${{ steps.upload-front.outputs.version-id }}
-        run: |
-          if ! pnpm --filter=front-app run promote -- "${VERSION_ID}@100%" --yes; then
-            echo "::error::front-app deploy failed after worker-api may already be live at 100%. Rollback with: pnpm --filter=worker-api exec wrangler rollback --env production"
-            exit 1
-          fi
+        run: bash .github/actions/cd/promote-versions.sh
 
       - name: Smoke production health
         run: curl --fail --silent --show-error --max-time 30 "${VITE_API_BASE_URL}/api/v1/health"
@@ -135,6 +112,4 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          WORKER_API_VERSION_ID: ${{ steps.upload-api.outputs.version-id }}
-          FRONT_APP_VERSION_ID: ${{ steps.upload-front.outputs.version-id }}
         run: bash .github/actions/cd/create-github-release.sh

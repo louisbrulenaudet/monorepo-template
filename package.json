@@ -70,8 +70,8 @@
     "lint:fix": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix .",
     "login": "wrangler login",
     "prepare": "vp config --no-agent",
-    "preview": "turbo run preview --filter=front-app",
-    "promote": "turbo run promote --filter=worker-api --filter=front-app",
+    "preview": "turbo run preview --filter='./apps/*'",
+    "promote": "turbo run promote --filter='./apps/*'",
     "release:status": "changeset status --verbose",
     "skills-update": "bash .agents/skills/skills-update/scripts/update-locked-skills.sh",
     "test": "turbo run test",
@@ -79,6 +79,6 @@
     "types": "turbo run types --filter='./apps/*'",
     "types:check": "turbo run types:check --filter='./apps/*'",
     "update": "pnpm update --recursive --latest",
-    "upload": "turbo run upload --filter=worker-api --filter=front-app"
+    "upload": "turbo run upload --filter='./apps/*'"
   }
 }

@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
-# Purpose: Create or update the GitHub Release for the deployed tag, with both
-# Workers' version ids and the matching CHANGELOG sections in the notes.
+# Purpose: Create or update the GitHub Release for the deployed tag.
 # Target: called by cd.yml with GH_TOKEN and the guarded variables below.
 set -euo pipefail
 : "${TAG:?TAG is required (vX.Y.Z)}"
 : "${VERSION:?VERSION is required (X.Y.Z)}"
 : "${RELEASE_SHA:?RELEASE_SHA is required}"
 : "${VITE_API_BASE_URL:?VITE_API_BASE_URL is required}"
-: "${WORKER_API_VERSION_ID:?WORKER_API_VERSION_ID is required}"
-: "${FRONT_APP_VERSION_ID:?FRONT_APP_VERSION_ID is required}"
+: "${VERSION_IDS_FILE:?VERSION_IDS_FILE is required (exported by upload-versions.sh)}"
+
+deployed=""
+while IFS=$'\t' read -r app _dir _version_id; do
+  deployed+="\`${app}\`, "
+done < "$VERSION_IDS_FILE"
 
 notes="$(mktemp)"
 {
-  echo "Deployed \`worker-api\` and \`front-app\` @ \`${VERSION}\` to production."
+  echo "Deployed ${deployed%, } @ \`${VERSION}\` to production."
   echo
   echo "- Commit: ${RELEASE_SHA}"
-  echo "- worker-api version id: \`${WORKER_API_VERSION_ID}\`"
-  echo "- front-app version id: \`${FRONT_APP_VERSION_ID}\`"
+  while IFS=$'\t' read -r app _dir version_id; do
+    echo "- ${app} version id: \`${version_id}\`"
+  done < "$VERSION_IDS_FILE"
   echo "- URL: ${VITE_API_BASE_URL}"
-  for app in worker-api front-app; do
-    changelog="apps/${app}/CHANGELOG.md"
+  while IFS=$'\t' read -r app dir _version_id; do
+    changelog="apps/${dir}/CHANGELOG.md"
     [ -f "$changelog" ] || continue
     excerpt="$(
       awk -v ver="$VERSION" '
@@ -32,7 +36,7 @@ notes="$(mktemp)"
     echo
     echo "### ${app}"
     echo "$excerpt"
-  done
+  done < "$VERSION_IDS_FILE"
 } > "$notes"
 
 if gh release view "$TAG" > /dev/null 2>&1; then

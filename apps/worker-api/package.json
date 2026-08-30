@@ -32,6 +32,7 @@
     "role": "http-gateway",
     "prefix": "worker-",
     "devPort": 8700,
+    "deployOrder": 1,
     "agentGuide": "AGENTS.md"
   },
   "private": true,

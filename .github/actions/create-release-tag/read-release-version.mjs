@@ -1,43 +1,14 @@
-import { readFileSync } from "node:fs";
+import { readApps } from "../lib/apps.mjs";
 
-/**
- * @param {string} path
- * @returns {unknown}
- */
-function readJson(path) {
-  return JSON.parse(readFileSync(path, "utf8"));
+const apps = readApps();
+const versions = new Set(apps.map((app) => app.version));
+
+if (versions.size !== 1) {
+  console.error(
+    `App versions drifted: ${apps.map((app) => `${app.name} ${app.version}`).join(", ")}. ` +
+      "Re-align them in one commit before releasing.",
+  );
+  process.exit(1);
 }
 
-/**
- * @param {string} path
- * @returns {string}
- */
-function readVersion(path) {
-  const manifest = readJson(path);
-  if (
-    manifest !== null &&
-    typeof manifest === "object" &&
-    "version" in manifest &&
-    typeof manifest.version === "string"
-  ) {
-    return manifest.version;
-  }
-  throw new Error(`Missing string version in ${path}`);
-}
-
-function main() {
-  const workerVersion = readVersion("apps/worker-api/package.json");
-  const frontVersion = readVersion("apps/front-app/package.json");
-
-  if (workerVersion !== frontVersion) {
-    console.error(
-      `App versions drifted: worker-api ${workerVersion} != front-app ${frontVersion}. ` +
-        "Re-align them in one commit before releasing.",
-    );
-    process.exit(1);
-  }
-
-  process.stdout.write(workerVersion);
-}
-
-main();
+process.stdout.write(apps[0].version);

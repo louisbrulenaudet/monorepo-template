@@ -3,7 +3,7 @@
   "includeEntryExports": true,
   "treatConfigHintsAsErrors": true,
   "workspaces": {
-    "apps/front-app": {
+    "apps/front-*": {
       "ignoreDependencies": [
         "@tanstack/react-devtools!",
         "@tanstack/react-query-devtools!",
@@ -19,7 +19,7 @@
         "!vitest.setup.ts!",
       ],
     },
-    "apps/worker-api": {
+    "apps/!(front-*)": {
       "ignoreDependencies": ["cloudflare"],
     },
     ".": {
