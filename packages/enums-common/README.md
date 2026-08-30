@@ -67,7 +67,7 @@ Pass the `as const` object directly when the schema allows every member:
 
 ```typescript
 import { HttpMethod } from "@repo/enums-common";
-import { z } from "zod";
+import * as z from "zod/mini";
 
 export const HttpMethodSchema = z.enum(HttpMethod);
 ```

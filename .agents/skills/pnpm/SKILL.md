@@ -74,7 +74,7 @@ catalog:
   typescript: ^7.0.2
   vite: ^8.2.0
   wrangler: ^4.119.0
-  zod: ^4.4.3
+  zod: ^4.5.2
 ```
 
 TanStack packages (`@tanstack/*`) and `@types/*` are also in the catalog — see `pnpm-workspace.yaml` for the full list.

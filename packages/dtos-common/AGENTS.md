@@ -15,7 +15,7 @@ Schemas use Zod Mini (`import * as z from "zod/mini"`) for tree-shakable Worker 
 
 Schema changes are **contract changes**. Layer notes, consumer expectations, Zod authoring, and the full change workflow load from `.claude/rules/contracts/` or `.cursor/rules/contracts/` when editing `src/**`.
 
-Prefer subpath imports (`@repo/dtos-common/api`, etc.). The package root (`@repo/dtos-common`) re-exports `api/` only until other layers ship schemas.
+Import through the layer subpath (`@repo/dtos-common/api`, etc.). The package root (`@repo/dtos-common`) is deliberately an empty barrel - add re-exports there only once something imports the root entry.
 
 ## Structure
 
@@ -25,10 +25,7 @@ packages/dtos-common/
 │   ├── api/
 │   │   ├── <feature>.ts    # Schemas per feature (kebab-case)
 │   │   └── index.ts        # Named re-exports
-│   ├── rpc/                # Scaffold until first schema + package.json export
-│   ├── queue/
-│   ├── webhook/
-│   └── index.ts            # Package entry - re-exports `api/` (extend when other layers have schemas)
+│   └── index.ts            # Package entry - empty barrel; exports nothing yet
 ```
 
 Import via the declared subpath for that layer. One feature file per concern within a layer. Do **not** add a `package.json` `exports` entry for `rpc` / `queue` / `webhook` until the first schema lands in that layer.

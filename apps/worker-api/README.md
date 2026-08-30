@@ -13,6 +13,7 @@ The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev por
 
 What you can run today:
 - Health endpoint at `GET /api/v1/health` (returns release semver in `version`; `X-Worker-Version-Id` header carries the opaque wrangler version id)
+- Echo endpoint at `POST /api/v1/echo` - the worked `zValidator` example: validates the JSON body and the `?uppercase=true` query flag against `@repo/dtos-common/api`, and returns `{ error, requestId, issues }` on a validation failure. **Not mounted in production** (404 there) - it reflects caller input on an unauthenticated route with no rate-limit binding
 - Every response carries an `X-Request-Id` header, and error responses return `{ error, requestId }`. Per-request access logging comes from native Workers observability; failures log structured JSON with the request id for correlation.
 - Local/dev `CORS_ORIGINS` is `http://localhost:5174` (and exposes `X-Request-Id`). Staging/production **require** a comma-separated allowlist in `wrangler.jsonc` `vars` (e.g. `https://app.example.com`); an empty value fails closed with `503` on `/api/*` (no permissive `*`).
 - A 15 s request timeout returns `504`, and a `Server-Timing` header is added in non-production for local profiling.
@@ -47,6 +48,7 @@ apps/worker-api/
 │   │   ├── cors-origins.ts # CORS_ORIGINS allowlist parsing (fail-closed)
 │   │   └── csrf.ts         # Origin / Sec-Fetch-Site gate on unsafe methods
 │   ├── routes/             # One route module per feature (created per feature)
+│   │   ├── echo.ts         # POST /api/v1/echo - zValidator json + query
 │   │   └── health.ts
 │   └── index.ts            # Middleware stack + route mounts
 ├── tests/                  # Vitest (Cloudflare pool / workerd)
@@ -178,6 +180,18 @@ import { HealthResponseSchema } from "@repo/dtos-common/api";
 const body: unknown = await response.json();
 expect(HealthResponseSchema.parse(body)).toEqual({ status: "ok" });
 ```
+
+`src/routes/echo.ts` is the worked example for a route that does take input - see it for the full shape rather than a snippet here. Three things it establishes:
+
+- **Always pass the third `zValidator` argument.** Without a hook the middleware answers with Hono's default `{ success, error }` body, which serialises Zod internals and drops the `requestId` every other error response here carries. The house shape is `{ error, requestId, issues }`.
+- **Register the cheap target before the expensive one.** Hono runs validators in registration order, so putting `query` ahead of `json` lets an allocation-free check reject before the body is read and parsed - otherwise a bad query parameter still costs a full `bodyLimit`-sized parse.
+- **Pass `c.get("requestId")` into your helper, not the whole `Context`.** The hook's context carries the app's `Variables` but **not** its `Bindings`, so a helper annotated `Context<EchoEnv>` is not assignable to it.
+
+> [!NOTE]
+> Do not reach for Zod 4.5's `z.compile()` here. It builds its fast path with `new Function`, and workerd forbids code generation from strings during request handling, so a compiled schema silently falls back to the interpreted parser - all of the API surface, none of the speedup.
+
+> [!NOTE]
+> Do not log validation failures. The client already receives every issue in the response body and the native invocation log records the 400, so a `console` line only duplicates both - and on a public route it lets a caller inflate log ingest at will. Reserve `console.error` for real Worker failures.
 
 Worker-local constrained strings belong in `src/enums/`. Promote to `@repo/enums-common` when a second app needs them.
 

@@ -12,6 +12,7 @@ import { timeout } from "hono/timeout";
 import { timing } from "hono/timing";
 import { corsMiddleware } from "./middlewares/cors";
 import { csrfMiddleware } from "./middlewares/csrf";
+import echoRoute from "./routes/echo";
 import healthRoute from "./routes/health";
 
 const API_TIMEOUT_MS = 15_000;
@@ -96,6 +97,17 @@ api.use(async (c, next) => {
   return await next();
 });
 
+// Echo is a demo surface: it reflects caller-supplied input on an
+// unauthenticated public POST and has no rate-limit binding. 404 rather than
+// 403 so production does not advertise that the route exists at all.
+api.use("/echo", async (c, next) => {
+  if (c.env.ENVIRONMENT === AppEnvironment.PRODUCTION) {
+    return c.notFound();
+  }
+  return await next();
+});
+
+api.route("/echo", echoRoute);
 api.route("/health", healthRoute);
 
 app.route("/api/v1", api);

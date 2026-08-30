@@ -79,7 +79,7 @@ Use zValidator with schemas from @repo/dtos-common/api on route inputs.
 
 ### RPC / queue / webhook
 
-Scaffold directories exist under src/rpc/, src/queue/, and src/webhook/, but those subpaths are not in package.json exports until the first schema lands:
+Only src/api/ exists today. Create src/rpc/, src/queue/, or src/webhook/ when the first schema for that layer lands, together with its package.json exports entry:
 
 1. Add src/<layer>/<feature>.ts with Zod schemas.
 2. Named-export from src/<layer>/index.ts.
@@ -87,7 +87,7 @@ Scaffold directories exist under src/rpc/, src/queue/, and src/webhook/, but tho
 4. Update producers and consumers in the same PR.
 5. Run pnpm check-types.
 
-Prefer subpath imports. The package root @repo/dtos-common re-exports api/ only until other layers grow.
+Import through the layer subpath. The package root @repo/dtos-common is deliberately an empty barrel - add re-exports there only once something actually imports the root entry.
 
 ## Contract change workflow
 
@@ -110,14 +110,14 @@ Prefer subpath imports. The package root @repo/dtos-common re-exports api/ only 
 packages/dtos-common/
 ├── src/
 │   ├── api/
+│   │   ├── echo.ts       # Echo request / query / response schemas
 │   │   ├── health.ts     # Health check response schema
 │   │   └── index.ts      # Named re-exports
-│   ├── rpc/              # Scaffold; export in package.json with first schema
-│   ├── queue/
-│   ├── webhook/
-│   └── index.ts          # Named re-exports of api/ for now
+│   └── index.ts          # Empty barrel; the package root exports nothing yet
 └── package.json
 ```
+
+src/rpc/, src/queue/, and src/webhook/ do not exist yet - create the directory and its package.json exports entry with the first schema for that layer.
 
 ## Best Practices
 

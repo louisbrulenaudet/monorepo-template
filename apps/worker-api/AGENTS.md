@@ -4,7 +4,7 @@
 
 `worker-api` is the **public HTTP gateway**: **Cloudflare Workers** + **Hono**, port **8700** in dev. Entry point for `front-app` over HTTP; coordinates internal Workers via service bindings when those bindings exist.
 
-Starter surface: `GET /api/v1/health`. Hono lifecycle, middleware order, and validation patterns load from `.claude/rules/backend/hono-gateway.md` or `.cursor/rules/backend/hono-gateway.mdc` when editing `src/**`.
+Starter surface: `GET /api/v1/health` and `POST /api/v1/echo` (the `zValidator` reference implementation - json + query targets, shared 400 hook; gated off in production because it reflects caller input without auth or rate limiting). Hono lifecycle, middleware order, and validation patterns load from `.claude/rules/backend/hono-gateway.md` or `.cursor/rules/backend/hono-gateway.mdc` when editing `src/**`.
 
 ## Structure
 
