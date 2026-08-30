@@ -25,15 +25,6 @@
   "options": {
     "typeAware": true,
     "denyWarnings": true,
-    // Disable-directive policy: only `oxlint-disable*` directives are honored.
-    // `eslint-disable*` comments are NOT respected, and because unused
-    // directives are errors, any stray `// eslint-disable-next-line` fails the
-    // lint pass. Always suppress with `// oxlint-disable-next-line <rule>` and
-    // a reason (see .claude/rules/quality/code-style.*).
-    //
-    // Type checking stays with tsc via `turbo run check-types`:
-    // oxlint's experimental options.typeCheck would duplicate it while losing
-    // per-package Turbo caching and --affected filtering. Revisit when stable.
     "reportUnusedDisableDirectives": "error",
     "respectEslintDisableDirectives": false
   },
@@ -66,11 +57,6 @@
     "no-new-func": "error",
     "no-script-url": "error",
     "no-unreachable-loop": "error",
-    // Workers bill CPU time and cap request duration: a serial `await` inside a
-    // loop turns N independent I/O calls into N round trips. Batch with
-    // `Promise.all` / a queue instead. Genuinely sequential work (ordered
-    // writes, rate-limited providers) is the one case worth an explicit
-    // `oxlint-disable-next-line no-await-in-loop` with a reason.
     "no-await-in-loop": "error",
     "no-unused-vars": [
       "error",

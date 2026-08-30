@@ -43,23 +43,13 @@ function isAllowedOrigin(
   if (origin === undefined) {
     return false;
   }
-  // Permissive mode (dev with empty CORS_ORIGINS): any Origin is fine.
   if (allowedOrigins === null) {
     return true;
   }
   return allowedOrigins.includes(origin);
 }
 
-/**
- * Origin / Sec-Fetch-Site gate for all unsafe methods (any Content-Type).
- *
- * Hono built-in csrf only checks form content types; this gateway also serves
- * application/json from the SPA, so browser CSRF protection for JSON mutations
- * is this middleware plus the CORS allowlist.
- *
- * Allowed when either check passes (same OR semantics as hono/csrf). Must not
- * run on OPTIONS (CORS preflight).
- */
+/** Origin / Sec-Fetch-Site gate for all unsafe methods (any Content-Type). */
 export const csrfMiddleware = createMiddleware<AppEnv>(async (c, next) => {
   const method = parseHttpMethod(c.req.method);
   if (

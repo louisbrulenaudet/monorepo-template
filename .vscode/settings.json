@@ -89,8 +89,6 @@
   // Exclude Vite-only configs from Vitest discovery; keep vitest.config.* so
   // the explorer finds both .ts (front-*) and .mts (worker-*) packages.
   "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,*.d.ts,**/vite.config.ts,**/dist/**,**/build/**}",
-  // Two package configs is intentional (Turbo package caching; Node vs Workers
-  // pools). Do not suggest a root vitest.workspace / projects file.
   "vitest.disableWorkspaceWarning": true,
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,

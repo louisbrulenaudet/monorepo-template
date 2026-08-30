@@ -1,17 +1,9 @@
 ---
 name: planner
 description: Use INSTEAD OF the built-in `Plan` agent to design an implementation approach in this repo - new endpoint, new Worker, new package, schema change, refactor spanning workspaces. Returns a step-by-step plan naming real files. Read-only; proposes, never edits. Unlike `Plan` it already carries this repo's architectural constraints, so it will not produce a plan that the boundary rules or the CI gate would reject.
-# `tools` is the ONLY least-privilege gate here: this repo sets
-# `permissions.defaultMode: "acceptEdits"`, and a parent `acceptEdits` takes precedence over
-# any subagent `permissionMode`, so a `permissionMode` line would be silently ignored.
-# No Bash and no Edit/Write: a planner reads and proposes. Running the gate is `verifier`'s job.
 tools: Read, Grep, Glob
-# sonnet: choosing between designs and catching a boundary violation before it is written needs
-# real reasoning, but not the main Opus session's.
 model: sonnet
-# Effort is NOT inherited from settings.json - a subagent runs at the session level unless it sets its own.
 effort: high
-# Bounds reading the whole repo before committing to an approach.
 maxTurns: 20
 color: magenta
 ---

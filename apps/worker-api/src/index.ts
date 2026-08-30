@@ -25,7 +25,6 @@ type AppEnv = {
 
 const app = new Hono<AppEnv>();
 
-// Accept client X-Request-Id only when opaque UUID; otherwise mint one.
 app.use(
   requestId({
     headerName: "",
@@ -48,8 +47,6 @@ app.use(
   }),
 );
 
-// CORP same-origin is fine for CORS-mode fetch from front-app; do not disable
-// it to "fix" cross-origin SPA reads — Access-Control-* governs those.
 app.use(
   secureHeaders({
     contentSecurityPolicy: {
@@ -70,8 +67,6 @@ app.use("/api/*", csrfMiddleware);
 
 const api = new Hono<AppEnv>();
 
-// Server-Timing header for local profiling. Disabled in production: Workers
-// timer metrics are inaccurate, and internal timings should not leak to clients.
 api.use(async (c, next) => {
   if (c.env.ENVIRONMENT === AppEnvironment.PRODUCTION) {
     return await next();
@@ -79,8 +74,6 @@ api.use(async (c, next) => {
   return timing()(c, next);
 });
 
-// Safety-net timeout (returns 504). NOTE: this races the handler but does not
-// cancel it, and cannot wrap streaming responses - see the hono-gateway rule.
 api.use(timeout(API_TIMEOUT_MS));
 
 api.use(

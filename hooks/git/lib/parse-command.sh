@@ -1,14 +1,5 @@
 #!/usr/bin/env sh
-# Purpose: quote-aware parsing of a shell command string for the git guards.
-# Target: sourced by hooks/git/guard-*.sh - not a hook entry point itself.
-# Canonical location: hooks/git/lib/.
 #
-# Why this exists: the guards previously classified a command with unanchored
-# substring matching over the WHOLE command line (`case $CMD in *git*add*`) and
-# then scanned every whitespace token. That denied legitimate commands - a
-# commit message mentioning `.env.local`, a path like `config.env.ts`, even a
-# command that merely NAMED `guard-secret-commit.sh` (that path contains "git"
-# then "commit"). This library replaces substring search with real parsing:
 #
 #   1. pc_segments  - split on UNQUOTED ; && || | & ( ) and newline.
 #   2. pc_tokens    - tokenise one segment, honouring ' " and backslash.
@@ -128,7 +119,6 @@ pc_git_argv() {
   IFS=$pc_oldifs
   [ $# -gt 0 ] || return 0
 
-  # Step over leading VAR=value assignments and command wrappers.
   while [ $# -gt 0 ]; do
     case ${1##*/} in
       sudo | doas | env | command | nice | ionice | nohup | time | stdbuf | setsid | xargs)
@@ -179,13 +169,11 @@ pc_git_argv() {
   done
   [ $# -gt 0 ] || return 0
 
-  # The command word itself must be git - bare, or any path ending in /git.
   case $1 in
     git | */git) shift ;;
     *) return 0 ;;
   esac
 
-  # Step over git's own global options so the subcommand is found correctly.
   while [ $# -gt 0 ]; do
     case $1 in
       -C | -c | --git-dir | --work-tree | --namespace | --exec-path | --config-env)
@@ -265,7 +253,6 @@ pc_has_flag() {
       --) return 1 ;;
       "$pc_needle") return 0 ;;
     esac
-    # Bundled short flags: -fd contains f and d. Long options are exempt.
     case $pc_needle in
       -?)
         case $1 in

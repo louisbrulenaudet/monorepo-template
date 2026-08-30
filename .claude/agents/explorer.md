@@ -1,16 +1,9 @@
 ---
 name: explorer
 description: Use INSTEAD OF the built-in `Explore` agent for any "where is X / which files do Y / how is Z wired" question in this repo. Returns file paths and one-line excerpts, never file dumps. Read-only. Unlike `Explore` it already knows this monorepo's layout, its boundary rules, and which paths are deny-listed, so it does not spend turns rediscovering them or attempting reads that will be refused.
-# `tools` is the ONLY least-privilege gate here: this repo sets
-# `permissions.defaultMode: "acceptEdits"`, and a parent `acceptEdits` takes precedence over
-# any subagent `permissionMode`, so a `permissionMode` line would be silently ignored.
-# No Bash: locating code needs Grep/Glob, and omitting Bash is what makes this agent read-only.
 tools: Read, Grep, Glob
-# haiku: matching names and paths against a map it is handed is mechanical.
 model: haiku
-# Effort is NOT inherited from settings.json - a subagent runs at the session level unless it sets its own.
 effort: low
-# Bounds a widening grep on a symbol that does not exist.
 maxTurns: 10
 color: green
 ---

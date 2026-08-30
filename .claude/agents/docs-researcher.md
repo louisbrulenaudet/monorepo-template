@@ -2,13 +2,7 @@
 name: docs-researcher
 description: Use PROACTIVELY to look up external library / framework / SDK / API documentation (Cloudflare Workers, wrangler, Hono, Zod) via Context7 and the web, and return ONLY the distilled answer with citations. Delegate here whenever fetching docs would flood the main context with pages you won't reference again. Returns the exact API/config snippet + source URL. Never edits code.
 tools: Read, Grep, Glob, WebFetch, WebSearch, mcp__context7__resolve-library-id, mcp__context7__query-docs
-# `tools` is the ONLY least-privilege gate here: this repo sets
-# `permissions.defaultMode: "acceptEdits"`, and a parent `acceptEdits` takes precedence over any
-# subagent `permissionMode`, so a `permissionMode` line would be silently ignored. The absence of
-# Edit/Write/Bash above is what makes this agent read-only.
-# sonnet: fetched docs need comprehension + synthesis into a correct snippet, not just extraction - still cheaper than running the main Opus session for verbose page fetches.
 model: sonnet
-# Bounds a WebSearch → WebFetch loop on a question the docs simply do not answer.
 maxTurns: 20
 color: blue
 ---

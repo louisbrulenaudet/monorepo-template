@@ -22,10 +22,7 @@ export function resetCorrelationIdCache(): void {
   cachedId = null;
 }
 
-/**
- * Stable opaque id for this browser tab session. Sent as `X-Request-Id` on
- * worker-api calls so SPA and gateway logs correlate without privileged data.
- */
+/** Stable opaque id for this browser tab session. */
 export function getOrCreateCorrelationId(): string {
   if (cachedId !== null) {
     return cachedId;
