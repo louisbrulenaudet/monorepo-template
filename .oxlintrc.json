@@ -160,6 +160,7 @@
     {
       "files": [
         "scripts/**/*.{js,mjs,cjs}",
+        ".github/actions/**/*.{js,mjs,cjs}",
         "apps/*/scripts/**/*.{js,mjs,cjs}",
         "**/*.config.{js,mjs,cjs,ts}",
         "**/vite.config.ts",

@@ -11,7 +11,7 @@
     "version": true,
     "tag": false
   },
-  "fixed": [["front-app", "worker-api"]],
+  "fixed": [["*"]],
   "updateInternalDependencies": "patch",
   "ignore": [],
   "format": "auto"

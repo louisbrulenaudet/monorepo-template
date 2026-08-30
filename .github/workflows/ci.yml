@@ -100,7 +100,7 @@ jobs:
             run: pnpm turbo run check-types test build
 
       - name: Wrangler deploy dry-run
-        run: pnpm turbo run deploy --filter=front-app -- --dry-run
+        run: pnpm turbo run deploy --filter='./apps/*' -- --dry-run
 
       - name: Upload build artifacts on failure
         if: failure()

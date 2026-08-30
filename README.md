@@ -258,9 +258,10 @@ There is no generator CLI. Copy the closest sibling under `apps/` and wire it in
 1. **Copy** `apps/worker-api` (or another closest match) to `apps/<prefix-name>` (e.g. `apps/worker-account`).
 2. **Rename** `package.json` `name`, `wrangler.jsonc` `name`, and any display strings.
 3. **Assign ports** from the [Development ports](#development-ports) registry - set `dev.port` / `inspector_port: 0` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`.
-4. **Add** `package.json` scripts (`dev`, `deploy`, `check-types`, `types`, `types:check`, lint/format via `pnpm -w exec` from repo root) and a `turbo.json` with tags (see [AGENTS.md](AGENTS.md)).
-5. **Extend** `@repo/typescript-config/workers.json` (or the matching preset); add `.dev.vars.example`.
-6. **Install and typegen** (commit the generated `worker-configuration.d.ts` with the new Worker):
+4. **Declare the promote order** - `monorepo.deployOrder` in `package.json`, lower first (gateways before the SPAs that call them). CD discovers apps from `apps/*` and fails closed on a missing value, so this is the only place a new app announces itself to the release pipeline.
+5. **Add** `package.json` scripts (`dev`, `deploy`, `check-types`, `types`, `types:check`, lint/format via `pnpm -w exec` from repo root) and a `turbo.json` with tags (see [AGENTS.md](AGENTS.md)).
+6. **Extend** `@repo/typescript-config/workers.json` (or the matching preset); add `.dev.vars.example`.
+7. **Install and typegen** (commit the generated `worker-configuration.d.ts` with the new Worker):
    ```sh
    pnpm install
    pnpm types
@@ -375,7 +376,7 @@ wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.j
 
 ### Releases
 
-Versioning is [Changesets](https://changesets.dev). `front-app` and `worker-api` are a `fixed` group, so they always share one version - which is what makes a single `vX.Y.Z` tag a valid release coordinate. **Nothing is published to npm**: every workspace is `private: true`. A release is a git tag plus a Cloudflare Workers promote.
+Versioning is [Changesets](https://changesets.dev). Every app under `apps/` is one `fixed` group (`"fixed": [["*"]]`, a glob over package names, not a list), so they always share one version - which is what makes a single `vX.Y.Z` tag a valid release coordinate. **Nothing is published to npm**: every workspace is `private: true`. A release is a git tag plus a Cloudflare Workers promote.
 
 ```mermaid
 flowchart LR
@@ -408,7 +409,7 @@ Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md). Pipelin
 2. `wrangler versions deploy <version-id>@100% --yes --env production`
 3. `curl` the `/api/v1/health` smoke check, then create the GitHub Release
 
-for `worker-api` and `front-app`. Uploads run in parallel; promotes stay sequential (`worker-api` first) so a partial production state is attributable.
+for every app discovered under `apps/`. Uploads and promotes both run sequentially, ordered by each app's `monorepo.deployOrder` in its `package.json` (`worker-api` 1, `front-app` 2), so the gateway is live before the SPA that calls it and a partial production state is attributable.
 
 > [!NOTE]
 > **CD is paused** until production Environment secrets are configured. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them. Until then, use the local helpers below. Before real traffic, also set `CORS_ORIGINS` in `apps/worker-api/wrangler.jsonc` under `env.production.vars` - it ships empty, which fails closed (`/api/*` returns 503, so the CD smoke check fails after both Workers are promoted), and because vars ship inside the uploaded version the fix needs a new release, not a CD re-run.
