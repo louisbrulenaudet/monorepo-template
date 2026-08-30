@@ -18,6 +18,9 @@ catalogs:
     '@cloudflare/vitest-plugin':
       specifier: ^1.1.2
       version: 1.1.2
+    '@hono/zod-validator':
+      specifier: ^0.9.0
+      version: 0.9.0
     '@tailwindcss/vite':
       specifier: ^4.3.3
       version: 4.3.3
@@ -148,8 +151,8 @@ catalogs:
       specifier: ^4.127.1
       version: 4.127.1
     zod:
-      specifier: ^4.4.3
-      version: 4.4.3
+      specifier: ^4.5.2
+      version: 4.5.4
 
 importers:
 
@@ -320,26 +323,32 @@ importers:
         version: 4.127.1
       zod:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 4.5.4
 
   apps/worker-api:
     dependencies:
+      '@hono/zod-validator':
+        specifier: 'catalog:'
+        version: 0.9.0(hono@4.13.5)(zod@4.5.4)
       '@repo/correlation-id':
         specifier: workspace:*
         version: link:../../packages/correlation-id
+      '@repo/dtos-common':
+        specifier: workspace:*
+        version: link:../../packages/dtos-common
       '@repo/enums-common':
         specifier: workspace:*
         version: link:../../packages/enums-common
       hono:
         specifier: 'catalog:'
         version: 4.13.5
+      zod:
+        specifier: 'catalog:'
+        version: 4.5.4
     devDependencies:
       '@cloudflare/vitest-plugin':
         specifier: 'catalog:'
         version: 1.1.2(@vitest/runner@4.1.11)(@vitest/snapshot@4.1.11)(vitest@4.1.11)
-      '@repo/dtos-common':
-        specifier: workspace:*
-        version: link:../../packages/dtos-common
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -378,7 +387,7 @@ importers:
     dependencies:
       zod:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 4.5.4
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -917,6 +926,12 @@ packages:
   '@eslint/css-tree@4.0.5':
     resolution: {integrity: sha512-iPmijIAq4hlIJB86PYmY/fcZORHtjphSqICDbwuw32A/JmkhZQ/K/6TjHE03zqf3n5yABpVcbRAMG8Mi9ojy8g==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@hono/zod-validator@0.9.0':
+    resolution: {integrity: sha512-n0ZSXmCiHVIp4Y5wlOOyZCeTd/rsawA/qW1cipB8QOYKZ9N8Tk0nZUZCXho9cu374AN4JpDNKioNKBJ/W+LBug==}
+    peerDependencies:
+      hono: '>=4.11.2'
+      zod: ^3.25.0 || ^4.0.0
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -4531,6 +4546,9 @@ packages:
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
+  zod@4.5.4:
+    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
+
 snapshots:
 
   '@adobe/css-tools@4.5.0': {}
@@ -5013,6 +5031,11 @@ snapshots:
     dependencies:
       mdn-data: 2.29.0
       source-map-js: 1.2.1
+
+  '@hono/zod-validator@0.9.0(hono@4.13.5)(zod@4.5.4)':
+    dependencies:
+      hono: 4.13.5
+      zod: 4.5.4
 
   '@img/colour@1.1.0': {}
 
@@ -6033,7 +6056,7 @@ snapshots:
       jiti: 2.7.0
       magic-string: 0.30.21
       prettier: 3.9.6
-      zod: 4.4.3
+      zod: 4.5.4
     transitivePeerDependencies:
       - supports-color
 
@@ -6047,7 +6070,7 @@ snapshots:
       '@tanstack/router-utils': 1.162.2(supports-color@10.2.2)
       chokidar: 5.0.0
       unplugin: 3.3.0(esbuild@0.28.1)(rolldown@1.2.6)(vite@8.2.2)
-      zod: 4.4.3
+      zod: 4.5.4
     optionalDependencies:
       '@tanstack/react-router': 1.170.32(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       vite: 8.2.2(@types/node@26.4.0)(@vitejs/devtools@0.6.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -8029,3 +8052,5 @@ snapshots:
   zigpty@0.2.1: {}
 
   zod@4.4.3: {}
+
+  zod@4.5.4: {}

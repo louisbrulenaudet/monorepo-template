@@ -3,13 +3,15 @@
   "description": "Public Hono HTTP gateway on Cloudflare Workers; validates requests with shared Zod contracts.",
   "version": "0.0.0",
   "dependencies": {
+    "@hono/zod-validator": "catalog:",
     "@repo/correlation-id": "workspace:*",
+    "@repo/dtos-common": "workspace:*",
     "@repo/enums-common": "workspace:*",
-    "hono": "catalog:"
+    "hono": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "catalog:",
-    "@repo/dtos-common": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "typescript": "catalog:",

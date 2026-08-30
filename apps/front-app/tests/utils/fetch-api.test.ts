@@ -1,6 +1,6 @@
 import { CorsAllowedHeader } from "@repo/enums-common";
 import { describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import * as z from "zod/mini";
 import { FetchApiError, fetchJsonWithSchema } from "#/utils/fetch-api";
 import { installSessionStorageHooks } from "../helpers/session-storage-mock";
 
