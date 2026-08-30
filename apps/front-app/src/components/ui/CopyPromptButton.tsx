@@ -47,7 +47,7 @@ export function CopyPromptButton({
       className="group inline-flex cursor-pointer items-center gap-2.5 squircle-button border border-gray-950 bg-gray-950 px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800"
     >
       <span
-        className="relative flex h-5 w-[94px] shrink-0 items-center justify-start text-white"
+        className="relative flex h-5 w-23.5 shrink-0 items-center justify-start text-white"
         aria-hidden="true"
       >
         <ClaudeIcon className="size-5 -rotate-6 transition-transform duration-300 ease-out group-hover:-translate-x-1 group-hover:-rotate-12" />
