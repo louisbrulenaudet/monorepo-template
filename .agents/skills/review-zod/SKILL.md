@@ -2,6 +2,10 @@
 name: review-zod
 description: "Zod review (v4 adoption across @repo/dtos-common boundaries, schema organization, parse strategies) against current official Zod best practices. USE WHEN: user runs /review-zod or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review Zod

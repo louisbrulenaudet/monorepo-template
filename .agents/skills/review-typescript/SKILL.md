@@ -2,6 +2,10 @@
 name: review-typescript
 description: "TypeScript setup review (shared presets in packages/typescript-config, per-app tsconfigs, TS 7 readiness) against current official best practices. USE WHEN: user runs /review-typescript or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review TypeScript

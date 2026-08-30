@@ -2,6 +2,10 @@
 name: review-wrangler
 description: "Wrangler/Workers config review (wrangler.jsonc files, compatibility dates, bindings, observability, generated types) against current official Cloudflare best practices. USE WHEN: user runs /review-wrangler or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review Wrangler

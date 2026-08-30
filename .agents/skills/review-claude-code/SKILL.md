@@ -2,6 +2,10 @@
 name: review-claude-code
 description: "Claude Code setup review (settings.json, permissions, rules, hooks, agents, memory, worktrees) against current official best practices. USE WHEN: user runs /review-claude-code or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review Claude Code

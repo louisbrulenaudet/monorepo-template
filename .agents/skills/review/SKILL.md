@@ -2,6 +2,10 @@
 name: review
 description: "Full multi-dimension code/PR/docs review → structured plan. USE WHEN: user runs /review or explicitly asks for this review. DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review."
 disable-model-invocation: true
+context: fork
+background: true
+model: opus
+effort: high
 ---
 
 # Review

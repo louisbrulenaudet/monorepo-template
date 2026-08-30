@@ -2,6 +2,10 @@
 name: review-oxc
 description: "OXC review (oxlint rules/ignores, oxfmt, tsgolint type-aware rules, agent output format) against current official OXC best practices. USE WHEN: user runs /review-oxc or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review OXC

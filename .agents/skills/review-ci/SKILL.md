@@ -2,6 +2,10 @@
 name: review-ci
 description: "CI, GitHub Actions, caching, hooks, deploy review. USE WHEN: user runs /review-ci or explicitly asks for this review. DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review CI

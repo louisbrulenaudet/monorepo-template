@@ -2,6 +2,10 @@
 name: review-vite
 description: "Vite setup review (front-app vite.config.ts, build/performance options, @cloudflare/vite-plugin, devtools) against current official Vite best practices. USE WHEN: user runs /review-vite or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review Vite

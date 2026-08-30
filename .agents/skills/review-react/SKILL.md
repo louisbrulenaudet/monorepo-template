@@ -2,6 +2,10 @@
 name: review-react
 description: "React 19 review (front-app patterns, compiler readiness, Suspense boundaries, hooks discipline) against current official React best practices. USE WHEN: user runs /review-react or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review React

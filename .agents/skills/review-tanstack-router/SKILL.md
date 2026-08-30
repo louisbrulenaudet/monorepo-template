@@ -2,6 +2,10 @@
 name: review-tanstack-router
 description: "TanStack Router review (file-based routing, route tree generation, typed search params, preload/lazy behavior) against current official TanStack Router best practices. USE WHEN: user runs /review-tanstack-router or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review TanStack Router
