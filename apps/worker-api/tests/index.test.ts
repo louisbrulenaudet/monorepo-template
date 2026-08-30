@@ -1,6 +1,5 @@
 import { exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
-// Side-effect import so Vitest re-runs when the Worker entry changes.
 import app from "../src/index";
 
 void app;

@@ -3,7 +3,7 @@ import { isStrictCorsAppEnvironment } from "@repo/enums-common";
 /**
  * `null` means permissive mode (any origin) — allowed in non-strict envs only.
  *
- * @internal Exported for unit tests.
+ * @internal
  */
 export function parseCorsOrigins(value: string | undefined): string[] | null {
   if (value === undefined || value.trim() === "") {
