@@ -2,6 +2,10 @@
 name: review-tanstack-query
 description: "TanStack Query review (queryOptions patterns, cache hygiene, mutation flows, devtools) against current official TanStack Query best practices. USE WHEN: user runs /review-tanstack-query or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review TanStack Query

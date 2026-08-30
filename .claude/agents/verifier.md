@@ -13,6 +13,8 @@ description: >
 tools: Read, Grep, Glob, Bash
 # haiku: running checks and distilling diagnostics into file:line is mechanical.
 model: haiku
+# Effort is NOT inherited from settings.json - a subagent runs at the session level unless it sets its own. `low` matches the work, and thinking bills at the output rate.
+effort: low
 # Bounds re-running the gate to chase a flake.
 maxTurns: 12
 color: yellow

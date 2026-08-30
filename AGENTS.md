@@ -190,7 +190,9 @@ Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `mo
 
 ### Subagent roster
 
-Three read-only agents - `verifier`, `bundle-analyzer`, `docs-researcher`. Descriptions load from `.claude/agents/*.md`; do not restate them here. Add more under `.claude/agents/` / `.cursor/agents/` when new surfaces land (see `monorepo-agent-setup`).
+Five read-only agents - `explorer`, `planner`, `verifier`, `bundle-analyzer`, `docs-researcher`. Descriptions load from `.claude/agents/*.md`; do not restate them here. Add more under `.claude/agents/` / `.cursor/agents/` when new surfaces land (see `monorepo-agent-setup`).
+
+`explorer` and `planner` exist because the built-in `Explore` and `Plan` agents load neither `CLAUDE.md` nor `.claude/rules/`, so every delegation to them depends on a human remembering to restate the constraints. The two local agents carry the repository map and the architectural constraints in their own prompts instead. Prefer them over the built-ins for anything in this repo.
 
 ### Dependency-scoped stack reviews
 
@@ -209,7 +211,7 @@ Beyond the dimension reviews (`/review-*`), one human-only `/review-<dep>` comma
 Easy to get wrong:
 
 - **`tools` is the only real least-privilege gate.** Parent `acceptEdits` overrides subagent `permissionMode`. Omit `Edit`/`Write`/`Bash` for read-only; do not rely on the mode.
-- **`Explore` and `Plan` do not load `CLAUDE.md` or `.claude/rules/`.** Restate binding constraints in the delegation prompt for those two.
+- **The built-in `Explore` and `Plan` do not load `CLAUDE.md` or `.claude/rules/`.** Use `explorer` and `planner` instead, which carry that grounding themselves. If you do reach for a built-in, restate the binding constraints in the delegation prompt.
 - **Agents never write scratch files into the working tree.** Findings come back in the reply.
 
 ## Enforced Boundaries

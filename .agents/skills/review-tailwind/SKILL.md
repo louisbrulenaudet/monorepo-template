@@ -2,6 +2,10 @@
 name: review-tailwind
 description: "Tailwind CSS v4 review (CSS-first config, Vite plugin integration, better-tailwindcss lint rules) against current official Tailwind best practices. USE WHEN: user runs /review-tailwind or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review Tailwind

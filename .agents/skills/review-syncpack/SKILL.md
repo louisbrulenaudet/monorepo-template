@@ -2,6 +2,10 @@
 name: review-syncpack
 description: "syncpack review (specifier rules for catalog/workspace links, formatting of package.json fields, drift gates) against current official syncpack best practices. USE WHEN: user runs /review-syncpack or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review syncpack

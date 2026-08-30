@@ -12,6 +12,8 @@ description: >
 tools: Read, Grep, Glob, Bash
 # haiku: parse a size table and rank it - mechanical, no source reasoning.
 model: haiku
+# Effort is NOT inherited from settings.json - a subagent runs at the session level unless it sets its own. `low` matches the work, and thinking bills at the output rate.
+effort: low
 # One build, one summary. If the build fails, report the failure - do not retry variations.
 maxTurns: 8
 color: cyan

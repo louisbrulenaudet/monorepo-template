@@ -2,6 +2,10 @@
 name: review-ui
 description: "UI/UX-focused review. USE WHEN: user runs /review-ui or explicitly asks for this review. DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review UI

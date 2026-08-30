@@ -1,5 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "effortLevel": "high",
+  "subagentPromptCacheTtl": "1h",
   "statusLine": {
     "type": "command",
     "command": "sh \"${CLAUDE_PROJECT_DIR}/.claude/status-line.sh\""
@@ -222,16 +224,32 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
     "allowUnsandboxedCommands": false,
-    "excludedCommands": ["gh *"],
+    "excludedCommands": [
+      "gh *"
+    ],
     "network": {
-      "allowedDomains": ["registry.npmjs.org"]
+      "allowedDomains": [
+        "registry.npmjs.org"
+      ]
     },
     "credentials": {
       "files": [
-        { "path": "~/.ssh", "mode": "deny" },
-        { "path": "~/.aws", "mode": "deny" },
-        { "path": "~/.config/.wrangler", "mode": "deny" },
-        { "path": "~/.wrangler", "mode": "deny" }
+        {
+          "path": "~/.ssh",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.aws",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.config/.wrangler",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.wrangler",
+          "mode": "deny"
+        }
       ]
     }
   },
@@ -265,7 +283,8 @@
     ],
     "symlinkDirectories": [
       "node_modules"
-    ]
+    ],
+    "baseRef": "fresh"
   },
   "env": {
     "CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION": "40",

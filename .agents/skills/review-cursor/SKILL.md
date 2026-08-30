@@ -2,6 +2,10 @@
 name: review-cursor
 description: "Cursor setup review (.cursor settings, rules, hooks.json, agents, mcp.json) against current official best practices and parity with the Claude tree. USE WHEN: user runs /review-cursor or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review Cursor

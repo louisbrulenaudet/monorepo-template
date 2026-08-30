@@ -8,6 +8,6 @@
 - Never `cd` into a package to lint. Lint/format are whole-repo by design - see **Scoping** in `AGENTS.md` for why, and pass a path to narrow: `pnpm --filter=front-app run lint`.
 - The `Edit`/`Write` post-tool hook already formats and lints each file you touch and hands back agent-format diagnostics. Treat that feedback as authoritative for that file.
 - Run `pnpm run ci` before finishing any code change. Advisory - nothing enforces it. Delegate it to `verifier` when you do not need the raw diagnostics in context.
-- Use plan mode for multi-file or architectural changes. Delegation table and traps: **Agent tooling** in `AGENTS.md`. Claude-specific: `Explore`/`Plan` do **not** load this file or `.claude/rules/` - restate binding constraints in those prompts.
+- Use plan mode for multi-file or architectural changes. Delegation table and traps: **Agent tooling** in `AGENTS.md`. Claude-specific: the built-in `Explore`/`Plan` do **not** load this file or `.claude/rules/`, so prefer the local `explorer` and `planner` agents, which carry that grounding in their own prompts; if you use a built-in anyway, restate the binding constraints in the prompt.
 - Path-scoped rules in `.claude/rules/` load when you touch a matching file.
 - Framework depth lives in skills: `hono`, `tanstack-router`, `tanstack-query`, `workers-best-practices`.

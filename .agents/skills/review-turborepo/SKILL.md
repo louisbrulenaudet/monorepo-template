@@ -2,6 +2,10 @@
 name: review-turborepo
 description: "Turborepo review (task graph, boundaries tags, caching, remote cache, --affected usage) against current official Turborepo best practices. USE WHEN: user runs /review-turborepo or explicitly asks for this review. DO NOT USE WHEN: reviewing app code, other dev dependencies, or implementing features."
 disable-model-invocation: true
+context: fork
+background: true
+model: sonnet
+effort: medium
 ---
 
 # Review Turborepo
