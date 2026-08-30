@@ -9,6 +9,10 @@ const APPS_DIR = "apps";
  * @property {string} dir Directory name under `apps/`
  * @property {string} version
  * @property {number} deployOrder `monorepo.deployOrder`; lower promotes first
+ * @property {string} role `monorepo.role`; `http-gateway` marks the app CD
+ *   smokes
+ * @property {string | null} healthPath `monorepo.healthPath`; public probe
+ *   path, or null for no public surface
  */
 
 /**
@@ -30,27 +34,37 @@ function readApp(dir) {
     throw new Error(`Not a JSON object: ${manifestPath}`);
   }
 
-  const name = "name" in manifest ? manifest.name : undefined;
-  const version = "version" in manifest ? manifest.version : undefined;
+  const { name, version, monorepo } = manifest;
   if (typeof name !== "string" || typeof version !== "string") {
     throw new Error(`Missing string name/version in ${manifestPath}`);
   }
 
-  const monorepo = "monorepo" in manifest ? manifest.monorepo : undefined;
-  const deployOrder =
-    monorepo !== null &&
-    typeof monorepo === "object" &&
-    "deployOrder" in monorepo
-      ? monorepo.deployOrder
-      : undefined;
-  if (typeof deployOrder !== "number" || !Number.isInteger(deployOrder)) {
+  const deployOrder = monorepo?.deployOrder;
+  if (!Number.isInteger(deployOrder)) {
     throw new Error(
       `Missing integer monorepo.deployOrder in ${manifestPath}. Every app declares ` +
         "where it sits in the production promote order (gateways before the SPAs that call them).",
     );
   }
 
-  return { name, dir, version, deployOrder };
+  const role = monorepo?.role;
+  if (typeof role !== "string" || role === "") {
+    throw new Error(`Missing string monorepo.role in ${manifestPath}`);
+  }
+
+  const healthPath = monorepo?.healthPath;
+  if (
+    healthPath !== null &&
+    (typeof healthPath !== "string" || !healthPath.startsWith("/"))
+  ) {
+    throw new Error(
+      `Missing monorepo.healthPath in ${manifestPath}. Declare the public probe path ` +
+        '(e.g. "/api/v1/health"), or null when the app has no public HTTP surface. ' +
+        "An app that never declares one ships to production unverified.",
+    );
+  }
+
+  return { name, dir, version, deployOrder, role, healthPath };
 }
 
 /**
@@ -66,7 +80,16 @@ export function readApps() {
   if (apps.length === 0) {
     throw new Error(`No apps found under ${APPS_DIR}/`);
   }
-  return apps.toSorted(
-    (a, b) => a.deployOrder - b.deployOrder || a.name.localeCompare(b.name),
-  );
+
+  const sorted = apps.toSorted((a, b) => a.deployOrder - b.deployOrder);
+  for (let i = 1; i < sorted.length; i += 1) {
+    if (sorted[i].deployOrder === sorted[i - 1].deployOrder) {
+      throw new Error(
+        `Apps ${sorted[i - 1].name} and ${sorted[i].name} share monorepo.deployOrder ` +
+          `${sorted[i].deployOrder} in ${APPS_DIR}/. Promote order must be total - give each ` +
+          "app its own position (gateways before the SPAs that call them).",
+      );
+    }
+  }
+  return sorted;
 }

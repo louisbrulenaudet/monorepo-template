@@ -70,6 +70,7 @@
     "prefix": "front-",
     "devPort": 5174,
     "deployOrder": 2,
+    "healthPath": "/",
     "agentGuide": "AGENTS.md"
   },
   "private": true,
