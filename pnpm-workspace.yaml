@@ -37,9 +37,9 @@ catalog:
   '@vitejs/plugin-react': ^6.1.1
   cross-env: ^10.1.0
   eslint-plugin-better-tailwindcss: ^4.7.0
-  happy-dom: ^20.11.13
+  happy-dom: ^20.12.0
   hono: ^4.13.5
-  knip: ^6.32.3
+  knip: ^6.33.0
   oxc-transform-react: ^0.147.0
   oxfmt: ^0.65.0
   oxlint: ^1.80.0
@@ -55,7 +55,7 @@ catalog:
   vite-plus: 0.3.0
   vitest: ^4.1.11
   wrangler: ^4.127.1
-  zod: ^4.5.2
+  zod: ^4.5.4
 
 auditConfig:
   ignoreCves: []
