@@ -5,10 +5,6 @@ import { defineConfig, mergeConfig } from "vitest/config";
 
 export { resolvePackageRoot } from "./package-root.js";
 
-/**
- * Shared defaults duplicated here so `@repo/vitest-config/workers` does not
- * import the Node entry (and Node apps never resolve the Cloudflare pool).
- */
 const sharedTestDefaults: InlineConfig = {
   include: ["tests/**/*.test.ts"],
   restoreMocks: true,
@@ -20,16 +16,7 @@ const sharedTestDefaults: InlineConfig = {
 
 type CloudflareTestOptions = Parameters<typeof cloudflareTest>[0];
 
-/**
- * Workers Vitest config via `@cloudflare/vitest-plugin`.
- *
- * Import from `@repo/vitest-config/workers` so Node-only apps never resolve the
- * Cloudflare pool package.
- *
- * Never set `isolate: false`, a Node `pool`, or a custom `environment`/`runner`
- * — storage isolation is per file by default, and Cloudflare forbids custom
- * envs.
- */
+/** Workers Vitest config via `@cloudflare/vitest-plugin`. */
 export function defineWorkersConfig(
   cloudflareOptions: CloudflareTestOptions,
   overrides: ViteUserConfig = {},

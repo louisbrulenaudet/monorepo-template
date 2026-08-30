@@ -1,9 +1,4 @@
 #!/usr/bin/env sh
-# Purpose: Log Cursor sessionStart events for debugging agent context loading.
-# Target: Cursor sessionStart (wired from .cursor/hooks.json).
-# Canonical location: hooks/logging/.
-#
-# Appends each event to hooks/logs/session-start.log (git-ignored). Non-blocking: always exits 0.
 
 INPUT=$(cat 2>/dev/null || true)
 ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"

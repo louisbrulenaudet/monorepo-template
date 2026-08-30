@@ -4,14 +4,6 @@ import { defineConfig, mergeConfig } from "vitest/config";
 
 export { resolvePackageRoot } from "./package-root.js";
 
-/**
- * Shared Vitest `test` defaults for every app runtime.
- *
- * Do not set `reporters` here: Vitest 4.1 auto-selects the `agent` reporter
- * when `AI_AGENT` / std-env detects an agent, and custom reporters skip that
- * detection. GitHub Actions still gets the built-in `github-actions` job
- * summary when unset.
- */
 const sharedTestDefaults: InlineConfig = {
   include: ["tests/**/*.test.{ts,tsx}"],
   restoreMocks: true,
@@ -21,16 +13,7 @@ const sharedTestDefaults: InlineConfig = {
   passWithNoTests: true,
 };
 
-/**
- * Node Vitest config for `front-*` apps.
- *
- * - `pool: "threads"` — faster IPC than default `forks` for compatible Node
- *   suites
- * - `isolate: false` — skip per-file worker isolation when tests clean up mocks
- * - `experimental.fsModuleCache` — persist transform cache across watch/reruns
- *
- * Never attach `cloudflareTest` / the Workers pool here.
- */
+/** Node Vitest config for `front-*` apps. */
 export function defineNodeConfig(
   overrides: ViteUserConfig = {},
 ): ViteUserConfig {

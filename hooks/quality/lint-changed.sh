@@ -1,18 +1,4 @@
 #!/usr/bin/env sh
-# Purpose: Lint a JS/TS file right after an agent edits it and feed problems back.
-# Target: called by check-changed.sh after Cursor afterFileEdit or Claude Edit|Write.
-# Canonical location: hooks/quality/ - wired from .cursor/hooks.json and .claude/settings.json.
-#
-# Exits 2 with oxlint output on stderr when the file has problems. Post-tool
-# callers receive feedback, but the completed edit is not rolled back.
-#
-# Two deliberate choices, both required for the output to match `pnpm run ci`:
-#   1. oxlint runs FROM THE REPO ROOT on a root-relative path. `.oxlintrc.json`
-#      `settings.better-tailwindcss.entryPoint` is resolved against the process
-#      CWD, so linting from anywhere else changes the diagnostics.
-#   2. `--format=agent` pins the one-line `file:line:col: severity plugin(rule):
-#      message help: ...` form. The `default` format renders code frames and a
-#      summary footer when stdout is a TTY, which is noise for an agent.
 
 INPUT=$(cat 2>/dev/null || true)
 ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"
@@ -26,8 +12,6 @@ fi
 [ -z "$FILE" ] && exit 0
 [ -f "$FILE" ] || exit 0
 
-# Lint code files only. format-changed.sh additionally handles JSON/JSONC/CSS,
-# which oxlint does not lint. `.d.ts` is generated output - never lint it.
 case "$FILE" in
   *.d.ts) exit 0 ;;
   *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs) ;;
@@ -44,13 +28,9 @@ elif command -v oxlint >/dev/null 2>&1; then
 fi
 [ -z "$OXLINT" ] && exit 0
 
-# Tailwind's sync worker can take more than its 30s default to initialize on
-# low-power development machines. Keep the intended worker timeout portable.
 SYNCKIT_TIMEOUT=${SYNCKIT_TIMEOUT:-120000}
 export SYNCKIT_TIMEOUT
 
-# Absolutise both sides, then make FILE relative to ROOT so oxlint can run with
-# the repo root as its CWD.
 ABS_ROOT=$(cd "$ROOT" 2>/dev/null && pwd) || exit 0
 case "$FILE" in
   /*) ABS_FILE="$FILE" ;;

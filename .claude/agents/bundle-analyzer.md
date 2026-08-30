@@ -5,16 +5,9 @@ description: >
   build large, whether a dependency is worth adding, or before a performance change to
   `front-app`. Runs the existing `analyze` script and returns ONLY a ranked chunk summary -
   the verbose per-module build output stays out of the main context. Never edits code or config.
-# `tools` is the ONLY least-privilege gate here: this repo sets
-# `permissions.defaultMode: "acceptEdits"`, and a parent `acceptEdits` takes precedence over
-# any subagent `permissionMode`, so a `permissionMode` line would be silently ignored.
-# Bash is the whole point of this agent - it must run a real build to produce numbers.
 tools: Read, Grep, Glob, Bash
-# haiku: parse a size table and rank it - mechanical, no source reasoning.
 model: haiku
-# Effort is NOT inherited from settings.json - a subagent runs at the session level unless it sets its own. `low` matches the work, and thinking bills at the output rate.
 effort: low
-# One build, one summary. If the build fails, report the failure - do not retry variations.
 maxTurns: 8
 color: cyan
 ---

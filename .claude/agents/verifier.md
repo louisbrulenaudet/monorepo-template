@@ -5,17 +5,9 @@ description: >
   verification gate (`pnpm run ci` - lint, format, check-types, types-check, boundaries, test, build)
   and reports ONLY failures that need a decision. Read-only - never auto-fixes, never edits files, and keeps verbose
   OXC/TypeScript/runner output out of the main context.
-# `tools` is the ONLY least-privilege gate here: this repo sets
-# `permissions.defaultMode: "acceptEdits"`, and a parent `acceptEdits` takes precedence over
-# any subagent `permissionMode`, so a `permissionMode` line would be silently ignored.
-# Bash is required (pnpm/turbo) and is already guarded by the repo-wide PreToolUse hooks -
-# settings.json hooks fire inside subagents too.
 tools: Read, Grep, Glob, Bash
-# haiku: running checks and distilling diagnostics into file:line is mechanical.
 model: haiku
-# Effort is NOT inherited from settings.json - a subagent runs at the session level unless it sets its own. `low` matches the work, and thinking bills at the output rate.
 effort: low
-# Bounds re-running the gate to chase a flake.
 maxTurns: 12
 color: yellow
 ---

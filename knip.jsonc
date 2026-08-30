@@ -23,9 +23,7 @@
       "ignoreDependencies": ["cloudflare"],
     },
     ".": {
-      // Referenced from .github/actions/**/action.yml run steps.
       "entry": [".github/actions/**/*.mjs!"],
-      // Vite DevTools Vitest dock CLI; must stay at the root (rules/quality/knip.md).
       "ignoreDependencies": ["@vitest/ui"],
     },
     "packages/vitest-config": {

@@ -1,5 +1,3 @@
-// apps/front-app/vite.config.ts
-
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
@@ -103,8 +101,6 @@ function generatedBuildArtifactsPlugin(mode: string, command: string) {
         return;
       }
 
-      // `hidden` sourcemaps stay on the CI artifact for symbolication but must
-      // never be uploaded as public Workers Assets.
       const assetsIgnorePath = path.resolve(appDir, "dist/.assetsignore");
       const assetsIgnore = readFileSync(assetsIgnorePath, "utf-8");
       if (!assetsIgnore.split("\n").includes("*.map")) {
@@ -128,7 +124,6 @@ function generatedBuildArtifactsPlugin(mode: string, command: string) {
   };
 }
 
-// https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   assertProductionOriginEnv(mode, command);
 
@@ -174,8 +169,6 @@ export default defineConfig(({ command, mode }) => {
       reportCompressedSize: false,
       chunkSizeWarningLimit: 500,
       rolldownOptions: {
-        // Required: without it no build writes `node_modules/.rolldown`
-        // (see .claude/rules/frontend/vite-config.md).
         devtools: {},
         onLog(level, log, log2) {
           if (
@@ -228,9 +221,6 @@ export default defineConfig(({ command, mode }) => {
       hmr: {
         overlay: true,
       },
-      // Forward browser warnings/errors (and unhandled exceptions, with
-      // source-mapped stack traces) to the terminal so agentic dev loops can
-      // read runtime failures without a screenshot.
       forwardConsole: {
         unhandledErrors: true,
         logLevels: ["warn", "error"],

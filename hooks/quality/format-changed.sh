@@ -1,9 +1,4 @@
 #!/usr/bin/env sh
-# Purpose: Format a supported source/config file right after an agent writes/edits it.
-# Target: called by check-changed.sh after Cursor afterFileEdit or Claude Edit|Write.
-# Canonical location: hooks/quality/ - wired from .cursor/hooks.json and .claude/settings.json.
-#
-# Non-blocking: always exits 0. oxfmt writes in place and honours .gitignore.
 
 INPUT=$(cat 2>/dev/null || true)
 ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"

@@ -1,7 +1,4 @@
 #!/usr/bin/env sh
-# Purpose: Block a write whose CONTENT carries a live credential.
-# Target: Claude Code PreToolUse (Edit|Write) - wired from .claude/settings.json.
-# Canonical location: hooks/security/.
 #
 # Claude Code only: Cursor has no before-file-edit event, so this script is not
 # referenced from .cursor/hooks.json and never emits a Cursor JSON verdict.
@@ -22,8 +19,6 @@
 # audit that produced this file found that over-broad matching (substring scans)
 # denied legitimate work, and a false denial on every edit is worse than the gap.
 #
-# Failure mode: FAIL CLOSED (exit 2 + reason on stderr). Never exit 1: exit 1 is
-# a non-blocking error and would let the write through.
 #
 # The reason names the pattern and the line numbers ONLY. The matched text is
 # never echoed, so the secret is not copied into the transcript, the debug log,
@@ -42,7 +37,6 @@ emit_deny() {
   exit 2
 }
 
-# Builtins only, so a broken PATH still blocks rather than exiting 1.
 emit_fault() {
   trap - EXIT INT TERM HUP
   printf 'guard fault in %s: %s\n' "${0##*/}" "$1" >&2
