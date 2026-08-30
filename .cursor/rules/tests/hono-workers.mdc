@@ -17,3 +17,4 @@ Governs Vitest for Hono apps on Cloudflare Workers via `@cloudflare/vitest-plugi
 - Types: `tests/env.d.ts` with `ProvidedEnv extends Env`; tests tsconfig includes `@cloudflare/vitest-plugin/types` and committed `worker-configuration.d.ts`.
 - Assert status/body/headers/binding state - not `toBeDefined()`-only. Agents: `pnpm turbo run test --filter=<app>` non-watch.
 - Keep this pool for unit/route tests. Add Wrangler `createTestHarness` only for multi-Worker production-build integration when a service binding exists - do not replace these suites. See `packages/vitest-config/AGENTS.md`.
+- Every route test imports the Worker entry (`import app from "../src/index"` or a relative equivalent) immediately followed by `void app;`, uncommented - the unused-looking side-effect import is what makes Vitest re-run the suite when the entry module changes.

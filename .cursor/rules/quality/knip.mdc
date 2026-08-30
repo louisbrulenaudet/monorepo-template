@@ -42,6 +42,6 @@ Root `knip.jsonc` is intentionally comment-free; every override's rationale live
 
 - Both passes must stay green: `pnpm knip` (default) and `pnpm knip:production` (`--production --strict`: shipped-code-only + workspace isolation). Both run inside `pnpm run ci`.
 - Never blanket-`ignore`. Prefer scoped patterns (`ignoreIssues`, `ignoreFiles`, production-only suffixes like `"dep!"` / `"!pattern!"`).
-- Exports kept solely for unit tests carry an explicit JSDoc `@internal` tag - production mode ignores tagged exports, so tests never mask dead shipped API.
+- Exports kept solely for unit tests carry an explicit JSDoc `@internal` tag - production mode ignores tagged exports, so tests never mask dead shipped API - the tag alone is the reason, don't add prose above it restating "extracted/exported for tests".
 - Auto-fix unused dependencies and pnpm catalog entries with `knip --fix --fix-type dependencies,catalog`; agent-readable output via `pnpm knip:agent` (`--reporter symbols`).
 - Generated files (`routeTree.gen.ts`, `worker-configuration.d.ts`) resolve cleanly today; if they ever false-positive, use `ignoreIssues` scoped patterns, not blanket `ignore`.
