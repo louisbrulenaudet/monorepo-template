@@ -563,7 +563,7 @@ app.get('/api', ...handlers)
 - Use `c.set()`/`c.get()` to pass data between middleware and handlers.
 - Chain validators for multiple request parts (param + query + json).
 - Export app type for RPC: `export type AppType = typeof routes`
-- Use `app.request()` for testing — no server startup needed.
+- Use `app.request()` for testing - no server startup needed.
 
 ## Adapters
 

@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "caching only", "bo
 
 Your pre-trained knowledge of Turborepo may be outdated. **Do not draft suggestions from memory alone.**
 
-1. Resolve "Turborepo" via the **Context7 MCP** (`resolve-library-id` → `query-docs`): `turbo.json` schema (tasks, `dependsOn`, inputs/outputs, caches), boundaries tags syntax, global dependencies/env handling, `turbo query`.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`turborepo.com` docs) - boundaries reference, caching guide, upgrade notes for the pinned major.
+1. Resolve "Turborepo" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers): `turbo.json` schema (tasks, `dependsOn`, inputs/outputs, caches), boundaries tags syntax, global dependencies/env handling, `turbo query`.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`turborepo.com` docs) - boundaries reference, caching guide, upgrade notes for the pinned major. Use whichever web fetch/search tools are available.
 3. Version currency: catalog `turbo` pin in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; check the pinned major's deprecations against config keys in use (legacy keys are a common drift).
 4. A local deep skill exists at `.agents/skills/turborepo/SKILL.md` - consult it for repo-specific conventions, but treat official docs as ground truth.
 5. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.

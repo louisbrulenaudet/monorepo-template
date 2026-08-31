@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "build options", "d
 
 Your pre-trained knowledge of Vite may be outdated (this repo tracks Vite major versions closely). **Do not draft suggestions from memory alone.**
 
-1. Resolve "Vite" via the **Context7 MCP** (`resolve-library-id` → `query-docs`); fetch current docs for build options, performance features, dev-server options, and plugin APIs. Do this also for `@cloudflare/vite-plugin` and any plugin under review.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domains** (`vite.dev`, `developers.cloudflare.com`) - build guide, performance guide, Cloudflare Workers Vite plugin reference.
+1. Resolve "Vite" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers); fetch current docs for build options, performance features, dev-server options, and plugin APIs. Do this also for `@cloudflare/vite-plugin` and any plugin under review.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domains (`vite.dev`, `developers.cloudflare.com`) - build guide, performance guide, Cloudflare Workers Vite plugin reference. Use whichever web fetch/search tools are available.
 3. Version currency: compare catalog entries in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) (`vite`, `@cloudflare/vite-plugin`, `@vitejs/plugin-react`, `@vitejs/devtools*`, `rollup-plugin-visualizer`) and installed versions (`pnpm why <pkg>` or `pnpm --filter front-app exec vite --version`) against latest stable release notes; flag drift, breaking changes relevant to used options, and deprecated config keys.
 4. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

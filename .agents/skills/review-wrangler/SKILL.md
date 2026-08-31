@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "compatibility date
 
 Your pre-trained knowledge of Wrangler may be outdated (frequent releases; JSONC-only features appear regularly). **Do not draft suggestions from memory alone.**
 
-1. Resolve "Wrangler" via the **Context7 MCP** (`resolve-library-id` → `query-docs`) for current config fields, CLI subcommands, `wrangler types`, versions uploads/promotes.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`developers.cloudflare.com/workers/`) - wrangler config reference, compatibility dates changelog, observability, migrations. The project also exposes a **cloudflare-docs MCP** - prefer it for Cloudflare questions.
+1. Resolve "Wrangler" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers) for current config fields, CLI subcommands, `wrangler types`, versions uploads/promotes.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`developers.cloudflare.com/workers/`) - wrangler config reference, compatibility dates changelog, observability, migrations. Use whichever web fetch/search tools are available. A vendor documentation MCP, when one is installed, takes precedence for vendor questions.
 3. Local schema ground truth: [node_modules/wrangler/config-schema.json](../../../node_modules/wrangler/config-schema.json) is authoritative for field validity at the installed version.
 4. Version currency: catalog `wrangler` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) + installed version vs latest stable; check recent compatibility-date entries relevant to flags in use.
 5. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.

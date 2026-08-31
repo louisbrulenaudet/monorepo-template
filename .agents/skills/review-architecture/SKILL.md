@@ -11,11 +11,9 @@ effort: medium
 # Review architecture
 Run an **architecture-focused** review of the monorepo: layout, workspace dependencies, Turborepo task graph, app vs package boundaries, dependency direction, and module coupling/cohesion. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-
 ## Invocation
 
 Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
-
 
 ## Best practices alignment
 
@@ -44,7 +42,7 @@ Conduct an architecture-only review. Inspect the following and call out violatio
 ### Turborepo task graph and caching
 
 - **Artifacts:** [turbo.json](../../../turbo.json), root and app [package.json](../../../package.json) scripts.
-- **Checks:** Turbo package tasks include `transit`, `check-types`, `types`, `types:check`, `build`, `dev`, `preview`, `deploy` (no turbo `lint`/`format` — OXC is whole-repo outside Turborepo by design). `check-types` uses the transit-node pattern (`dependsOn: ["transit"]`), not `^check-types`. `build` depends on `^build` + `check-types`. `global.inputs` should stay lean (currently `pnpm-workspace.yaml`; pnpm 11 ignores non-auth project `.npmrc` settings) — do **not** expect OXC configs or a root `tsconfig.json` in the global hash (there is no root solution tsconfig; packages extend `@repo/typescript-config`). Package-level `turbo.json` tags every workspace for `boundaries`. No task cycles. Caching is beneficial (e.g. `build` cacheable, `dev`/`deploy` not cacheable).
+- **Checks:** Turbo package tasks include `transit`, `check-types`, `types`, `types:check`, `build`, `dev`, `preview`, `deploy` (no turbo `lint`/`format` - OXC is whole-repo outside Turborepo by design). `check-types` uses the transit-node pattern (`dependsOn: ["transit"]`), not `^check-types`. `build` depends on `^build` + `check-types`. `global.inputs` should stay lean (currently `pnpm-workspace.yaml`; pnpm 11 ignores non-auth project `.npmrc` settings) - do **not** expect OXC configs or a root `tsconfig.json` in the global hash (there is no root solution tsconfig; packages extend `@repo/typescript-config`). Package-level `turbo.json` tags every workspace for `boundaries`. No task cycles. Caching is beneficial (e.g. `build` cacheable, `dev`/`deploy` not cacheable).
 
 ### Root scripts and port allocation
 

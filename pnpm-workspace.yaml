@@ -11,6 +11,7 @@ catalog:
   '@changesets/cli': ^3.0.1
   '@cloudflare/vite-plugin': ^1.54.2
   '@cloudflare/vitest-plugin': ^1.1.2
+  '@hono/cli': 0.2.0-next.0
   '@hono/zod-validator': ^0.9.0
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
@@ -43,8 +44,10 @@ catalog:
   oxc-transform-react: ^0.147.0
   oxfmt: ^0.65.0
   oxlint: ^1.80.0
+  oxlint-plugin-react-doctor: ^0.9.12
   oxlint-tsgolint: ^7.0.2001
   react: ^19.2.8
+  react-doctor: ^0.9.12
   react-dom: ^19.2.8
   rollup-plugin-visualizer: ^7.1.1
   syncpack: ^15.3.3
@@ -68,11 +71,12 @@ minimumReleaseAgeExclude:
   - wrangler
   - miniflare
   - typescript
+  - '@hono/cli@0.2.0-next.0'
 
 blockExoticSubdeps: true
 
 trustPolicy: no-downgrade
-trustPolicyIgnoreAfter: 525600 # 365 days — skip trust checks for older publishes lacking provenance
+trustPolicyIgnoreAfter: 525600 # 365 days - skip trust checks for older publishes lacking provenance
 
 allowBuilds:
   esbuild: true

@@ -75,6 +75,7 @@ Local env: `cp .env.example .env.local` (and `.env.production.example` for prod 
 | `pnpm -w turbo run deploy --filter=front-app` | `wrangler deploy` (upload + 100%) |
 | `pnpm -w run ci` | Full repository PR gate (local; not `--affected`) |
 | `pnpm -w check-types` | Verify route generation and typecheck the workspace |
+| `pnpm -w react-doctor:changed` | React Doctor offline changed-scope scan - run after React edits (deep workflow: skill `react-doctor`) |
 | `pnpm analyze` | Bundle stats (`dist/stats.html`) |
 
 In-app absolute imports use package.json `imports` (`#/*` → `./src/*`), e.g. `import { Button } from "#/components/ui/Button"`.

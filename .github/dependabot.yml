@@ -1,6 +1,6 @@
 # Dependabot version updates. No docker / docker-compose ecosystems (none in
 # this repo). Absent options (`cooldown`, `labels`, group `dependency-type`)
-# are absent on purpose — add only when the DX need is clear.
+# are absent on purpose - add only when the DX need is clear.
 version: 2
 
 updates:

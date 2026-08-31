@@ -3,7 +3,7 @@ name: workers-best-practices
 description: Reviews and authors Cloudflare Workers code against production best practices. Load when writing new Workers, reviewing Worker code, configuring wrangler.jsonc, or checking for common Workers anti-patterns (streaming, floating promises, global state, secrets, bindings, observability). Biases towards retrieval from Cloudflare docs over pre-trained knowledge.
 ---
 
-Your knowledge of Cloudflare Workers APIs, types, and configuration may be outdated. **Prefer retrieval over pre-training** for any Workers code task — writing or reviewing.
+Your knowledge of Cloudflare Workers APIs, types, and configuration may be outdated. **Prefer retrieval over pre-training** for any Workers code task - writing or reviewing.
 
 ## Retrieval Sources
 
@@ -30,8 +30,8 @@ mkdir -p /tmp/workers-types-latest && \
 
 ## Reference Documentation
 
-- `references/rules.md` — all best practice rules with code examples and anti-patterns
-- `references/review.md` — type validation, config validation, binding access patterns, review process
+- `references/rules.md` - all best practice rules with code examples and anti-patterns
+- `references/review.md` - type validation, config validation, binding access patterns, review process
 
 ## Rules Quick Reference
 
@@ -40,25 +40,25 @@ mkdir -p /tmp/workers-types-latest && \
 | Rule | Summary |
 |------|---------|
 | Compatibility date | Set `compatibility_date` to today on new projects; update periodically on existing ones |
-| nodejs_compat | Enable the `nodejs_compat` flag — many libraries depend on Node.js built-ins |
-| wrangler types | Run `wrangler types` to generate `Env` — never hand-write binding interfaces |
+| nodejs_compat | Enable the `nodejs_compat` flag - many libraries depend on Node.js built-ins |
+| wrangler types | Run `wrangler types` to generate `Env` - never hand-write binding interfaces |
 | Secrets | Use `wrangler secret put`, never hardcode secrets in config or source |
-| wrangler.jsonc | Use JSONC config for non-secret settings — newer features are JSON-only |
+| wrangler.jsonc | Use JSONC config for non-secret settings - newer features are JSON-only |
 
 ### Request & Response Handling
 
 | Rule | Summary |
 |------|---------|
-| Streaming | Stream large/unknown payloads — never `await response.text()` on unbounded data |
+| Streaming | Stream large/unknown payloads - never `await response.text()` on unbounded data |
 | waitUntil | Use `ctx.waitUntil()` for post-response work; do not destructure `ctx` |
 
 ### Architecture
 
 | Rule | Summary |
 |------|---------|
-| Bindings over REST | Use in-process bindings (KV, R2, D1, Queues) — not the Cloudflare REST API |
+| Bindings over REST | Use in-process bindings (KV, R2, D1, Queues) - not the Cloudflare REST API |
 | Queues & Workflows | Move async/background work off the critical path |
-| Service bindings | Use service bindings for Worker-to-Worker calls — not public HTTP |
+| Service bindings | Use service bindings for Worker-to-Worker calls - not public HTTP |
 | Hyperdrive | Always use Hyperdrive for external PostgreSQL/MySQL connections |
 
 ### Observability
@@ -78,38 +78,38 @@ mkdir -p /tmp/workers-types-latest && \
 
 | Rule | Summary |
 |------|---------|
-| Web Crypto | Use `crypto.randomUUID()` / `crypto.getRandomValues()` — never `Math.random()` for security |
+| Web Crypto | Use `crypto.randomUUID()` / `crypto.getRandomValues()` - never `Math.random()` for security |
 | No passThroughOnException | Use explicit try/catch with structured error responses |
 
 ## Anti-Patterns to Flag
 
 | Anti-pattern | Why it matters |
 |-------------|----------------|
-| `await response.text()` on unbounded data | Memory exhaustion — 128 MB limit |
+| `await response.text()` on unbounded data | Memory exhaustion - 128 MB limit |
 | Hardcoded secrets in source or config | Credential leak via version control |
 | `Math.random()` for tokens/IDs | Predictable, not cryptographically secure |
-| Bare `fetch()` without `await` or `waitUntil` | Floating promise — dropped result, swallowed error |
+| Bare `fetch()` without `await` or `waitUntil` | Floating promise - dropped result, swallowed error |
 | Module-level mutable variables for request state | Cross-request data leaks, stale state, I/O errors |
 | Cloudflare REST API from inside a Worker | Unnecessary network hop, auth overhead, added latency |
 | `ctx.passThroughOnException()` as error handling | Hides bugs, makes debugging impossible |
 | Hand-written `Env` interface | Drifts from actual wrangler config bindings |
-| Direct string comparison for secret values | Timing side-channel — use `crypto.subtle.timingSafeEqual` |
-| Destructuring `ctx` (`const { waitUntil } = ctx`) | Loses `this` binding — throws "Illegal invocation" at runtime |
+| Direct string comparison for secret values | Timing side-channel - use `crypto.subtle.timingSafeEqual` |
+| Destructuring `ctx` (`const { waitUntil } = ctx`) | Loses `this` binding - throws "Illegal invocation" at runtime |
 | `any` on `Env` or handler params | Defeats type safety for all binding access |
-| `as unknown as T` double-cast | Hides real type incompatibilities — fix the design |
-| `implements` on platform base classes (instead of `extends`) | Legacy — loses `this.ctx`, `this.env`. Applies to DurableObject, WorkerEntrypoint, Workflow |
+| `as unknown as T` double-cast | Hides real type incompatibilities - fix the design |
+| `implements` on platform base classes (instead of `extends`) | Legacy - loses `this.ctx`, `this.env`. Applies to DurableObject, WorkerEntrypoint, Workflow |
 | `env.X` inside platform base class | Should be `this.env.X` in classes extending DurableObject, WorkerEntrypoint, etc. |
 
 ## Review Workflow
 
-1. **Retrieve** — fetch latest best practices page, workers types, and wrangler schema
-2. **Read full files** — not just diffs; context matters for binding access patterns
-3. **Check types** — binding access, handler signatures, no `any`, no unsafe casts (see `references/review.md`)
-4. **Check config** — compatibility_date, nodejs_compat, observability, secrets, binding-code consistency
-5. **Check patterns** — streaming, floating promises, global state, serialization boundaries
-6. **Check security** — crypto usage, secret handling, timing-safe comparisons, error handling
-7. **Validate with tools** — `npx tsc --noEmit`, lint for `no-floating-promises`
-8. **Reference rules** — see `references/rules.md` for each rule's correct pattern
+1. **Retrieve** - fetch latest best practices page, workers types, and wrangler schema
+2. **Read full files** - not just diffs; context matters for binding access patterns
+3. **Check types** - binding access, handler signatures, no `any`, no unsafe casts (see `references/review.md`)
+4. **Check config** - compatibility_date, nodejs_compat, observability, secrets, binding-code consistency
+5. **Check patterns** - streaming, floating promises, global state, serialization boundaries
+6. **Check security** - crypto usage, secret handling, timing-safe comparisons, error handling
+7. **Validate with tools** - `npx tsc --noEmit`, lint for `no-floating-promises`
+8. **Reference rules** - see `references/rules.md` for each rule's correct pattern
 
 ## Scope
 

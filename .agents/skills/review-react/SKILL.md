@@ -20,9 +20,9 @@ Text after the slash command is additional scope/focus (e.g. "hooks", "Suspense"
 
 Your pre-trained knowledge of React may be outdated. **Do not draft suggestions from memory alone.**
 
-1. Resolve "React" via the **Context7 MCP** (`resolve-library-id` → `query-docs`): React 19 APIs (`use`, actions, `ref` as prop, forwardRef changes), docs guidance on effects and fetching.
+1. Resolve "React" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers): React 19 APIs (`use`, actions, `ref` as prop, forwardRef changes), docs guidance on effects and fetching.
 2. Cross-check with the local skill `.agents/skills/vercel-react-best-practices/SKILL.md` for performance heuristics used by this repo.
-3. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`react.dev`) - reference pages and blog posts for the installed major.
+3. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`react.dev`) - reference pages and blog posts for the installed major. Use whichever web fetch/search tools are available.
 4. Version currency: catalog `react`/`react-dom`/`@types/react*` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; flag removed/deprecated APIs still present in code.
 5. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

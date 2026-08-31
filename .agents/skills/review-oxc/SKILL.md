@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "rules only", "form
 
 Your pre-trained knowledge of OXC may be outdated (fast-moving project). **Do not draft suggestions from memory alone.**
 
-1. Resolve "OXC" (and "oxfmt" separately if covered) via the **Context7 MCP** (`resolve-library-id` → `query-docs`): linter config schema, categories/plugins, nested config, formatter options, output formats.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`oxc.rs`) - linter config reference, output formats (notably the `--format=agent` contract), formatter docs, changelog for breaking changes.
+1. Resolve "OXC" (and "oxfmt" separately if covered) via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers): linter config schema, categories/plugins, nested config, formatter options, output formats.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`oxc.rs`) - linter config reference, output formats (notably the `--format=agent` contract), formatter docs, changelog for breaking changes. Use whichever web fetch/search tools are available.
 3. Version currency: compare catalog entries (`oxlint`, `oxfmt`, `oxlint-tsgolint`, `oxc-transform-react`) in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) and installed versions against latest stable; flag deprecated rules/config keys still present in config.
 4. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

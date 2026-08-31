@@ -11,4 +11,21 @@ Do not add a comment that restates the code. A comment earns its place only when
 - **If the explanation runs past two lines, or applies to more than the line below it, it belongs in a rule** - not a comment block at the top of a file. The exception is a config file whose comments are already the documented source of truth: root `turbo.json` task descriptions and `wrangler.jsonc` annotations are cited as authoritative by [../core/turborepo.md](../core/turborepo.mdc) and [../backend/workers-config.md](../backend/workers-config.mdc). Extend those in place; do not strip them into a rule.
 - **Keep the comments that prevent a regression:** why a key is deliberately absent, why a non-default value is set, why an apparently redundant line is load-bearing. The test is simple - deleting it should feel risky. If deleting it changes nothing, it should not be there.
 - Applies to source, YAML and workflows, shell, and config alike.
-- **Not covered by this rule:** JSDoc/docstrings carrying types or a public API contract, `@internal` tags Knip depends on, and `oxlint-disable-*` directives, which [code-style.md](code-style.mdc) requires to carry a reason. Those are machine-read, not prose.
+
+## Do not generate
+
+These fail the test above. Do not add them, and when you touch a file that still has them, delete them - do not hunt them in files you are not already editing, and do not rewrite working code just to make a comment deletable.
+
+- Restating the next statement, control flow, or a well-named symbol (`// increment i`, `/** Resolve the allowlist. */` on `resolveCorsOrigins`).
+- Section banners, IDE/scaffold boilerplate, and commented-out code (restore it or delete it).
+- Stale TODOs that are no longer actionable.
+- File-header essays that repeat a path-scoped rule or `AGENTS.md`.
+
+## Keep without re-litigating
+
+- License headers and legally required notices.
+- Generated-file banners (`wrangler types` `worker-configuration.d.ts`, TanStack Router `routeTree.gen.ts`) - do not hand-edit those files (see [guardrails.md](../core/guardrails.mdc)).
+- Machine-read markers: `@internal` (tag only - no prose restating "for tests"; see [knip.md](knip.mdc)), `oxlint-disable-*` with a reason ([code-style.md](code-style.mdc)), `// @vitest-environment …`, `@ts-expect-error` with a reason, workflow `# vX.Y.Z` SHA pins.
+- JSDoc that is a public API contract or carries types tooling needs. Prose JSDoc is still a comment: if it only repeats the name or signature, delete it.
+
+`knip.jsonc` stays comment-free; every override's rationale lives in [knip.md](knip.mdc).

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "share": false,
+  "noScore": true,
+  "supplyChain": { "enabled": false },
+  "ignore": {
+    "rules": ["deslop/unused-dev-dependency"],
+  },
+  "projects": ["front-app"],
+}

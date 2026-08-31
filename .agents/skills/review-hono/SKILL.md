@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "middleware", "erro
 
 Your pre-trained knowledge of Hono may be outdated. **Do not draft suggestions from memory alone.**
 
-1. Resolve "Hono" via the **Context7 MCP** (`resolve-library-id` → `query-docs`): routing patterns, middleware ordering semantics, validators/Zod integration helpers, error handling (`HTTPException`, `onError`), Cloudflare Workers adapters/helpers, RPC/`hc` client typing if referenced.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`hono.dev`) - guides and API reference pages relevant to findings.
+1. Resolve "Hono" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers): routing patterns, middleware ordering semantics, validators/Zod integration helpers, error handling (`HTTPException`, `onError`), Cloudflare Workers adapters/helpers, RPC/`hc` client typing if referenced.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`hono.dev`) - guides and API reference pages relevant to findings. Use whichever web fetch/search tools are available.
 3. Version currency: catalog `hono` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) and installed version vs latest stable changelog; flag deprecated APIs used in code (e.g. old validator helpers).
 4. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

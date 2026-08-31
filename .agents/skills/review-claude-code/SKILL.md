@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "permissions only",
 
 Your pre-trained knowledge of Claude Code may be outdated. **Do not draft suggestions from memory alone.**
 
-1. Resolve "Claude Code" via the **Context7 MCP** (`resolve-library-id` → `query-docs`) for settings keys, permission rule syntax, hooks events, subagent frontmatter, and worktree behavior.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official docs domain(s)** (`code.claude.com`, `docs.anthropic.com`) - settings reference, permissions, IAM, hooks, sandboxing, worktrees, output styles, best-practices guidance for large codebases.
+1. Resolve "Claude Code" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers) for settings keys, permission rule syntax, hooks events, subagent frontmatter, and worktree behavior.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official docs domain(s) (`code.claude.com`, `docs.anthropic.com`) - settings reference, permissions, IAM, hooks, sandboxing, worktrees, output styles, best-practices guidance for large codebases. Use whichever web fetch/search tools are available.
 3. Check version currency: compare installed CLI (`claude --version`) against the latest stable release notes (official changelog). Flag deprecated settings keys or hook events still present in config.
 4. Cite the retrieved source next to every finding; label anything you could not verify as **Unverified**.
 
@@ -33,7 +33,7 @@ Your pre-trained knowledge of Claude Code may be outdated. **Do not draft sugges
 - [.claude/skills/](../../../.claude/skills/) - symlinks into `.agents/skills/`; broken or stale links
 - [CLAUDE.md](../../../CLAUDE.md) + nested per-app/package guides - duplication vs pointer discipline
 - `.claude/worktrees/`, `.claude/status-line.sh`, `.mcp.json` server list
-- Sync parity with the Cursor tree (see `/review-cursor` for that side's depth)
+- Sync parity with the Cursor tree
 
 ## Analysis axes
 
@@ -46,7 +46,7 @@ Your pre-trained knowledge of Claude Code may be outdated. **Do not draft sugges
 
 ## DX & AI-agentic workflow
 
-Verify the setup maximizes agentic effectiveness: machine-readable outputs (`pnpm lint:agent`, `knip --reporter symbols`) reachable without noise; MCP servers project-scoped (Context7, cloudflare-docs) without duplicate registration; clean worktree (generated `dist/`, `worker-configuration.d.ts` handled per repo policy).
+Verify the setup maximizes agentic effectiveness: machine-readable outputs (`pnpm lint:agent`, `knip --reporter symbols`) reachable without noise; documentation MCP servers project-scoped, without duplicate registration; clean worktree (generated `dist/`, `worker-configuration.d.ts` handled per repo policy).
 
 ## Steps
 

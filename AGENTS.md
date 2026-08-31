@@ -108,7 +108,15 @@ Align with [Cloudflare Workers testing](https://developers.cloudflare.com/worker
 
 ## Environment
 
-Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev.vars.example` → `.dev.vars` per app before local runs. Agent worktrees do not copy real env files; provision isolated credentials explicitly in each worktree. Secrets and wrangler vars: path-scoped rule `backend/workers-config`. Local ports when scaffolding: `backend/ports` (human tables in [README.md](README.md)).
+Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev.vars.example` → `.dev.vars` per app before local runs. Secrets and wrangler vars: path-scoped rule `backend/workers-config`. Local ports when scaffolding: `backend/ports` (human tables in [README.md](README.md)).
+
+### Worktrees
+
+A worktree is a fresh checkout, so **run `pnpm install --frozen-lockfile --prefer-offline` in it before any turbo command**. Nothing automates this: `worktree.symlinkDirectories` cannot supply it, because pnpm keeps a `node_modules` at the root *and* inside every workspace package, and symlinking the root one would make a worktree `pnpm install` write back into the main checkout. The install is cheap on disk - pnpm hardlinks from the content-addressable store - and costs only CPU time, once per worktree.
+
+`worktree.sparsePaths` in `.claude/settings.json` is applied as a **cone-mode** sparse checkout (`core.sparseCheckoutCone=true`), which means every root-level *file* is checked out whether or not it is listed - only *directories* are filtered. So the only entries that do real work are the directories: `.agents`, `.changeset`, `.claude`, `.cursor`, `.github`, `.vite-hooks`, `.vscode`, `apps`, `hooks`, `packages`. The root-file entries are kept deliberately, so the list stays correct if the checkout ever stops being cone-mode; do not read them as required. When you add a root **directory** that the tooling needs, add it here - `.opencode` is excluded on purpose.
+
+[`.worktreeinclude`](.worktreeinclude) carries gitignored files in - currently only `.claude/settings.local.json`, for the warm Turbo and Node compile caches. It deliberately carries **no** env files: worktrees do not copy real credentials, so provision isolated ones explicitly per worktree. A `WorktreeCreate` hook would disable `.worktreeinclude` entirely, which is why there isn't one.
 
 ## Root Scripts (pnpm)
 
@@ -119,6 +127,7 @@ Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev
 | `pnpm run ci` | Full-repo local PR gate (no `--affected`); one `turbo run check-types test build`; CI uses `--affected` for that phase |
 | `pnpm lint:agent` | Lint with `--format=agent` - one machine-readable line per diagnostic, no auto-fix |
 | `pnpm lint:ci` | Lint pinned to `--format=github` (PR annotations); used by `.github/workflows/ci.yml` |
+| `pnpm react-doctor` / `pnpm react-doctor:changed` | React Doctor scan over `front-*` apps via the pinned local binary - fully offline (telemetry, score, share, and Socket.dev checks disabled in `doctor.config.jsonc`); `:changed` is the post-React-edit regression check. Agent contract: `.claude/rules/frontend/react-doctor.md`; embedded `react-doctor/*` oxlint rules run inside `pnpm lint:*` |
 | `pnpm types` | Regenerate `worker-configuration.d.ts` (**commit the result**) |
 | `pnpm types:check` | Verify committed Worker types match `wrangler.jsonc` (inside `pnpm run ci`) |
 | `pnpm boundaries` | Package dependency tags vs `turbo.json` (inside `pnpm run ci`) |
@@ -134,33 +143,15 @@ Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev
 
 ### Releases
 
-[Changesets](https://changesets.dev) drives versioning for the deployable apps (same pattern as Vite, Astro, and cloudflare/workers-sdk). One shared release version: every app under `apps/` is one `fixed` group in `.changeset/config.json` - written as the glob `[["*"]]`, which matches every unscoped package name and so never an `@repo/*` package - so they always bump together, which is what makes a single `vX.Y.Z` tag a valid release coordinate. **Nothing is published to npm** - every workspace is `private: true`; a release is a git tag plus a Cloudflare Workers promote.
+[Changesets](https://changesets.dev) drives versioning for the deployable apps. Every app under `apps/` is one `fixed` group in `.changeset/config.json` - the glob `[["*"]]`, which matches unscoped package names only and so never an `@repo/*` package - so they always bump together and a single `vX.Y.Z` tag is a valid release coordinate. **Nothing is published to npm** - every workspace is `private: true`; a release is a git tag plus a Cloudflare Workers promote.
 
-```text
-PR ──► CI (pull_request, --affected) + advisory changeset-status comment
-
-merge to main ──► Release workflow
-  gate         ALWAYS: calls ci.yml on the merge commit (full graph)
-  select-mode  pending changesets? → "chore: release" PR (versions + CHANGELOGs)   [END]
-               none?               → tag vX.Y.Z (needs gate) → newly created?
-                                       → CD (called directly, not tag-triggered):
-                                         wrangler versions upload --tag X.Y.Z
-                                         → promote @100% → smoke → GitHub Release
-```
-
-Rules:
+Three rules that bind while writing ordinary app code, not just release infrastructure - which is why they live here and not only in the path-scoped rule:
 
 - **Every PR that changes a deployable app ships a changeset** (`pnpm changeset`; pick patch/minor/major). Non-blocking reminder via the Changesets PR status comment; use `pnpm changeset --empty` for no-release changes. Docs/tests/tooling-only PRs do not need one.
-- **Merging the `chore: release` PR is the release act**: it lands the bumps on `main`, where `gate` validates the commit and only then is tag `vX.Y.Z` cut and handed to CD. Do not push `v*` tags by hand.
-- **The release PR branch is force-pushed, not accumulated.** Every push to `main` resets `changeset-release/main` from the tip, re-runs `changeset version`, and force-pushes one commit - so it always reflects all of `main` plus all pending changesets, and manual edits to that branch are discarded. Corrections go in a new changeset on `main`.
-- **CD is never tag-triggered.** Tags created with `GITHUB_TOKEN` do not start workflow runs, so `release.yml` calls `cd.yml` directly. Adding a `push: tags:` trigger back is dead code.
-- **The tag is the idempotency key.** Re-running `Release` on an already-tagged commit reports `created=false` and skips the deploy; redeploy on purpose with CD's `workflow_dispatch` + tag input.
+- **Merging the `chore: release` PR is the release act, and no `v*` tag is ever pushed by hand.** Merging lands the bumps on `main`, where `gate` validates the commit; only then is the tag cut and handed to CD.
 - **Runtime versions**: `/api/v1/health` returns `{ status, version }` (semver from `package.json`, inlined at build); `front-app` renders it in the root footer; `X-Worker-Version-Id` stays the opaque wrangler version id.
-- **Rollback**: `pnpm --filter=<app> exec wrangler rollback --env production`; redeploy any prior release with CD's `workflow_dispatch` + tag input.
-- **Prerequisites (one-time repo setting)**: enable *Actions → General → Allow GitHub Actions to create and approve pull requests*. CI skips `changeset-release/**` head branches by job condition and `gate` validates the release commit after merge, so a required check reports skipped rather than red - but note that a `pull_request` run on a bot-authored branch is created in the `action_required` state, so it still needs one "Approve and run" click unless you exempt the branch in branch protection.
-- CD remains paused by the repository variable `CD_ENABLED`, checked by `release.yml`'s `deploy` job; set it to `true` alongside the production GitHub Environment secrets (see [Contribution](#contribution)). It is gated at the caller on purpose - a job skipped inside a `workflow_call` target reports success, which would leave a green Release with the tag cut and nothing shipped.
 
-Depth: `.claude/rules/ops/release.md` / `.cursor/rules/ops/release.mdc`; contributor-facing walkthrough in [`.changeset/README.md`](.changeset/README.md).
+The release state machine, the pipeline invariants, the recovery table, the repo settings CD depends on, and rollback all live in `.claude/rules/ops/release.md` / `.cursor/rules/ops/release.mdc`, which load when you touch `.changeset/**` or the release workflows. Contributor-facing walkthrough: [`.changeset/README.md`](.changeset/README.md).
 
 ### Scoping
 
@@ -181,12 +172,15 @@ Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview
 | Full gate | `pnpm run ci` (includes `turbo run check-types test build`) |
 | worker-api smoke | background `pnpm --filter=worker-api dev`, then `curl -sf http://localhost:8700/api/v1/health` (expect `{ status, version }` JSON), then stop the dev process |
 | front-app smoke | background `pnpm --filter=front-app dev`, then `curl -sf http://localhost:5174/` and check the HTML contains `id="root"`, then stop |
+| worker-api routes / serverless smoke | `pnpm --filter=worker-api exec hono routes`; `pnpm --filter=worker-api exec hono request -P /api/v1/health --runtime workerd` - no dev server, `workerd` supplies the real `wrangler.jsonc` bindings |
 
 Run dev servers through the harness's background-task mechanism (never a bare `&` you cannot reap) and always stop them when done. Both smoke checks work inside the Claude Code sandbox - localhost binding and curl are permitted.
 
 ## Agent tooling
 
 Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Nested `AGENTS.md` + `CLAUDE.md` live under each `apps/*`, `packages/*`, and `hooks/` - give new packages the same pair. Turbo graph primitives (`turbo query`) and signed-remote-cache provisioning are path-scoped in `core/turborepo`.
+
+**Working on a Hono app? Run `pnpm --filter=worker-api exec hono agent-context` first and follow it.** `@hono/cli` (the `next` / 0.2 line) is a `worker-api` devDependency; `agent-context` prints the command reference generated from the installed version, so it cannot drift. Commands are JSON-first - add `--plain` only when a human reads the output.
 
 ### Subagent roster
 
@@ -196,7 +190,7 @@ Five read-only agents - `explorer`, `planner`, `verifier`, `bundle-analyzer`, `d
 
 ### Dependency-scoped stack reviews
 
-Beyond the dimension reviews (`/review-*`), one human-only `/review-<dep>` command exists per dev dependency (`review-claude-code`, `review-cursor`, `review-vite`, `review-oxc`, `review-typescript`, `review-turborepo`, `review-pnpm`, `review-wrangler`, `review-hono`, `review-tailwind`, `review-vitest`, `review-tanstack-router`, `review-tanstack-query`, `review-react`, `review-zod`, `review-knip`, `review-syncpack`). Run them periodically to verify each tool's config still follows current best practices: every skill mandates ground-truth retrieval (Context7 MCP → official docs) before suggesting changes and outputs a Critical / Improvements / Optional plan.
+Beyond the dimension reviews (`/review-*`), one human-only `/review-<dep>` command exists per dev dependency (`review-claude-code`, `review-vite`, `review-oxc`, `review-typescript`, `review-turborepo`, `review-pnpm`, `review-wrangler`, `review-hono`, `review-tailwind`, `review-vitest`, `review-tanstack-router`, `review-tanstack-query`, `review-react`, `review-zod`, `review-knip`, `review-syncpack`). Run them periodically to verify each tool's config still follows current best practices: every skill mandates ground-truth retrieval (installed documentation MCP collector → direct web fetch of official docs) before suggesting changes and outputs a Critical / Improvements / Optional plan.
 
 ### When to delegate
 
