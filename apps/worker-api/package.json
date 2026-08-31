@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "catalog:",
+    "@hono/cli": "catalog:",
     "@repo/typescript-config": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "typescript": "catalog:",
@@ -47,6 +48,7 @@
     "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern apps/worker-api",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix apps/worker-api",
     "promote": "wrangler versions deploy --env production",
+    "routes": "hono routes",
     "test": "vitest run",
     "test:watch": "vitest",
     "types": "wrangler types -c ./wrangler.jsonc",

@@ -11,7 +11,7 @@ const REQUEST_FAILED_MESSAGE =
   "The request failed. Try again, or quote the request id if it keeps happening.";
 
 /**
- * Client-facing copy only — never echo raw Error.message (may contain internal
+ * Client-facing copy only - never echo raw Error.message (may contain internal
  * or privileged wording from upstreams).
  */
 export function getClientSafeErrorDetails(

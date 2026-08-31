@@ -1,7 +1,7 @@
 # Explaining and configuring rules
 
 Explain React Doctor rules and edit `doctor.config.*` safely. Use this when a user
-wants to understand a rule or change which rules run — not for fixing diagnostics
+wants to understand a rule or change which rules run - not for fixing diagnostics
 (that is the main `react-doctor` skill / `/doctor`).
 
 Triggers: "why did this rule fire", "I disagree with this rule", "turn this rule off",
@@ -43,7 +43,7 @@ Rule references accept the full key (`react-doctor/no-danger`), the bare id (`no
 
 ## Decision guide
 
-Match the control to the intent — prefer the narrowest one:
+Match the control to the intent - prefer the narrowest one:
 
 - **User disagrees with one rule / it's a false positive for them** → `rules disable <rule>` (sets `rules.<key> = "off"`; the rule stops running everywhere). This is the default for "I don't want this rule".
 - **Rule is fine but wrong severity** → `rules set <rule> warn` or `rules set <rule> error`.
@@ -57,7 +57,7 @@ How the layers combine: `ignore.tags` disables every rule carrying that tag **be
 
 ## Config shape
 
-Config lives in `doctor.config.ts` (or `.js`/`.mjs`/`.cjs`/`.json`/`.jsonc`), or the `reactDoctor` key in `package.json`. The `rules` commands edit whichever exists — TS/JS edits preserve formatting (via magicast) — and create `doctor.config.json` when none does, stamping `$schema`:
+Config lives in `doctor.config.ts` (or `.js`/`.mjs`/`.cjs`/`.json`/`.jsonc`), or the `reactDoctor` key in `package.json`. The `rules` commands edit whichever exists - TS/JS edits preserve formatting (via magicast) - and create `doctor.config.json` when none does, stamping `$schema`:
 
 ```ts
 // doctor.config.ts
@@ -70,4 +70,4 @@ export default {
 
 ## Educating the user
 
-When explaining a rule, lead with the "Why it matters" guidance from `rules explain` and, when they want depth, the per-rule recipe at `https://www.react.doctor/prompts/rules/<plugin>/<rule>.md`. Only after they understand it should you offer to disable it — many "bad" rules are catching real issues.
+When explaining a rule, lead with the "Why it matters" guidance from `rules explain` and, when they want depth, the per-rule recipe at `https://www.react.doctor/prompts/rules/<plugin>/<rule>.md`. Only after they understand it should you offer to disable it - many "bad" rules are catching real issues.

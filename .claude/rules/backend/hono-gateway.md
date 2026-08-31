@@ -87,4 +87,13 @@ Register in this order. The onion model runs "before" logic top-down and "after"
 - Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()`.
 - Run `pnpm types` after adding bindings to regenerate `worker-configuration.d.ts`.
 
+## Inspecting the app (Hono CLI)
+
+`@hono/cli` is a `worker-api` devDependency. Run `hono agent-context` first: it prints the command reference generated from the installed version, so it cannot drift from this rule. Every command is JSON by default - `--plain` is for humans only.
+
+- `hono routes` after changing middleware order or a mount - the registered table without booting a server (`--verbose` includes middleware).
+- `hono request -P <path> --runtime workerd` to exercise a route. The default `node` runtime has no `c.env`, so any handler that reads a binding or `ENVIRONMENT` needs `--runtime workerd`, which loads `wrangler.jsonc` and its local bindings; pass no file argument then.
+- `hono request --trace` when a response is not what you expect - `matchedRoutes` names the middleware that ran and the handler that responded.
+- This is the fast loop between edits, not a replacement for the Vitest Workers pool suites.
+
 See [workers-config.md](workers-config.md) when editing `wrangler.jsonc`. See [workers-cache.md](workers-cache.md) when setting `Cache-Control` on responses.

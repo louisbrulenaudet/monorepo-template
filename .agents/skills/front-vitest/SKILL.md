@@ -9,10 +9,6 @@ metadata:
 
 Hard constraints and Node-first defaults live in the path-scoped rule `.claude/rules/tests/front-react.md` / `.cursor/rules/tests/front-react.mdc`. Load this skill only when you need harnesses beyond that rule.
 
-Pinned lock versions front-app 2026-08-11: react/react-dom 19.2.8, @tanstack/react-query 5.101.4, @tanstack/react-router 1.170.25, vite 8.2.1, vitest 4.1.10.
-
-Docs retrieved 2026-08-11: vitest.dev environment/config, tanstack.com/query testing, tanstack.com/router setup-testing and file-based testing, react.dev act / StrictMode / forwardRef / use.
-
 ## Prerequisites
 
 Installed in front-app (catalog deps): happy-dom, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event, @testing-library/dom. jsdom is NOT installed - add it via the catalog only if one suite needs a per-file jsdom fallback for a happy-dom spec gap. Vitest bundles no DOM. Do not invent a DOM suite under plain Node.

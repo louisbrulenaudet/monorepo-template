@@ -1,19 +1,10 @@
 {
   "$schema": "https://react.doctor/schema/config.json",
-  // Privacy: no share URLs and no score API; CLI telemetry (Sentry/Axiom) is
-  // killed by REACT_DOCTOR_NO_TELEMETRY=1 (root `react-doctor` script +
-  // .claude/settings.json env), so every scan runs fully offline.
   "share": false,
   "noScore": true,
-  // Socket.dev dependency scoring sends dependency names to a third party and
-  // makes scans network-dependent; disabled for determinism. Re-enable for a
-  // single run with `pnpm react-doctor --supply-chain`.
   "supplyChain": { "enabled": false },
-  // Workspace tsconfig packages (@repo/typescript-config) are consumed via
-  // tsconfig `extends`, which import analysis cannot see.
   "ignore": {
     "rules": ["deslop/unused-dev-dependency"],
   },
-  // Scan target: front-* apps only. Add future front-* workspace names here.
   "projects": ["front-app"],
 }

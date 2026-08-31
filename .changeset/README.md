@@ -16,8 +16,8 @@ To preview the actual file edits locally: `GITHUB_TOKEN=$(gh auth token) pnpm ex
 
 ## When a changeset is required
 
-- **Required** when a PR changes any app under `apps/` — anything that ships.
-- **Required** when a PR changes `packages/dtos-common`, `packages/enums-common`, or `packages/correlation-id` — these are wire contracts and shared runtime code, so a change must reach production.
+- **Required** when a PR changes any app under `apps/` - anything that ships.
+- **Required** when a PR changes `packages/dtos-common`, `packages/enums-common`, or `packages/correlation-id` - these are wire contracts and shared runtime code, so a change must reach production.
 - **`--empty`** for a change to a deployable that deliberately should not produce a release.
 - **Not needed** for docs, tests, agent rules, or tooling-only PRs.
 
@@ -25,14 +25,14 @@ The `Changeset PR status` workflow comments on every PR with what will and will 
 
 ## Version semantics
 
-Every app under `apps/` is one `fixed` group, so they **always share one version** and bump together even when only one has a changeset. That is what makes a single `vX.Y.Z` tag a valid release coordinate, and `create-release-tag` fails closed if any of them drift. The group is written as `"fixed": [["*"]]` rather than a list of app names: Changesets matches that glob against package *names*, and it does not cross `/`, so it selects every unscoped workspace — the apps — and never an `@repo/*` package. A new app joins the shared version by existing.
+Every app under `apps/` is one `fixed` group, so they **always share one version** and bump together even when only one has a changeset. That is what makes a single `vX.Y.Z` tag a valid release coordinate, and `create-release-tag` fails closed if any of them drift. The group is written as `"fixed": [["*"]]` rather than a list of app names: Changesets matches that glob against package *names*, and it does not cross `/`, so it selects every unscoped workspace - the apps - and never an `@repo/*` package. A new app joins the shared version by existing.
 
-A changeset naming `@repo/dtos-common`, `@repo/enums-common`, or `@repo/correlation-id` patch-bumps every app via `updateInternalDependencies: "patch"` and therefore ships a deploy — which is the point, since those are wire contracts and shared runtime code. `@repo/typescript-config` and `@repo/vitest-config` do **not** cascade: they are devDependencies only, and Changesets does not propagate a bump across a devDependency edge. A changeset for either versions just that package.
+A changeset naming `@repo/dtos-common`, `@repo/enums-common`, or `@repo/correlation-id` patch-bumps every app via `updateInternalDependencies: "patch"` and therefore ships a deploy - which is the point, since those are wire contracts and shared runtime code. `@repo/typescript-config` and `@repo/vitest-config` do **not** cascade: they are devDependencies only, and Changesets does not propagate a bump across a devDependency edge. A changeset for either versions just that package.
 
 ## The release PR
 
 While any changeset sits on `main`, the `Release` workflow keeps a `chore: release` PR open on branch `changeset-release/main`.
 
-**Do not push commits to that branch.** On every push to `main` the branch is reset from the current `main` tip, `changeset version` re-runs, and a single commit is force-pushed — so the PR always reflects all of `main` plus all pending changesets, and any manual edit is discarded. Corrections belong in a new changeset on `main`.
+**Do not push commits to that branch.** On every push to `main` the branch is reset from the current `main` tip, `changeset version` re-runs, and a single commit is force-pushed - so the PR always reflects all of `main` plus all pending changesets, and any manual edit is discarded. Corrections belong in a new changeset on `main`.
 
 Merging that PR is the release act. Full detail: `.claude/rules/ops/release.md`.
