@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "theme only", "lint
 
 Your pre-trained knowledge of Tailwind may be outdated (v4 changed the configuration model fundamentally). **Do not draft suggestions from memory alone.**
 
-1. Resolve "Tailwind CSS" via the **Context7 MCP** (`resolve-library-id` → `query-docs`): CSS-first `@theme`/`@import "tailwindcss"` configuration, Vite plugin usage, v4 utility and variant behavior, content detection (no `content` array).
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`tailwindcss.com/docs`) - upgrade guide, theme variables reference, compatibility notes for `@tailwindcss/vite` at the installed version.
+1. Resolve "Tailwind CSS" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers): CSS-first `@theme`/`@import "tailwindcss"` configuration, Vite plugin usage, v4 utility and variant behavior, content detection (no `content` array).
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`tailwindcss.com/docs`) - upgrade guide, theme variables reference, compatibility notes for `@tailwindcss/vite` at the installed version. Use whichever web fetch/search tools are available.
 3. Version currency: catalog `tailwindcss`, `@tailwindcss/vite`, `eslint-plugin-better-tailwindcss` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; flag deprecated class/config patterns.
 4. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

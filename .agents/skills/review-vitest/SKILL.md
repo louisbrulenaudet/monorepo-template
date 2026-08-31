@@ -20,9 +20,9 @@ Text after the slash command is additional scope/focus (e.g. "workers pool only"
 
 Your pre-trained knowledge of Vitest may be outdated. **Do not draft suggestions from memory alone.**
 
-1. Resolve "Vitest" via the **Context7 MCP** (`resolve-library-id` → `query-docs`) at v4: config API (`mergeConfig`/`defineConfig`), pool options (`threads`/`forks`/`vmThreads`), reporter list (including agent-aware auto-detection), project/workspace patterns, experimental flags validity.
-2. Also resolve "@cloudflare/vitest-plugin" (or "Cloudflare Workers" docs) for current Workers-pool guidance; prefer the **cloudflare-docs MCP** for Workers testing questions.
-3. For anything Context7 lacks, use **Firecrawl search/scrape restricted to official domains** (`vitest.dev`, `developers.cloudflare.com/workers/testing/`) - vitest config reference, Workers testing guide, `createTestHarness()` reference.
+1. Resolve "Vitest" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers) at v4: config API (`mergeConfig`/`defineConfig`), pool options (`threads`/`forks`/`vmThreads`), reporter list (including agent-aware auto-detection), project/workspace patterns, experimental flags validity.
+2. Also resolve "@cloudflare/vitest-plugin" (or "Cloudflare Workers" docs) for current Workers-pool guidance; a vendor documentation MCP, when one is installed, takes precedence for vendor questions.
+3. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to official domains (`vitest.dev`, `developers.cloudflare.com/workers/testing/`) - vitest config reference, Workers testing guide, `createTestHarness()` reference. Use whichever web fetch/search tools are available.
 4. Version currency: catalog `vitest`, `@cloudflare/vitest-plugin` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; flag deprecated config keys still present in presets or per-app configs.
 5. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

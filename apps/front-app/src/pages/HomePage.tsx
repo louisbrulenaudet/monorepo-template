@@ -45,7 +45,6 @@ export function HomePage() {
             <img
               src={logo.src}
               alt={logo.alt}
-              role="img"
               width={logo.width}
               height={logo.height}
               fetchPriority={logo.eager ? "high" : "auto"}

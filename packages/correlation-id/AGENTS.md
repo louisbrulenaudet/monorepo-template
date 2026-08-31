@@ -2,12 +2,9 @@
 
 ## Overview
 
-**Single source of truth** for opaque UUID v4 correlation helpers used by
-`worker-api` and `front-app`. Values are sent as `X-Request-Id` and must never
-identify a client or matter (see skill `privileged-legal-data`).
+**Single source of truth** for opaque UUID v4 correlation helpers used by `worker-api` and `front-app`. Values are sent as `X-Request-Id` and must never identify a client or matter (see skill `privileged-legal-data`).
 
-This package is runtime-neutral (Workers + browser + Node). Browser
-`sessionStorage` persistence stays app-local under `front-app`.
+This package is runtime-neutral (Workers + browser + Node). Browser `sessionStorage` persistence stays app-local under `front-app`.
 
 ## Structure
 
@@ -53,5 +50,4 @@ packages/correlation-id/
 
 ## Contribution
 
-Keep the package thin (opaque gate + mint/accept only, no business logic). See
-root [AGENTS.md](../../AGENTS.md) and [README.md](README.md).
+Keep the package thin (opaque gate + mint/accept only, no business logic). See root [AGENTS.md](../../AGENTS.md) and [README.md](README.md).

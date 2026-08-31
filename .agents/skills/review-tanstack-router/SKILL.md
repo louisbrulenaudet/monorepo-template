@@ -20,9 +20,9 @@ Text after the slash command is additional scope/focus (e.g. "search params", "c
 
 Your pre-trained knowledge of TanStack Router may be outdated (frequent minor releases). **Do not draft suggestions from memory alone.**
 
-1. Resolve "TanStack Router" via the **Context7 MCP** (`resolve-library-id` → `query-docs`): file-based routing conventions, `createFileRoute`/route APIs at the installed version, search-param validation with Zod, code-based splitting/`lazyRouteComponent` patterns, devtools.
+1. Resolve "TanStack Router" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers): file-based routing conventions, `createFileRoute`/route APIs at the installed version, search-param validation with Zod, code-based splitting/`lazyRouteComponent` patterns, devtools.
 2. Cross-check with local skill `.agents/skills/tanstack-router/SKILL.md` for repo-relevant depth.
-3. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`tanstack.com/router`) - guides and changelog.
+3. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`tanstack.com/router`) - guides and changelog. Use whichever web fetch/search tools are available.
 4. Version currency: catalog entries (`@tanstack/react-router`, `@tanstack/router-plugin`, `@tanstack/router-cli`, `-devtools`) in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; plugin and runtime version skew is a classic drift point.
 5. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

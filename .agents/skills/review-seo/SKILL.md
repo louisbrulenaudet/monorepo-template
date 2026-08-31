@@ -11,11 +11,9 @@ effort: medium
 # Review SEO
 Run an **SEO-focused** review: meta tags, Open Graph, canonical URLs, structured data, sitemap, RSS, robots, crawlability, Core Web Vitals, heading hierarchy, and optional bot/LLM surfaces when implemented. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-
 ## Invocation
 
 Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
-
 
 ## Best practices alignment
 

@@ -149,8 +149,7 @@ Notes:
    ```
 2. Verify the API: `GET` `http://localhost:8700/api/v1/health`
 3. Open the frontend: `http://localhost:5174`
-4. Reveal the Vite DevTools dock with **Shift+Alt+D**. Its Rolldown panel stays
-   empty until a build has run: `pnpm turbo run build --filter=front-app`.
+4. Reveal the Vite DevTools dock with **Shift+Alt+D**. Its Rolldown panel stays empty until a build has run: `pnpm turbo run build --filter=front-app`.
 
 Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scoping](#scoping-pnpm--turborepo)).
 

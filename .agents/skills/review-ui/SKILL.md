@@ -11,11 +11,9 @@ effort: medium
 # Review UI
 Run a **UI/UX-focused** review: Tailwind usage, responsive design, dark mode, accessibility (WCAG 2.2 AA), component patterns, layout stability, typography, color contrast, and motion (respecting reduced-motion). Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-
 ## Invocation
 
 Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
-
 
 ## Best practices alignment
 
