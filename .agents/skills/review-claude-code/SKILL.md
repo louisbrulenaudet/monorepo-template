@@ -33,7 +33,7 @@ Your pre-trained knowledge of Claude Code may be outdated. **Do not draft sugges
 - [.claude/skills/](../../../.claude/skills/) - symlinks into `.agents/skills/`; broken or stale links
 - [CLAUDE.md](../../../CLAUDE.md) + nested per-app/package guides - duplication vs pointer discipline
 - `.claude/worktrees/`, `.claude/status-line.sh`, `.mcp.json` server list
-- Sync parity with the Cursor tree (see `/review-cursor` for that side's depth)
+- Sync parity with the Cursor tree
 
 ## Analysis axes
 

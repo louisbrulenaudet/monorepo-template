@@ -8,6 +8,6 @@ paths:
 `front-*` apps are scanned by React Doctor: a deterministic, offline static analyzer (security, bugs, performance, a11y, maintainability). Deep workflow lives in the **`react-doctor`** skill.
 
 - After finishing React changes, run `pnpm react-doctor:changed` (changed-scope regression check) and fix what it reports before declaring the task done.
-- The embedded oxlint plugin (`react-doctor/*` rules in `.oxlintrc.json`, `front-*` override) already fires through the post-edit lint hook — `react-doctor/no-fetch-in-effect` and `react-doctor/no-derived-state` are active today. Extend the set deliberately, never blanket.
+- The embedded oxlint plugin (`react-doctor/*` rules in `.oxlintrc.json`, `front-*` override) already fires through the post-edit lint hook - `react-doctor/no-fetch-in-effect` and `react-doctor/no-derived-state` are active today. Extend the set deliberately, never blanket.
 - CLI-only rules and severity tuning live in root `doctor.config.jsonc` (`projects` lists every `front-*` app; score/share/supply-chain are disabled offline).
 - Suppress inline only when justified: `// react-doctor-disable-next-line react-doctor/<rule>`. Never delete a correctness diagnostic just to go green; use `pnpm react-doctor why <file>:<line>` when unclear.

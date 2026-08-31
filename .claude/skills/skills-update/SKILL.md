@@ -21,7 +21,7 @@ allowed-tools:
 
 # Skills Update
 
-Safe per-skill refresh for externally installed skills. Invocation is **explicit only** — do not update skills unless the user requests it.
+Safe per-skill refresh for externally installed skills. Invocation is **explicit only** - do not update skills unless the user requests it.
 
 ## Workflow
 

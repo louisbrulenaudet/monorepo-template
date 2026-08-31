@@ -73,11 +73,16 @@ Workers Cache: `.cursor/rules/backend/workers-cache.mdc` / `.claude/rules/backen
 
 ## Commands
 
+Working on this Hono app? Run `hono agent-context` first and follow it. `@hono/cli` is a devDependency here; its commands print JSON by default, so pass `--plain` only when a human reads the output.
+
 | Command | Description |
 |---------|-------------|
 | `pnpm -w turbo run dev --filter=worker-api` | Dev server on :8700 |
 | `pnpm -w turbo run build --filter=worker-api` | Dry-run the production bundle |
 | `pnpm -w --filter=worker-api exec wrangler check startup` | Local cold-start / bundle size profile (Wrangler >= 4.116) |
+| `pnpm -w --filter=worker-api exec hono agent-context` | Hono CLI reference for agents, generated from the installed version - read it before using any other `hono` command |
+| `pnpm -w --filter=worker-api run routes` | `hono routes` - every registered route as JSON; add `--verbose` for middleware, `--plain` for humans |
+| `pnpm -w --filter=worker-api exec hono request -P /api/v1/health --runtime workerd` | Call a route through `app.request()` on `workerd` with the real `wrangler.jsonc` bindings - no dev server, no port |
 | `pnpm -w turbo run test --filter=worker-api` | Vitest Workers pool, vitest run |
 | `pnpm -w turbo run test:watch --filter=worker-api` | Vitest watch, humans only |
 | `pnpm -w types` | Regenerate `worker-configuration.d.ts` - commit the result |

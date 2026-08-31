@@ -172,12 +172,15 @@ Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview
 | Full gate | `pnpm run ci` (includes `turbo run check-types test build`) |
 | worker-api smoke | background `pnpm --filter=worker-api dev`, then `curl -sf http://localhost:8700/api/v1/health` (expect `{ status, version }` JSON), then stop the dev process |
 | front-app smoke | background `pnpm --filter=front-app dev`, then `curl -sf http://localhost:5174/` and check the HTML contains `id="root"`, then stop |
+| worker-api routes / serverless smoke | `pnpm --filter=worker-api exec hono routes`; `pnpm --filter=worker-api exec hono request -P /api/v1/health --runtime workerd` - no dev server, `workerd` supplies the real `wrangler.jsonc` bindings |
 
 Run dev servers through the harness's background-task mechanism (never a bare `&` you cannot reap) and always stop them when done. Both smoke checks work inside the Claude Code sandbox - localhost binding and curl are permitted.
 
 ## Agent tooling
 
 Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Nested `AGENTS.md` + `CLAUDE.md` live under each `apps/*`, `packages/*`, and `hooks/` - give new packages the same pair. Turbo graph primitives (`turbo query`) and signed-remote-cache provisioning are path-scoped in `core/turborepo`.
+
+**Working on a Hono app? Run `pnpm --filter=worker-api exec hono agent-context` first and follow it.** `@hono/cli` (the `next` / 0.2 line) is a `worker-api` devDependency; `agent-context` prints the command reference generated from the installed version, so it cannot drift. Commands are JSON-first - add `--plain` only when a human reads the output.
 
 ### Subagent roster
 
@@ -187,7 +190,7 @@ Five read-only agents - `explorer`, `planner`, `verifier`, `bundle-analyzer`, `d
 
 ### Dependency-scoped stack reviews
 
-Beyond the dimension reviews (`/review-*`), one human-only `/review-<dep>` command exists per dev dependency (`review-claude-code`, `review-cursor`, `review-vite`, `review-oxc`, `review-typescript`, `review-turborepo`, `review-pnpm`, `review-wrangler`, `review-hono`, `review-tailwind`, `review-vitest`, `review-tanstack-router`, `review-tanstack-query`, `review-react`, `review-zod`, `review-knip`, `review-syncpack`). Run them periodically to verify each tool's config still follows current best practices: every skill mandates ground-truth retrieval (installed documentation MCP collector → direct web fetch of official docs) before suggesting changes and outputs a Critical / Improvements / Optional plan.
+Beyond the dimension reviews (`/review-*`), one human-only `/review-<dep>` command exists per dev dependency (`review-claude-code`, `review-vite`, `review-oxc`, `review-typescript`, `review-turborepo`, `review-pnpm`, `review-wrangler`, `review-hono`, `review-tailwind`, `review-vitest`, `review-tanstack-router`, `review-tanstack-query`, `review-react`, `review-zod`, `review-knip`, `review-syncpack`). Run them periodically to verify each tool's config still follows current best practices: every skill mandates ground-truth retrieval (installed documentation MCP collector → direct web fetch of official docs) before suggesting changes and outputs a Critical / Improvements / Optional plan.
 
 ### When to delegate
 

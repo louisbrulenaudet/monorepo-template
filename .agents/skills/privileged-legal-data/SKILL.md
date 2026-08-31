@@ -19,7 +19,7 @@ Not "leaking PII" in the generic sense. In a legal-domain system the harm is a *
 
 Anything that identifies a client or a matter, or that carries substantive content from either: client and counterparty names, matter or file numbers, case numbers and docket identifiers, the text of an instruction or advice, document contents and filenames, and free-text fields a user typed. An opaque internal id (a UUID with no external meaning) is not privileged; a "reference" that a human could look up is.
 
-## Boundary rules — Workers (`worker-api`, `worker-*`, `queue-*`, `webhook-*`, `mcp-*`)
+## Boundary rules - Workers (`worker-api`, `worker-*`, `queue-*`, `webhook-*`, `mcp-*`)
 
 - **Validate before you touch it.** Every body, query, and path parameter goes through a Zod schema from `@repo/dtos-common` at the boundary (`zValidator`). Use `.strict()` where the shape is closed so unexpected fields are rejected rather than forwarded into a log or a store.
 - **Logging.** Log an opaque request id, a route name, a status, and a duration. Never a name, a matter reference, a document filename, or a request body. If you need to correlate to a matter, log the opaque id and resolve it in a system with the same access controls as the matter itself.
@@ -30,7 +30,7 @@ Anything that identifies a client or a matter, or that carries substantive conte
 - **Secrets.** Only `.dev.vars` locally and wrangler secrets or env bindings in deployed environments. Never in `wrangler.jsonc` `vars`, never in a log, never in an error body.
 - **CORS and CSRF.** An allowlist of known origins, never `*` in production; CSRF protection on state-changing `/api/*`. A permissive CORS header on a privileged endpoint is a disclosure bug, not a config preference.
 
-## Boundary rules — SPA (`front-app`)
+## Boundary rules - SPA (`front-app`)
 
 - Only `VITE_*` variables reach the client bundle, and none of them is a secret. Anything privileged stays server-side.
 - The SPA talks to `worker-api` over **HTTP only**, never a service binding - privileged calls and credentials stay behind the gateway.

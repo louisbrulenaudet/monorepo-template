@@ -245,7 +245,7 @@ wrangler deploy --minify
 > Never output, log, or hardcode secret values in commands.
 
 ```bash
-# Set secret — interactive prompt (preferred, wrangler will ask for the value securely)
+# Set secret - interactive prompt (preferred, wrangler will ask for the value securely)
 wrangler secret put API_KEY
 
 # Set secret from a file (useful for PEM keys, CI environments)

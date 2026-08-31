@@ -32,7 +32,7 @@ Do **not** put task logic in root `package.json` when it belongs in packages - s
 | Install (CI) | `pnpm install --frozen-lockfile` |
 | Update all deps | `pnpm update` → `pnpm update --recursive --latest` (bumps catalog entries in `pnpm-workspace.yaml`) |
 | Lockfile | Single `pnpm-lock.yaml` (pnpm workspace default) |
-| Policy location | `pnpm-workspace.yaml` only — project `.npmrc` is auth-only under pnpm 11 |
+| Policy location | `pnpm-workspace.yaml` only - project `.npmrc` is auth-only under pnpm 11 |
 
 After adding a new app under `apps/`, run `pnpm install` before turbo commands.
 
@@ -77,7 +77,7 @@ catalog:
   zod: ^4.5.2
 ```
 
-TanStack packages (`@tanstack/*`) and `@types/*` are also in the catalog — see `pnpm-workspace.yaml` for the full list.
+TanStack packages (`@tanstack/*`) and `@types/*` are also in the catalog - see `pnpm-workspace.yaml` for the full list.
 
 Reference in any `package.json`:
 
