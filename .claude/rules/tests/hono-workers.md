@@ -8,7 +8,7 @@ paths:
 
 # Hono Workers Vitest (Cloudflare pool)
 
-Governs Vitest for Hono apps on Cloudflare Workers via `@cloudflare/vitest-plugin` (workerd). General bar: [vitest.md](vitest.md). Discipline: [testing.md](../quality/testing.md). Prefer Cloudflare / Hono docs (Context7) over training memory for API details.
+Governs Vitest for Hono apps on Cloudflare Workers via `@cloudflare/vitest-plugin` (workerd). General bar: [vitest.md](vitest.md). Discipline: [testing.md](../quality/testing.md). Prefer Cloudflare / Hono docs via the installed documentation MCP collector over training memory for API details.
 
 ## Repo invariants
 

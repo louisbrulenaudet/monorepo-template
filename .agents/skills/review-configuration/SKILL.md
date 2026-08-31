@@ -11,11 +11,9 @@ effort: medium
 # Review configuration
 Run a **configuration-focused** review: environment and secrets handling, Cloudflare/wrangler setup, TypeScript and OXC configs, Vite and Wrangler configuration, build modes, and dev/staging/prod parity. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-
 ## Invocation
 
 Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
-
 
 ## Best practices alignment
 

@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "strictness", "modu
 
 Your pre-trained knowledge of TypeScript may be outdated - this repo tracks the newest major line (`typescript` in the catalog). **Do not draft suggestions from memory alone.**
 
-1. Resolve "TypeScript" via the **Context7 MCP** (`resolve-library-id` → `query-docs`): current compiler options, module resolution strategies (`bundler`), `verbatimModuleSyntax`, project references / incremental options, and any new-major behavior changes.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domains** (`typescriptlang.org/tsconfig`, official release notes/blog for the installed major).
+1. Resolve "TypeScript" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers): current compiler options, module resolution strategies (`bundler`), `verbatimModuleSyntax`, project references / incremental options, and any new-major behavior changes.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domains (`typescriptlang.org/tsconfig`, official release notes/blog for the installed major). Use whichever web fetch/search tools are available.
 3. Version currency: catalog `typescript` + `@types/node` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; check the installed major's migration notes for deprecated/renamed flags used anywhere in repo tsconfigs.
 4. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

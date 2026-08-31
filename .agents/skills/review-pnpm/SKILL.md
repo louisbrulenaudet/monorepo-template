@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "catalog only", "se
 
 Your pre-trained knowledge of pnpm may be outdated (fast-moving; settings move between `.npmrc` and `pnpm-workspace.yaml`). **Do not draft suggestions from memory alone.**
 
-1. Resolve "pnpm" via the **Context7 MCP** (`resolve-library-id` → `query-docs`) for current `pnpm-workspace.yaml` settings semantics: `catalog`/`catalogMode`, `minimumReleaseAge`, `trustPolicy`, `allowBuilds`/`strictDepBuilds`, `blockExoticSubdeps`, audit config.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`pnpm.io`) - settings reference, catalog docs, release notes for the pinned major.
+1. Resolve "pnpm" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers) for current `pnpm-workspace.yaml` settings semantics: `catalog`/`catalogMode`, `minimumReleaseAge`, `trustPolicy`, `allowBuilds`/`strictDepBuilds`, `blockExoticSubdeps`, audit config.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`pnpm.io`) - settings reference, catalog docs, release notes for the pinned major. Use whichever web fetch/search tools are available.
 3. Version currency: compare `packageManager` pin in [package.json](../../../package.json) and any pnpm-related catalog entries against latest stable; flag deprecated setting names still present.
 4. A local deep skill exists at `.agents/skills/pnpm/SKILL.md` - consult it for repo-specific conventions, but treat official docs as ground truth.
 5. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.

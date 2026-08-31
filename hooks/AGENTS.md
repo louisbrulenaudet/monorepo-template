@@ -120,24 +120,14 @@ Known limits, by design: the guards do not see through `eval`, `sh -c`, heredocs
 
 ### OXC invariants for `quality/` hooks
 
-`format-changed.sh` handles code plus JSON/JSONC/CSS; `lint-changed.sh` handles only
-JS/TS-family code. The lint hook holds four constraints that must not be relaxed:
+`format-changed.sh` handles code plus JSON/JSONC/CSS; `lint-changed.sh` handles only JS/TS-family code. The lint hook holds four constraints that must not be relaxed:
 
-- **Runs oxlint from the repo root** on a root-relative path. `.oxlintrc.json`
-  resolves `settings.better-tailwindcss.entryPoint` against the process CWD, so
-  linting from anywhere else changes the diagnostics and diverges from `pnpm run ci`.
+- **Runs oxlint from the repo root** on a root-relative path. `.oxlintrc.json` resolves `settings.better-tailwindcss.entryPoint` against the process CWD, so linting from anywhere else changes the diagnostics and diverges from `pnpm run ci`.
 - **Exports `SYNCKIT_TIMEOUT=120000` by default.** Tailwind canonicalization starts a sync worker that can exceed its 30-second default on low-power development machines.
-- **Passes `--format=agent`** so output is one line per diagnostic
-  (`file:line:col: severity plugin(rule): message help: …`) instead of the
-  TTY-dependent code frames the `default` format renders.
-- **Passes `--no-error-on-unmatched-pattern`.** Without it, editing a file that
-  `ignorePatterns` or `.gitignore` excludes (`*.gen.ts`, `worker-configuration.d.ts`)
-  makes oxlint exit 1 with "No files found to lint", which the hook would report
-  to the agent as a lint failure that does not exist.
+- **Passes `--format=agent`** so output is one line per diagnostic (`file:line:col: severity plugin(rule): message help: …`) instead of the TTY-dependent code frames the `default` format renders.
+- **Passes `--no-error-on-unmatched-pattern`.** Without it, editing a file that `ignorePatterns` or `.gitignore` excludes (`*.gen.ts`, `worker-configuration.d.ts`) makes oxlint exit 1 with "No files found to lint", which the hook would report to the agent as a lint failure that does not exist.
 
-`check-changed.sh` discards the **format** exit status and lets the **lint** exit
-status become its own, so a formatter hiccup can never pre-empt the diagnostics
-the agent needs. It deliberately does not use `set -e`.
+`check-changed.sh` discards the **format** exit status and lets the **lint** exit status become its own, so a formatter hiccup can never pre-empt the diagnostics the agent needs. It deliberately does not use `set -e`.
 
 ## Debugging
 
@@ -147,10 +137,7 @@ the agent needs. It deliberately does not use `set -e`.
 | Claude instruction load | `tail -f hooks/logs/instructions-loaded.log` |
 | Cursor hook errors | Customize → Hooks output channel |
 
-Both logs rotate once past 256 KB (`*.log.1`), so `hooks/logs/` stays bounded.
-The `InstructionsLoaded` handler is `"async": true` - it is debug telemetry that
-enforces nothing, and this event ignores hook exit codes, so it must not sit on
-the critical path.
+Both logs rotate once past 256 KB (`*.log.1`), so `hooks/logs/` stays bounded. The `InstructionsLoaded` handler is `"async": true` - it is debug telemetry that enforces nothing, and this event ignores hook exit codes, so it must not sit on the critical path.
 
 ## Contribution
 

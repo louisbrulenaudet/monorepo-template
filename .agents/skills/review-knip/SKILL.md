@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "production pass on
 
 Your pre-trained knowledge of Knip may be outdated (frequent releases; plugin and issue-type surface evolves). **Do not draft suggestions from memory alone.**
 
-1. Resolve "Knip" via the **Context7 MCP** (`resolve-library-id` → `query-docs`) at the installed major: config schema (`workspaces`, `ignoreIssues`, `includeEntryExports`), issue types, plugin detection (Vite/Vitest/Turbo/Cloudflare), reporters, `--fix`/`--fix-type` behavior.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`knip.dev`) - configuration reference, issue-type docs, release notes for breaking changes.
+1. Resolve "Knip" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers) at the installed major: config schema (`workspaces`, `ignoreIssues`, `includeEntryExports`), issue types, plugin detection (Vite/Vitest/Turbo/Cloudflare), reporters, `--fix`/`--fix-type` behavior.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`knip.dev`) - configuration reference, issue-type docs, release notes for breaking changes. Use whichever web fetch/search tools are available.
 3. Version currency: catalog `knip` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; flag deprecated config keys or removed issue types still present.
 4. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

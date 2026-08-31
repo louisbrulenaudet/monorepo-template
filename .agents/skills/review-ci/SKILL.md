@@ -11,11 +11,9 @@ effort: medium
 # Review CI
 Run a **CI-focused** review: GitHub Actions workflow, caching, lockfile and reproducibility, branch/trigger strategy, Dependabot, Husky pre-commit, and deploy pipeline. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-
 ## Invocation
 
 Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
-
 
 ## Best practices alignment
 

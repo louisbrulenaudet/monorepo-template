@@ -6,7 +6,7 @@ globs: apps/worker-*/**,apps/queue-*/**,apps/webhook-*/**,apps/mcp-*/**
 
 # Hono Workers Vitest (Cloudflare pool)
 
-Governs Vitest for Hono apps on Cloudflare Workers via `@cloudflare/vitest-plugin` (workerd). General bar: [vitest.mdc](vitest.mdc). Discipline: [testing.mdc](../quality/testing.mdc). Prefer Cloudflare / Hono docs (Context7) over training memory for API details.
+Governs Vitest for Hono apps on Cloudflare Workers via `@cloudflare/vitest-plugin` (workerd). General bar: [vitest.mdc](vitest.mdc). Discipline: [testing.mdc](../quality/testing.mdc). Prefer Cloudflare / Hono docs via the installed documentation MCP collector over training memory for API details.
 
 ## Repo invariants
 

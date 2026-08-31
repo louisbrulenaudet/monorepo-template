@@ -18,6 +18,12 @@
       "sourceType": "local",
       "skillPath": "skills/pnpm/SKILL.md"
     },
+    "react-doctor": {
+      "source": "millionco/react-doctor",
+      "sourceType": "github",
+      "skillPath": "skills/react-doctor/SKILL.md",
+      "computedHash": "2a003f397a4a94fc032019bc7fd97e938b4e2fae995c96df8603790db168dcc7"
+    },
     "tanstack-config": {
       "source": "tanstack-skills/tanstack-skills",
       "sourceType": "github",
@@ -46,7 +52,7 @@
       "source": "vercel/turborepo",
       "sourceType": "github",
       "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "eb988d5153a0483bee1e50e0accf39ce57690e55686f3cf25d3b960d672ca703"
+      "computedHash": "799ac3cf9ec94f14c37be76f0be14c896727c968c2d49501cd77713d724d1e33"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",

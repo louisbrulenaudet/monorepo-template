@@ -226,7 +226,10 @@
         "react",
         "jsx-a11y"
       ],
-      "jsPlugins": ["eslint-plugin-better-tailwindcss"],
+      "jsPlugins": [
+        "eslint-plugin-better-tailwindcss",
+        "oxlint-plugin-react-doctor"
+      ],
       "rules": {
         "react/exhaustive-deps": "error",
         "react/no-array-index-key": "error",
@@ -251,6 +254,8 @@
             "unnamedComponents": "arrow-function"
           }
         ],
+        "react-doctor/no-fetch-in-effect": "error",
+        "react-doctor/no-derived-state": "error",
         "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
         "better-tailwindcss/enforce-canonical-classes": "error",
         "better-tailwindcss/no-concatenated-classes": "error",

@@ -16,14 +16,16 @@
       "Bash(pnpm lint:fix)",
       "Bash(pnpm lint:agent)",
       "Bash(pnpm lint:check)",
+      "Bash(pnpm react-doctor:*)",
+      "Bash(pnpm run react-doctor:*)",
       "Bash(pnpm format:fix)",
       "Bash(pnpm format:check)",
       "Bash(pnpm build)",
       "Bash(pnpm boundaries)",
       "Bash(pnpm run boundaries)",
-      "Bash(pnpm --filter * run check-types)",
-      "Bash(pnpm --filter * test)",
-      "Bash(pnpm --filter * exec tsc --noEmit)",
+      "Bash(pnpm --filter=front-app exec vitest run:*)",
+      "Bash(pnpm --filter=worker-api exec vitest run:*)",
+      "Bash(pnpm --filter=@repo/correlation-id exec vitest run:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -33,7 +35,6 @@
       "Bash(turbo run:*)",
       "Bash(pnpm turbo run:*)",
       "Bash(pnpm -r --if-present run test)",
-      "Bash(pnpm --filter * run test)",
       "Bash(pnpm install)",
       "Bash(pnpm install --frozen-lockfile)",
       "WebFetch(domain:code.claude.com)",
@@ -249,6 +250,10 @@
         {
           "path": "~/.wrangler",
           "mode": "deny"
+        },
+        {
+          "path": "~/Library/Preferences/.wrangler",
+          "mode": "deny"
         }
       ]
     }
@@ -262,33 +267,42 @@
   "worktree": {
     "sparsePaths": [
       ".agents",
+      ".changeset",
       ".claude",
       ".cursor",
       ".github",
       ".vite-hooks",
       ".vscode",
+      ".cursorignore",
+      ".cursorindexingignore",
+      ".gitignore",
+      ".mcp.json",
       ".nvmrc",
       ".oxfmtrc.json",
       ".oxlintrc.json",
+      ".syncpackrc.json",
+      ".worktreeinclude",
       "AGENTS.md",
       "CLAUDE.md",
+      "LICENSE",
+      "README.md",
       "hooks",
       "apps",
       "packages",
+      "knip.jsonc",
       "package.json",
       "pnpm-lock.yaml",
       "pnpm-workspace.yaml",
+      "skills-lock.json",
       "turbo.json",
       "vite.config.ts"
-    ],
-    "symlinkDirectories": [
-      "node_modules"
     ],
     "baseRef": "fresh"
   },
   "env": {
-    "CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION": "40",
+    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "20",
     "TURBO_TELEMETRY_DISABLED": "1",
-    "WRANGLER_SEND_METRICS": "false"
+    "WRANGLER_SEND_METRICS": "false",
+    "REACT_DOCTOR_NO_TELEMETRY": "1"
   }
 }

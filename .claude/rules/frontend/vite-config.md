@@ -16,8 +16,7 @@ paths:
 
 ## Plugins (order matters)
 
-`devtools` → `tanstackRouter` (**before** `react`) → `react({ compiler: true })` (native Rust React Compiler via optional peer `oxc-transform-react`; no Babel pass) → `tailwindcss` → `cloudflare` → build-only (`apply: "build"`) → conditional via spread. Falsy plugins are skipped. Compiler on → less manual memoization ([react.md](react.md)).
-Do not configure `auxiliaryWorkers` on `front-*` to embed `worker-api` or other backends - HTTP-only SPA boundary.
+`devtools` → `tanstackRouter` (**before** `react`) → `react({ compiler: true })` (native Rust React Compiler via optional peer `oxc-transform-react`; no Babel pass) → `tailwindcss` → `cloudflare` → build-only (`apply: "build"`) → conditional via spread. Falsy plugins are skipped. Compiler on → less manual memoization ([react.md](react.md)). Do not configure `auxiliaryWorkers` on `front-*` to embed `worker-api` or other backends - HTTP-only SPA boundary.
 
 ## DevTools
 

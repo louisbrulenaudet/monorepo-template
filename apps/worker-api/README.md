@@ -111,8 +111,7 @@ Notes:
    pnpm install
    ```
 
-2. **Configure environment (optional):**
-   Copy `.dev.vars.example` to `.dev.vars`. The current code does not require secrets; if you add any, document keys in `.dev.vars.example` and set real values in `.dev.vars` (never commit secrets).
+2. **Configure environment (optional):** Copy `.dev.vars.example` to `.dev.vars`. The current code does not require secrets; if you add any, document keys in `.dev.vars.example` and set real values in `.dev.vars` (never commit secrets).
 
 3. **Start development server**:
    - All apps: `pnpm dev` from the monorepo root

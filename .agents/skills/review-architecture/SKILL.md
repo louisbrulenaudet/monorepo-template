@@ -11,11 +11,9 @@ effort: medium
 # Review architecture
 Run an **architecture-focused** review of the monorepo: layout, workspace dependencies, Turborepo task graph, app vs package boundaries, dependency direction, and module coupling/cohesion. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-
 ## Invocation
 
 Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
-
 
 ## Best practices alignment
 

@@ -11,11 +11,9 @@ effort: medium
 # Review security
 Run a **security-focused** review: HTTP security headers, CSP, bot protection (when implemented), CORS/CSRF, input validation, secret management, dependency vulnerabilities, and error information leakage. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-
 ## Invocation
 
 Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
-
 
 ## Best practices alignment
 
@@ -28,12 +26,7 @@ Text after the slash command is additional scope/focus - narrow the review accor
 
 Align with root [AGENTS.md](../../../AGENTS.md) and [apps/worker-api/AGENTS.md](../../../apps/worker-api/AGENTS.md) for env and validation patterns.
 
-**Legal-sector delta:** this skill covers the generic surface (headers, CSP, CORS/CSRF, validation,
-dependency audit). The client-privilege rules - identifiers in logs, traces, cache keys and error
-bodies; matter/tenancy isolation; retention on durable writes; document text treated as untrusted
-input; third-party disclosure - live once in the [`privileged-legal-data`](../privileged-legal-data/SKILL.md)
-skill, with the always-loaded prohibitions in [guardrails.md](../../../.claude/rules/core/guardrails.md).
-Apply both; do not restate that checklist here.
+**Legal-sector delta:** this skill covers the generic surface (headers, CSP, CORS/CSRF, validation, dependency audit). The client-privilege rules - identifiers in logs, traces, cache keys and error bodies; matter/tenancy isolation; retention on durable writes; document text treated as untrusted input; third-party disclosure - live once in the [`privileged-legal-data`](../privileged-legal-data/SKILL.md) skill, with the always-loaded prohibitions in [guardrails.md](../../../.claude/rules/core/guardrails.md). Apply both; do not restate that checklist here.
 
 ## Deep technical review
 

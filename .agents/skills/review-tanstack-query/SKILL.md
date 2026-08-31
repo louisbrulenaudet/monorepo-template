@@ -20,9 +20,9 @@ Text after the slash command is additional scope/focus (e.g. "mutations", "cache
 
 Your pre-trained knowledge of TanStack Query may be outdated. **Do not draft suggestions from memory alone.**
 
-1. Resolve "TanStack Query" via the **Context7 MCP** (`resolve-library-id` → `query-docs`) at v5: `queryOptions` pattern, `useSuspenseQuery`/`useInfiniteQuery` guidance, `placeholderData`/`initialData` semantics, invalidation strategies, `QueryClient` defaults.
+1. Resolve "TanStack Query" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers) at v5: `queryOptions` pattern, `useSuspenseQuery`/`useInfiniteQuery` guidance, `placeholderData`/`initialData` semantics, invalidation strategies, `QueryClient` defaults.
 2. Cross-check with local skill `.agents/skills/tanstack-query/SKILL.md`.
-3. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`tanstack.com/query`) - guides, reference, changelog for the installed minor.
+3. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`tanstack.com/query`) - guides, reference, changelog for the installed minor. Use whichever web fetch/search tools are available.
 4. Version currency: catalog entries (`@tanstack/react-query`, `-devtools`) in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; flag deprecated v4-era APIs still present (`isFetching` misuse aside - look for removed options).
 5. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

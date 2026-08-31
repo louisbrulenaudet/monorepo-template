@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "lint rules only", 
 
 Your pre-trained knowledge of syncpack may be outdated (major versions changed config shape significantly). **Do not draft suggestions from memory alone.**
 
-1. Resolve "syncpack" via the **Context7 MCP** (`resolve-library-id` → `query-docs`) at the installed major: config file name/schema, lint rule set (`specifiers`, `versions`, `semverRange`), filter/sort/format options, CLI commands (`lint`, `fix`, `format`) and flags.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`jamiemason.github.io/syncpack`) - config reference and release notes for the pinned major.
+1. Resolve "syncpack" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers) at the installed major: config file name/schema, lint rule set (`specifiers`, `versions`, `semverRange`), filter/sort/format options, CLI commands (`lint`, `fix`, `format`) and flags.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`jamiemason.github.io/syncpack`) - config reference and release notes for the pinned major. Use whichever web fetch/search tools are available.
 3. Version currency: catalog `syncpack` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) vs latest stable; confirm config format matches the pinned major (older JSON configs break on newer majors).
 4. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

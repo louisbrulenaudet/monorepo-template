@@ -11,11 +11,9 @@ effort: medium
 # Review code quality
 Run a **code-quality-focused** review: naming conventions, TypeScript strictness, OXC (oxfmt/oxlint) compliance, duplication, readability, error handling patterns, testability, and type safety. Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-
 ## Invocation
 
 Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
-
 
 ## Best practices alignment
 

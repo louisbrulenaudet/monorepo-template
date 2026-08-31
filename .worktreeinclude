@@ -1,0 +1,11 @@
+# Gitignored files copied into each new `claude --worktree` checkout (gitignore syntax).
+# Not processed at all if a WorktreeCreate hook is ever added - that hook replaces the
+# built-in git worktree logic, copying included.
+
+# Carries TURBO_CACHE_DIR and NODE_COMPILE_CACHE, so a worktree shares the warm caches
+# instead of rebuilding both from cold. Keep this file free of secrets: it propagates.
+
+# Deliberately absent: .dev.vars, .env*, and every other credential file. A worktree gets
+# its own provisioned credentials - see AGENTS.md "Environment". Copying real secrets into
+# every worktree is what .claude/rules/core/guardrails.md exists to prevent.
+# Also absent: hooks/logs/ (the hooks mkdir -p it) and dist/ / .wrangler/ (build outputs).

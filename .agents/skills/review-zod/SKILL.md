@@ -20,8 +20,8 @@ Text after the slash command is additional scope/focus (e.g. "dtos-common only",
 
 Your pre-trained knowledge of Zod may be outdated (v3 → v4 changed APIs and error internals significantly). **Do not draft suggestions from memory alone.**
 
-1. Resolve "Zod" via the **Context7 MCP** (`resolve-library-id` → `query-docs`) at v4: top-level APIs, `.safeParse`/`.parse` semantics, `z.output`/`z.input` inference, discriminated unions, registries/metadata features, error customization, tree-shaking/minification notes.
-2. For anything Context7 lacks, use **Firecrawl search/scrape restricted to the official domain** (`zod.dev`) - v4 changelog/migration notes relevant to schemas in this repo.
+1. Resolve "Zod" via the **installed documentation MCP collector** (whatever documentation MCP server(s) this project registers - library resolvers, vendor doc servers) at v4: top-level APIs, `.safeParse`/`.parse` semantics, `z.output`/`z.input` inference, discriminated unions, registries/metadata features, error customization, tree-shaking/minification notes.
+2. For anything the collector cannot resolve or lacks, **complete context collection with a direct web fetch** restricted to the official domain (`zod.dev`) - v4 changelog/migration notes relevant to schemas in this repo. Use whichever web fetch/search tools are available.
 3. Version currency: catalog `zod` in [pnpm-workspace.yaml](../../../pnpm-workspace.yaml) and installed version vs latest stable; flag any remaining v3-only APIs (e.g. old error-map patterns) in code.
 4. Cite the retrieved source next to every finding; label anything unverifiable as **Unverified**.
 

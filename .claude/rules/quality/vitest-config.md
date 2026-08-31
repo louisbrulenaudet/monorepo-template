@@ -40,8 +40,7 @@ Changing this package is a monorepo-wide breaking change.
 
 ## App wiring
 
-Front apps import defineNodeConfig and resolvePackageRoot from @repo/vitest-config.
-Worker apps import defineWorkersConfig and resolvePackageRoot from @repo/vitest-config/workers with an absolute wrangler.configPath via path.join(root, "wrangler.jsonc").
+Front apps import defineNodeConfig and resolvePackageRoot from @repo/vitest-config. Worker apps import defineWorkersConfig and resolvePackageRoot from @repo/vitest-config/workers with an absolute wrangler.configPath via path.join(root, "wrangler.jsonc").
 
 Every app must set root and test.dir via resolvePackageRoot(import.meta.dirname) so the Vitest VS Code explorer realpath cache matches (avoids Fatal Error parent of root folder).
 
