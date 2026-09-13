@@ -32,7 +32,7 @@ jobs:
       # No pnpm/setup or install: pr-status is a bundled action and, unlike
       # changesets/action/version, does not need @changesets/cli resolvable.
       - id: pr-status
-        uses: changesets/action/pr-status@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+        uses: changesets/action/pr-status@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
 
   pr-comment:
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
@@ -42,6 +42,6 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: changesets/action/pr-comment@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+      - uses: changesets/action/pr-comment@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           body: ${{ needs.pr-status.outputs.comment-body }}
