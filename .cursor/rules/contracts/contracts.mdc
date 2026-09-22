@@ -1,7 +1,7 @@
 ---
 description: "Zod DTO and enum contract rules - shared vs local shapes, schema authoring, additive changes."
-globs: packages/*-common/src/**,apps/**/src/dtos/**,apps/**/src/tools/**,apps/worker-*/src/routes/**,apps/front-*/src/services/**
 alwaysApply: false
+globs: packages/*-common/src/**,apps/**/src/dtos/**,apps/**/src/tools/**,apps/worker-*/src/routes/**,apps/front-*/src/services/**
 ---
 
 # Contract Rules

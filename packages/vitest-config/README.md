@@ -1,7 +1,7 @@
 # Vitest Config
 
 [![Oxc](https://img.shields.io/static/v1?label=lint%2Fformat&message=Oxc&color=blue&logo=oxc&logoColor=white)](https://oxc.rs/)
-[![Vitest](https://img.shields.io/static/v1?label=test&message=Vitest%204&color=6E9F18&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/static/v1?label=test&message=Vitest%205&color=6E9F18&logo=vitest&logoColor=white)](https://vitest.dev/)
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 Shared Vitest configuration factories for the monorepo. Apps call these helpers instead of duplicating pool, isolation, mock-hygiene, and include defaults across `front-*` and Worker-family apps.
@@ -45,13 +45,13 @@ flowchart LR
 - **Dual entry points** - `@repo/vitest-config` (Node) and `@repo/vitest-config/workers` (Cloudflare pool)
 - **Mock hygiene** - `restoreMocks`, `clearMocks`, `unstubEnvs`, `unstubGlobals` on every suite
 - **Consistent includes** - `tests/**/*.test.{ts,tsx}` (Node) / `tests/**/*.test.ts` (Workers), `passWithNoTests: true` by default; packages with suites override it to `false`
-- **Node performance defaults** - `pool: "threads"`, `isolate: false`, `experimental.fsModuleCache`
+- **Node performance defaults** - `pool: "threads"`, `isolate: false`, `fsModuleCache` (Workers entry stays without it)
 - **Workers pool wrapper** - `defineWorkersConfig` wraps `cloudflareTest({ wrangler })`
-- **Agent / CI reporters untouched** - no custom `reporters` (Vitest 4.1 auto `agent` + GitHub Actions summary)
+- **Agent / CI reporters untouched** - no custom `reporters` (Vitest auto `agent` + GitHub Actions summary)
 
 ## Tech Stack
 
-- **Test runner:** Vitest 4.x (pnpm catalog)
+- **Test runner:** Vitest 5.x (pnpm catalog; Workers apps pinned to the `vitest4` catalog until `@cloudflare/vitest-plugin` ships Vitest 5 support)
 - **Workers pool:** `@cloudflare/vitest-plugin` (optional peer; Workers entry only)
 - **Formatting/Linting:** OXC (oxfmt / oxlint)
 - **Package Manager:** pnpm

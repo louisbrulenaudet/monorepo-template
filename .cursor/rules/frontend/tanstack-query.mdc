@@ -1,5 +1,5 @@
 ---
-description: TanStack Query v5 - queryOptions layout, fetchJsonWithSchema, singleton client
+description: "TanStack Query v5 - queryOptions layout, fetchJsonWithSchema, singleton client"
 alwaysApply: false
 globs: apps/front-*/src/services/**,apps/front-*/src/config/query-client.ts,apps/front-*/src/**/*query-options*
 ---

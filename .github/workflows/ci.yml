@@ -89,15 +89,15 @@ jobs:
             run: pnpm run knip && pnpm run knip:production
 
           - name: Syncpack
-            run: pnpm run deps:check && pnpm run deps:format --check
+            run: pnpm run deps:check && pnpm run deps:format:check
 
           - name: Typecheck, test, and build (affected)
             if: github.event_name == 'pull_request'
-            run: pnpm turbo run check-types test build --affected
+            run: pnpm turbo run check-types test build --affected --continue=dependencies-successful
 
           - name: Typecheck, test, and build (full graph)
             if: github.event_name != 'pull_request'
-            run: pnpm turbo run check-types test build
+            run: pnpm turbo run check-types test build --continue=dependencies-successful
 
       - name: Wrangler deploy dry-run
         run: pnpm turbo run deploy --filter='./apps/*' -- --dry-run

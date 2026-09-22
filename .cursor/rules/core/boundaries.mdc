@@ -1,7 +1,7 @@
 ---
 description: "Package dependency boundaries - tag map and enforced invariants."
-globs: **/turbo.json
 alwaysApply: false
+globs: **/turbo.json
 ---
 
 # Package Boundaries

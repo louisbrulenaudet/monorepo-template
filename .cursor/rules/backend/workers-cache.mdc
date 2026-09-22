@@ -1,5 +1,5 @@
 ---
-description: Workers Cache - Cache-Control, gateway exports cache off, RPC vs fetch
+description: "Workers Cache - Cache-Control, gateway exports cache off, RPC vs fetch"
 alwaysApply: false
 globs: **/wrangler.jsonc,apps/worker-*/src/routes/**,apps/worker-*/src/index.ts,apps/worker-*/src/handlers/**
 ---

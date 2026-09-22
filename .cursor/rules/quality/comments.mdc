@@ -8,7 +8,7 @@ Do not add a comment that restates the code. A comment earns its place only when
 
 - **Default to no comment.** If a line needs explaining, rename something or restructure it first. A comment is the fallback, not the first move.
 - **Never write a comment for an AI reader.** Path-scoped rules under `.claude/rules/` (mirrored in `.cursor/rules/`) are the channel for that, and they cost context only when a matching file is touched. A comment costs context every time anyone reads the file, forever, and pushes the code apart while it does.
-- **If the explanation runs past two lines, or applies to more than the line below it, it belongs in a rule** - not a comment block at the top of a file. The exception is a config file whose comments are already the documented source of truth: root `turbo.json` task descriptions and `wrangler.jsonc` annotations are cited as authoritative by [../core/turborepo.md](../core/turborepo.mdc) and [../backend/workers-config.md](../backend/workers-config.mdc). Extend those in place; do not strip them into a rule.
+- **If the explanation runs past two lines, or applies to more than the line below it, it belongs in a rule** - not a comment block at the top of a file. The exception is a config file whose comments are already the documented source of truth: root `turbo.json` task descriptions and `wrangler.jsonc` annotations are cited as authoritative by [../core/turborepo.mdc](../core/turborepo.mdc) and [../backend/workers-config.mdc](../backend/workers-config.mdc). Extend those in place; do not strip them into a rule.
 - **Keep the comments that prevent a regression:** why a key is deliberately absent, why a non-default value is set, why an apparently redundant line is load-bearing. The test is simple - deleting it should feel risky. If deleting it changes nothing, it should not be there.
 - Applies to source, YAML and workflows, shell, and config alike.
 
@@ -24,8 +24,8 @@ These fail the test above. Do not add them, and when you touch a file that still
 ## Keep without re-litigating
 
 - License headers and legally required notices.
-- Generated-file banners (`wrangler types` `worker-configuration.d.ts`, TanStack Router `routeTree.gen.ts`) - do not hand-edit those files (see [guardrails.md](../core/guardrails.mdc)).
-- Machine-read markers: `@internal` (tag only - no prose restating "for tests"; see [knip.md](knip.mdc)), `oxlint-disable-*` with a reason ([code-style.md](code-style.mdc)), `// @vitest-environment …`, `@ts-expect-error` with a reason, workflow `# vX.Y.Z` SHA pins.
+- Generated-file banners (`wrangler types` `worker-configuration.d.ts`, TanStack Router `routeTree.gen.ts`) - do not hand-edit those files (see [guardrails.mdc](../core/guardrails.mdc)).
+- Machine-read markers: `@internal` (tag only - no prose restating "for tests"; see [knip.mdc](knip.mdc)), `oxlint-disable-*` with a reason ([code-style.mdc](code-style.mdc)), `// @vitest-environment …`, `@ts-expect-error` with a reason, workflow `# vX.Y.Z` SHA pins.
 - JSDoc that is a public API contract or carries types tooling needs. Prose JSDoc is still a comment: if it only repeats the name or signature, delete it.
 
-`knip.jsonc` stays comment-free; every override's rationale lives in [knip.md](knip.mdc).
+`knip.jsonc` stays comment-free; every override's rationale lives in [knip.mdc](knip.mdc).

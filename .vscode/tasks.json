@@ -77,7 +77,7 @@
     },
     {
       "label": "check: format + lint",
-      "detail": "pnpm check - oxlint + oxfmt --check in one pass from the repo root (OXC)",
+      "detail": "pnpm check - oxlint, oxfmt --check, and syncpack as parallel //# root tasks",
       "type": "shell",
       "command": "pnpm check",
       "group": "build",
@@ -126,10 +126,10 @@
       }
     },
     {
-      "label": "fix: lint + format",
-      "detail": "pnpm lint:fix && pnpm format:fix - auto-fix oxlint diagnostics then oxfmt the repo",
+      "label": "fix: all",
+      "detail": "pnpm fix - syncpack fix + format, oxlint --fix, then oxfmt (the mirror of pnpm check)",
       "type": "shell",
-      "command": "pnpm lint:fix && pnpm format:fix",
+      "command": "pnpm fix",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

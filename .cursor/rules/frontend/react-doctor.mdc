@@ -1,5 +1,5 @@
 ---
-description: React Doctor front-* scan contract - run changed-scope scan after React changes, embedded oxlint rules, offline posture
+description: "React Doctor front-* scan contract - run changed-scope scan after React changes, embedded oxlint rules, offline posture"
 alwaysApply: false
 globs: apps/front-*/src/**/*.{ts,tsx}
 ---

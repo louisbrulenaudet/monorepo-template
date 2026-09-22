@@ -31,9 +31,9 @@
   "private": true,
   "scripts": {
     "check-types": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p tsconfig.node.json",
-    "format": "pnpm -w exec oxfmt --check packages/correlation-id",
+    "format:check": "pnpm -w exec oxfmt --check packages/correlation-id",
     "format:fix": "pnpm -w exec oxfmt packages/correlation-id",
-    "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/correlation-id",
+    "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/correlation-id",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/correlation-id",
     "test": "vitest run",
     "test:watch": "vitest"

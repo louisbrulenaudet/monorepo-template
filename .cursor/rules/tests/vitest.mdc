@@ -1,5 +1,5 @@
 ---
-description: Vitest - two runtimes, @repo/vitest-config, no watch for agents
+description: "Vitest - two runtimes, @repo/vitest-config, no watch for agents"
 alwaysApply: false
 globs: **/*.test.ts,**/*.spec.ts,**/tests/**,**/vitest.config.ts,**/vitest.config.mts,**/vitest.evals.config.ts
 ---

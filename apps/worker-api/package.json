@@ -16,7 +16,7 @@
     "@repo/typescript-config": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "typescript": "catalog:",
-    "vitest": "catalog:",
+    "vitest": "catalog:vitest4",
     "wrangler": "catalog:"
   },
   "keywords": [
@@ -43,9 +43,9 @@
     "check-types": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
     "deploy": "wrangler deploy --env production",
     "dev": "wrangler dev",
-    "format": "pnpm -w exec oxfmt --check apps/worker-api",
+    "format:check": "pnpm -w exec oxfmt --check apps/worker-api",
     "format:fix": "pnpm -w exec oxfmt apps/worker-api",
-    "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern apps/worker-api",
+    "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern apps/worker-api",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix apps/worker-api",
     "promote": "wrangler versions deploy --env production",
     "routes": "hono routes",

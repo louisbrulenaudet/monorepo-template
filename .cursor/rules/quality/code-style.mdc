@@ -1,5 +1,5 @@
 ---
-description: Code style - OXC is source of truth; thin handlers; no silencing rules
+description: "Code style - OXC is source of truth; thin handlers; no silencing rules"
 alwaysApply: false
 globs: apps/**/*.{ts,tsx},packages/**/*.ts
 ---

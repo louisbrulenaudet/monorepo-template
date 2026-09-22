@@ -1,7 +1,7 @@
 ---
 description: "Shared TSConfig presets - inheritance, the strict flags that change how you write code, deliberate omissions, editing rules, in-app `#/*` imports."
-globs: packages/typescript-config/**,**/tsconfig*.json
 alwaysApply: false
+globs: packages/typescript-config/**,**/tsconfig*.json
 ---
 
 # TypeScript Config Presets

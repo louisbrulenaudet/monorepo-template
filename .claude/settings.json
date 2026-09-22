@@ -72,14 +72,9 @@
       "Edit(**/drizzle/migrations/**)",
       "Edit(**/pnpm-lock.yaml)",
       "Edit(pnpm-lock.yaml)",
-      "Read(**/dist/**)",
-      "Read(**/build/**)",
-      "Read(**/.turbo/**)",
-      "Read(**/.wrangler/**)",
       "Read(**/coverage/**)",
       "Read(**/*.tsbuildinfo)",
       "Read(**/*.map)",
-      "Read(**/pnpm-lock.yaml)",
       "Read(**/.dev.vars)",
       "Read(**/.dev.vars.local)",
       "Read(**/.dev.vars.staging)",
@@ -88,12 +83,6 @@
       "Read(**/.prod.vars.*)",
       "Read(**/.staging.vars)",
       "Read(**/.staging.vars.*)",
-      "Read(**/.env)",
-      "Read(**/.env.local)",
-      "Read(**/.env.development)",
-      "Read(**/.env.staging)",
-      "Read(**/.env.test)",
-      "Read(**/.env.production)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
       "Read(**/*.p12)",
@@ -230,7 +219,13 @@
     ],
     "network": {
       "allowedDomains": [
-        "registry.npmjs.org"
+        "github.com",
+        "api.github.com",
+        "objects.githubusercontent.com",
+        "registry.npmjs.org",
+        "vercel.com",
+        "api.vercel.com",
+        "turborepo.dev"
       ]
     },
     "credentials": {

@@ -1,5 +1,5 @@
 ---
-description: Naming - kebab-case files, front PascalCase components, DTO Schema suffix
+description: "Naming - kebab-case files, front PascalCase components, DTO Schema suffix"
 alwaysApply: false
 globs: apps/**/*.{ts,tsx},packages/**/*.ts
 ---

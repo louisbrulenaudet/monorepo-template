@@ -1,7 +1,7 @@
 ---
-description: Markdown is never hard-wrapped - one line per paragraph, list item, and table row; alert markers keep their own line
-globs: **/*.md,**/*.mdc
+description: "Markdown is never hard-wrapped - one line per paragraph, list item, and table row; alert markers keep their own line"
 alwaysApply: false
+globs: **/*.md,**/*.mdc
 ---
 
 # Markdown Style

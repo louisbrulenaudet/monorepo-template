@@ -31,7 +31,7 @@
   },
   "peerDependencies": {
     "@cloudflare/vitest-plugin": "^1.0.0",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.0 || ^5.0.0"
   },
   "peerDependenciesMeta": {
     "@cloudflare/vitest-plugin": {
@@ -40,9 +40,9 @@
   },
   "private": true,
   "scripts": {
-    "format": "pnpm -w exec oxfmt --check packages/vitest-config",
+    "format:check": "pnpm -w exec oxfmt --check packages/vitest-config",
     "format:fix": "pnpm -w exec oxfmt packages/vitest-config",
-    "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/vitest-config",
+    "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/vitest-config",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/vitest-config"
   },
   "sideEffects": false,

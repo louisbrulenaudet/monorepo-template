@@ -1,14 +1,14 @@
 ---
-description: GitHub Actions CD - called by release.yml after the tag, no push-tags trigger, Cloudflare versions upload then 100% promote, scoped API token on the production environment, GitHub-owned deployment record
-globs: .github/workflows/cd.yml
+description: "GitHub Actions CD - called by release.yml after the tag, no push-tags trigger, Cloudflare versions upload then 100% promote, scoped API token on the production environment, GitHub-owned deployment record"
 alwaysApply: false
+globs: .github/workflows/cd.yml
 ---
 
 # Continuous Deployment
 
-The pipeline is [`.github/workflows/cd.yml`](../../../.github/workflows/cd.yml). Read it for the step list; a prose copy here would only drift. How a release reaches it: [`ops/release.md`](release.mdc). CI invariants: [`ops/ci.md`](ci.mdc). Human-facing secret/variable tables: the README deploy section. Wrangler secrets vs vars: [`backend/workers-config.md`](../backend/workers-config.mdc).
+The pipeline is [`.github/workflows/cd.yml`](../../../.github/workflows/cd.yml). Read it for the step list; a prose copy here would only drift. How a release reaches it: [`ops/release.mdc`](release.mdc). CI invariants: [`ops/ci.mdc`](ci.mdc). Human-facing secret/variable tables: the README deploy section. Wrangler secrets vs vars: [`backend/workers-config.mdc`](../backend/workers-config.mdc).
 
-Weakening a deploy gate or shipping with missing credentials is covered by [`guardrails.md`](../core/guardrails.mdc) and is never the answer here either.
+Weakening a deploy gate or shipping with missing credentials is covered by [`guardrails.mdc`](../core/guardrails.mdc) and is never the answer here either.
 
 ## Status
 
@@ -50,10 +50,10 @@ Weakening a deploy gate or shipping with missing credentials is covered by [`gua
 
 ## Same hardening as CI
 
-SHA-pinned `uses:` with `# vX.Y.Z` comments; `persist-credentials: false` on checkout; workflow `permissions: {}` with per-job re-grants (`contents: write` for the Release, `deployments: write` for the environment record); runner `ubuntu-24.04`; frozen `pnpm install`; Node `24` via `pnpm/setup`; telemetry off. Step bodies live as scripts per the convention in [`ops/ci.md`](ci.mdc); the smoke probe now lives in `smoke-versions.sh` too, and the deploy-order coupling lives in each app's `monorepo.deployOrder` (above) rather than in step names. `$RUNNER_TEMP` only ever from a step - see the expression-context section in [`ops/ci.md`](ci.mdc), which is what broke this file once. Do not diverge "just for CD".
+SHA-pinned `uses:` with `# vX.Y.Z` comments; `persist-credentials: false` on checkout; workflow `permissions: {}` with per-job re-grants (`contents: write` for the Release, `deployments: write` for the environment record); runner `ubuntu-24.04`; frozen `pnpm install`; Node `24` via `pnpm/setup`; telemetry off. Step bodies live as scripts per the convention in [`ops/ci.mdc`](ci.mdc); the smoke probe now lives in `smoke-versions.sh` too, and the deploy-order coupling lives in each app's `monorepo.deployOrder` (above) rather than in step names. `$RUNNER_TEMP` only ever from a step - see the expression-context section in [`ops/ci.mdc`](ci.mdc), which is what broke this file once. Do not diverge "just for CD".
 
 ## What is deliberately not used
 
 - **Workers Builds** - external GitHub Actions is the chosen path so CI and CD share one pipeline. Do not dual-enable Cloudflare Builds on the same production Workers.
-- **Baking secrets into `wrangler.jsonc` `vars` or workflow YAML** - runtime secrets stay in Cloudflare; build secrets stay in GitHub Environments ([`workers-config.md`](../backend/workers-config.mdc)).
+- **Baking secrets into `wrangler.jsonc` `vars` or workflow YAML** - runtime secrets stay in Cloudflare; build secrets stay in GitHub Environments ([`workers-config.mdc`](../backend/workers-config.mdc)).
 - **Deploying every green `main`** - only a newly created release tag deploys, gated on `create-release-tag`'s `created` output.

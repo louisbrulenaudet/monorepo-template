@@ -1,5 +1,5 @@
 ---
-description: Front-app Vitest - Node pool only, isolated QueryClient, no Workers pool
+description: "Front-app Vitest - Node pool only, isolated QueryClient, no Workers pool"
 alwaysApply: false
 globs: apps/front-*/tests/**,apps/front-*/vitest.config.ts,apps/front-*/vitest.setup.ts
 ---

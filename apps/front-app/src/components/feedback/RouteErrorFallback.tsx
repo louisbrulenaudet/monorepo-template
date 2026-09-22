@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { getClientSafeErrorDetails } from "#/utils/client-safe-error";
 
 export type RouteErrorFallbackProps = Readonly<{
-  error: Error;
+  error: unknown;
   title?: string;
 }>;
 

@@ -1,5 +1,5 @@
 ---
-description: TanStack Router - committed routeTree, routes/pages split, Query preload staleTime
+description: "TanStack Router - committed routeTree, routes/pages split, Query preload staleTime"
 alwaysApply: false
 globs: apps/front-*/src/routes/**,apps/front-*/src/pages/**,apps/front-*/src/routeTree.gen.ts,apps/front-*/src/**/*router*
 ---
