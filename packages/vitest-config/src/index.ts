@@ -11,6 +11,7 @@ const sharedTestDefaults: InlineConfig = {
   unstubEnvs: true,
   unstubGlobals: true,
   passWithNoTests: true,
+  fsModuleCache: true,
 };
 
 /** Node Vitest config for `front-*` apps. */
@@ -24,9 +25,6 @@ export function defineNodeConfig(
         environment: "node",
         pool: "threads",
         isolate: false,
-        experimental: {
-          fsModuleCache: true,
-        },
       },
     }),
     defineConfig(overrides),

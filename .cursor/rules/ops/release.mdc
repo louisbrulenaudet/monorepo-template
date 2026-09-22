@@ -1,12 +1,12 @@
 ---
-description: Changesets release pipeline - version PR, shared vX.Y.Z tag, CI gate before tagging, no npm publish, GITHUB_TOKEN tag trigger limitation
-globs: .changeset/**,.github/workflows/release.yml,.github/actions/create-release-tag/**
+description: "Changesets release pipeline - version PR, shared vX.Y.Z tag, CI gate before tagging, no npm publish, GITHUB_TOKEN tag trigger limitation"
 alwaysApply: false
+globs: .changeset/**,.github/workflows/release.yml,.github/actions/create-release-tag/**
 ---
 
 # Releases
 
-[Changesets](https://changesets.dev) computes versions; the pipeline is [`.github/workflows/release.yml`](../../../.github/workflows/release.yml). Read it for the job list; long step bodies live as `bash`-invoked scripts under `.github/actions/` (convention: [`ops/ci.md`](ci.mdc)). Human-facing "how do I" lives in [`.changeset/README.md`](../../../.changeset/README.md); CI internals in [`ops/ci.md`](ci.mdc); the deploy in [`ops/cd.md`](cd.mdc).
+[Changesets](https://changesets.dev) computes versions; the pipeline is [`.github/workflows/release.yml`](../../../.github/workflows/release.yml). Read it for the job list; long step bodies live as `bash`-invoked scripts under `.github/actions/` (convention: [`ops/ci.mdc`](ci.mdc)). Human-facing "how do I" lives in [`.changeset/README.md`](../../../.changeset/README.md); CI internals in [`ops/ci.mdc`](ci.mdc); the deploy in [`ops/cd.mdc`](cd.mdc).
 
 Nothing is published to npm. Every workspace is `private: true`, no `publishConfig`, no `.npmrc`. **A release is a git tag plus a Cloudflare Workers promote.**
 

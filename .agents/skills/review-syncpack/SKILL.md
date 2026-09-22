@@ -36,7 +36,7 @@ Your pre-trained knowledge of syncpack may be outdated (major versions changed c
 
 - **Specifier policy**: lint rules enforce exactly the repo contract - third-party deps must use `catalog:`, internal `@repo/**` must use `workspace:*`, peer ranges exempt; violations fail `deps:check`.
 - **Drift detection**: semver grouping catches same-intent packages diverging across workspaces (e.g. React/TanStack families, oxlint toolchain); groups defined deliberately rather than defaults alone.
-- **Formatting automation**: field ordering normalized via `syncpack format`; `deps:format --check` wired into CI; `deps:fix` safe to run blindly by agents (no destructive rewrites).
+- **Formatting automation**: field ordering normalized via `syncpack format`; `deps:format:check` wired into CI and into the `//#deps:format:check` root task; `deps:fix` safe to run blindly by agents (no destructive rewrites).
 - **Catalog interplay**: syncpack rules and pnpm `catalogMode: prefer` reinforce each other; no rules fighting pnpm catalogs (double sources of truth).
 - **Version currency**: renamed rules/options at installed major adopted; deprecated config removed.
 
@@ -47,7 +47,7 @@ Verify agent-friendliness: `syncpack lint` failures are precise and machine-acti
 ## Steps
 
 1. Collect ground truth before reading config.
-2. Read the syncpack config; run `pnpm deps:check` and `pnpm deps:format --check` to confirm gates green.
+2. Read the syncpack config; run `pnpm deps:check` and `pnpm deps:format:check` to confirm gates green.
 3. Walk each analysis axis; note findings or explicit one-line "no issues".
 4. Compose the plan grouped Critical / Improvements / Optional with **what**, **where**, **why**, and source citations.
 

@@ -1,8 +1,9 @@
 ---
 description: "Wrangler config rules - secrets vs vars, generated types, RPC typing, fail-closed expectations."
-globs: **/wrangler.jsonc,apps/worker-*/package.json,apps/worker-*/src/**/*.ts,**/.dev.vars.example
 alwaysApply: false
+globs: **/wrangler.jsonc,apps/worker-*/package.json,apps/worker-*/src/**/*.ts,**/.dev.vars.example
 ---
+
 # Wrangler / Config Rules
 
 `wrangler.jsonc` is the **source of truth** for a Worker's bindings, vars, and routes. Generated outputs must never be hand-edited (see [guardrails.mdc](../core/guardrails.mdc)):

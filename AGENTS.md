@@ -89,6 +89,7 @@ Root map for cross-cutting placement. App-local detail: `apps/*/AGENTS.md` and `
 | Opaque correlation ids | `packages/correlation-id` (`X-Request-Id`); SPA session wrapper in `front-app` |
 | DB schema / migrations | `apps/<owner>/src/db/` (one owner; never `packages/db-*`) |
 | Frontend feature | `apps/front-app/src/{pages,routes,services,hooks,components}/` |
+| Agent rules | `.claude/rules/<cat>/<name>.md` **and** its `.cursor/rules/<cat>/<name>.mdc` mirror, in the same change |
 | Bindings / secrets | `apps/<worker>/wrangler.jsonc`; `.dev.vars` from `.dev.vars.example` |
 | Tests (unit) | `apps/<app>/tests/` + `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` (Cloudflare Vitest pool) |
 | Tests (multi-Worker integration) | Wrangler `createTestHarness()` from a Node Vitest suite - only after a second Worker + service binding exists; see [`packages/vitest-config/AGENTS.md`](packages/vitest-config/AGENTS.md) |
@@ -124,7 +125,12 @@ A worktree is a fresh checkout, so **run `pnpm install --frozen-lockfile --prefe
 
 | Command | Description |
 |---------|-------------|
-| `pnpm run ci` | Full-repo local PR gate (no `--affected`); one `turbo run check-types test build`; CI uses `--affected` for that phase |
+| `pnpm run check` | Fastest tier: lint, format, and both syncpack checks as parallel `//#` root tasks. The fix-and-recheck loop |
+| `pnpm run fix` | Mirror of `check`: `deps:fix`, `deps:format`, `lint:fix`, then `format:fix` - format runs last so everything ends formatted. One predictable "make it clean" verb |
+| `pnpm run ci` | Full-repo local PR gate (no `--affected`): `pnpm boundaries`, then **one** `turbo run` of every check with `--continue=dependencies-successful`, then `pnpm audit`. Reports all failures in a single pass |
+| `pnpm run ci:affected` | Middle tier for mid-task iteration: `pnpm boundaries` plus the same gate scoped with `--affected`, minus knip and audit. Never a substitute for `pnpm run ci` before finishing |
+| `pnpm run ci:agent` | `ci` with `lint:agent` / `knip:agent`, `--output-logs=errors-only`, and `--log-order=grouped`. Only oxlint and Knip have agent formats - oxfmt and syncpack output stays human-shaped |
+| `pnpm run ci:sandbox` | `ci:agent` minus the two `build` tasks, for sandboxed agents: Claude Code denies `**/.env*` reads and `front-app` declares `.env*` as `build` inputs, so any task list including `build` aborts during traversal. Ask the user to run `pnpm run ci` for build coverage |
 | `pnpm lint:agent` | Lint with `--format=agent` - one machine-readable line per diagnostic, no auto-fix |
 | `pnpm lint:ci` | Lint pinned to `--format=github` (PR annotations); used by `.github/workflows/ci.yml` |
 | `pnpm react-doctor` / `pnpm react-doctor:changed` | React Doctor scan over `front-*` apps via the pinned local binary - fully offline (telemetry, score, share, and Socket.dev checks disabled in `doctor.config.jsonc`); `:changed` is the post-React-edit regression check. Agent contract: `.claude/rules/frontend/react-doctor.md`; embedded `react-doctor/*` oxlint rules run inside `pnpm lint:*` |
@@ -135,7 +141,7 @@ A worktree is a fresh checkout, so **run `pnpm install --frozen-lockfile --prefe
 | `pnpm knip:production` | Knip `--production --strict`: shipped-code-only pass + workspace isolation (inside `pnpm run ci`) |
 | `pnpm knip:agent` | Knip with `--reporter symbols` - one machine-readable line per unused symbol, for agents |
 | `pnpm deps:check` | syncpack lint - third-party deps must use `catalog:` specifiers; internal `@repo/**` links must use `workspace:*`; peer ranges exempt (inside `pnpm run ci`) |
-| `pnpm deps:fix` | Autofix syncpack findings (`syncpack fix`); `pnpm deps:format --check` verifies `package.json` field ordering in CI, run `pnpm deps:format` to normalize |
+| `pnpm deps:fix` | Autofix syncpack findings (`syncpack fix`); `pnpm deps:format:check` verifies `package.json` field ordering, run `pnpm deps:format` to normalize |
 | `pnpm changeset` | Add a changeset (version intent + changelog entry) for the current PR - required when touching deployable apps |
 | `pnpm release:status` | Read-only release state: pending changesets and the next versions (`changeset status --verbose`) - deliberately **not** in `pnpm run ci`, it exits 1 when changed packages lack a changeset |
 
@@ -157,9 +163,9 @@ The release state machine, the pipeline invariants, the recovery table, the repo
 
 Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview`, `types` (`--filter=<pkg>`, `--filter=...pkg...`, `--affected`). Prefer scoped turbo while iterating; use `pnpm run ci` as the local PR gate (full graph). **GitHub CI only** for `--affected`.
 
-**Lint and format are not turbo-backed.** OXC runs as a single pass from the repo root: oxlint resolves `settings.better-tailwindcss.entryPoint` against process CWD, so per-package `oxlint .` silently breaks Tailwind context rules and re-spawns `tsgolint` per package. Narrow with a path: `pnpm --filter=front-app run lint`. Never `cd` into a package to lint. `pnpm boundaries` is a CLI command, not a package task.
+**Lint and format are `//#` root tasks, never per-package ones.** OXC, Knip, and syncpack run through Turborepo as root tasks (`//#lint:check`, `//#format:check`, `//#knip`, `//#deps:check`, ...), which is still a single pass at repo-root CWD - turbo only schedules them in parallel and reports them together. That matters because oxlint resolves `settings.better-tailwindcss.entryPoint` against process CWD, so a per-package `oxlint .` would silently break Tailwind context rules and re-spawn `tsgolint` per package. The `//#` prefix pins each task to the root package even if a workspace later adds a same-named script. Narrow with a path instead: `pnpm --filter=front-app run lint:check`. Never `cd` into a package to lint. `pnpm boundaries` is a CLI command, not a package task - it stays outside the `turbo run`, as does `pnpm audit` (network-bound, and its advisory DB is not a pure function of the commit).
 
-**Agent lint contract** (mirrors [OXC coding agents](https://oxc.rs/docs/guide/usage/coding-agents.html)): iterate with `pnpm lint:fix`, then finish every code change with `pnpm lint:agent` and read only that output - it is the machine-readable `--format=agent` form (`file:line:col: severity plugin(rule): message help:`). The human/CI format (`pnpm lint:check`) renders TTY-dependent code frames; do not parse it. Inline suppressions: `oxlint-disable*` directives only - see `.claude/rules/quality/code-style.md`. Type checking stays with tsc via `turbo run check-types`; oxlint's experimental `options.typeCheck` is deliberately not used (it would lose Turbo per-package caching and `--affected`).
+**Agent lint contract** (mirrors [OXC coding agents](https://oxc.rs/docs/guide/usage/coding-agents.html)): iterate with `pnpm lint:fix`, then finish every code change with `pnpm lint:agent` and read only that output - it is the machine-readable `--format=agent` form (`file:line:col: severity plugin(rule): message help:`). The human/CI format (`pnpm lint:check`) renders TTY-dependent code frames; do not parse it - which is why the gate has an agent tier, `pnpm run ci:agent`, that swaps in `lint:agent` and `knip:agent`. Inline suppressions: `oxlint-disable*` directives only - see `.claude/rules/quality/code-style.md`. Type checking stays with tsc via `turbo run check-types`; oxlint's experimental `options.typeCheck` is deliberately not used (it would lose Turbo per-package caching and `--affected`).
 
 **Knip policy** (root `knip.jsonc`, kept comment-free): both the default pass and `pnpm knip:production` must stay green. Never blanket-`ignore`; prefer scoped patterns (`ignoreIssues`, production-only suffixes like `"dep!"` / `"!tests/**!"`) or JSDoc `@internal` on test-only exports. Auto-fix unused dependencies and pnpm catalog entries with `knip --fix --fix-type dependencies,catalog`. Test-only exports carry an explicit `@internal` tag rather than relying on tests to keep them "used". Per-override rationale: `.claude/rules/quality/knip.md` / `.cursor/rules/quality/knip.mdc`.
 
@@ -169,7 +175,11 @@ Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview
 |------|---------|
 | One workspace's tests | `pnpm turbo run test --filter=<ws>` - a cache hit replays the stored log; add `--force` for a fresh execution |
 | One test file | `pnpm --filter=<ws> exec vitest run tests/<path>.test.ts` |
-| Full gate | `pnpm run ci` (includes `turbo run check-types test build`) |
+| Fast static recheck | `pnpm run check` - lint, format, syncpack in parallel; seconds |
+| Mid-task iteration | `pnpm run ci:affected` - adds types/test/build for affected packages only |
+| Full gate | `pnpm run ci` (one `turbo run --continue=dependencies-successful`, so every failure surfaces in one pass) - required before finishing |
+| Full gate, machine-readable | `pnpm run ci:agent` - agent formatters, output only from failing tasks |
+| Full gate, inside a sandbox | `pnpm run ci:sandbox` - `ci:agent` without the `build` tasks, so the `.env*` filesystem deny cannot abort the run; hand `build` verification back to the user |
 | worker-api smoke | background `pnpm --filter=worker-api dev`, then `curl -sf http://localhost:8700/api/v1/health` (expect `{ status, version }` JSON), then stop the dev process |
 | front-app smoke | background `pnpm --filter=front-app dev`, then `curl -sf http://localhost:5174/` and check the HTML contains `id="root"`, then stop |
 | worker-api routes / serverless smoke | `pnpm --filter=worker-api exec hono routes`; `pnpm --filter=worker-api exec hono request -P /api/v1/health --runtime workerd` - no dev server, `workerd` supplies the real `wrangler.jsonc` bindings |
@@ -230,6 +240,5 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 ## Contribution
 
 - Run `pnpm run ci` before opening a PR.
-- Update the relevant `AGENTS.md` when adding endpoints, bindings, env vars, or conventions.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
 - Continuous deployment: [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is called by `release.yml` once a release tag is cut, and runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for every app discovered under `apps/`, in `monorepo.deployOrder`, then smokes the gateway at its declared `monorepo.healthPath`. **CD is paused** until production GitHub Environment secrets are configured; set the repository variable `CD_ENABLED` to `true` to arm it and leave upload / promote as-is.

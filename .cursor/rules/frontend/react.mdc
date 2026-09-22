@@ -1,5 +1,5 @@
 ---
-description: React 19 SPA invariants - client-only, no fetch in useEffect, Compiler memo policy
+description: "React 19 SPA invariants - client-only, no fetch in useEffect, Compiler memo policy"
 alwaysApply: false
 globs: apps/front-*/src/**/*.{ts,tsx}
 ---

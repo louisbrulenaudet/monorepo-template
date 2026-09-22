@@ -311,6 +311,7 @@
     "setstate",
     "sitemapindex",
     "sprintf",
+    "statusline",
     "streamable",
     "stripable",
     "Stripable",

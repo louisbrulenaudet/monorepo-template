@@ -1,5 +1,5 @@
 ---
-description: Hono Workers Vitest - workerd pool, exports.fetch, per-file isolation
+description: "Hono Workers Vitest - workerd pool, exports.fetch, per-file isolation"
 alwaysApply: false
 globs: apps/worker-*/**,apps/queue-*/**,apps/webhook-*/**,apps/mcp-*/**
 ---

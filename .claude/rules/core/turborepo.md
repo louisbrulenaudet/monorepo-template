@@ -20,6 +20,16 @@ Read-only graph primitives and signed-cache provisioning for this repo's turbo s
 | `turbo query ls [pkg]` | Package list / per-package deps and tasks |
 | `turbo query --schema` | GraphQL schema to load before writing custom queries |
 
+## Root tasks (`//#`)
+
+Repo-wide checks that cannot be per-package - OXC, Knip, syncpack - are declared in root `turbo.json` as `//#lint:check`, `//#lint:agent`, `//#format:check`, `//#knip`, `//#knip:agent`, `//#knip:production`, `//#deps:check`, `//#deps:format:check`. Each maps 1:1 to a root `package.json` script of the same name and runs as one process at repo-root CWD, so `pnpm run check` / `ci` / `ci:agent` can schedule them in parallel from a single `turbo run`.
+
+- **Always address them with the `//#` prefix.** A bare `turbo run lint:check` would fan out to any workspace that later adds a same-named script, which is exactly the per-package `oxlint` that breaks the Tailwind context rules.
+- **`//#deps:check` and `//#deps:format:check` are cached with hand-authored `inputs`**: the workspace manifests (`package.json`, `apps/*/package.json`, `packages/*/package.json`), `pnpm-workspace.yaml`, and `.syncpackrc.json` - the complete set syncpack reads, verified with `--dry-run=json`. Extend those globs if `pnpm-workspace.yaml` ever adds a workspace directory.
+- **Every other root task stays `cache: false`.** A root task's `$TURBO_DEFAULT$` spans the whole repo, so caching without hand-authored `inputs` buys nothing. Before setting `cache: true` on one, author its `inputs` and verify the resolved file list with `turbo run <task> --dry-run=json` - explicit input globs do not honor `.gitignore` the way `$TURBO_DEFAULT$` does, so a bare `**/package.json` also matches nested `node_modules` manifests. An under-specified hash yields a cached *pass* over code that was never checked - a stale-green gate.
+- **`//#lint:check` should stay uncached.** `typeAware: true` couples it to the entire tsconfig graph plus the Tailwind entry point; enumerating that correctly is not worth the staleness risk.
+- **`audit` is never a root task.** `pnpm audit` is not a pure function of the commit (the advisory DB changes daily), and `envMode: "strict"` would strip the proxy and registry vars it inherits freely today. `boundaries` is likewise a CLI verb (`turbo boundaries`), not a task - keep both outside the `turbo run`.
+
 ## Remote cache
 
 Remote caching is enabled **and signed** (`remoteCache.signature: true`, `longerSignatureKey`). Local dev and CI need `TURBO_REMOTE_CACHE_SIGNATURE_KEY` (**>= 32 bytes**) alongside `TURBO_TOKEN`/`TURBO_TEAM`, or signed fetches fail closed. Without the key set locally, expect remote-cache misses; local caching is unaffected. Rotation invalidates every previously signed artifact - one rebuild per task, then the cache re-populates.

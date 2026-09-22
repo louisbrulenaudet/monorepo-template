@@ -1,7 +1,7 @@
 ---
 description: "Local dev port allocation - role ranges, registry, inspector_port, strictPort, multi-config wrangler."
-globs: **/wrangler.jsonc,apps/*/package.json,apps/front-*/vite.config.ts
 alwaysApply: false
+globs: **/wrangler.jsonc,apps/*/package.json,apps/front-*/vite.config.ts
 ---
 
 # Local Dev Ports

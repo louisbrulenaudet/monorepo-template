@@ -44,8 +44,11 @@ esac
 
 set -- --format=agent --no-error-on-unmatched-pattern
 # An explicit --config also disables nested-config discovery, which is what we
-# want: this monorepo has exactly one oxlint config.
-[ -f "$ABS_ROOT/.oxlintrc.json" ] && set -- "$@" --config "$ABS_ROOT/.oxlintrc.json"
+# want: this monorepo has exactly one oxlint config. Keep the path relative - the
+# run below is already at $ABS_ROOT, and an absolute --config stops the
+# overrides[].files globs matching, reporting every PascalCase component as a
+# kebab-case violation.
+[ -f "$ABS_ROOT/.oxlintrc.json" ] && set -- "$@" --config .oxlintrc.json
 set -- "$@" "$REL_FILE"
 
 if OUT=$(cd "$ABS_ROOT" && "$OXLINT" "$@" 2>&1); then

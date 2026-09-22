@@ -21,9 +21,9 @@
       "signature": true
     },
     // Prepended to every task's `inputs` (not folded into a single global hash), so a
-    // task can drop a specific entry with a negation glob. OXC configs are deliberately
-    // absent: lint and format do not run through Turborepo, so .oxlintrc.json and
-    // .oxfmtrc.json must not invalidate check-types or build. See root package.json (lint/format scripts).
+    // task can drop a specific entry with a negation glob. OXC configs must never be added
+    // here: .oxlintrc.json and .oxfmtrc.json belong to the //#lint:* / //#format:check inputs,
+    // and a global entry would re-invalidate check-types and build on a lint-rule-only edit.
     "inputs": ["pnpm-workspace.yaml"],
     "passThroughEnv": [
       "CI",
@@ -69,7 +69,7 @@
           "allow": ["config"]
         }
       },
-      // Build-time presets (@repo/typescript-config): consumed by everything, depends on nothing internal.
+      // Build-time presets (@repo/typescript-config, @repo/vitest-config): consumed by everything, depend on nothing internal.
       "config": {
         "dependencies": {
           "allow": []
@@ -77,10 +77,55 @@
       }
     }
   },
-  // No lint / format tasks by design: OXC runs as a single whole-repo pass outside
-  // Turborepo (see root package.json lint/format scripts for why). Keep it that way - a per-package
-  // `oxlint .` breaks the context-aware Tailwind rules.
+  // OXC, Knip, and syncpack run as `//#` root tasks: one whole-repo pass each, at repo-root CWD,
+  // scheduled in parallel by a single `turbo run`. Never give them per-package tasks - a per-package
+  // `oxlint .` breaks the context-aware Tailwind rules and re-spawns tsgolint per package. The `//#`
+  // prefix pins them to root even if a workspace later adds a same-named script.
   "tasks": {
+    "//#lint:check": {
+      "description": "Whole-repo oxlint pass, human format. Uncached: typeAware lint depends on the entire tsconfig graph plus the Tailwind entry point, so an under-specified input hash would cache a pass over code that was never linted.",
+      "cache": false
+    },
+    "//#lint:agent": {
+      "description": "Same pass with --format=agent - the machine-readable form agents parse.",
+      "cache": false
+    },
+    "//#format:check": {
+      "description": "Whole-repo oxfmt --check. Uncached until its inputs are authored and verified against --dry=json.",
+      "cache": false
+    },
+    "//#knip": {
+      "description": "Unused files, exports, and dependencies across every workspace. Uncached until its inputs are authored and verified against --dry=json.",
+      "cache": false
+    },
+    "//#knip:agent": {
+      "description": "Same pass with --reporter symbols.",
+      "cache": false
+    },
+    "//#knip:production": {
+      "description": "Knip --production --strict: shipped-code-only pass plus workspace isolation.",
+      "cache": false
+    },
+    "//#deps:check": {
+      "description": "syncpack lint: catalog: specifiers for third-party deps, workspace:* for internal links. Cached: syncpack reads only the workspace manifests, the workspace catalog, and its rc file, so these inputs are the complete hash (verified with --dry-run=json; a bare **/package.json glob would pull in nested node_modules). Extend the manifest globs if pnpm-workspace.yaml ever adds a workspace directory.",
+      "inputs": [
+        "package.json",
+        "apps/*/package.json",
+        "packages/*/package.json",
+        "pnpm-workspace.yaml",
+        ".syncpackrc.json"
+      ]
+    },
+    "//#deps:format:check": {
+      "description": "syncpack format --check: package.json field ordering. Run pnpm deps:format to fix. Cached with the same complete input set as //#deps:check.",
+      "inputs": [
+        "package.json",
+        "apps/*/package.json",
+        "packages/*/package.json",
+        "pnpm-workspace.yaml",
+        ".syncpackrc.json"
+      ]
+    },
     "transit": {
       "description": "Internal no-op graph edge (transit-node pattern). Propagates source changes through declared workspace dependencies without serializing check-types tasks. App-to-app service bindings are not package dependencies and require an explicit callee#transit edge in the caller's package configuration.",
       "dependsOn": ["^transit"],

@@ -15,7 +15,7 @@ const REQUEST_FAILED_MESSAGE =
  * or privileged wording from upstreams).
  */
 export function getClientSafeErrorDetails(
-  error: Error,
+  error: unknown,
 ): ClientSafeErrorDetails {
   if (error instanceof FetchApiError) {
     return {

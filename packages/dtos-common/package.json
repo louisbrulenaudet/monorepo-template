@@ -41,9 +41,9 @@
   "private": true,
   "scripts": {
     "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
-    "format": "pnpm -w exec oxfmt --check packages/dtos-common",
+    "format:check": "pnpm -w exec oxfmt --check packages/dtos-common",
     "format:fix": "pnpm -w exec oxfmt packages/dtos-common",
-    "lint": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/dtos-common",
+    "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/dtos-common",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/dtos-common",
     "test": "vitest run",
     "test:watch": "vitest"

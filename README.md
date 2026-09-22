@@ -161,8 +161,9 @@ Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scop
 | `pnpm install --frozen-lockfile` | Install with frozen lockfile (CI) |
 | `pnpm login` | Login to Cloudflare (repo-pinned Wrangler) |
 | `pnpm update` | Update dependencies to latest (rewrites pnpm catalog) |
-| `pnpm check` | Lint + format check (no typecheck) |
-| `pnpm run ci` | Full-repo local PR gate: boundaries, lint:check, format:check, types:check, one `turbo run check-types test build`, audit (GitHub CI uses `--affected` for the turbo phase) |
+| `pnpm check` | Lint, format, and syncpack checks in one parallel `turbo run` (no typecheck) |
+| `pnpm run ci` | Full-repo local PR gate: `pnpm boundaries`, then one `turbo run` of lint, format, syncpack, knip, types:check, check-types, test, and build with `--continue=dependencies-successful`, then `pnpm audit`. Every failure surfaces in a single pass (GitHub CI uses `--affected` for the turbo phase) |
+| `pnpm run check` / `pnpm run ci:affected` / `pnpm run ci:agent` | Faster tiers of the same gate: static checks only; `--affected` scope minus knip and audit; and the machine-readable variant for agents |
 | `pnpm test` | Vitest via `turbo run test` (per-app; Node or Cloudflare pool) |
 | `pnpm test:watch` | Vitest watch via `turbo run test:watch` (humans; persistent, uncached) |
 | `pnpm boundaries` | Check package dependency tags against `turbo.json` |
@@ -191,7 +192,7 @@ Pass turbo flags on turbo-backed tasks (`dev`, `build`, `check-types`, `test`, `
 | `--filter=...pkg...` | Package + dependents/deps | `pnpm turbo run build --filter=...front-app...` |
 | `--affected` | Only changed packages vs base | `pnpm turbo run build --affected` |
 
-Local `pnpm run ci` is full-repo (no `--affected`). GitHub CI runs `check-types`, `test`, and `build` with `--affected`, and always verifies app `types:check`.
+Local `pnpm run ci` is full-repo (no `--affected`); `pnpm run ci:affected` is the opt-in scoped tier for mid-task iteration, never the PR gate. GitHub CI runs `check-types`, `test`, and `build` with `--affected`, and always verifies app `types:check`.
 
 ## Development ports
 
@@ -516,7 +517,7 @@ VP_GIT_HOOKS=0 git commit -m "..."  # bypass hooks for one commit
 
 ## Contribution
 
-- Run **`pnpm run ci`** before opening a PR (boundaries, lint, format, types:check, one `turbo run check-types test build`, audit). GitHub CI mirrors those gates and uses `--affected` for the turbo phase.
+- Run **`pnpm run ci`** before opening a PR (boundaries, then one `turbo run` covering lint, format, syncpack, knip, types:check, check-types, test, build, then audit). GitHub CI mirrors those gates and uses `--affected` for the turbo phase.
 - Wire-format changes: update `@repo/dtos-common` and every producer/consumer in the **same PR** (HTTP → `worker-api` + `front-app`).
 - When you add endpoints, bindings, or env vars, update the relevant app/package **README** and **AGENTS.md**.
 

@@ -1,0 +1,4 @@
+---
+---
+
+Test stack upgrade: shared configs and all Node-side workspaces move to **Vitest 5** (catalog `vitest` and `@vitest/ui` now `^5.0.0`), picking up the stable `fsModuleCache` option in `@repo/vitest-config`'s Node factory (previously `experimental.fsModuleCache`), Vitest 5's default `clearMocks` (explicit in the shared defaults already), and the new `.vitest` artifact directory (already gitignored). `worker-api` stays pinned to Vitest 4 via the temporary `vitest4` named catalog because `@cloudflare/vitest-plugin` still declares `vitest ^4.1.0` peers and has no v5-compatible release yet; when Cloudflare ships one, the app moves back to `catalog:`, the named catalog is deleted, and `@repo/vitest-config`'s peer range tightens from `^4.1.0 || ^5.0.0` to `^5.0.0`. Shipped runtime behavior is unchanged - this is test tooling only.

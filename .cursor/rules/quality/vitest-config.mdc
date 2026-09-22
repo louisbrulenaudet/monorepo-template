@@ -1,7 +1,7 @@
 ---
-description: Shared @repo/vitest-config factories - dual entries, Turbo package caching, Node vs Workers knobs.
-globs: packages/vitest-config/**
+description: "Shared @repo/vitest-config factories - dual entries, Turbo package caching, Node vs Workers knobs."
 alwaysApply: false
+globs: packages/vitest-config/**
 ---
 
 # Shared Vitest Config (@repo/vitest-config)
@@ -13,7 +13,7 @@ Official alignment:
 - Turborepo Vitest guide: prefer package tasks plus a shared config package over Vitest Projects for cache hits
 - Vitest: workspace is deprecated in favor of projects; we still avoid root projects so Turbo owns the graph
 - Vitest performance: Node uses pool threads and isolate false; Workers keep Cloudflare per-file isolation
-- Vitest 4.1: leave reporters unset so AI_AGENT / std-env can select the agent reporter
+- Vitest 5: leave reporters unset so agent / CI auto-detection selects the reporter
 
 General test authoring: [vitest.mdc](../tests/vitest.mdc). Workers: [hono-workers.mdc](../tests/hono-workers.mdc). Front: [front-react.mdc](../tests/front-react.mdc). Package checklist: [AGENTS.md](../../../packages/vitest-config/AGENTS.md).
 
@@ -33,7 +33,7 @@ Changing this package is a monorepo-wide breaking change.
 1. Keep the package config-tagged. Do not add a workspace dependency on @repo/typescript-config; config.dependencies.allow is empty.
 2. Stay JIT with source .ts exports. Do not add a build-to-dist step unless the monorepo moves off JIT configs.
 3. Do not set reporters in shared defaults. That breaks Vitest 4.1 auto agent detection and the GHA github-actions summary.
-4. Node factory only: environment node, pool threads, isolate false, experimental.fsModuleCache. Never attach cloudflareTest.
+4. Node factory only: environment node, pool threads, isolate false, fsModuleCache (stable top-level option since Vitest 5). Never attach cloudflareTest.
 5. Workers factory only: wrap cloudflareTest. Never set isolate false, a Node pool, or a custom environment or runner.
 6. Keep mock hygiene on: restoreMocks, clearMocks, unstubEnvs, unstubGlobals, passWithNoTests true. Include globs diverge on purpose: the Node factory matches tests/**/*.test.{ts,tsx} (component suites must never be silently skipped), the Workers factory stays tests/**/*.test.ts (no JSX inside workerd). Apps with suites override passWithNoTests to false so a glob mismatch fails loudly; the shared true keeps test-less packages green.
 7. Do not enable coverage, blob reporters, or sharding here without an explicit follow-up that wires Turbo outputs and a merge task.
