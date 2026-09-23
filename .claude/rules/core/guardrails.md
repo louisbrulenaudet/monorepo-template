@@ -61,4 +61,5 @@ Depth: skill `privileged-legal-data`.
 ## Do not paper over failures
 
 - Never silence a failing check to make it pass: do not disable a lint rule, add a blanket ignore directive, cast through `any` / `as unknown`, or loosen a type just to clear an error. Fix the cause.
+- Do not launder a type. Widening a known value to `unknown`, `object`, or an open `Record` and asserting it back, or swapping `any` for `unknown` plus an assertion, is a cast by another name. Keep the precise type from creation to use.
 - Do not ignore failing validation, type errors, or tests. Either fix them, or stop and report the exact command run and its output.

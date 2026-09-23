@@ -11,6 +11,13 @@ function withEnv(overrides: Partial<WorkerEnv>): WorkerEnv {
   return { ...env, ...overrides };
 }
 
+const PREVIEW_ORIGIN = "https://pr-7-front-app-production.acme.workers.dev";
+const previewEnv = {
+  ...env,
+  ENVIRONMENT: AppEnvironment.PREVIEW,
+  CORS_ORIGINS: "https://*-front-app-production.acme.workers.dev",
+};
+
 describe("CORS and CSRF middleware", () => {
   it("exposes X-Request-Id and locked-down CSP on API responses", async () => {
     const response = await exports.default.fetch(
@@ -186,5 +193,53 @@ describe("CORS and CSRF middleware", () => {
     );
 
     expect(response.status).toBe(403);
+  });
+
+  it("reflects a preview Origin matching a wildcard entry", async () => {
+    const response = await app.request(
+      "http://example.com/api/v1/health",
+      {
+        method: "OPTIONS",
+        headers: {
+          Origin: PREVIEW_ORIGIN,
+          "Access-Control-Request-Method": "POST",
+        },
+      },
+      previewEnv,
+    );
+
+    expect(response.status).toBeLessThan(400);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      PREVIEW_ORIGIN,
+    );
+  });
+
+  it("passes the CSRF gate for a preview Origin matching a wildcard entry", async () => {
+    const response = await app.request(
+      "http://example.com/api/v1/health",
+      {
+        method: "POST",
+        headers: {
+          Origin: PREVIEW_ORIGIN,
+          "Content-Type": "application/json",
+          "Sec-Fetch-Site": "cross-site",
+        },
+        body: "{}",
+      },
+      previewEnv,
+    );
+
+    expect(response.status).not.toBe(403);
+    expect(response.status).not.toBe(503);
+  });
+
+  it("returns 503 when production CORS_ORIGINS holds a wildcard", async () => {
+    const response = await app.request(
+      "http://example.com/api/v1/health",
+      { headers: { Origin: PREVIEW_ORIGIN } },
+      { ...previewEnv, ENVIRONMENT: AppEnvironment.PRODUCTION },
+    );
+
+    expect(response.status).toBe(503);
   });
 });

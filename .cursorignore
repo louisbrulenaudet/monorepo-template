@@ -16,7 +16,6 @@
 # Cloudflare local secrets (keep the *.example templates readable)
 **/.dev.vars
 **/.dev.vars.*
-!**/.dev.vars.example
 **/.prod.vars
 **/.prod.vars.*
 **/.staging.vars

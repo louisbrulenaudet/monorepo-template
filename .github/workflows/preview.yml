@@ -1,0 +1,120 @@
+name: Preview
+
+on:
+  # Never `pull_request_target`: it would run this checkout with base-branch secrets.
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  DO_NOT_TRACK: "1"
+  TELEMETRY_DISABLED: "1"
+  WRANGLER_SEND_METRICS: "false"
+  TURBO_UI: "false"
+  PREVIEW_NAME: pr-${{ github.event.pull_request.number }}
+
+jobs:
+  deploy:
+    name: Deploy Worker Previews
+    # Paused until PREVIEWS_ENABLED is true. Fork and Dependabot PRs never get the
+    # credentials, and the release PR is validated by release.yml instead.
+    if: >-
+      vars.PREVIEWS_ENABLED == 'true' &&
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      !startsWith(github.head_ref, 'changeset-release/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: preview
+    permissions:
+      contents: read
+      pull-requests: write # the Previews comment
+    # Cloudflare and GitHub tokens are step-scoped below - install never sees them,
+    # and deploy-previews.sh unsets them around the frontend build.
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          runtime: node@24
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      # Must come from a step: `runner` / $RUNNER_TEMP is unavailable in workflow- and
+      # job-level `env:`, and referencing it there makes the file unparseable.
+      - name: Set runner-temp paths
+        run: |
+          echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
+          echo "PREVIEW_URLS_FILE=$RUNNER_TEMP/preview-urls.tsv" >> "$GITHUB_ENV"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Create or update every app's Preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+          PREVIEW_MESSAGE: pr-${{ github.event.pull_request.number }} ${{ github.event.pull_request.head.sha }}
+        run: bash .github/actions/previews/deploy-previews.sh
+
+      - name: Comment Preview URLs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/actions/previews/comment-previews.sh
+
+  cleanup:
+    name: Delete Worker Previews
+    if: >-
+      vars.PREVIEWS_ENABLED == 'true' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      !startsWith(github.head_ref, 'changeset-release/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: preview
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          runtime: node@24
+          cache: true
+          cache-dependency-path: pnpm-lock.yaml
+          install: false
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Delete every app's Preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bash .github/actions/previews/delete-previews.sh

@@ -37,7 +37,9 @@
       "head_sampling_rate": 1,
     },
   },
-  // Uncomment when adding secrets - wrangler types + deploy validate these names (no .dev.vars needed in CI):
+  // Uncomment when adding secrets - wrangler types + deploy validate these names. Local values go in
+  // apps/worker-api/.env, never .dev.vars: an unreadable .dev.vars aborts the Vitest pool, an
+  // unreadable .env is skipped (so sandboxed agents and CI run on the fake test bindings instead).
   // "secrets": {
   //   "required": ["EXAMPLE_SECRET"],
   // },
@@ -68,7 +70,9 @@
       },
     },
     "production": {
-      "preview_urls": false,
+      // Serves Worker Previews on workers.dev - and production Version URLs with it.
+      // Enable Cloudflare Access on Preview URLs before arming PREVIEWS_ENABLED.
+      "preview_urls": true,
       "version_metadata": {
         "binding": "CF_VERSION_METADATA",
       },
@@ -84,6 +88,33 @@
         "traces": {
           "enabled": true,
           "head_sampling_rate": 0.01,
+        },
+      },
+      // `wrangler preview --env production`. Vars and bindings are not inherited -
+      // restate each one the code reads; observability here raises sampling to 100%.
+      "previews": {
+        "version_metadata": {
+          "binding": "CF_VERSION_METADATA",
+        },
+        "vars": {
+          "ENVIRONMENT": "preview",
+          // Wire value = AppEnvironment.PREVIEW. Wildcards are honored here only.
+          // Empty → /api/* returns 503 (fail closed).
+          // Example: "https://*-front-app-production.<subdomain>.workers.dev"
+          "CORS_ORIGINS": "",
+        },
+        "observability": {
+          "enabled": true,
+          "logs": {
+            "enabled": true,
+            "invocation_logs": true,
+            "persist": true,
+          },
+          "traces": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+          },
         },
       },
     },

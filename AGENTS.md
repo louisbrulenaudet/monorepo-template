@@ -90,7 +90,7 @@ Root map for cross-cutting placement. App-local detail: `apps/*/AGENTS.md` and `
 | DB schema / migrations | `apps/<owner>/src/db/` (one owner; never `packages/db-*`) |
 | Frontend feature | `apps/front-app/src/{pages,routes,services,hooks,components}/` |
 | Agent rules | `.claude/rules/<cat>/<name>.md` **and** its `.cursor/rules/<cat>/<name>.mdc` mirror, in the same change |
-| Bindings / secrets | `apps/<worker>/wrangler.jsonc`; `.dev.vars` from `.dev.vars.example` |
+| Bindings / secrets | `apps/<worker>/wrangler.jsonc` (secret names in `secrets.required`); local secret values in `apps/<worker>/.env`, never `.dev.vars` |
 | Tests (unit) | `apps/<app>/tests/` + `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` (Cloudflare Vitest pool) |
 | Tests (multi-Worker integration) | Wrangler `createTestHarness()` from a Node Vitest suite - only after a second Worker + service binding exists; see [`packages/vitest-config/AGENTS.md`](packages/vitest-config/AGENTS.md) |
 
@@ -109,7 +109,7 @@ Align with [Cloudflare Workers testing](https://developers.cloudflare.com/worker
 
 ## Environment
 
-Use Node 24 and the exact pnpm version pinned in root `package.json`. Copy `.dev.vars.example` → `.dev.vars` per app before local runs. Secrets and wrangler vars: path-scoped rule `backend/workers-config`. Local ports when scaffolding: `backend/ports` (human tables in [README.md](README.md)).
+Use Node 24 (≥ 24.11, the floor Vite+ `vp` requires) and the exact pnpm version pinned in root `package.json`. Worker secrets for local runs go in `apps/<worker>/.env` (the names are the ones in `secrets.required`), never in `.dev.vars` - Wrangler aborts on an unreadable `.dev.vars` but skips an unreadable `.env`, so sandboxed agents keep running the Worker tests. Secrets and wrangler vars: path-scoped rule `backend/workers-config`. Local ports when scaffolding: `backend/ports` (human tables in [README.md](README.md)).
 
 ### Worktrees
 
@@ -142,6 +142,7 @@ A worktree is a fresh checkout, so **run `pnpm install --frozen-lockfile --prefe
 | `pnpm knip:agent` | Knip with `--reporter symbols` - one machine-readable line per unused symbol, for agents |
 | `pnpm deps:check` | syncpack lint - third-party deps must use `catalog:` specifiers; internal `@repo/**` links must use `workspace:*`; peer ranges exempt (inside `pnpm run ci`) |
 | `pnpm deps:fix` | Autofix syncpack findings (`syncpack fix`); `pnpm deps:format:check` verifies `package.json` field ordering, run `pnpm deps:format` to normalize |
+| `pnpm preview:deploy` / `pnpm preview:delete` | Create/update or delete a Worker Preview of every app (branch-slug name, `PREVIEW_NAME=` overrides). Outward-facing, needs Cloudflare credentials. Contract: `.claude/rules/ops/previews.md` |
 | `pnpm changeset` | Add a changeset (version intent + changelog entry) for the current PR - required when touching deployable apps |
 | `pnpm release:status` | Read-only release state: pending changesets and the next versions (`changeset status --verbose`) - deliberately **not** in `pnpm run ci`, it exits 1 when changed packages lack a changeset |
 
@@ -182,9 +183,10 @@ Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview
 | Full gate, inside a sandbox | `pnpm run ci:sandbox` - `ci:agent` without the `build` tasks, so the `.env*` filesystem deny cannot abort the run; hand `build` verification back to the user |
 | worker-api smoke | background `pnpm --filter=worker-api dev`, then `curl -sf http://localhost:8700/api/v1/health` (expect `{ status, version }` JSON), then stop the dev process |
 | front-app smoke | background `pnpm --filter=front-app dev`, then `curl -sf http://localhost:5174/` and check the HTML contains `id="root"`, then stop |
+| Remote branch Preview (real edge, isolated) | Hand `! pnpm preview:deploy` to the user or read the PR's Previews comment; loop and sandbox caveats in `.claude/rules/ops/previews.md` |
 | worker-api routes / serverless smoke | `pnpm --filter=worker-api exec hono routes`; `pnpm --filter=worker-api exec hono request -P /api/v1/health --runtime workerd` - no dev server, `workerd` supplies the real `wrangler.jsonc` bindings |
 
-Run dev servers through the harness's background-task mechanism (never a bare `&` you cannot reap) and always stop them when done. Both smoke checks work inside the Claude Code sandbox - localhost binding and curl are permitted.
+Run dev servers through the harness's background-task mechanism (never a bare `&` you cannot reap) and always stop them when done. Both smoke checks work inside the Claude Code sandbox (`sandbox.network.allowLocalBinding`). Where a user-level `Bash(curl *)` deny applies, probe with `node -e 'fetch(process.argv[1]).then(async (r) => { console.log(r.status, await r.text()); process.exitCode = r.ok ? 0 : 1; })' <url>` instead.
 
 ## Agent tooling
 
@@ -234,6 +236,7 @@ Detail: `.claude/rules/core/boundaries.md` / `.cursor/rules/core/boundaries.mdc`
 3. Public HTTP only for gateway, webhooks, MCP, and frontends - not for business RPC or queue-only workers.
 4. SPA to API? Keep `front-*` on `@cloudflare/vite-plugin` + assets `wrangler.jsonc`, and `worker-api` on Wrangler. Never co-locate the gateway as a Vite `auxiliaryWorkers` entry or put API routes in the assets Worker (Cloudflare SPA+API-in-one-Worker tutorial is an anti-pattern for this monorepo).
 5. Cross-Worker tests? Keep per-app Vitest pool suites; add `createTestHarness` only for multi-Worker production-build integration (see testing split above).
+6. Testing a branch remotely? **Worker Previews** (`env.production.previews` + `pnpm preview:deploy`), never Version URLs or a new Wrangler environment. A Preview's service bindings reach the **production** callee.
 
 Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor/rules/` / `.claude/rules/` (`contracts`, `quality`).
 
@@ -242,3 +245,4 @@ Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor
 - Run `pnpm run ci` before opening a PR.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
 - Continuous deployment: [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is called by `release.yml` once a release tag is cut, and runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for every app discovered under `apps/`, in `monorepo.deployOrder`, then smokes the gateway at its declared `monorepo.healthPath`. **CD is paused** until production GitHub Environment secrets are configured; set the repository variable `CD_ENABLED` to `true` to arm it and leave upload / promote as-is.
+- Branch Previews: [`.github/workflows/preview.yml`](.github/workflows/preview.yml) - one Worker Preview per same-repo PR, deleted on close. **Paused** until `PREVIEWS_ENABLED` is `true`; arming steps in the README.

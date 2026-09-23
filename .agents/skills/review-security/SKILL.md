@@ -19,7 +19,7 @@ Text after the slash command is additional scope/focus - narrow the review accor
 
 - **Headers** - CSP with nonces or strict-dynamic where needed; X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy; HSTS in production where applicable (often platform + `hono/secure-headers` on API).
 - **Input validation** - All external input (API bodies, query params, path params) validated with Zod schemas from `@repo/dtos-common` and `@hono/zod-validator` where applicable; use `.strict()` on schemas when appropriate; reject unknown keys; sanitize for context (HTML, URL, etc.) where output.
-- **Secrets** - Never in repo or client bundle; only in `.dev.vars` or wrangler env; no logging or error messages that include secrets.
+- **Secrets** - Never in repo or client bundle; only in a local `.env` or wrangler secrets; no logging or error messages that include secrets.
 - **Bot protection** - Turnstile (or equivalent) on sensitive endpoints **when implemented**; token verified server-side before any processing; no bypass for "trusted" clients without verification.
 - **CORS and CSRF** - CORS allowlist (no wildcard in production); preflight handled; state-changing `/api/*` requests protected (e.g. `hono/csrf` with same-site / origin rules per AGENTS.md patterns).
 - **Errors and logging** - No stack traces or internal paths in client-facing responses; safe logging (no sensitive data); consistent Hono error handling (`HTTPException`, `onError`).
@@ -54,8 +54,8 @@ Conduct a security-only review. Inspect the following and call out violations or
 
 ### Secrets and environment
 
-- **Artifacts:** [apps/worker-api/.dev.vars.example](../../../apps/worker-api/.dev.vars.example), [apps/worker-api/wrangler.jsonc](../../../apps/worker-api/wrangler.jsonc), [apps/front-app/wrangler.jsonc](../../../apps/front-app/wrangler.jsonc), code reading `import.meta.env` / Worker bindings.
-- **Checks:** No API keys or secrets in repo or in client bundle. Secrets only in `.dev.vars` or wrangler secrets / env. `.dev.vars` in `.gitignore`; `.dev.vars.example` has placeholders only. No secret in logs. No secret in error response body or headers.
+- **Artifacts:** [apps/worker-api/wrangler.jsonc](../../../apps/worker-api/wrangler.jsonc), [apps/front-app/wrangler.jsonc](../../../apps/front-app/wrangler.jsonc), code reading `import.meta.env` / Worker bindings.
+- **Checks:** No API keys or secrets in repo or in client bundle. Secrets only in a local `.env` or wrangler secrets / env, names declared in `secrets.required`. `.env*` / `.dev.vars*` in `.gitignore`. No secret in logs. No secret in error response body or headers.
 
 ### Error handling and information leakage
 

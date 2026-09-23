@@ -7,7 +7,6 @@
 .prod.vars.*
 .staging.vars
 .staging.vars.*
-!.dev.vars.example
 
 # Global environment files
 .env

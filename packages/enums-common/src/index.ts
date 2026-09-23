@@ -1,4 +1,8 @@
-export { AppEnvironment, isStrictCorsAppEnvironment } from "./app-environment";
+export {
+  AppEnvironment,
+  allowsWildcardCorsOrigins,
+  isStrictCorsAppEnvironment,
+} from "./app-environment";
 export { CorsAllowedHeader, CORS_ALLOWED_HEADERS } from "./cors-allowed-header";
 export {
   HttpMethod,

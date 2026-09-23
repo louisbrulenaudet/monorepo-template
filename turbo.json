@@ -30,8 +30,13 @@
       "NODE_ENV",
       "NODE_COMPILE_CACHE",
       "NODE_DISABLE_COMPILE_CACHE",
-      // Wrangler telemetry opt-out must reach `turbo run dev` under strict envMode.
-      "WRANGLER_SEND_METRICS"
+      // Without it os.tmpdir() falls back to /tmp, where Miniflare (Workers Vitest pool)
+      // cannot mkdir inside the Claude Code sandbox.
+      "TMPDIR",
+      // Wrangler telemetry opt-out and log directory must reach every wrangler task under
+      // strict envMode; without WRANGLER_LOG_PATH, sandboxed runs log EPERM into ~/.wrangler.
+      "WRANGLER_SEND_METRICS",
+      "WRANGLER_LOG_PATH"
     ]
   },
   // Machine-enforced version of the architecture in AGENTS.md. Run via `pnpm boundaries`

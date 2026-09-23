@@ -68,7 +68,7 @@ scan() {
   # Only line NUMBERS leave this function - never the matching text.
   sc_lines=$(printf '%s\n' "$CONTENT" | grep -nE -e "$sc_re" 2>/dev/null | cut -d: -f1 | tr '\n' ' ' || true)
   if [ -n "$sc_lines" ]; then
-    emit_deny "Blocked: this write appears to contain a live credential ($sc_label) at line(s): ${sc_lines% }. File: $FILE. Never commit secrets - see .claude/rules/core/guardrails.md. Put the real value in .dev.vars (git-ignored) or a Worker secret, and reference it through the environment; keep only a placeholder in tracked source."
+    emit_deny "Blocked: this write appears to contain a live credential ($sc_label) at line(s): ${sc_lines% }. File: $FILE. Never commit secrets - see .claude/rules/core/guardrails.md. Put the real value in apps/<worker>/.env (git-ignored) or a Worker secret, and reference it through the environment; keep only a placeholder in tracked source."
   fi
 }
 

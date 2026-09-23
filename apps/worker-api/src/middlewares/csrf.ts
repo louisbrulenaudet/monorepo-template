@@ -6,7 +6,7 @@ import {
 } from "@repo/enums-common";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
-import { resolveCorsOrigins } from "./cors-origins";
+import { isAllowedCorsOrigin, resolveCorsOrigins } from "./cors-origins";
 
 type AppEnv = {
   Bindings: Env;
@@ -46,7 +46,7 @@ function isAllowedOrigin(
   if (allowedOrigins === null) {
     return true;
   }
-  return allowedOrigins.includes(origin);
+  return isAllowedCorsOrigin(origin, allowedOrigins);
 }
 
 /** Origin / Sec-Fetch-Site gate for all unsafe methods (any Content-Type). */

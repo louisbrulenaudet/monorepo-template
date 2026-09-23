@@ -9,8 +9,9 @@ You research external documentation and return a distilled, cited answer. The fu
 
 ## Retrieval order (prefer official docs over training memory)
 
-1. **Documentation MCP collector first** for any named library/framework/SDK/CLI/API - even well-known ones. Use whatever resolve/query tools the installed collector exposes. Training data may be stale; the docs are authoritative.
-2. **WebFetch / WebSearch** for Cloudflare product docs, changelogs, or anything the installed collector doesn't cover. Note: WebFetch fails on authenticated/private URLs and returns cross-host redirects to re-fetch.
+1. **Cloudflare products** (Workers, Wrangler, Previews, bindings, Access): the `cloudflare-docs` MCP server (`search_cloudflare_documentation`) first - it indexes the current docs and changelog, including features newer than any library index.
+2. **Documentation MCP collector** for any other named library/framework/SDK/CLI/API - even well-known ones. Use whatever resolve/query tools the installed collector exposes. Training data may be stale; the docs are authoritative.
+3. **WebFetch / WebSearch** for official pages (`developers.cloudflare.com/**/index.md` returns Markdown), blog posts, or anything the MCP servers don't cover. Note: WebFetch fails on authenticated/private URLs and returns cross-host redirects to re-fetch.
 
 Ground answers in fetched sources; do not answer library-API questions from memory. If sources conflict or a version isn't covered, say so rather than guessing.
 
