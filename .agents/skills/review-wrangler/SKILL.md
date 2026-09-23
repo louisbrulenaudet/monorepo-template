@@ -30,7 +30,7 @@ Your pre-trained knowledge of Wrangler may be outdated (frequent releases; JSONC
 
 - [apps/worker-api/wrangler.jsonc](../../../apps/worker-api/wrangler.jsonc), [apps/front-app/wrangler.jsonc](../../../apps/front-app/wrangler.jsonc)
 - Generated types: `apps/*/worker-configuration.d.ts` freshness vs configs (`pnpm types` / `pnpm types:check`)
-- `.dev.vars.example` per app; secrets path-scoping rule (`backend/workers-config`)
+- `secrets.required` per app (no `.dev.vars` in Worker apps); secrets path-scoping rule (`backend/workers-config`)
 - Deploy pipeline: root scripts (`deploy`, `promote`, `upload`) and [.github/workflows/cd.yml](../../../.github/workflows/ci.yml) (paused state documented)
 
 ## Analysis axes
@@ -44,7 +44,7 @@ Your pre-trained knowledge of Wrangler may be outdated (frequent releases; JSONC
 
 ## DX & AI-agentic workflow
 
-Verify agent-friendliness: `$schema` pointer present in every jsonc so agents get validation; `.dev.vars.example` documents every var/secrets name; `pnpm types` regenerates deterministically.
+Verify agent-friendliness: `$schema` pointer present in every jsonc so agents get validation; `secrets.required` declares every secret name; `pnpm types` regenerates deterministically.
 
 ## Steps
 

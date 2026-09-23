@@ -17,7 +17,7 @@ Text after the slash command is additional scope/focus - narrow the review accor
 
 ## Best practices alignment
 
-- **Secrets** - Never in repo or client bundle; use `.dev.vars` (workers) and wrangler env; document required vars in `.dev.vars.example`.
+- **Secrets** - Never in repo or client bundle; local values in `apps/<worker>/.env` (never `.dev.vars`) and wrangler secrets; declare every secret name in `secrets.required`.
 - **Environment** - Clear split: client-exposed keys via Vite (`import.meta.env`, e.g. `VITE_*` if used); server-only secrets and config in Workers; build modes (development/production) consistent across tools.
 - **TypeScript** - Strict mode everywhere; shared configs from `@repo/typescript-config` (`strict.json` core → runtime presets); per-package `tsc --noEmit` via Turborepo transit (no root solution / project references); no conflicting compiler options between packages.
 - **OXC (oxfmt / oxlint)** - Single source of truth for format and lint; consistent rules; no conflicting formatters (e.g. Prettier).
@@ -31,8 +31,8 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 
 ### Environment and secrets
 
-- **Artifacts:** [apps/worker-api/.dev.vars.example](../../../apps/worker-api/.dev.vars.example), [apps/front-app/wrangler.jsonc](../../../apps/front-app/wrangler.jsonc), [apps/worker-api/wrangler.jsonc](../../../apps/worker-api/wrangler.jsonc), any `.env*` or `import.meta.env` usage in [apps/front-app/src/](../../../apps/front-app/src/), [apps/worker-api/src/](../../../apps/worker-api/src/).
-- **Checks:** `.dev.vars` is gitignored; `.dev.vars.example` lists every required variable with placeholder or description (no real secrets). Wrangler `vars` and `[env.*.vars]` only for non-secret config; secrets only in wrangler secret or `.dev.vars`. No secrets in client-bundled code; only intentionally exposed env keys via Vite (document which prefixes are safe).
+- **Artifacts:** [apps/front-app/wrangler.jsonc](../../../apps/front-app/wrangler.jsonc), [apps/worker-api/wrangler.jsonc](../../../apps/worker-api/wrangler.jsonc), any `.env*` or `import.meta.env` usage in [apps/front-app/src/](../../../apps/front-app/src/), [apps/worker-api/src/](../../../apps/worker-api/src/).
+- **Checks:** `.env*` / `.dev.vars*` are gitignored; `secrets.required` lists every secret name; no Worker app has a `.dev.vars`; tests give each secret a fake `miniflare.bindings` value. Wrangler `vars` and `[env.*.vars]` only for non-secret config; secrets only in wrangler secret or a local `.env`. No secrets in client-bundled code; only intentionally exposed env keys via Vite (document which prefixes are safe).
 
 ### Cloudflare Workers and wrangler
 
@@ -62,7 +62,7 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 ### Anti-patterns to flag
 
 - Secrets in repo, in client bundle, or in wrangler.jsonc as plain text.
-- Missing or outdated `.dev.vars.example`; required env vars not documented.
+- A secret read by code but missing from `secrets.required`; a `.dev.vars` in a Worker app.
 - TypeScript strict disabled or `any` encouraged by config.
 - Multiple formatters or conflicting lint configs.
 - Wrangler compatibility_date very old; or flags that are deprecated/removed.
@@ -72,7 +72,7 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 
 1. **Gather scope** - All config or specific area (env, wrangler, TS, OXC, Vite). Default to full configuration review.
 2. **Read conventions** - Root and app AGENTS.md for env, ports, and tooling.
-3. **Inspect env and secrets** - .dev.vars.example, wrangler vars, codebase for env usage; confirm no secrets in client or repo.
+3. **Inspect env and secrets** - `secrets.required`, wrangler vars, codebase for env usage; confirm no secrets in client or repo.
 4. **Inspect wrangler and Vite** - Both wrangler.jsonc files; front-app vite.config.ts; alignment between build output and deployment.
 5. **Inspect TypeScript** - All tsconfig files and typescript-config package; strict and extends chain.
 6. **Inspect OXC** - `.oxfmtrc.json` and `.oxlintrc.json`; format/lint rules and ignore patterns.
@@ -83,7 +83,7 @@ Conduct a configuration-only review. Inspect the following and call out violatio
 
 - [ ] Scope clear
 - [ ] Root and app AGENTS.md consulted
-- [ ] Env and secrets handling reviewed (.dev.vars, wrangler, Vite env)
+- [ ] Env and secrets handling reviewed (`secrets.required`, `.env`, wrangler, Vite env)
 - [ ] Both wrangler.jsonc and front-app vite.config.ts reviewed
 - [ ] All tsconfig and typescript-config reviewed
 - [ ] `.oxfmtrc.json` and `.oxlintrc.json` reviewed
@@ -103,7 +103,7 @@ If context is insufficient, suggest which config files or @ references to add.
 - **Correctness:** Config options are valid and consistent; no secrets exposed.
 - **Conventions:** Matches AGENTS.md (ports, env, TypeScript strict, OXC).
 - **Quality:** Reproducible builds; clear env contract; strict typing.
-- **Actionability:** Every suggestion is implementable (e.g. "add X to .dev.vars.example", "set strict: true in Y").
+- **Actionability:** Every suggestion is implementable (e.g. "add X to secrets.required", "set strict: true in Y").
 - **Trade-offs:** Note any (e.g. nodejs_compat vs bundle size).
 - **Scope:** Configuration only; defer security or performance to their reviews.
 

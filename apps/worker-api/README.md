@@ -57,7 +57,6 @@ apps/worker-api/
 ├── vitest.config.mts       # defineWorkersConfig from @repo/vitest-config/workers
 ├── wrangler.jsonc
 ├── worker-configuration.d.ts
-├── .dev.vars.example
 └── README.md
 ```
 
@@ -111,7 +110,7 @@ Notes:
    pnpm install
    ```
 
-2. **Configure environment (optional):** Copy `.dev.vars.example` to `.dev.vars`. The current code does not require secrets; if you add any, document keys in `.dev.vars.example` and set real values in `.dev.vars` (never commit secrets).
+2. **Configure environment (optional):** the current code needs no secrets. When you add one, declare its name in `secrets.required` in `wrangler.jsonc` and put the local value in `apps/worker-api/.env` - never `.dev.vars` (git-ignored either way; never commit secrets).
 
 3. **Start development server**:
    - All apps: `pnpm dev` from the monorepo root
@@ -139,7 +138,7 @@ Expected response:
 2. Route module `src/routes/<feature>.ts` with `zValidator` on every input.
 3. Mount the route in `src/index.ts`.
 4. Call business logic locally or via `env.BINDING` once a service binding exists.
-5. Update `.dev.vars.example` for any new secrets.
+5. Declare any new secret in `secrets.required` (`wrangler.jsonc`), with a fake value in `vitest.config.mts` for tests.
 6. Run `pnpm run ci`.
 
 ### Available Commands

@@ -34,6 +34,7 @@ hooks/
 | Block a new git pattern | `git/guard-destructive-git.sh` or `git/guard-secret-commit.sh` |
 | Change how a command is parsed | `git/lib/parse-command.sh` |
 | Add a credential pattern for written content | `security/guard-secret-content.sh` |
+| Protect another generated artifact from hand-edits | `security/guard-generated-files.sh` |
 | Change format/lint behaviour | `quality/format-changed.sh` or `quality/lint-changed.sh` |
 | Add Cursor hook wiring | [`.cursor/hooks.json`](../.cursor/hooks.json) |
 | Add Claude hook wiring | [`.claude/settings.json`](../.claude/settings.json) → `hooks` |
@@ -114,6 +115,7 @@ Known limits, by design: the guards do not see through `eval`, `sh -c`, heredocs
 | `quality/format-changed.sh` | called by `check-changed.sh` | never (always 0) |
 | `quality/lint-changed.sh` | called by `check-changed.sh` | oxlint reports problems on `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs` (never `.d.ts`) |
 | `security/guard-secret-content.sh` | Claude PreToolUse Edit\|Write | written content matches a high-signal credential pattern |
+| `security/guard-generated-files.sh` | Claude PreToolUse Edit\|Write | the target is a generated artifact (`worker-configuration.d.ts`, `routeTree.gen.ts`, `dist/**`, `build/**`) - a hook rather than an `Edit(...)` deny, because those denies also blocked the generators inside the sandbox |
 | `git/lib/parse-command.sh` | sourced by the git guards | n/a - defines functions, never exits |
 | `logging/session-start.sh` | Cursor sessionStart | never |
 | `logging/instructions-loaded.sh` | Claude InstructionsLoaded (async) | never - this event ignores the exit code |

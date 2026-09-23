@@ -27,7 +27,7 @@ Anything that identifies a client or a matter, or that carries substantive conte
 - **Cache keys and URLs.** A Workers Cache key, a KV key, and a URL path or query string are all effectively logged infrastructure. Hash or use an opaque id; never embed a client name or matter reference. This applies to `waitUntil` writes as much as to responses.
 - **Tenancy.** Matter isolation is a property of the query, not of the caller's good behaviour. Every read and write is scoped by the matter or tenant id the request was authorised for - derived server-side from the credential, never taken from a client-supplied field.
 - **Durable stores and queues.** Anything written to KV, a queue message, D1, or an object store needs a stated retention and deletion rule in the owning app's `AGENTS.md`. A queue message is a copy of the data that outlives the request; treat enqueueing as a storage decision.
-- **Secrets.** Only `.dev.vars` locally and wrangler secrets or env bindings in deployed environments. Never in `wrangler.jsonc` `vars`, never in a log, never in an error body.
+- **Secrets.** Only `apps/<worker>/.env` locally (names in `secrets.required`) and wrangler secrets or env bindings in deployed environments. Never in `wrangler.jsonc` `vars`, never in a log, never in an error body.
 - **CORS and CSRF.** An allowlist of known origins, never `*` in production; CSRF protection on state-changing `/api/*`. A permissive CORS header on a privileged endpoint is a disclosure bug, not a config preference.
 
 ## Boundary rules - SPA (`front-app`)
@@ -53,7 +53,7 @@ Use this when reviewing a diff that touches a handler, a logger, a cache key, a 
 - [ ] Cache, KV, and queue keys opaque or hashed; no identifier in a URL path or query string.
 - [ ] Every query scoped by a server-derived tenant or matter id, not a client-supplied one.
 - [ ] Any new durable write has a retention and deletion rule recorded in the owning `AGENTS.md`.
-- [ ] Secrets only via `.dev.vars` / wrangler bindings; none in `vars`, logs, or the client bundle.
+- [ ] Secrets only via `.env` locally / wrangler bindings; none in `vars`, logs, or the client bundle.
 - [ ] CORS allowlisted (no production `*`); CSRF covered on state-changing routes.
 - [ ] Document-derived text kept in a data position; it cannot steer a tool call.
 - [ ] No new third-party call carrying privileged content without the user confirming scope.

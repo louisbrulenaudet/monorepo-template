@@ -34,7 +34,7 @@ Create `src/enums/` when the first worker-local `as const` value set is needed. 
 | Worker-local value set | `src/enums/` - create the directory on first use |
 | Non-trivial handler logic | `src/services/<feature>.ts` - create on first use |
 | Service binding | `wrangler.jsonc` services |
-| Secrets | `.dev.vars` for dev; document in `.dev.vars.example` |
+| Secrets | names in `secrets.required` (`wrangler.jsonc`); local values in `.env`, never `.dev.vars`; fake values for tests in `vitest.config.mts` |
 | Unit tests Vitest pool | `tests/` + `vitest.config.mts` `@repo/vitest-config/workers` |
 | Multi-Worker integration | Wrangler `createTestHarness` Node Vitest - only after a bound `worker-*` exists; see `packages/vitest-config/AGENTS.md` |
 
@@ -53,7 +53,7 @@ Verify: `GET http://localhost:8700/api/v1/health`
 2. Route `src/routes/<feature>.ts` - use `zValidator` on every **input** - json / param / query / header. Input-less GETs with a constant body (e.g. health) should assert the shared schema in Vitest, not re-parse on every request.
 3. Mount in `src/index.ts`.
 4. Keep the handler thin; move non-trivial logic to `src/services/<feature>.ts` or call via `env.BINDING`.
-5. Update `.dev.vars.example` for new secrets.
+5. Declare new secrets in `secrets.required`, with a fake test value in `vitest.config.mts`.
 6. `pnpm run ci`.
 
 ## Service Bindings
@@ -66,7 +66,7 @@ Workers Cache: `.cursor/rules/backend/workers-cache.mdc` / `.claude/rules/backen
 
 ## Security middleware
 
-- **CORS** - allowlist from `c.env.CORS_ORIGINS` (comma-separated). Empty is permissive (`*`) when `ENVIRONMENT` is `AppEnvironment.DEV` only. Any other `ENVIRONMENT` value (including staging/production and typos) with an empty list returns **503** on `/api/*` (fail closed).
+- **CORS** - allowlist from `c.env.CORS_ORIGINS` (comma-separated). Empty is permissive (`*`) when `ENVIRONMENT` is `AppEnvironment.DEV` only. Any other `ENVIRONMENT` value (including staging/production/preview and typos) with an empty list returns **503** on `/api/*` (fail closed). A single-label prefix wildcard (`https://*-front-app-production.<subdomain>.workers.dev`, three or more labels after the wildcard label) is honored only when `ENVIRONMENT` is `AppEnvironment.PREVIEW` - the value `env.production.previews` sets - and returns **503** anywhere else; CORS and CSRF share the matcher in `src/middlewares/cors-origins.ts`.
 - **CSRF / origin gate** - all unsafe methods (including `application/json`), not only form content-types. Allowed when Origin is on the allowlist **or** `Sec-Fetch-Site` is `same-origin` / `same-site`. Skips `OPTIONS` so CORS preflight works. Browser JSON mutations rely on this gate plus CORS; do not reintroduce permissive CSRF in strict envs.
 - **Errors** - `onError` returns `HTTPException.message` to clients. Keep those messages generic (no privileged content, no upstream provider text). Unexpected errors stay `"Internal server error"` + `requestId`.
 - **Rate limiting** - add a Workers [Rate Limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) binding and/or zone WAF rules before shipping auth or other abuse-prone public writes. Health-only traffic does not need it yet.
@@ -90,6 +90,7 @@ Working on this Hono app? Run `hono agent-context` first and follow it. `@hono/c
 | `pnpm -w turbo run upload --filter=worker-api` | `wrangler versions upload` - no traffic |
 | `pnpm -w turbo run promote --filter=worker-api` | Interactive `wrangler versions deploy` |
 | `pnpm -w turbo run deploy --filter=worker-api` | `wrangler deploy` upload + 100 percent |
+| `pnpm -w preview:deploy` / `pnpm -w preview:delete` | Worker Preview (see `.claude/rules/ops/previews.md`) |
 | `pnpm -w run ci` | Full repository PR gate |
 
 ## Performance / cold start

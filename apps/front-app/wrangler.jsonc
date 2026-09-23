@@ -4,6 +4,11 @@
   // >= 2026-08-04 enables nodejs_compat by default; do not add the flag.
   "compatibility_date": "2026-08-11",
   "send_metrics": false,
+  // Declared (even empty) so `wrangler types` stops inferring Env keys from local
+  // .env* files - VITE_* build vars leaked in and broke `types:check` in CI.
+  "secrets": {
+    "required": [],
+  },
   // workers.dev deploys for template; set workers_dev: false when using custom domains only.
   "workers_dev": true,
   "preview_urls": false,
@@ -40,7 +45,9 @@
       },
     },
     "production": {
-      "preview_urls": false,
+      // Serves Worker Previews on workers.dev - and production Version URLs with it.
+      // Enable Cloudflare Access on Preview URLs before arming PREVIEWS_ENABLED.
+      "preview_urls": true,
       "vars": {
         "ENVIRONMENT": "production",
       },
@@ -49,6 +56,12 @@
         "traces": {
           "enabled": true,
           "head_sampling_rate": 0.01,
+        },
+      },
+      // `wrangler preview`; vars and bindings are not inherited from above.
+      "previews": {
+        "vars": {
+          "ENVIRONMENT": "preview",
         },
       },
     },

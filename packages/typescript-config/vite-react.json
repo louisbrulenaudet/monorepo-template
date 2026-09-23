@@ -6,7 +6,6 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "preserve",
     "moduleResolution": "bundler",
-    "exactOptionalPropertyTypes": false,
     "allowImportingTsExtensions": true,
     "incremental": true,
     "noEmit": true,

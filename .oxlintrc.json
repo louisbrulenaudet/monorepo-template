@@ -73,6 +73,7 @@
     "typescript/no-unsafe-member-access": "error",
     "typescript/no-unsafe-call": "error",
     "typescript/no-unsafe-return": "error",
+    "typescript/no-unsafe-argument": "error",
     "typescript/parameter-properties": [
       "error",
       {
@@ -140,6 +141,17 @@
       {
         "case": "kebabCase"
       }
+    ],
+    "unicorn/no-abusive-eslint-disable": "error",
+    "vitest/no-restricted-vi-methods": [
+      "error",
+      {
+        "mock": "Module mocking swaps an import the code under test never chose. Inject a real seam: a fake argument, a Workers env binding, or a tests/helpers/* double.",
+        "doMock": "Module mocking swaps an import the code under test never chose. Inject a real seam: a fake argument, a Workers env binding, or a tests/helpers/* double.",
+        "unmock": "Module mocking swaps an import the code under test never chose. Inject a real seam: a fake argument, a Workers env binding, or a tests/helpers/* double.",
+        "doUnmock": "Module mocking swaps an import the code under test never chose. Inject a real seam: a fake argument, a Workers env binding, or a tests/helpers/* double.",
+        "importMock": "Module mocking swaps an import the code under test never chose. Inject a real seam: a fake argument, a Workers env binding, or a tests/helpers/* double."
+      }
     ]
   },
   "overrides": [
@@ -159,7 +171,9 @@
         "typescript/no-unsafe-assignment": "off",
         "typescript/no-unsafe-member-access": "off",
         "typescript/no-unsafe-call": "off",
-        "typescript/no-unsafe-return": "off"
+        "typescript/no-unsafe-return": "off",
+        "typescript/no-unsafe-argument": "off",
+        "max-lines-per-function": "off"
       }
     },
     {
@@ -204,12 +218,6 @@
             }
           }
         ]
-      }
-    },
-    {
-      "files": ["apps/front-*/**/*"],
-      "rules": {
-        "max-lines-per-function": "off"
       }
     },
     {
@@ -292,6 +300,7 @@
         "typescript/no-unsafe-member-access": "off",
         "typescript/no-unsafe-call": "off",
         "typescript/no-unsafe-return": "off",
+        "typescript/no-unsafe-argument": "off",
         "vitest/require-to-throw-message": "off"
       }
     },
@@ -303,6 +312,7 @@
         "typescript/no-unsafe-member-access": "off",
         "typescript/no-unsafe-call": "off",
         "typescript/no-unsafe-return": "off",
+        "typescript/no-unsafe-argument": "off",
         "vitest/no-standalone-expect": "off"
       }
     }

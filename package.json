@@ -24,12 +24,12 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": ">=24 <25",
+      "version": ">=24.11 <25",
       "onFail": "error"
     }
   },
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=24.11 <25"
   },
   "keywords": [
     "cloudflare-workers",
@@ -78,6 +78,8 @@
     "login": "wrangler login",
     "prepare": "vp config --no-agent",
     "preview": "turbo run preview --filter='./apps/*'",
+    "preview:delete": "bash .github/actions/previews/delete-previews.sh",
+    "preview:deploy": "bash .github/actions/previews/deploy-previews.sh",
     "promote": "turbo run promote --filter='./apps/*'",
     "react-doctor": "cross-env REACT_DOCTOR_NO_TELEMETRY=1 react-doctor --no-telemetry",
     "react-doctor:changed": "pnpm run react-doctor --scope changed --verbose",

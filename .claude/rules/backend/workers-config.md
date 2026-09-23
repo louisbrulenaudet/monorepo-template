@@ -3,7 +3,6 @@ paths:
   - "**/wrangler.jsonc"
   - "apps/worker-*/package.json"
   - "apps/worker-*/src/**/*.ts"
-  - "**/.dev.vars.example"
 ---
 
 # Wrangler / Config Rules
@@ -14,11 +13,11 @@ paths:
 
 ## Required config
 
-Every app `wrangler.jsonc` should include: `$schema` (`../../node_modules/wrangler/config-schema.json` from `apps/*`), a current `compatibility_date` (2026-08-04 or later so Node.js compatibility is on by default; do not add redundant `nodejs_compat` / `nodejs_compat_v2` flags), `send_metrics: false`, root `observability`, and `env.staging` + `env.production` with traces enabled. Copy patterns from an existing app (`worker-api`, `front-app`) when scaffolding.
+Every app `wrangler.jsonc` should include: `$schema` (`../../node_modules/wrangler/config-schema.json` from `apps/*`), a current `compatibility_date` (2026-08-04 or later so Node.js compatibility is on by default; do not add redundant `nodejs_compat` / `nodejs_compat_v2` flags), `send_metrics: false`, root `observability`, `env.staging` + `env.production` with traces enabled, and an `env.production.previews` block (empty is valid; `wrangler preview` requires it). Copy patterns from an existing app (`worker-api`, `front-app`) when scaffolding.
 
 ## Secrets vs vars
 
-- **Secrets** never go in `wrangler.jsonc` `vars`, code, or logs. Local dev: `.dev.vars` (git-ignored; keep `.dev.vars.example` in sync). Deploy: `wrangler secret put`.
+- **Secrets** never go in `wrangler.jsonc` `vars`, code, or logs. Names: `secrets.required` in `wrangler.jsonc` (the single list - no example file). Local values: `apps/<worker>/.env` (git-ignored). **Never create a `.dev.vars` in a Worker app**: Cloudflare accepts either file, but Wrangler throws on an unreadable `.dev.vars` and skips an unreadable `.env`, and the Claude Code sandbox denies reading both - so a `.dev.vars` alone breaks the Workers Vitest pool and `wrangler types` for sandboxed agents. Deploy: `wrangler secret put`.
 - **Non-secret config** (`API_ORIGIN`, `*_BASE_URL`, `ENVIRONMENT`, `CORS_ORIGINS`) may be plain `vars`. `VITE_*` for the SPA is build-time and public (not a secret).
 - Declare required secret names with `secrets.required` in `wrangler.jsonc` when a Worker needs them - `wrangler types` emits typed `env.*` bindings without `.dev.vars` (CI-safe), `wrangler dev` allowlists `.dev.vars` keys, and deploy fails if remote secrets are missing.
 - Hand-declared bindings live in `src/types/*.d.ts`; generated ones come from `pnpm types`.
@@ -30,6 +29,7 @@ Every app `wrangler.jsonc` should include: `$schema` (`../../node_modules/wrangl
 | Root | `wrangler dev` | Local development |
 | `staging` | `--env staging` | Pre-production |
 | `production` | `--env production` | Production |
+| `env.production.previews` | `wrangler preview --env production` | Branch / PR Previews under the production Worker - nothing inherited, see [../ops/previews.md](../ops/previews.md) |
 
 Uncomment `routes` under `env.staging` / `env.production` before go-live.
 

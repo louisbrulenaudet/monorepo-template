@@ -36,7 +36,7 @@ Cover the following dimensions (if a dimension yields no findings, say so in one
 
 - **Architecture & configuration**
   - Monorepo: apps vs packages, `@repo/dtos-common` / `@repo/enums-common` / `@repo/typescript-config` usage, Turborepo tasks and caching, root scripts and port allocation.
-  - Env and secrets: `.dev.vars` vs `wrangler.jsonc` vars; Vite `import.meta.env` (client-exposed keys only, e.g. `VITE_*` if used); no secrets in client bundle or repo.
+  - Env and secrets: `secrets.required` + local `.env` (never `.dev.vars`) vs `wrangler.jsonc` vars; Vite `import.meta.env` (client-exposed keys only, e.g. `VITE_*` if used); no secrets in client bundle or repo.
   - Deployment: Cloudflare Workers + Vite build output for `front-app`; `worker-api` as separate Worker; env-specific build modes (development/production).
 - **Scalability**
   - Worker limits: CPU/memory and request timeouts; edge-safe code (e.g. nodejs_compat, no Node-only APIs in worker code).
@@ -49,7 +49,7 @@ Cover the following dimensions (if a dimension yields no findings, say so in one
   - Network: payload size, duplicate requests; link prefetch or route preloading if added; avoid unnecessary heavy client JS.
 - **Security & robustness**
   - Frontend: no secrets or sensitive logic in client bundle; security headers and CSP as configured for the deployment.
-  - worker-api: CORS origins and preflight, CSRF and body limits per middleware; third-party verification (e.g. Turnstile) only when implemented; service secrets only in env (`.dev.vars` / wrangler).
+  - worker-api: CORS origins and preflight, CSRF and body limits per middleware; third-party verification (e.g. Turnstile) only when implemented; service secrets only in env (local `.env` / wrangler secrets).
   - Validation and errors: Zod schemas from `@repo/dtos-common` at HTTP boundaries; consistent Hono error handling; safe logging and no sensitive data in responses or logs.
 - **Maintainability & code quality**
   - Conventions: naming (camelCase, CONSTANT_CASE, PascalCase enums and CONSTANT_CASE members per AGENTS.md); OXC and TypeScript strict; consistent patterns across apps.
@@ -57,7 +57,7 @@ Cover the following dimensions (if a dimension yields no findings, say so in one
   - Evolution: duplication, readability, testability; sustainability of shared DTOs and API surface.
 - **CI, reproducibility & observability**
   - CI: `.github/workflows/ci.yml` - install, lint/format (`pnpm check`), typecheck (`pnpm check-types`), build; cache and lockfile handling; branch/trigger strategy.
-  - Reproducibility: `pnpm install` and lockfile, env documented (e.g. `.dev.vars.example`), build modes and deploy pipeline.
+  - Reproducibility: `pnpm install` and lockfile, env documented (secret names in `secrets.required`), build modes and deploy pipeline.
 - **User experience**
   - Styling: Tailwind CSS, Vite plugin, dark mode, responsive design, mobile-first approach, consistent UI/UX patterns.
 

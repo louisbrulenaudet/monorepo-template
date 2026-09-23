@@ -65,10 +65,12 @@
       "Bash(rm -Rf:*)",
       "Bash(rm -r -f:*)",
       "Bash(rm -f -r:*)",
+      "Bash(wrangler preview:*)",
+      "Bash(pnpm preview:deploy*)",
+      "Bash(pnpm preview:delete*)",
+      "Bash(pnpm run preview:*)",
+      "Bash(bash .github/actions/previews/*)",
       "Bash(sudo rm:*)",
-      "Edit(**/dist/**)",
-      "Edit(**/build/**)",
-      "Edit(**/worker-configuration.d.ts)",
       "Edit(**/drizzle/migrations/**)",
       "Edit(**/pnpm-lock.yaml)",
       "Edit(pnpm-lock.yaml)",
@@ -165,6 +167,15 @@
             ],
             "timeout": 10,
             "statusMessage": "Scanning content for credentials"
+          },
+          {
+            "type": "command",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/security/guard-generated-files.sh"
+            ],
+            "timeout": 10,
+            "statusMessage": "Checking for generated files"
           }
         ]
       }
@@ -226,7 +237,8 @@
         "vercel.com",
         "api.vercel.com",
         "turborepo.dev"
-      ]
+      ],
+      "allowLocalBinding": true
     },
     "credentials": {
       "files": [
@@ -243,13 +255,19 @@
           "mode": "deny"
         },
         {
-          "path": "~/.wrangler",
+          "path": "~/.wrangler/config",
           "mode": "deny"
         },
         {
           "path": "~/Library/Preferences/.wrangler",
           "mode": "deny"
         }
+      ]
+    },
+    "enableWeakerNetworkIsolation": true,
+    "filesystem": {
+      "allowWrite": [
+        "~/Library/pnpm/package-manager-store"
       ]
     }
   },
@@ -298,6 +316,7 @@
     "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "20",
     "TURBO_TELEMETRY_DISABLED": "1",
     "WRANGLER_SEND_METRICS": "false",
-    "REACT_DOCTOR_NO_TELEMETRY": "1"
+    "REACT_DOCTOR_NO_TELEMETRY": "1",
+    "WRANGLER_LOG_PATH": "/tmp/claude/wrangler-logs"
   }
 }

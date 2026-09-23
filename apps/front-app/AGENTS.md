@@ -73,6 +73,7 @@ Local env: `cp .env.example .env.local` (and `.env.production.example` for prod 
 | `pnpm -w turbo run upload --filter=front-app` | `wrangler versions upload` (no traffic) |
 | `pnpm -w turbo run promote --filter=front-app` | Interactive `wrangler versions deploy` |
 | `pnpm -w turbo run deploy --filter=front-app` | `wrangler deploy` (upload + 100%) |
+| `pnpm -w preview:deploy` / `pnpm -w preview:delete` | Worker Preview (see `.claude/rules/ops/previews.md`) |
 | `pnpm -w run ci` | Full repository PR gate (local; not `--affected`) |
 | `pnpm -w check-types` | Verify route generation and typecheck the workspace |
 | `pnpm -w react-doctor:changed` | React Doctor offline changed-scope scan - run after React edits (deep workflow: skill `react-doctor`) |

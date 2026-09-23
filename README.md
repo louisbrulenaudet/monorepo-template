@@ -109,7 +109,7 @@ Do **not** create shared `packages/db-*` schema packages. Put Drizzle schema und
 | DB schema (one owner) | `apps/<owner>/src/db/` - never `packages/db-*` |
 | Frontend API client | `apps/front-app/src/services/worker-api/<feature>.ts` |
 | Frontend page + route | `apps/front-app/src/pages/` + `src/routes/` |
-| Local Worker secrets | `apps/<worker>/.dev.vars` (from `.dev.vars.example`) |
+| Local Worker secrets | `apps/<worker>/.env`, names declared in `secrets.required` (`wrangler.jsonc`) - never `.dev.vars` |
 | Frontend env | `apps/front-app/.env.local` (from `.env.example`) |
 
 ## Getting Started
@@ -132,7 +132,7 @@ No type-generation step: `worker-configuration.d.ts` is **committed**, per Cloud
 
 Copy env templates before the first run:
 
-- Workers: `apps/<worker>/.dev.vars.example` → `.dev.vars`
+- Workers: none today. When a Worker declares `secrets.required` in `wrangler.jsonc`, put those keys in `apps/<worker>/.env`
 - Frontend: `apps/front-app/.env.example` → `.env.local`
 
 Agent worktrees do not copy real env files. Provision isolated development credentials explicitly in each worktree when runtime access is required.
@@ -253,7 +253,7 @@ There is no generator CLI. Copy the closest sibling under `apps/` and wire it in
 3. **Assign ports** from the [Development ports](#development-ports) registry - set `dev.port` / `inspector_port: 0` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`.
 4. **Declare the promote order and the health probe** - `monorepo.deployOrder` in `package.json`, lower first (gateways before the SPAs that call them), plus `monorepo.healthPath`: the public path CD probes after promoting, or `null` when the app has no public HTTP surface. CD discovers apps from `apps/*` and fails closed on either value missing, so this is the only place a new app announces itself to the release pipeline.
 5. **Add** `package.json` scripts (`dev`, `deploy`, `check-types`, `types`, `types:check`, lint/format via `pnpm -w exec` from repo root) and a `turbo.json` with tags (see [AGENTS.md](AGENTS.md)).
-6. **Extend** `@repo/typescript-config/workers.json` (or the matching preset); add `.dev.vars.example`.
+6. **Extend** `@repo/typescript-config/workers.json` (or the matching preset); declare any secret names in `secrets.required`.
 7. **Install and typegen** (commit the generated `worker-configuration.d.ts` with the new Worker):
    ```sh
    pnpm install
@@ -312,7 +312,7 @@ src/
 Each worker uses environment-specific configuration. Frontends use Vite env files (see [apps/front-app/README.md](apps/front-app/README.md)).
 
 ### Development Environment
-- **Workers:** `.dev.vars` (from `.dev.vars.example`) for local secrets and overrides
+- **Workers:** `apps/<worker>/.env` for local secrets (keys listed in `secrets.required`). Not `.dev.vars`: Cloudflare supports either file, and the Workers test pool aborts on an unreadable `.dev.vars` in the Claude Code sandbox but skips an unreadable `.env`
 - **Frontend:** `.env.local` (from `.env.example`) - only `VITE_*` keys reach the browser
 
 ### Staging/Production Environments
@@ -446,6 +446,35 @@ pnpm --filter=front-app run deploy
 pnpm --filter=worker-api run upload
 pnpm --filter=worker-api run promote
 ```
+
+### Branch Previews
+
+[Worker Previews](https://developers.cloudflare.com/workers/previews/) give every branch or pull request an isolated, production-like copy of each Worker, served under the production Worker (`worker-api-production`, `front-app-production`) with its own URL, logs, and traces. Vars and bindings come from `env.production.previews` in each `wrangler.jsonc` and are never inherited from production; there `ENVIRONMENT` is `preview`.
+
+```sh
+pnpm preview:deploy   # Preview named after the branch; prints and smokes the URLs
+pnpm preview:delete   # remove it again
+PREVIEW_NAME=demo pnpm preview:deploy
+```
+
+The gateway is previewed first, then `front-app` is built against the gateway **Preview** URL, so the SPA Preview talks to the API Preview. Pull requests get the same through [`.github/workflows/preview.yml`](.github/workflows/preview.yml): one Preview per same-repo PR (`pr-<number>`), a single comment listing the URLs, and deletion when the PR closes.
+
+Once per account, before the first run:
+
+1. **Turn on workers.dev Preview URLs** for both Workers: `pnpm --filter=<app> exec wrangler triggers deploy --config wrangler.jsonc --env production` with `<app>` set to `worker-api`, then `front-app`. `--config` bypasses a local Vite build's redirected config, which would target the wrong Worker. `preview_urls: true` only applies through `wrangler deploy` / `triggers deploy`, never through the `versions upload` CD uses; without it a Preview has no URL.
+2. **Set `CORS_ORIGINS`** in `apps/worker-api/wrangler.jsonc` → `env.production.previews.vars` to `https://*-front-app-production.<subdomain>.workers.dev`. It ships empty, which fails closed: the gateway Preview answers **503** on `/api/*`, including the smoke check.
+3. **Enable Cloudflare Access** on the `front-app` Preview URLs (Worker → Settings → Domains & Routes → Preview URLs). Preview URLs are **public by default**, and `preview_urls: true` also exposes production Version URLs. Leave the gateway Preview on its CORS allowlist: Access there would break the SPA's cross-origin calls unless you also configure the Access application's CORS settings.
+
+To arm the workflow, create a `preview` GitHub Environment holding the secrets below, then set the repository variable `PREVIEWS_ENABLED` to `true`.
+
+| Name | Kind | Purpose |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | secret (`preview` environment) | Scoped token, same permissions as CD - Previews live under the production Workers |
+| `CLOUDFLARE_ACCOUNT_ID` | secret (`preview` environment) | Target account |
+| `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` | secret (`preview` environment, optional) | Access service token, included in a **Service Auth** policy, so the smoke probe passes Access |
+| `PREVIEWS_ENABLED` | variable | Must be `true` for the workflow to run |
+
+Limitations, isolation, and the agent workflow: [`.claude/rules/ops/previews.md`](.claude/rules/ops/previews.md).
 
 ## Best Practices
 

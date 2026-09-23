@@ -16,14 +16,14 @@ set -euo pipefail
 version_ids="${RUNNER_TEMP:?RUNNER_TEMP is required}/version-ids.tsv"
 : > "$version_ids"
 
-apps="$(node .github/actions/cd/list-apps.mjs)"
+apps="$(node .github/actions/lib/list-apps.mjs)"
 
 names=()
 dirs=()
 outs=()
 logs=()
 pids=()
-while IFS=$'\t' read -r app dir; do
+while IFS=$'\t' read -r app dir _; do
   [ -n "$app" ] || continue
   out="$(mktemp)"
   log="$(mktemp)"

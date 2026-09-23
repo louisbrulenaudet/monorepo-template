@@ -5,7 +5,7 @@ import {
 } from "@repo/enums-common";
 import { cors } from "hono/cors";
 import { createMiddleware } from "hono/factory";
-import { resolveCorsOrigins } from "./cors-origins";
+import { isAllowedCorsOrigin, resolveCorsOrigins } from "./cors-origins";
 
 type AppEnv = {
   Bindings: Env;
@@ -29,9 +29,14 @@ export const corsMiddleware = createMiddleware<AppEnv>(async (c, next) => {
     );
   }
 
+  const allowedOrigins = resolution.origins;
   return cors({
     // Permissive `*` only when resolveCorsOrigins allowed null (non-strict envs).
-    origin: resolution.origins ?? "*",
+    origin:
+      allowedOrigins === null
+        ? "*"
+        : (origin) =>
+            isAllowedCorsOrigin(origin, allowedOrigins) ? origin : null,
     allowHeaders: CORS_ALLOW_HEADERS,
     allowMethods: CORS_ALLOW_METHODS,
     exposeHeaders: CORS_EXPOSE_HEADERS,

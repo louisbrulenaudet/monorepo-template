@@ -9,8 +9,10 @@ catalogMode: prefer
 catalog:
   '@changesets/changelog-github': ^1.0.1
   '@changesets/cli': ^3.0.3
-  '@cloudflare/vite-plugin': ^1.57.2
-  '@cloudflare/vitest-plugin': ^1.2.2
+  # 1.58.0 replaces `server.config` with a copy, which breaks Vite's inline-module
+  # HTML proxy cache in dev ("No matching HTML proxy module"). Unpin once fixed upstream.
+  '@cloudflare/vite-plugin': 1.57.3
+  '@cloudflare/vitest-plugin': ^1.2.3
   '@hono/cli': 0.2.0-next.0
   '@hono/zod-validator': ^0.9.1
   '@tailwindcss/vite': ^4.3.3
@@ -52,12 +54,12 @@ catalog:
   rollup-plugin-visualizer: ^7.1.1
   syncpack: ^15.3.3
   tailwindcss: ^4.3.3
-  turbo: 2.11.2
+  turbo: 2.11.3
   typescript: ^7.0.2
   vite: ^8.3.0
-  vite-plus: 0.3.0
+  vite-plus: 1.0.0-rc.0
   vitest: ^5.0.1
-  wrangler: ^4.136.2
+  wrangler: ^4.137.0
   zod: ^4.6.5
 
 # Temporary transition group: @cloudflare/vitest-plugin still pins vitest ^4.1.0
