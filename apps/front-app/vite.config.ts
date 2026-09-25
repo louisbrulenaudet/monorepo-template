@@ -1,4 +1,5 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
@@ -8,12 +9,13 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { visualizer } from "rollup-plugin-visualizer";
-import { defineConfig, loadEnv, type PluginOption } from "vite";
+import { defineConfig, loadEnv, type Plugin, type PluginOption } from "vite";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 const analyzeBundle = process.env["ANALYZE"] === "true";
 const repoRoot = path.resolve(appDir, "../..");
 const productionEnvKeys = ["VITE_API_BASE_URL"] as const;
+const optionalProductionOriginKeys = ["VITE_SENTRY_DSN"] as const;
 
 function isPlaceholderOrigin(value: string): boolean {
   try {
@@ -43,20 +45,24 @@ function assertProductionOriginEnv(mode: string, command: string): void {
     );
   }
 
-  const placeholders = productionEnvKeys.filter((key) =>
-    env[key] ? isPlaceholderOrigin(env[key]) : false,
-  );
+  const placeholders = [
+    ...productionEnvKeys,
+    ...optionalProductionOriginKeys,
+  ].filter((key) => (env[key] ? isPlaceholderOrigin(env[key]) : false));
   if (placeholders.length > 0) {
     throw new Error(
-      `Production frontend env contains placeholder origins: ${placeholders.join(
+      `Production frontend env contains placeholder or invalid origins: ${placeholders.join(
         ", ",
       )}.`,
     );
   }
 }
 
-function cspHeaders(apiBaseUrl: string): string {
-  const apiOrigin = new URL(apiBaseUrl).origin;
+function cspHeaders(apiBaseUrl: string, sentryDsn: string | undefined): string {
+  const connectOrigins = [new URL(apiBaseUrl).origin];
+  if (sentryDsn) {
+    connectOrigins.push(new URL(sentryDsn).origin);
+  }
   // style-src unsafe-inline is deliberate for Vite/Tailwind injected styles;
   // keep script-src strict (no unsafe-inline / unsafe-eval).
   const csp = [
@@ -68,7 +74,7 @@ function cspHeaders(apiBaseUrl: string): string {
     "font-src 'self'",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    `connect-src 'self' ${apiOrigin}`,
+    `connect-src 'self' ${connectOrigins.join(" ")}`,
   ].join("; ");
 
   return [
@@ -118,8 +124,42 @@ function generatedBuildArtifactsPlugin(mode: string, command: string) {
 
       writeFileSync(
         path.resolve(appDir, "dist/_headers"),
-        cspHeaders(apiBaseUrl),
+        cspHeaders(apiBaseUrl, env["VITE_SENTRY_DSN"]),
       );
+    },
+  };
+}
+
+const DEBUG_ID_COMMENT = /\/\/# debugId=([\da-f-]+)/;
+
+// @sentry/vite-plugin stamps a debug ID into each chunk but, under rolldown, not
+// into its hidden source map; Sentry matches the two only when both carry it.
+function sentryDebugIdSourceMapsPlugin(): Plugin {
+  return {
+    name: "sentry-debug-id-source-maps",
+    apply: "build",
+    writeBundle(outputOptions, bundle) {
+      const outDir = outputOptions.dir;
+      if (!outDir) {
+        return;
+      }
+      for (const output of Object.values(bundle)) {
+        if (output.type !== "chunk" || !output.sourcemapFileName) {
+          continue;
+        }
+        const debugId = DEBUG_ID_COMMENT.exec(output.code)?.[1];
+        if (!debugId) {
+          continue;
+        }
+        const mapPath = path.resolve(outDir, output.sourcemapFileName);
+        const map: unknown = JSON.parse(readFileSync(mapPath, "utf-8"));
+        if (typeof map === "object" && map !== null) {
+          writeFileSync(
+            mapPath,
+            JSON.stringify({ ...map, debug_id: debugId, debugId }),
+          );
+        }
+      }
     },
   };
 }
@@ -140,6 +180,18 @@ export default defineConfig(({ command, mode }) => {
     generatedBuildArtifactsPlugin(mode, command),
   ];
 
+  // Last, as the plugin requires. The build only injects debug IDs: the uncached
+  // CD step `sentry:sourcemaps` names the release and uploads, so a turbo cache
+  // hit cannot skip the upload and the auth token never reaches the build.
+  plugins.push(
+    sentryVitePlugin({
+      telemetry: false,
+      release: { name: "", inject: false },
+      sourcemaps: { disable: "disable-upload" },
+    }),
+    sentryDebugIdSourceMapsPlugin(),
+  );
+
   if (analyzeBundle) {
     const bundleAnalyzePlugins = visualizer({
       filename: "dist/stats.html",
@@ -159,6 +211,10 @@ export default defineConfig(({ command, mode }) => {
     plugins,
     css: {
       devSourcemap: true,
+    },
+
+    define: {
+      __SENTRY_DEBUG__: false,
     },
 
     build: {
@@ -187,6 +243,13 @@ export default defineConfig(({ command, mode }) => {
                 name: "react-vendor",
                 test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/,
                 priority: 30,
+              },
+              {
+                name: "sentry-vendor",
+                test: /node_modules[\\/](@sentry|web-vitals)[\\/]/,
+                priority: 15,
+                // Splits off the tracing code only the lazy sentry-tracing chunk needs.
+                entriesAware: true,
               },
               {
                 name: "tanstack-router-vendor",

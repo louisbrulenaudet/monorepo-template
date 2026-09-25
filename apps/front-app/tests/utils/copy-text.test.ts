@@ -1,11 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { copyText } from "#/utils/copy-text";
 
 describe("copyText", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
   it("writes to the async clipboard and returns true", async () => {
     const writeText = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { clipboard: { writeText } });

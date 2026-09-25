@@ -11,7 +11,13 @@
         "!.env.example",
         "!.env.*.example"
       ],
-      "env": ["$TURBO_EXTENDS$", "VITE_API_BASE_URL", "CLOUDFLARE_ENV"]
+      "env": [
+        "$TURBO_EXTENDS$",
+        "VITE_API_BASE_URL",
+        "VITE_APP_ENVIRONMENT",
+        "VITE_SENTRY_DSN",
+        "CLOUDFLARE_ENV"
+      ]
     },
     "dev": {
       "description": "Starts Vite and also worker-api so filtered `turbo run dev --filter=front-app` has a live gateway. Interruptible so `turbo watch` can restart when dependency inputs change.",

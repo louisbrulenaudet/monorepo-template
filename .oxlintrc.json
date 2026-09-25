@@ -152,6 +152,15 @@
         "doUnmock": "Module mocking swaps an import the code under test never chose. Inject a real seam: a fake argument, a Workers env binding, or a tests/helpers/* double.",
         "importMock": "Module mocking swaps an import the code under test never chose. Inject a real seam: a fake argument, a Workers env binding, or a tests/helpers/* double."
       }
+    ],
+    "vitest/no-identical-title": "error",
+    "vitest/no-restricted-matchers": [
+      "error",
+      {
+        "toBeTruthy": "Passes for almost any value, so a wrong value still passes. Assert the exact value, a format with toMatch or toSatisfy, or a shared-schema parse.",
+        "toBeFalsy": "Passes for null, undefined, 0, and an empty string alike. Assert the exact value, e.g. toBeNull() or toBe(false).",
+        "toBeDefined": "Passes for any value except undefined. Assert the exact value, a format with toMatch or toSatisfy, or a shared-schema parse."
+      }
     ]
   },
   "overrides": [

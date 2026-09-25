@@ -31,6 +31,7 @@ Root `knip.jsonc` is intentionally comment-free; every override's rationale live
 
 ### Root (`"."`)
 
+- `project` excludes `.agents/**`, which holds vendored agent skills installed from `skills-lock.json` - their bundled scripts are not project code, and the Vitest plugin's default test glob would otherwise make their `*.test.cjs` files entries. The negation is needed in both forms: `"!.agents/**"` for the default pass and `"!.agents/**!"` for production mode, which reads only `!`-suffixed patterns. Restating the default glob must keep `css`, which the Tailwind plugin compiles, or `treatConfigHintsAsErrors` fails on a compiled-extension hint. Do not use `ignore` or `ignoreFiles` instead - both still analyze the files. Same boundary as `ignorePatterns` in `.oxlintrc.json`.
 - `ignoreDependencies: ["@vitest/ui"]` (both passes) - launched as a CLI by the Vite DevTools Vitest dock, never imported, and the root has no Vitest config for Knip's vitest plugin to bind to. It lives at the workspace root rather than in `apps/front-app` because `@vitejs/devtools-vitest` probes for it with `isPackageExists("@vitest/ui", { paths: [workspaceRoot] })` while `@vitejs/devtools` core probes integrations against the app `cwd`; under pnpm's isolated layout an app-local install is invisible to that probe and the dock fails with `VTDT0001`. Do not move it back.
 
 ### packages/vitest-config
@@ -42,6 +43,6 @@ Root `knip.jsonc` is intentionally comment-free; every override's rationale live
 
 - Both passes must stay green: `pnpm knip` (default) and `pnpm knip:production` (`--production --strict`: shipped-code-only + workspace isolation). Both run inside `pnpm run ci`.
 - Never blanket-`ignore`. Prefer scoped patterns (`ignoreIssues`, `ignoreFiles`, production-only suffixes like `"dep!"` / `"!pattern!"`).
-- Exports kept solely for unit tests carry an explicit JSDoc `@internal` tag - production mode ignores tagged exports, so tests never mask dead shipped API - the tag alone is the reason, don't add prose above it restating "extracted/exported for tests".
+- Exports kept solely for unit tests carry an explicit JSDoc `@internal` tag - production mode ignores tagged exports, so tests never mask dead shipped API - the tag alone is the reason, don't add prose above it restating "extracted/exported for tests". Such an export is the last resort, not the default: the authoring gate in [testing.mdc](testing.mdc) requires testing through the real entry first.
 - Auto-fix unused dependencies and pnpm catalog entries with `knip --fix --fix-type dependencies,catalog`; agent-readable output via `pnpm knip:agent` (`--reporter symbols`).
 - Generated files (`routeTree.gen.ts`, `worker-configuration.d.ts`) resolve cleanly today; if they ever false-positive, use `ignoreIssues` scoped patterns, not blanket `ignore`.

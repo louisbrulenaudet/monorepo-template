@@ -13,7 +13,8 @@ globs: apps/worker-*/src/**/*.ts,apps/webhook-*/src/**/*.ts
 ```mermaid
 flowchart TD
   Client["Client / front-app"] --> ReqId["request-id"]
-  ReqId --> Sec["secure headers"]
+  ReqId --> Sentry["sentry"]
+  Sentry --> Sec["secure headers"]
   Sec --> CORS["CORS (/api/*)"]
   CORS --> CSRF["CSRF (unsafe methods)"]
   CSRF --> Timing["timing (dev only)"]
@@ -32,21 +33,23 @@ Register in this order. The onion model runs "before" logic top-down and "after"
 **Root app (every route):**
 
 1. **`requestId()`** (`hono/request-id`) - **first**, so every error log and response can reference it. Sets `c.get("requestId")` and echoes the `X-Request-Id` response header. Add `RequestIdVariables` to the Hono generic's `Variables` so `c.get("requestId")` is typed.
-2. **`secureHeaders()`** (`hono/secure-headers`) - HSTS, `nosniff`, `no-referrer`, COOP/CORP on by default (and `X-Powered-By` removed). Add a locked-down `contentSecurityPolicy` (`default-src 'none'; frame-ancestors 'none'`) - harmless for JSON, hardening if a response is ever rendered. Set `permissionsPolicy` to deny camera/mic/geolocation/payment. CORP `same-origin` is fine for CORS-mode `fetch` from `front-app`; do not disable it to fix SPA reads.
-3. **`cors()`** on `/api/*` - preflight `OPTIONS` must clear before auth/routes. Read the allowlist from `c.env.CORS_ORIGINS` **per request** (env is not available at module scope on Workers). Put `X-Request-Id` in `exposeHeaders` so browsers can read the id. Empty allowlist is permissive (`*`) in `dev` only; any other `ENVIRONMENT` (including `staging` / `production` and typos) must set origins or `/api/*` returns **503**.
-4. **Origin / CSRF gate** on `/api/*` - unsafe methods only (any `Content-Type`, including `application/json`); must not block CORS preflight. Allows when Origin is on the allowlist **or** `Sec-Fetch-Site` is `same-origin` / `same-site`. Hono built-in `csrf()` only covers form content-types - do not rely on it alone for this JSON SPA gateway.
+2. **`sentry(app, (env) => …)`** (`@sentry/hono/cloudflare`) - right after `requestId()`, followed by an inline middleware that `setTag("request_id", …)`s the opaque id. It reports `c.error` 5xx even when `onError` handles the error, so do not add `captureException` there. Keep `dataCollection` locked down (no user info, cookies, headers, bodies, query params, frame variables) - privileged client data, see [guardrails.md](../core/guardrails.md).
+3. **`secureHeaders()`** (`hono/secure-headers`) - HSTS, `nosniff`, `no-referrer`, COOP/CORP on by default (and `X-Powered-By` removed). Add a locked-down `contentSecurityPolicy` (`default-src 'none'; frame-ancestors 'none'`) - harmless for JSON, hardening if a response is ever rendered. Set `permissionsPolicy` to deny camera/mic/geolocation/payment. CORP `same-origin` is fine for CORS-mode `fetch` from `front-app`; do not disable it to fix SPA reads.
+4. **`cors()`** on `/api/*` - preflight `OPTIONS` must clear before auth/routes. Read the allowlist from `c.env.CORS_ORIGINS` **per request** (env is not available at module scope on Workers). Put `X-Request-Id` in `exposeHeaders` so browsers can read the id. Empty allowlist is permissive (`*`) in `dev` only; any other `ENVIRONMENT` (including `staging` / `production` and typos) must set origins or `/api/*` returns **503**.
+5. **Origin / CSRF gate** on `/api/*` - unsafe methods only (any `Content-Type`, including `application/json`); must not block CORS preflight. Allows when Origin is on the allowlist **or** `Sec-Fetch-Site` is `same-origin` / `same-site`. Hono built-in `csrf()` only covers form content-types - do not rely on it alone for this JSON SPA gateway.
 
 **API sub-app (`/api/v1`):**
 
-5. **`timing()`** (`hono/timing`) - Server-Timing header, **dev only** (gate on `c.env.ENVIRONMENT`). Workers timer metrics are inaccurate (timers advance only on I/O) and internal timings should not leak to clients.
-6. **`timeout(ms)`** (`hono/timeout`) - safety net returning `504`. Read the caveat below before adding routes.
-7. **`bodyLimit()`** - e.g. 3 MB cap; return `413` on overflow.
-8. **`prettyJSON()`** - dev only.
+6. **`timing()`** (`hono/timing`) - Server-Timing header, **dev only** (gate on `c.env.ENVIRONMENT`). Workers timer metrics are inaccurate (timers advance only on I/O) and internal timings should not leak to clients.
+7. **`timeout(ms)`** (`hono/timeout`) - safety net returning `504`. Read the caveat below before adding routes.
+8. **`bodyLimit()`** - e.g. 3 MB cap; return `413` on overflow.
+9. **`prettyJSON()`** - dev only.
 
 ## Observability
 
 - **Native first.** With `observability.enabled` in `wrangler.jsonc`, Workers emits an invocation log per request (method, path, status, CPU/wall time, outcome) with no code. Do **not** re-implement a per-request access log in middleware - it only duplicates that data and doubles log ingest cost.
 - **Correlate failures by request id.** `requestId()` sets `c.get("requestId")` and the `X-Request-Id` response header; `onError` logs structured JSON that includes it, and `onError` / `notFound` echo it in the response body. A client can quote the id, and you can grep logs for it on a failure.
+- **Sentry for exceptions, Workers Observability for traffic.** `SENTRY_DSN` is a `secrets.required` secret (unset locally or in tests → SDK disabled). Release is `worker-api@<semver>`; `environment` is `ENVIRONMENT`, and front-app sends the same `AppEnvironment` value via `VITE_APP_ENVIRONMENT`. Trace sampling mirrors each environment's `head_sampling_rate` (100% in `dev` / `preview`, 1% elsewhere): change the two together, and change front-app's `sentry.ts` with them, because the gateway continues the SPA's sampling decision. `beforeBreadcrumb` drops console breadcrumbs, because console text must not reach a third party. Source maps match by release, not debug ID: Wrangler bundles and uploads in one step, so nothing can inject IDs in between. That is why `upload` passes `--outdir dist`, so that `sentry:sourcemaps` uploads the maps of exactly the bundle that shipped.
 - **Reserve `console.error` for real failures** - Workers observability indexes `console` output, so error dashboards stay signal-heavy when success is left to invocation logs.
 - Sampling and retention live in `wrangler.jsonc` (`observability`, `head_sampling_rate`, `logs.invocation_logs`) - see [workers-config.mdc](workers-config.mdc).
 
@@ -92,7 +95,7 @@ Register in this order. The onion model runs "before" logic top-down and "after"
 `@hono/cli` is a `worker-api` devDependency. Run `hono agent-context` first: it prints the command reference generated from the installed version, so it cannot drift from this rule. Every command is JSON by default - `--plain` is for humans only.
 
 - `hono routes` after changing middleware order or a mount - the registered table without booting a server (`--verbose` includes middleware).
-- `hono request -P <path> --runtime workerd` to exercise a route. The default `node` runtime has no `c.env`, so any handler that reads a binding or `ENVIRONMENT` needs `--runtime workerd`, which loads `wrangler.jsonc` and its local bindings; pass no file argument then.
+- `hono request <path> --runtime workerd` to exercise a route. The default `node` runtime has no `c.env`, so any handler that reads a binding or `ENVIRONMENT` needs `--runtime workerd`, which loads `wrangler.jsonc` and its local bindings; pass no file argument then.
 - `hono request --trace` when a response is not what you expect - `matchedRoutes` names the middleware that ran and the handler that responded.
 - This is the fast loop between edits, not a replacement for the Vitest Workers pool suites.
 

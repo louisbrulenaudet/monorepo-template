@@ -33,10 +33,3 @@ export function getApiHealthPresentation(
 ): ApiHealthPresentation {
   return API_HEALTH_PRESENTATION[apiHealthStatus];
 }
-
-/** @internal */
-export function getApiHealthDotClassName(
-  apiHealthStatus: ApiHealthStatus,
-): string {
-  return getApiHealthPresentation(apiHealthStatus).dotClassName;
-}

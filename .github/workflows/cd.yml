@@ -56,6 +56,8 @@ jobs:
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      VITE_APP_ENVIRONMENT: production
+      VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
       NODE_ENV: production
       TAG: ${{ inputs.tag }}
 
@@ -97,6 +99,16 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: bash .github/actions/cd/upload-versions.sh
+
+      # Before promote, so the new version's first errors already resolve. Non-fatal:
+      # a Sentry outage must not block a release. Sentry project slugs = app names.
+      - name: Upload source maps to Sentry
+        if: ${{ vars.SENTRY_ORG != '' }}
+        continue-on-error: true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+        run: pnpm --filter='./apps/*' run --if-present sentry:sourcemaps
 
       - name: Promote every app @100%
         env:

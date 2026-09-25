@@ -1,6 +1,7 @@
 import type { RequestIdVariables } from "hono/request-id";
 import { resolveCorrelationId } from "@repo/correlation-id";
 import { AppEnvironment } from "@repo/enums-common";
+import { sentry, setTag } from "@sentry/hono/cloudflare";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
@@ -10,6 +11,7 @@ import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import { timeout } from "hono/timeout";
 import { timing } from "hono/timing";
+import { version } from "../package.json";
 import { corsMiddleware } from "./middlewares/cors";
 import { csrfMiddleware } from "./middlewares/csrf";
 import echoRoute from "./routes/echo";
@@ -17,6 +19,21 @@ import healthRoute from "./routes/health";
 
 const API_TIMEOUT_MS = 15_000;
 const MAX_BODY_BYTES = 3 * 1024 * 1024;
+// Mirrors each environment's observability.traces.head_sampling_rate.
+const FULL_TRACING_ENVIRONMENTS = new Set<string>([
+  AppEnvironment.DEV,
+  AppEnvironment.PREVIEW,
+]);
+const SAMPLED_TRACES_RATE = 0.01;
+const SENTRY_RELEASE = `worker-api@${version}`;
+const SENTRY_DATA_COLLECTION = {
+  userInfo: false,
+  cookies: false,
+  httpHeaders: false,
+  httpBodies: [],
+  urlQueryParams: false,
+  stackFrameVariables: false,
+};
 
 type AppEnv = {
   Bindings: Env;
@@ -32,7 +49,24 @@ app.use(
   }),
 );
 
+app.use(
+  sentry(app, (env) => ({
+    dsn: env.SENTRY_DSN,
+    environment: env.ENVIRONMENT,
+    release: SENTRY_RELEASE,
+    tracesSampleRate: FULL_TRACING_ENVIRONMENTS.has(env.ENVIRONMENT)
+      ? 1
+      : SAMPLED_TRACES_RATE,
+    dataCollection: SENTRY_DATA_COLLECTION,
+    // Console text can carry privileged client data; onError already logs the
+    // stack to Workers Observability.
+    beforeBreadcrumb: (breadcrumb) =>
+      breadcrumb.category === "console" ? null : breadcrumb,
+  })),
+);
+
 app.use(async (c, next) => {
+  setTag("request_id", c.get("requestId"));
   await next();
   c.header("X-Request-Id", c.get("requestId"));
 });

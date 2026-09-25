@@ -7,6 +7,8 @@
     "@repo/correlation-id": "workspace:*",
     "@repo/dtos-common": "workspace:*",
     "@repo/enums-common": "workspace:*",
+    "@sentry/cloudflare": "catalog:",
+    "@sentry/hono": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"
   },
@@ -15,6 +17,7 @@
     "@hono/cli": "catalog:",
     "@repo/typescript-config": "workspace:*",
     "@repo/vitest-config": "workspace:*",
+    "@sentry/cli": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:vitest4",
     "wrangler": "catalog:"
@@ -49,10 +52,11 @@
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix apps/worker-api",
     "promote": "wrangler versions deploy --env production",
     "routes": "hono routes",
+    "sentry:sourcemaps": "sentry-cli releases new \"$npm_package_name@$npm_package_version\" --project \"$npm_package_name\" && sentry-cli sourcemaps upload --project \"$npm_package_name\" --release=\"$npm_package_name@$npm_package_version\" --strip-prefix 'dist/..' dist",
     "test": "vitest run",
     "test:watch": "vitest",
     "types": "wrangler types -c ./wrangler.jsonc",
     "types:check": "wrangler types -c ./wrangler.jsonc --check",
-    "upload": "wrangler versions upload --env production"
+    "upload": "wrangler versions upload --env production --outdir dist"
   }
 }

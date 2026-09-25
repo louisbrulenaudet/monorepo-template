@@ -8,12 +8,8 @@ import {
 const WILDCARD_ORIGIN = /^https:\/\/\*([a-z0-9-]*(?:\.[a-z0-9-]+){3,})$/;
 const WILDCARD_MATCHED_PREFIX = /^https:\/\/[a-z0-9-]+$/;
 
-/**
- * `null` means permissive mode (any origin) - allowed in non-strict envs only.
- *
- * @internal
- */
-export function parseCorsOrigins(value: string | undefined): string[] | null {
+/** `null` means permissive mode (any origin) - allowed in non-strict envs only. */
+function parseCorsOrigins(value: string | undefined): string[] | null {
   if (value === undefined || value.trim() === "") {
     return null;
   }

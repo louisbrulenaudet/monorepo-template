@@ -30,8 +30,6 @@ export function installSessionStorageHooks(): void {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
     resetCorrelationIdCache();
   });
 }

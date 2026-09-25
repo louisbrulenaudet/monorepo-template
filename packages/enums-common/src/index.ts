@@ -2,6 +2,7 @@ export {
   AppEnvironment,
   allowsWildcardCorsOrigins,
   isStrictCorsAppEnvironment,
+  parseAppEnvironment,
 } from "./app-environment";
 export { CorsAllowedHeader, CORS_ALLOWED_HEADERS } from "./cors-allowed-header";
 export {

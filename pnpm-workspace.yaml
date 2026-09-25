@@ -10,17 +10,23 @@ catalog:
   '@changesets/changelog-github': ^1.0.1
   '@changesets/cli': ^3.0.3
   # 1.58.0 replaces `server.config` with a copy, which breaks Vite's inline-module
-  # HTML proxy cache in dev ("No matching HTML proxy module"). Unpin once fixed upstream.
-  '@cloudflare/vite-plugin': 1.57.3
-  '@cloudflare/vitest-plugin': ^1.2.3
-  '@hono/cli': 0.2.0-next.0
+  # HTML proxy cache in dev ("No matching HTML proxy module"); still broken in 1.60.1. Unpin once fixed upstream.
+  '@cloudflare/vite-plugin': 1.60.1
+  '@cloudflare/vitest-plugin': ^1.2.7
+  '@hono/cli': 0.2.0-next.9
   '@hono/zod-validator': ^0.9.1
+  # @sentry/hono peers on the exact same @sentry/cloudflare version; bump all three together.
+  '@sentry/cli': ^3.8.0
+  '@sentry/cloudflare': 11.0.0
+  '@sentry/hono': 11.0.0
+  '@sentry/react': 11.0.0
+  '@sentry/vite-plugin': ^5.4.0
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
-  '@tanstack/react-devtools': ^0.10.12
+  '@tanstack/react-devtools': ^0.10.13
   '@tanstack/react-query': ^5.103.2
   '@tanstack/react-query-devtools': ^5.103.2
-  '@tanstack/react-router': ^1.170.38
+  '@tanstack/react-router': ^1.170.39
   '@tanstack/react-router-devtools': ^1.167.2
   '@tanstack/router-cli': 1.167.38
   '@tanstack/router-plugin': ^1.168.40
@@ -31,35 +37,35 @@ catalog:
   '@types/node': 26.6.2
   '@types/react': ^19.3.0
   '@types/react-dom': ^19.3.0
-  '@vitejs/devtools': ^0.7.5
-  '@vitejs/devtools-oxc': ^0.7.5
-  '@vitejs/devtools-rolldown': ^0.7.5
-  '@vitejs/devtools-vite': ^0.7.5
-  '@vitejs/devtools-vitest': ^0.7.5
+  '@vitejs/devtools': ^0.7.6
+  '@vitejs/devtools-oxc': ^0.7.6
+  '@vitejs/devtools-rolldown': ^0.7.6
+  '@vitejs/devtools-vite': ^0.7.6
+  '@vitejs/devtools-vitest': ^0.7.6
   '@vitest/ui': ^5.0.1
   '@vitejs/plugin-react': ^6.1.1
   cross-env: ^10.1.0
   eslint-plugin-better-tailwindcss: ^4.7.0
   happy-dom: ^20.14.5
-  hono: ^4.13.8
-  knip: ^6.37.0
+  hono: ^4.13.9
+  knip: ^6.38.0
   oxc-transform-react: ^0.151.0
   oxfmt: ^0.70.0
   oxlint: ^1.85.0
   oxlint-plugin-react-doctor: ^0.9.14
-  oxlint-tsgolint: ^7.0.2002
+  oxlint-tsgolint: ^7.0.2003
   react: ^19.3.0
   react-doctor: ^0.9.14
   react-dom: ^19.3.0
   rollup-plugin-visualizer: ^7.1.1
   syncpack: ^15.3.3
   tailwindcss: ^4.3.3
-  turbo: 2.11.3
+  turbo: 2.11.4
   typescript: ^7.0.2
-  vite: ^8.3.0
+  vite: ^8.3.1
   vite-plus: 1.0.0-rc.0
   vitest: ^5.0.1
-  wrangler: ^4.137.0
+  wrangler: ^4.140.0
   zod: ^4.6.5
 
 # Temporary transition group: @cloudflare/vitest-plugin still pins vitest ^4.1.0
@@ -80,7 +86,7 @@ minimumReleaseAgeExclude:
   - wrangler
   - miniflare
   - typescript
-  - '@hono/cli@0.2.0-next.0'
+  - '@hono/cli@0.2.0-next.9'
 
 blockExoticSubdeps: true
 
@@ -88,6 +94,9 @@ trustPolicy: no-downgrade
 trustPolicyIgnoreAfter: 525600 # 365 days - skip trust checks for older publishes lacking provenance
 
 allowBuilds:
+  # The binary comes from the per-platform optionalDependencies; the postinstall
+  # is only a download fallback.
+  '@sentry/cli': false
   esbuild: true
   sharp: true
   workerd: true

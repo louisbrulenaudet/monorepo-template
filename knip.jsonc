@@ -24,6 +24,11 @@
     },
     ".": {
       "entry": [".github/actions/**/*.mjs!"],
+      "project": [
+        "**/*.{css,js,cjs,mjs,jsx,ts,cts,mts,tsx}!",
+        "!.agents/**",
+        "!.agents/**!",
+      ],
       "ignoreDependencies": ["@vitest/ui"],
     },
     "packages/vitest-config": {

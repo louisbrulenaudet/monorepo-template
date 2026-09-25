@@ -22,11 +22,10 @@ describe("resolveCorrelationId", () => {
     expect(resolveCorrelationId(id)).toBe(id);
   });
 
-  it("mints a new opaque id when incoming is missing or unsafe", () => {
-    for (const incoming of [undefined, "matter-1"]) {
-      const minted = resolveCorrelationId(incoming);
-      expect(isOpaqueCorrelationId(minted)).toBe(true);
-      expect(minted).not.toBe(incoming);
-    }
-  });
+  it.each([undefined, "matter-1"])(
+    "mints a new opaque id when incoming is %j",
+    (incoming) => {
+      expect(resolveCorrelationId(incoming)).toSatisfy(isOpaqueCorrelationId);
+    },
+  );
 });
