@@ -84,7 +84,8 @@ while IFS=$'\t' read -r app _dir role health_path; do
     : "${gateway_url:?no http-gateway Preview exists yet - a frontend needs its URL as VITE_API_BASE_URL}"
     # --only: the type-check gate belongs to ci.yml; this build only needs dist/.
     env -u CLOUDFLARE_API_TOKEN -u CLOUDFLARE_ACCOUNT_ID \
-      VITE_API_BASE_URL="$gateway_url" CLOUDFLARE_ENV="$PREVIEW_ENV" NODE_ENV=production \
+      VITE_API_BASE_URL="$gateway_url" VITE_APP_ENVIRONMENT=preview \
+      CLOUDFLARE_ENV="$PREVIEW_ENV" NODE_ENV=production \
       pnpm turbo run build --filter="$app" --only < /dev/null
   fi
   url="$(wrangler_preview "$app")"

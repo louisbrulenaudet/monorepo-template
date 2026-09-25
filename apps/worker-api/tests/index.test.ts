@@ -1,4 +1,4 @@
-import { exports } from "cloudflare:workers";
+import { env, exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import app from "../src/index";
 
@@ -14,7 +14,7 @@ describe("worker-api root", () => {
     const body: unknown = await response.json();
     expect(body).toEqual({
       message: "Worker API",
-      version: expect.stringMatching(/\S/),
+      version: env.CF_VERSION_METADATA.id,
     });
   });
 

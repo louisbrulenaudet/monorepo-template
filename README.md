@@ -132,7 +132,7 @@ No type-generation step: `worker-configuration.d.ts` is **committed**, per Cloud
 
 Copy env templates before the first run:
 
-- Workers: none today. When a Worker declares `secrets.required` in `wrangler.jsonc`, put those keys in `apps/<worker>/.env`
+- Workers: put the keys a Worker declares in `secrets.required` (`wrangler.jsonc`) in `apps/<worker>/.env`. `worker-api` needs only `SENTRY_DSN`, and leaving it unset disables Sentry
 - Frontend: `apps/front-app/.env.example` → `.env.local`
 
 Agent worktrees do not copy real env files. Provision isolated development credentials explicitly in each worktree when runtime access is required.
@@ -422,7 +422,12 @@ Recovering from a failed release (full table in [`.claude/rules/ops/release.md`]
 | `CLOUDFLARE_API_TOKEN` | secret | Wrangler auth |
 | `CLOUDFLARE_ACCOUNT_ID` | secret | Target account |
 | `VITE_API_BASE_URL` | variable | Production API origin baked into `front-app` |
+| `VITE_SENTRY_DSN` | variable | Optional `front-app` Sentry DSN (public); also used by Preview builds, and empty disables Sentry |
+| `SENTRY_ORG` | variable | Optional; arms the CD step that uploads each app's source maps to the Sentry project named like the app |
+| `SENTRY_AUTH_TOKEN` | secret | Sentry org auth token for that step (scoped to the step, never the build) |
 | `CD_ENABLED` | variable | Must be `true` for `release.yml` to call CD; unset leaves the deploy job skipped |
+
+`worker-api` declares `SENTRY_DSN` in `secrets.required`, so a deploy fails until the Worker secret exists: run `pnpm --filter=worker-api exec wrangler secret put SENTRY_DSN --env <staging|production>` once per environment. Worker Previews do not require it, so Sentry stays off on Previews.
 
 **API token permissions** (scoped token; do not use a global API key):
 

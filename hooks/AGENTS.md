@@ -115,7 +115,7 @@ Known limits, by design: the guards do not see through `eval`, `sh -c`, heredocs
 | `quality/format-changed.sh` | called by `check-changed.sh` | never (always 0) |
 | `quality/lint-changed.sh` | called by `check-changed.sh` | oxlint reports problems on `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs` (never `.d.ts`) |
 | `security/guard-secret-content.sh` | Claude PreToolUse Edit\|Write | written content matches a high-signal credential pattern |
-| `security/guard-generated-files.sh` | Claude PreToolUse Edit\|Write | the target is a generated artifact (`worker-configuration.d.ts`, `routeTree.gen.ts`, `dist/**`, `build/**`) - a hook rather than an `Edit(...)` deny, because those denies also blocked the generators inside the sandbox |
+| `security/guard-generated-files.sh` | Claude PreToolUse Edit\|Write | the target is a generated artifact (`worker-configuration.d.ts`, `routeTree.gen.ts`, `pnpm-lock.yaml`, `dist/**`, `build/**`) - a hook rather than an `Edit(...)` deny, because those denies also blocked the generators inside the sandbox. For the same reason there are deliberately no `Read(...)` denies on `coverage/**`, `*.tsbuildinfo`, or `*.map` (tsc incremental builds and wrangler source-map upload read them) |
 | `git/lib/parse-command.sh` | sourced by the git guards | n/a - defines functions, never exits |
 | `logging/session-start.sh` | Cursor sessionStart | never |
 | `logging/instructions-loaded.sh` | Claude InstructionsLoaded (async) | never - this event ignores the exit code |

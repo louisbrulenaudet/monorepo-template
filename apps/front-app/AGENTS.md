@@ -21,7 +21,7 @@ apps/front-app/
 │   ├── services/worker-api/   # <feature>.ts + <feature>-query-options.ts
 │   ├── hooks/           # use-<feature>.ts
 │   ├── components/ui/   # Reusable primitives
-│   ├── config/          # env.ts, query-client.ts
+│   ├── config/          # env.ts, query-client.ts, instrument.ts, sentry.ts, sentry-tracing.ts
 │   ├── utils/           # fetch-api, correlation-id (SPA session wrapper)
 │   └── enums/           # Frontend-only value sets (`as const`)
 ├── tests/               # Vitest suites mirroring src/ (Node; DOM suites opt in per file)
@@ -42,6 +42,7 @@ apps/front-app/
 | UI primitive | `src/components/ui/<Name>.tsx` |
 | Data hook | `src/hooks/use-<feature>.ts` |
 | API base URL | `src/config/env.ts` (`VITE_API_BASE_URL`) |
+| Sentry | `src/config/sentry.ts`, initialised by `src/config/instrument.ts`, which must stay the first import of `main.tsx`, in its own import block. It reads `VITE_SENTRY_DSN` directly, not through `env.ts`, so an unset DSN folds the SDK out of the bundle. `VITE_APP_ENVIRONMENT` (`AppEnvironment`, matches worker-api) is read in `src/config/env.ts`. Router tracing loads lazily from `sentry-tracing.ts` (its own `sentry-vendor~` chunk). Query/mutation errors other than `FetchApiError` are reported through `createQueryClient` in `query-client.ts`. Builds only inject debug IDs; CD uploads the maps (`sentry:sourcemaps`) |
 | Frontend-only value set | `src/enums/<feature>.ts` |
 | Shared value set | `packages/enums-common/src/index.ts` |
 | SPA / deploy config | `wrangler.jsonc`, `vite.config.ts` |

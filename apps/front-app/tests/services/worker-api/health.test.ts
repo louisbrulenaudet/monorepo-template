@@ -1,32 +1,19 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { apiBaseUrl } from "#/config/env";
 import { getHealth } from "#/services/worker-api/health";
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+import { stubFetchJson } from "../../helpers/fetch-stub";
 
 describe("getHealth", () => {
   it("GETs /api/v1/health and returns the shared contract", async () => {
-    const fetchMock = vi.fn<typeof fetch>(() =>
-      Promise.resolve(
-        Response.json(
-          { status: "ok", version: "0.0.0" },
-          { status: 200, statusText: "OK" },
-        ),
-      ),
-    );
-    vi.stubGlobal("fetch", fetchMock);
+    const fetchMock = stubFetchJson({ status: "ok", version: "0.0.0" });
 
     await expect(getHealth({ dedupe: false, timeoutMs: 0 })).resolves.toEqual({
       status: "ok",
       version: "0.0.0",
     });
-
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] ?? [];
-    expect(url).toBe(`${apiBaseUrl}/api/v1/health`);
-    expect(init).toMatchObject({ method: "GET" });
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+      `${apiBaseUrl}/api/v1/health`,
+      expect.objectContaining({ method: "GET" }),
+    );
   });
 });

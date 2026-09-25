@@ -1,54 +1,38 @@
+import { isOpaqueCorrelationId } from "@repo/correlation-id";
 import { describe, expect, it, vi } from "vitest";
 import {
   getOrCreateCorrelationId,
-  isOpaqueCorrelationId,
+  resetCorrelationIdCache,
 } from "#/utils/correlation-id";
 import { installSessionStorageHooks } from "../helpers/session-storage-mock";
 
+function throwBlocked(): never {
+  throw new Error("blocked");
+}
+
 installSessionStorageHooks();
 
-describe("isOpaqueCorrelationId", () => {
-  it("accepts UUID v4", () => {
-    expect(isOpaqueCorrelationId("550e8400-e29b-41d4-a716-446655440000")).toBe(
-      true,
-    );
-  });
-
-  it("rejects privileged-looking values", () => {
-    expect(isOpaqueCorrelationId("matter-123")).toBe(false);
-    expect(isOpaqueCorrelationId("")).toBe(false);
-  });
-});
-
 describe("getOrCreateCorrelationId", () => {
-  it("reuses a stored opaque id for the session", () => {
+  it("reuses the id stored for the session", () => {
     const first = getOrCreateCorrelationId();
-    const second = getOrCreateCorrelationId();
-    expect(first).toBe(second);
-    expect(isOpaqueCorrelationId(first)).toBe(true);
+    resetCorrelationIdCache();
+
+    expect(first).toSatisfy(isOpaqueCorrelationId);
+    expect(getOrCreateCorrelationId()).toBe(first);
+  });
+
+  it("replaces a stored value that is not an opaque id", () => {
+    vi.spyOn(sessionStorage, "getItem").mockReturnValue("matter-123");
+
+    expect(getOrCreateCorrelationId()).toSatisfy(isOpaqueCorrelationId);
   });
 
   it("keeps a stable id when sessionStorage is blocked", () => {
-    vi.stubGlobal("sessionStorage", {
-      getItem: () => {
-        throw new Error("blocked");
-      },
-      setItem: () => {
-        throw new Error("blocked");
-      },
-      removeItem: () => {
-        throw new Error("blocked");
-      },
-      clear: () => {
-        throw new Error("blocked");
-      },
-      key: () => null,
-      length: 0,
-    } satisfies Storage);
+    vi.spyOn(sessionStorage, "getItem").mockImplementation(throwBlocked);
+    vi.spyOn(sessionStorage, "setItem").mockImplementation(throwBlocked);
 
     const first = getOrCreateCorrelationId();
-    const second = getOrCreateCorrelationId();
-    expect(first).toBe(second);
-    expect(isOpaqueCorrelationId(first)).toBe(true);
+    expect(first).toSatisfy(isOpaqueCorrelationId);
+    expect(getOrCreateCorrelationId()).toBe(first);
   });
 });

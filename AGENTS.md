@@ -91,7 +91,7 @@ Root map for cross-cutting placement. App-local detail: `apps/*/AGENTS.md` and `
 | Frontend feature | `apps/front-app/src/{pages,routes,services,hooks,components}/` |
 | Agent rules | `.claude/rules/<cat>/<name>.md` **and** its `.cursor/rules/<cat>/<name>.mdc` mirror, in the same change |
 | Bindings / secrets | `apps/<worker>/wrangler.jsonc` (secret names in `secrets.required`); local secret values in `apps/<worker>/.env`, never `.dev.vars` |
-| Tests (unit) | `apps/<app>/tests/` + `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` (Cloudflare Vitest pool) |
+| Tests (unit) | `apps/<app>/tests/` + `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` (Cloudflare Vitest pool); every new test passes the authoring gate in rule `quality/testing` |
 | Tests (multi-Worker integration) | Wrangler `createTestHarness()` from a Node Vitest suite - only after a second Worker + service binding exists; see [`packages/vitest-config/AGENTS.md`](packages/vitest-config/AGENTS.md) |
 
 Queue-only / dual-handler workers: `handlers/request.ts`, `handlers/message.ts`, shared `services/`, minimal `index.ts`.
@@ -184,7 +184,7 @@ Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview
 | worker-api smoke | background `pnpm --filter=worker-api dev`, then `curl -sf http://localhost:8700/api/v1/health` (expect `{ status, version }` JSON), then stop the dev process |
 | front-app smoke | background `pnpm --filter=front-app dev`, then `curl -sf http://localhost:5174/` and check the HTML contains `id="root"`, then stop |
 | Remote branch Preview (real edge, isolated) | Hand `! pnpm preview:deploy` to the user or read the PR's Previews comment; loop and sandbox caveats in `.claude/rules/ops/previews.md` |
-| worker-api routes / serverless smoke | `pnpm --filter=worker-api exec hono routes`; `pnpm --filter=worker-api exec hono request -P /api/v1/health --runtime workerd` - no dev server, `workerd` supplies the real `wrangler.jsonc` bindings |
+| worker-api routes / serverless smoke | `pnpm --filter=worker-api exec hono routes`; `pnpm --filter=worker-api exec hono request /api/v1/health --runtime workerd` - no dev server, `workerd` supplies the real `wrangler.jsonc` bindings |
 
 Run dev servers through the harness's background-task mechanism (never a bare `&` you cannot reap) and always stop them when done. Both smoke checks work inside the Claude Code sandbox (`sandbox.network.allowLocalBinding`). Where a user-level `Bash(curl *)` deny applies, probe with `node -e 'fetch(process.argv[1]).then(async (r) => { console.log(r.status, await r.text()); process.exitCode = r.ok ? 0 : 1; })' <url>` instead.
 

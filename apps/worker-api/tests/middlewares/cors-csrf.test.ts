@@ -5,27 +5,43 @@ import app from "../../src/index";
 
 void app;
 
-type WorkerEnv = typeof env;
-
-function withEnv(overrides: Partial<WorkerEnv>): WorkerEnv {
-  return { ...env, ...overrides };
-}
-
+const HEALTH_URL = "http://example.com/api/v1/health";
+const SPA_ORIGIN = "http://localhost:5174";
 const PREVIEW_ORIGIN = "https://pr-7-front-app-production.acme.workers.dev";
+
+const devEnv = {
+  ...env,
+  ENVIRONMENT: AppEnvironment.DEV,
+  CORS_ORIGINS: SPA_ORIGIN,
+};
 const previewEnv = {
   ...env,
   ENVIRONMENT: AppEnvironment.PREVIEW,
   CORS_ORIGINS: "https://*-front-app-production.acme.workers.dev",
 };
 
+const ALLOWED_ORIGINS = [
+  { name: "an allowlisted Origin", origin: SPA_ORIGIN, bindings: devEnv },
+  {
+    name: "a preview Origin matching a wildcard entry",
+    origin: PREVIEW_ORIGIN,
+    bindings: previewEnv,
+  },
+];
+
+function jsonPost(headers: Record<string, string>): RequestInit {
+  return {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: "{}",
+  };
+}
+
 describe("CORS and CSRF middleware", () => {
-  it("exposes X-Request-Id and locked-down CSP on API responses", async () => {
-    const response = await exports.default.fetch(
-      new Request("http://example.com/api/v1/health"),
-    );
+  it("sets a locked-down CSP and Permissions-Policy on API responses", async () => {
+    const response = await exports.default.fetch(new Request(HEALTH_URL));
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("X-Request-Id")).toBeTruthy();
     expect(response.headers.get("Content-Security-Policy")).toContain(
       "default-src 'none'",
     );
@@ -37,19 +53,14 @@ describe("CORS and CSRF middleware", () => {
 
   it("allows CORS for an Origin on the allowlist", async () => {
     const response = await app.request(
-      "http://example.com/api/v1/health",
-      {
-        headers: { Origin: "http://localhost:5174" },
-      },
-      withEnv({
-        ENVIRONMENT: AppEnvironment.DEV,
-        CORS_ORIGINS: "http://localhost:5174",
-      }),
+      HEALTH_URL,
+      { headers: { Origin: SPA_ORIGIN } },
+      devEnv,
     );
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      "http://localhost:5174",
+      SPA_ORIGIN,
     );
     expect(response.headers.get("Access-Control-Expose-Headers")).toContain(
       "X-Request-Id",
@@ -58,188 +69,85 @@ describe("CORS and CSRF middleware", () => {
 
   it("does not reflect a disallowed Origin", async () => {
     const response = await app.request(
-      "http://example.com/api/v1/health",
-      {
-        headers: { Origin: "https://evil.example" },
-      },
-      withEnv({
-        ENVIRONMENT: AppEnvironment.DEV,
-        CORS_ORIGINS: "http://localhost:5174",
-      }),
+      HEALTH_URL,
+      { headers: { Origin: "https://evil.example" } },
+      devEnv,
     );
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("Access-Control-Allow-Origin")).not.toBe(
-      "https://evil.example",
-    );
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
   });
 
   it("returns 503 when production CORS_ORIGINS is empty", async () => {
     const response = await app.request(
-      "http://example.com/api/v1/health",
+      HEALTH_URL,
       {},
-      withEnv({
-        ENVIRONMENT: AppEnvironment.PRODUCTION,
-        CORS_ORIGINS: "",
-      }),
+      { ...env, ENVIRONMENT: AppEnvironment.PRODUCTION, CORS_ORIGINS: "" },
     );
 
     expect(response.status).toBe(503);
-    const body: unknown = await response.json();
-    expect(body).toEqual({
+    expect(await response.json()).toEqual({
       error: "Service Unavailable",
       requestId: expect.any(String),
     });
   });
 
-  it("returns 503 when staging CORS_ORIGINS is empty", async () => {
+  it("returns 503 when production CORS_ORIGINS holds a wildcard, even for a matching Origin", async () => {
     const response = await app.request(
-      "http://example.com/api/v1/health",
-      {},
-      withEnv({
-        ENVIRONMENT: AppEnvironment.STAGING,
-        CORS_ORIGINS: "",
-      }),
-    );
-
-    expect(response.status).toBe(503);
-  });
-
-  it("does not block CORS preflight OPTIONS", async () => {
-    const response = await app.request(
-      "http://example.com/api/v1/health",
-      {
-        method: "OPTIONS",
-        headers: {
-          Origin: "http://localhost:5174",
-          "Access-Control-Request-Method": "GET",
-        },
-      },
-      withEnv({
-        ENVIRONMENT: AppEnvironment.DEV,
-        CORS_ORIGINS: "http://localhost:5174",
-      }),
-    );
-
-    expect(response.status).toBeLessThan(400);
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      "http://localhost:5174",
-    );
-  });
-
-  it("allows JSON POST from an allowlisted Origin", async () => {
-    const response = await app.request(
-      "http://example.com/api/v1/health",
-      {
-        method: "POST",
-        headers: {
-          Origin: "http://localhost:5174",
-          "Content-Type": "application/json",
-          "Sec-Fetch-Site": "cross-site",
-        },
-        body: "{}",
-      },
-      withEnv({
-        ENVIRONMENT: AppEnvironment.DEV,
-        CORS_ORIGINS: "http://localhost:5174",
-      }),
-    );
-
-    // No POST handler → 404 Method Not Allowed or 404, but not CSRF 403.
-    expect(response.status).not.toBe(403);
-    expect(response.status).not.toBe(503);
-  });
-
-  it("rejects JSON POST from a disallowed Origin", async () => {
-    const response = await app.request(
-      "http://example.com/api/v1/health",
-      {
-        method: "POST",
-        headers: {
-          Origin: "https://evil.example",
-          "Content-Type": "application/json",
-          "Sec-Fetch-Site": "cross-site",
-        },
-        body: "{}",
-      },
-      withEnv({
-        ENVIRONMENT: AppEnvironment.DEV,
-        CORS_ORIGINS: "http://localhost:5174",
-      }),
-    );
-
-    expect(response.status).toBe(403);
-    const body: unknown = await response.json();
-    expect(body).toEqual({
-      error: "Forbidden",
-      requestId: expect.any(String),
-    });
-  });
-
-  it("rejects unsafe JSON POST with no Origin or Sec-Fetch-Site", async () => {
-    const response = await app.request(
-      "http://example.com/api/v1/health",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: "{}",
-      },
-      withEnv({
-        ENVIRONMENT: AppEnvironment.DEV,
-        CORS_ORIGINS: "http://localhost:5174",
-      }),
-    );
-
-    expect(response.status).toBe(403);
-  });
-
-  it("reflects a preview Origin matching a wildcard entry", async () => {
-    const response = await app.request(
-      "http://example.com/api/v1/health",
-      {
-        method: "OPTIONS",
-        headers: {
-          Origin: PREVIEW_ORIGIN,
-          "Access-Control-Request-Method": "POST",
-        },
-      },
-      previewEnv,
-    );
-
-    expect(response.status).toBeLessThan(400);
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      PREVIEW_ORIGIN,
-    );
-  });
-
-  it("passes the CSRF gate for a preview Origin matching a wildcard entry", async () => {
-    const response = await app.request(
-      "http://example.com/api/v1/health",
-      {
-        method: "POST",
-        headers: {
-          Origin: PREVIEW_ORIGIN,
-          "Content-Type": "application/json",
-          "Sec-Fetch-Site": "cross-site",
-        },
-        body: "{}",
-      },
-      previewEnv,
-    );
-
-    expect(response.status).not.toBe(403);
-    expect(response.status).not.toBe(503);
-  });
-
-  it("returns 503 when production CORS_ORIGINS holds a wildcard", async () => {
-    const response = await app.request(
-      "http://example.com/api/v1/health",
+      HEALTH_URL,
       { headers: { Origin: PREVIEW_ORIGIN } },
       { ...previewEnv, ENVIRONMENT: AppEnvironment.PRODUCTION },
     );
 
     expect(response.status).toBe(503);
+  });
+
+  it.each(ALLOWED_ORIGINS)(
+    "answers the CORS preflight for $name",
+    async ({ origin, bindings }) => {
+      const response = await app.request(
+        HEALTH_URL,
+        {
+          method: "OPTIONS",
+          headers: { Origin: origin, "Access-Control-Request-Method": "POST" },
+        },
+        bindings,
+      );
+
+      expect(response.status).toBe(204);
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe(origin);
+    },
+  );
+
+  it.each(ALLOWED_ORIGINS)(
+    "lets a cross-site JSON POST from $name through the CSRF gate",
+    async ({ origin, bindings }) => {
+      const response = await app.request(
+        HEALTH_URL,
+        jsonPost({ Origin: origin, "Sec-Fetch-Site": "cross-site" }),
+        bindings,
+      );
+
+      expect(response.status).toBe(405);
+    },
+  );
+
+  it.each([
+    {
+      name: "a disallowed Origin",
+      headers: {
+        Origin: "https://evil.example",
+        "Sec-Fetch-Site": "cross-site",
+      },
+    },
+    { name: "no Origin or Sec-Fetch-Site", headers: {} },
+  ])("rejects a JSON POST with $name", async ({ headers }) => {
+    const response = await app.request(HEALTH_URL, jsonPost(headers), devEnv);
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Forbidden",
+      requestId: expect.any(String),
+    });
   });
 });

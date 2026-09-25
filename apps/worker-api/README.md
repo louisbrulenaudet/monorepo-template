@@ -110,7 +110,7 @@ Notes:
    pnpm install
    ```
 
-2. **Configure environment (optional):** the current code needs no secrets. When you add one, declare its name in `secrets.required` in `wrangler.jsonc` and put the local value in `apps/worker-api/.env` - never `.dev.vars` (git-ignored either way; never commit secrets).
+2. **Configure environment (optional):** the only secret is `SENTRY_DSN`, and leaving it unset disables Sentry. When you add one, declare its name in `secrets.required` in `wrangler.jsonc` and put the local value in `apps/worker-api/.env` - never `.dev.vars` (git-ignored either way; never commit secrets).
 
 3. **Start development server**:
    - All apps: `pnpm dev` from the monorepo root

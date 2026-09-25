@@ -56,6 +56,7 @@
       "WebFetch(domain:tailwindcss.com)",
       "WebFetch(domain:vite.dev)",
       "WebFetch(domain:pnpm.io)",
+      "WebFetch(domain:docs.sentry.io)",
       "mcp__cloudflare-docs__*",
       "mcp__context7__*"
     ],
@@ -72,11 +73,6 @@
       "Bash(bash .github/actions/previews/*)",
       "Bash(sudo rm:*)",
       "Edit(**/drizzle/migrations/**)",
-      "Edit(**/pnpm-lock.yaml)",
-      "Edit(pnpm-lock.yaml)",
-      "Read(**/coverage/**)",
-      "Read(**/*.tsbuildinfo)",
-      "Read(**/*.map)",
       "Read(**/.dev.vars)",
       "Read(**/.dev.vars.local)",
       "Read(**/.dev.vars.staging)",
@@ -317,6 +313,10 @@
     "TURBO_TELEMETRY_DISABLED": "1",
     "WRANGLER_SEND_METRICS": "false",
     "REACT_DOCTOR_NO_TELEMETRY": "1",
-    "WRANGLER_LOG_PATH": "/tmp/claude/wrangler-logs"
+    "WRANGLER_LOG_PATH": "/tmp/claude/wrangler-logs",
+    "VP_GIT_HOOKS": "0",
+    "GIT_CONFIG_COUNT": "1",
+    "GIT_CONFIG_KEY_0": "core.fsmonitor",
+    "GIT_CONFIG_VALUE_0": "false"
   }
 }

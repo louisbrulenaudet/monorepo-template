@@ -86,6 +86,13 @@
       "url": "./node_modules/wrangler/config-schema.json"
     }
   ],
+  // unpkg is scoped to knip: the bare domain would trust any npm package.
+  "json.schemaDownload.trustedDomains": {
+    "https://json.schemastore.org/": true,
+    "https://react.doctor/schema/": true,
+    "https://unpkg.com/knip@": true,
+    "https://opencode.ai/": true
+  },
   // Exclude Vite-only configs from Vitest discovery; keep vitest.config.* so
   // the explorer finds both .ts (front-*) and .mts (worker-*) packages.
   "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,*.d.ts,**/vite.config.ts,**/dist/**,**/build/**}",
@@ -226,6 +233,7 @@
     "Frontends",
     "frontmatter",
     "Frontmatter",
+    "fsmonitor",
     "gemini",
     "genai",
     "Ghsas",
@@ -277,6 +285,7 @@
     "nohup",
     "nonblocking",
     "nosniff",
+    "nowrap",
     "ntvs",
     "oklab",
     "oklch",
@@ -312,6 +321,7 @@
     "setstate",
     "sitemapindex",
     "sprintf",
+    "squircle",
     "statusline",
     "streamable",
     "stripable",

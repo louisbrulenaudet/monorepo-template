@@ -37,12 +37,13 @@
       "head_sampling_rate": 1,
     },
   },
-  // Uncomment when adding secrets - wrangler types + deploy validate these names. Local values go in
-  // apps/worker-api/.env, never .dev.vars: an unreadable .dev.vars aborts the Vitest pool, an
-  // unreadable .env is skipped (so sandboxed agents and CI run on the fake test bindings instead).
-  // "secrets": {
-  //   "required": ["EXAMPLE_SECRET"],
-  // },
+  // wrangler types + deploy validate these names; non-inheritable, so every env restates them. Local
+  // values go in apps/worker-api/.env, never .dev.vars: an unreadable .dev.vars aborts the Vitest pool,
+  // an unreadable .env is skipped (so sandboxed agents and CI run on the fake test bindings instead).
+  // Unset SENTRY_DSN locally disables Sentry.
+  "secrets": {
+    "required": ["SENTRY_DSN"],
+  },
   "vars": {
     "ENVIRONMENT": "dev", // AppEnvironment.DEV
     // Comma-separated browser origins. Empty/unset is permissive (*) when ENVIRONMENT is AppEnvironment.DEV only.
@@ -53,6 +54,9 @@
       "preview_urls": false,
       "version_metadata": {
         "binding": "CF_VERSION_METADATA",
+      },
+      "secrets": {
+        "required": ["SENTRY_DSN"],
       },
       "vars": {
         "ENVIRONMENT": "staging",
@@ -75,6 +79,9 @@
       "preview_urls": true,
       "version_metadata": {
         "binding": "CF_VERSION_METADATA",
+      },
+      "secrets": {
+        "required": ["SENTRY_DSN"],
       },
       "vars": {
         "ENVIRONMENT": "production",

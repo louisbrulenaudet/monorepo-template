@@ -1,5 +1,6 @@
+import { isOpaqueCorrelationId } from "@repo/correlation-id";
 import { HealthResponseSchema } from "@repo/dtos-common/api";
-import { exports } from "cloudflare:workers";
+import { env, exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import app from "../../src/index";
 
@@ -13,12 +14,12 @@ describe("GET /api/v1/health", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
-
-    const versionId = response.headers.get("X-Worker-Version-Id");
-    expect(versionId).toBeTruthy();
-
-    const requestId = response.headers.get("X-Request-Id");
-    expect(requestId).toBeTruthy();
+    expect(response.headers.get("X-Worker-Version-Id")).toBe(
+      env.CF_VERSION_METADATA.id,
+    );
+    expect(response.headers.get("X-Request-Id")).toSatisfy(
+      isOpaqueCorrelationId,
+    );
 
     const body: unknown = await response.json();
     expect(HealthResponseSchema.parse(body)).toEqual({
@@ -39,7 +40,7 @@ describe("GET /api/v1/health", () => {
     expect(response.headers.get("X-Request-Id")).toBe(clientId);
   });
 
-  it("rejects non-opaque client request ids", async () => {
+  it("replaces a non-opaque client request id with a minted opaque one", async () => {
     const response = await exports.default.fetch(
       new Request("http://example.com/api/v1/health", {
         headers: { "X-Request-Id": "matter-abc" },
@@ -47,8 +48,8 @@ describe("GET /api/v1/health", () => {
     );
 
     expect(response.status).toBe(200);
-    const echoed = response.headers.get("X-Request-Id");
-    expect(echoed).toBeTruthy();
-    expect(echoed).not.toBe("matter-abc");
+    expect(response.headers.get("X-Request-Id")).toSatisfy(
+      isOpaqueCorrelationId,
+    );
   });
 });

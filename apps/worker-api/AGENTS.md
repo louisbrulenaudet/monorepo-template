@@ -82,7 +82,7 @@ Working on this Hono app? Run `hono agent-context` first and follow it. `@hono/c
 | `pnpm -w --filter=worker-api exec wrangler check startup` | Local cold-start / bundle size profile (Wrangler >= 4.116) |
 | `pnpm -w --filter=worker-api exec hono agent-context` | Hono CLI reference for agents, generated from the installed version - read it before using any other `hono` command |
 | `pnpm -w --filter=worker-api run routes` | `hono routes` - every registered route as JSON; add `--verbose` for middleware, `--plain` for humans |
-| `pnpm -w --filter=worker-api exec hono request -P /api/v1/health --runtime workerd` | Call a route through `app.request()` on `workerd` with the real `wrangler.jsonc` bindings - no dev server, no port |
+| `pnpm -w --filter=worker-api exec hono request /api/v1/health --runtime workerd` | Call a route through `app.request()` on `workerd` with the real `wrangler.jsonc` bindings - no dev server, no port |
 | `pnpm -w turbo run test --filter=worker-api` | Vitest Workers pool, vitest run |
 | `pnpm -w turbo run test:watch --filter=worker-api` | Vitest watch, humans only |
 | `pnpm -w types` | Regenerate `worker-configuration.d.ts` - commit the result |

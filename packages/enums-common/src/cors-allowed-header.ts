@@ -3,6 +3,9 @@ export const CorsAllowedHeader = {
   AUTHORIZATION: "Authorization",
   /** Opaque correlation id (UUID). Never a client/matter identifier. */
   X_REQUEST_ID: "X-Request-Id",
+  // Sentry distributed tracing: front-app sends both so worker-api continues the trace.
+  SENTRY_TRACE: "sentry-trace",
+  BAGGAGE: "baggage",
 } as const;
 
 export type CorsAllowedHeader =
@@ -12,4 +15,6 @@ export const CORS_ALLOWED_HEADERS: readonly CorsAllowedHeader[] = [
   CorsAllowedHeader.CONTENT_TYPE,
   CorsAllowedHeader.AUTHORIZATION,
   CorsAllowedHeader.X_REQUEST_ID,
+  CorsAllowedHeader.SENTRY_TRACE,
+  CorsAllowedHeader.BAGGAGE,
 ];
