@@ -1,210 +1,26 @@
 # worker-api
 
-[![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Hono](https://img.shields.io/static/v1?label=framework&message=Hono&color=blue&logo=hono&logoColor=white)](https://hono.dev/)
-[![Zod](https://img.shields.io/static/v1?label=validation&message=Zod&color=blue&logo=zod&logoColor=white)](https://github.com/colinhacks/zod)
-[![Cloudflare](https://img.shields.io/static/v1?label=runtime&message=Cloudflare%20Workers&color=blue&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/workers/)
+Public HTTP gateway for the monorepo, built with Hono on Cloudflare Workers. `front-app` and external clients call it over HTTP; business Workers join later through service-binding RPC. It validates every input against the shared Zod schemas in `@repo/dtos-common/api`, applies CORS and security middleware, and returns typed JSON.
 
-Public HTTP API gateway for the monorepo. `front-app` and external clients call this Worker over HTTP; business Workers join later via service-binding RPC.
+## Run it
 
-## Current configuration (checked-in starter)
-
-The checked-in [wrangler.jsonc](wrangler.jsonc) defines the Worker name, dev port **8700**, and a minimal set of `vars` (e.g. `ENVIRONMENT`, local `CORS_ORIGINS`).
-
-What you can run today:
-- Health endpoint at `GET /api/v1/health` (returns release semver in `version`; `X-Worker-Version-Id` header carries the opaque wrangler version id)
-- Echo endpoint at `POST /api/v1/echo` - the worked `zValidator` example: validates the JSON body and the `?uppercase=true` query flag against `@repo/dtos-common/api`, and returns `{ error, requestId, issues }` on a validation failure. **Not mounted in production** (404 there) - it reflects caller input on an unauthenticated route with no rate-limit binding
-- Every response carries an `X-Request-Id` header, and error responses return `{ error, requestId }`. Per-request access logging comes from native Workers observability; failures log structured JSON with the request id for correlation.
-- Local/dev `CORS_ORIGINS` is `http://localhost:5174` (and exposes `X-Request-Id`). Staging/production **require** a comma-separated allowlist in `wrangler.jsonc` `vars` (e.g. `https://app.example.com`); an empty value fails closed with `503` on `/api/*` (no permissive `*`).
-- A 15 s request timeout returns `504`, and a `Server-Timing` header is added in non-production for local profiling.
-
-What you can add as you grow the repo:
-- Auth / session middleware
-- **Service bindings** to `worker-*` (configure under `services` in `wrangler.jsonc`)
-- **Rate limiting** on abuse-prone routes (Cloudflare Workers Rate Limiting binding and/or WAF rules) before shipping public writes
-
-## Purpose
-
-`worker-api` is the public-facing HTTP gateway: validate requests with shared Zod schemas, apply CORS and security middleware, and return typed JSON. The starter ships a health check with a local CORS allowlist; authentication and RPC bindings are extension points, not current defaults.
-
-## Tech Stack
-
-- **Language:** TypeScript (strict mode, ESNext)
-- **Framework:** Hono (for Cloudflare Workers)
-- **Validation:** Zod Mini schemas from `@repo/dtos-common/api`
-- **Middleware:** request id, secure headers, CORS, CSRF, timeout, body limits, timing + pretty JSON (dev)
-- **Runtime:** Cloudflare Workers
-- **Tests:** Vitest 4 + `@cloudflare/vitest-plugin` via `@repo/vitest-config/workers`
-- **Formatting/Linting:** OXC (oxfmt / oxlint)
-- **Package Manager:** pnpm
-
-## Project Structure
-
-```
-apps/worker-api/
-├── src/
-│   ├── middlewares/        # Env-dependent Hono middleware wrappers
-│   │   ├── cors.ts
-│   │   ├── cors-origins.ts # CORS_ORIGINS allowlist parsing (fail-closed)
-│   │   └── csrf.ts         # Origin / Sec-Fetch-Site gate on unsafe methods
-│   ├── routes/             # One route module per feature (created per feature)
-│   │   ├── echo.ts         # POST /api/v1/echo - zValidator json + query
-│   │   └── health.ts
-│   └── index.ts            # Middleware stack + route mounts
-├── tests/                  # Vitest (Cloudflare pool / workerd)
-│   ├── env.d.ts
-│   └── tsconfig.json
-├── vitest.config.mts       # defineWorkersConfig from @repo/vitest-config/workers
-├── wrangler.jsonc
-├── worker-configuration.d.ts
-└── README.md
+```sh
+pnpm turbo run dev --filter=worker-api   # Wrangler on http://localhost:8700
+curl -s http://localhost:8700/api/v1/health
 ```
 
-`src/enums/` is created on first use when a worker-local `as const` value set is needed; promote shared value sets to `@repo/enums-common`.
-
-## Request path
-
-Middleware runs top-down exactly as registered in `src/index.ts`; the `/api/v1` router applies its own stack before mounting feature routes.
-
-```mermaid
-flowchart TB
-  Client["Client / front-app"] --> ReqId["requestId<br/>resolveCorrelationId():<br/>accept opaque X-Request-Id or mint one"]
-  ReqId --> SetHeader["X-Request-Id response header"]
-  SetHeader --> NotAllowed["methodNotAllowed (405)"]
-  NotAllowed --> SecureHeaders["secureHeaders<br/>(CSP default-src 'none', frame-ancestors, permissions-policy)"]
-  SecureHeaders --> Cors["corsMiddleware (/api/*)<br/>allowlist from CORS_ORIGINS;<br/>empty + non-dev env fails closed (503)"]
-  Cors --> Csrf["csrfMiddleware (/api/*)<br/>origin gate on unsafe methods;<br/>skips OPTIONS preflight"]
-  Csrf --> Api["/api/v1 router"]
-
-  subgraph apiStack ["api router middleware"]
-    direction TB
-    Timing["timing - Server-Timing header<br/>(non-production only)"] --> Timeout["timeout 15 s (504)<br/>races but does not cancel the handler"]
-    Timeout --> BodyLimit["bodyLimit 3 MB (413)"]
-    BodyLimit --> Pretty["prettyJSON (non-production only)"]
-  end
-
-  Api --> Timing
-  Pretty --> Routes["Route handler (src/routes/&lt;feature&gt;.ts)"]
-  Routes -.->|"future service binding"| Rpc["worker-* RPC"]
-  Routes --> Json["Typed JSON + requestId on errors"]
-```
-
-Notes:
-- The timeout races the handler without cancelling it and cannot wrap streaming responses.
-- `ENVIRONMENT === "production"` skips both `timing` and `prettyJSON`.
-- Errors flow through `app.onError`: `HTTPException` messages pass through; unexpected errors log structured JSON with the request id and return a generic `"Internal server error"`.
-
-## Development Ports
-
-| Service | Path | Port |
-|---------|------|-----:|
-| worker-api (this app) | `wrangler.jsonc` (`dev.port`) | **8700** |
-| front-app (caller) | `apps/front-app/vite.config.ts` | 5174 |
-
-## Setup & Development
-
-### Prerequisites
-
-1. **Install dependencies** (from the monorepo root):
-   ```bash
-   pnpm install
-   ```
-
-2. **Configure environment (optional):** the only secret is `SENTRY_DSN`, and leaving it unset disables Sentry. When you add one, declare its name in `secrets.required` in `wrangler.jsonc` and put the local value in `apps/worker-api/.env` - never `.dev.vars` (git-ignored either way; never commit secrets).
-
-3. **Start development server**:
-   - All apps: `pnpm dev` from the monorepo root
-   - Worker only: `pnpm -w turbo run dev --filter=worker-api`
-   ```bash
-   pnpm -w turbo run dev --filter=worker-api
-   ```
-
-The Worker will be available at `http://localhost:8700`
-
-### Verify it works
-
-```bash
-curl -s "http://localhost:8700/api/v1/health"
-```
-
-Expected response:
 ```json
 { "status": "ok", "version": "0.0.0" }
 ```
 
-### Adding an endpoint
+Run commands from the repository root, or with `pnpm -w` from this directory: raw package scripts bypass Turbo's dependency graph. Test, typegen, deploy, and Hono CLI commands are listed in [AGENTS.md](AGENTS.md).
 
-1. Contract in `packages/dtos-common/src/api/<feature>.ts` (export from `api/index.ts`).
-2. Route module `src/routes/<feature>.ts` with `zValidator` on every input.
-3. Mount the route in `src/index.ts`.
-4. Call business logic locally or via `env.BINDING` once a service binding exists.
-5. Declare any new secret in `secrets.required` (`wrangler.jsonc`), with a fake value in `vitest.config.mts` for tests.
-6. Run `pnpm run ci`.
+## What ships today
 
-### Available Commands
+- `GET /api/v1/health` returns the release semver in `version`; the `X-Worker-Version-Id` header carries the opaque Wrangler version id.
+- `POST /api/v1/echo` is the worked `zValidator` example ([`src/routes/echo.ts`](src/routes/echo.ts)): it validates the JSON body and the `?uppercase=true` query flag, and answers a validation failure with `{ error, requestId, issues }`. It is not mounted in production (404 there), because it reflects caller input on an unauthenticated route with no rate limit.
+- Every response carries `X-Request-Id`, and every error body is `{ error, requestId }`, so a caller can quote the id of a failure and you can find it in the logs.
 
-Run orchestration from the repository root, or use `pnpm -w` here. Raw package scripts bypass Turbo dependencies.
+Not wired yet: auth or session middleware, service bindings to `worker-*`, and rate limiting (a Workers Rate Limiting binding or WAF rules), which must land before any public write ships.
 
-| Command | Description |
-|---------|-------------|
-| `pnpm -w install` | Install and link the workspace |
-| `pnpm -w turbo run dev --filter=worker-api` | Start Wrangler on port 8700 |
-| `pnpm -w turbo run test --filter=worker-api` | Vitest (Workers pool, `vitest run`) |
-| `pnpm -w turbo run test:watch --filter=worker-api` | Vitest watch (humans) |
-| `pnpm -w turbo run build --filter=worker-api` | Typecheck and dry-run the production bundle |
-| `pnpm -w turbo run deploy --filter=worker-api` | Typecheck and deploy this Worker |
-| `pnpm -w format:fix` | Format the repository with OXC |
-| `pnpm -w lint:fix` | Apply repository-wide lint fixes |
-| `pnpm -w check` | Run repository lint and format checks |
-| `pnpm -w check-types` | Typecheck the workspace |
-| `pnpm -w types` | Generate committed Wrangler types after binding changes |
-| `pnpm -w update` | Update workspace dependencies |
-| `pnpm -w run ci` | Full repository PR gate |
-
-## Deployment
-
-```bash
-pnpm -w turbo run deploy --filter=worker-api
-```
-
-## Request Validation with Zod
-
-All HTTP DTOs live in `@repo/dtos-common/api` (Zod Mini) so the frontend and gateway stay aligned. Validate inputs with `zValidator` at the route boundary. For constant probe bodies such as health, assert the shared schema in Vitest instead of re-parsing on every request:
-
-```typescript
-import { HealthResponseSchema } from "@repo/dtos-common/api";
-
-// Contract check lives in tests/routes/health.test.ts
-const body: unknown = await response.json();
-expect(HealthResponseSchema.parse(body)).toEqual({ status: "ok" });
-```
-
-`src/routes/echo.ts` is the worked example for a route that does take input - see it for the full shape rather than a snippet here. Three things it establishes:
-
-- **Always pass the third `zValidator` argument.** Without a hook the middleware answers with Hono's default `{ success, error }` body, which serialises Zod internals and drops the `requestId` every other error response here carries. The house shape is `{ error, requestId, issues }`.
-- **Register the cheap target before the expensive one.** Hono runs validators in registration order, so putting `query` ahead of `json` lets an allocation-free check reject before the body is read and parsed - otherwise a bad query parameter still costs a full `bodyLimit`-sized parse.
-- **Pass `c.get("requestId")` into your helper, not the whole `Context`.** The hook's context carries the app's `Variables` but **not** its `Bindings`, so a helper annotated `Context<EchoEnv>` is not assignable to it.
-
-> [!NOTE]
-> Do not reach for Zod 4.5's `z.compile()` here. It builds its fast path with `new Function`, and workerd forbids code generation from strings during request handling, so a compiled schema silently falls back to the interpreted parser - all of the API surface, none of the speedup.
-
-> [!NOTE]
-> Do not log validation failures. The client already receives every issue in the response body and the native invocation log records the 400, so a `console` line only duplicates both - and on a public route it lets a caller inflate log ingest at will. Reserve `console.error` for real Worker failures.
-
-Worker-local constrained strings belong in `src/enums/`. Promote to `@repo/enums-common` when a second app needs them.
-
-## Testing
-
-Suites live under `tests/` and run inside workerd via `@cloudflare/vitest-plugin`. Prefer `import { env, exports } from "cloudflare:workers"` for integration checks. Config: `vitest.config.mts` → `defineWorkersConfig` from `@repo/vitest-config/workers`.
-
-```bash
-pnpm -w turbo run test --filter=worker-api
-```
-
-## Development Guidelines
-
-- Use strict TypeScript with proper type annotations
-- Validate all requests/responses with Zod schemas using `zValidator`
-- Keep handlers thin; put business logic behind services or RPC
-- Follow RESTful API design principles
-- Run `pnpm run ci` before opening a PR
+Agent and contributor detail: [AGENTS.md](AGENTS.md).

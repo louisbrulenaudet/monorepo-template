@@ -27,7 +27,7 @@ export const EchoQuerySchema = z.strictObject(
   "unexpected query parameter",
 );
 
-/** @internal Asserted only by the worker-api Vitest suite. */
+/** @internal */
 export const EchoResponseSchema = z.strictObject({
   message: z.string(),
   receivedAt: z.iso.datetime(),

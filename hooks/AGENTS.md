@@ -4,38 +4,23 @@
 
 The `hooks/` directory holds **shared agent hook scripts** for Cursor and Claude Code. Hooks observe or control the agent loop: block unsafe git commands, format/lint after edits, and log debug events. Scripts are tool-agnostic; wiring lives in [`.cursor/hooks.json`](../.cursor/hooks.json) and [`.claude/settings.json`](../.claude/settings.json).
 
-Guardrails enforced here mirror [`.cursor/rules/core/guardrails.mdc`](../.cursor/rules/core/guardrails.mdc) and [`.claude/rules/core/guardrails.md`](../.claude/rules/core/guardrails.md).
+Guardrails enforced here mirror rule [`core/guardrails`](../.claude/rules/core/guardrails.md).
 
 ## Structure
 
-```
-hooks/
-├── git/                    # Shell command guards (beforeShellExecution / PreToolUse)
-│   ├── lib/
-│   │   └── parse-command.sh     # Quote-aware parser; sourced, never executed
-│   ├── guard-destructive-git.sh
-│   └── guard-secret-commit.sh
-├── security/               # Content guards (PreToolUse Edit|Write, Claude only)
-│   └── guard-secret-content.sh
-├── quality/                # Post-edit format + lint (afterFileEdit / PostToolUse)
-│   ├── check-changed.sh         # Sequential entry point
-│   ├── format-changed.sh
-│   ├── lint-changed.sh
-├── logging/                # Debug logs (fire-and-forget)
-│   ├── session-start.sh        # Cursor sessionStart
-│   └── instructions-loaded.sh  # Claude InstructionsLoaded
-└── logs/                   # Git-ignored runtime output, size-capped
-```
+`git/` shell-command guards (`lib/parse-command.sh` is sourced, never executed) · `security/` content guards (Claude only) · `quality/` post-edit format + lint and the stop gate · `session/` session-start context · `logging/` debug logs · `tests/run.sh` (`pnpm hooks:test`) · `logs/` git-ignored runtime output, size-capped. Per-script triggers: [Hook Behavior Summary](#hook-behavior-summary).
 
 ## Where to Change Things
 
 | Task | Location |
 |------|----------|
-| Block a new git pattern | `git/guard-destructive-git.sh` or `git/guard-secret-commit.sh` |
+| Block a new git pattern | `git/guard-destructive-git.sh` or `git/guard-secret-commit.sh`, plus a deny and an allow case in `tests/run.sh` |
 | Change how a command is parsed | `git/lib/parse-command.sh` |
 | Add a credential pattern for written content | `security/guard-secret-content.sh` |
 | Protect another generated artifact from hand-edits | `security/guard-generated-files.sh` |
 | Change format/lint behaviour | `quality/format-changed.sh` or `quality/lint-changed.sh` |
+| Change what runs before the agent may finish | `quality/stop-gate.sh` |
+| Warn the agent about the checkout at session start | `session/session-context.sh`, plus a case in `tests/run.sh` |
 | Add Cursor hook wiring | [`.cursor/hooks.json`](../.cursor/hooks.json) |
 | Add Claude hook wiring | [`.claude/settings.json`](../.claude/settings.json) → `hooks` |
 | Session / instruction logs | `logging/*.sh` → `hooks/logs/` |
@@ -43,26 +28,7 @@ hooks/
 
 ## Wiring
 
-```mermaid
-flowchart LR
-  subgraph config [Tool config]
-    Cursor[".cursor/hooks.json"]
-    Claude[".claude/settings.json"]
-  end
-  subgraph scripts [hooks/]
-    Git["git/"]
-    Quality["quality/"]
-    Logging["logging/"]
-  end
-  Cursor --> Git
-  Cursor --> Quality
-  Cursor --> Logging
-  Claude --> Git
-  Claude --> Quality
-  Claude --> Logging
-```
-
-Paths in config files are **relative to the repo root** (e.g. `hooks/git/guard-secret-commit.sh`).
+Paths in `.cursor/hooks.json` and `.claude/settings.json` are **relative to the repo root** (e.g. `hooks/git/guard-secret-commit.sh`).
 
 ## Authoring Conventions
 
@@ -92,7 +58,8 @@ Claude Code **ignores stdout entirely on exit 2** and does not inject it on `Pre
 A guard that cannot evaluate must not wave a command through. Missing `jq`/`awk`, an unreadable `lib/parse-command.sh`, a crash or a signal all deny with a `guard fault:` reason. Two consequences to respect when editing:
 
 - The `trap` is installed **before** the library is sourced, and the fault path uses only shell builtins (`printf`, `${0##*/}`) so a broken `PATH` still yields exit 2 rather than exit 1.
-- A syntax error in a guard or in the library **denies every Bash command** until it is fixed. Run the manual test in [README.md](README.md#manual-test-before-wiring) after any edit.
+- A syntax error in a guard or in the library **denies every Bash command** until it is fixed. `pnpm hooks:test` (inside `pnpm run check` and `pnpm run ci`) runs `sh -n` on every script plus the regression table in `tests/run.sh`.
+- **A harness timeout is the one fail-open path on Claude Code.** Per the hooks reference, a timed-out `PreToolUse` command hook does not block: the call continues through the normal permission flow. No trap can catch that, because the harness stops waiting rather than signalling the script. Cursor is covered by `failClosed: true` in `.cursor/hooks.json`. The guards run in ~35 ms against a 10 s budget, so the realistic trigger is a hung `git add --dry-run` / `git status` inside `guard-secret-commit.sh`. Keep the timeout at 10 s: a larger value does not close the gap, it only makes a stall longer. The backstops are the `permissions.ask` prefix rules for the common destructive git forms, `permissions.deny`, and the sandbox. Those rules never prompt in normal use, because `PreToolUse` denies before the permission check runs.
 - **Parser functions must never return a non-zero status.** Guards call them as bare assignments (`cs_ops=$(pc_operands "$@")`), where `set -e` promotes that status to a guard fault - a *silent* denial of a legitimate command, not a syntax error you would notice. This is why `pc_operands` ends in an explicit `return 0`; a trailing `[ $# -gt 0 ] && shift` would otherwise fail whenever its value-taking token is last. Regression case: `git add foo.txt 2>&1` (segmentation splits at the `&`, leaving a bare `2>`) must **allow**.
 
 Empty or absent stdin still **allows**: no payload is not evidence of wrongdoing.
@@ -109,7 +76,7 @@ Known limits, by design: the guards do not see through `eval`, `sh -c`, heredocs
 
 | Script | Trigger | Exit 2 when |
 |--------|---------|-------------|
-| `git/guard-secret-commit.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash | Secret path named or in staged set |
+| `git/guard-secret-commit.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash | Secret path named, or in the set `git add --dry-run` (or `commit -a`) would stage |
 | `git/guard-destructive-git.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash | reset --hard, push --force, checkout --, etc. |
 | `quality/check-changed.sh` | Cursor `afterFileEdit`; Claude PostToolUse Edit\|Write | delegates sequentially to format, then lint |
 | `quality/format-changed.sh` | called by `check-changed.sh` | never (always 0) |
@@ -117,15 +84,34 @@ Known limits, by design: the guards do not see through `eval`, `sh -c`, heredocs
 | `security/guard-secret-content.sh` | Claude PreToolUse Edit\|Write | written content matches a high-signal credential pattern |
 | `security/guard-generated-files.sh` | Claude PreToolUse Edit\|Write | the target is a generated artifact (`worker-configuration.d.ts`, `routeTree.gen.ts`, `pnpm-lock.yaml`, `dist/**`, `build/**`) - a hook rather than an `Edit(...)` deny, because those denies also blocked the generators inside the sandbox. For the same reason there are deliberately no `Read(...)` denies on `coverage/**`, `*.tsbuildinfo`, or `*.map` (tsc incremental builds and wrangler source-map upload read them) |
 | `git/lib/parse-command.sh` | sourced by the git guards | n/a - defines functions, never exits |
+| `quality/stop-gate.sh` | Cursor `stop`; Claude Stop | the diff changed since the last check and lint, format, syncpack, or `check-types --affected` fails. Cursor gets a `followup_message` instead of exit 2 |
+| `session/session-context.sh` | Cursor sessionStart; Claude SessionStart | never - prints context (Claude stdout, Cursor `additional_context`) only when something is wrong |
 | `logging/session-start.sh` | Cursor sessionStart | never |
 | `logging/instructions-loaded.sh` | Claude InstructionsLoaded (async) | never - this event ignores the exit code |
+
+### Stop gate
+
+`quality/stop-gate.sh` runs the fast static tier plus `check-types --affected` when the agent tries to finish, so a broken diff is caught in the same turn instead of by the user. Four constraints hold it in shape:
+
+- **One enforced retry per turn.** It exits 0 when Claude sets `stop_hook_active` or Cursor's `loop_count` is above 0 (`loop_limit: 1` in `.cursor/hooks.json`), so an unfixable failure cannot trap the agent in a loop.
+- **Keyed on the tree state, pass or fail.** The fingerprint (`git diff HEAD` plus untracked paths and contents) is stored per session under `$TMPDIR`, so a clean turn costs about 100 ms and an unchanged failing tree - often the user's own uncommitted work - is reported once, not on every later turn.
+- **`//#hooks:test` stays out of it.** The hook suite runs this script; including it would let a broken fixture recurse into the real checkout (it did once, when `mktemp` fell back to an unwritable default and the scratch path came back empty).
+- **Fails open** without `jq`, outside a git work tree, or when `node_modules/.bin/turbo` is missing, like the other quality hooks. Root `//#` tasks drop out of `--affected` when only workspace files change, which is why the type check is a second, affected-scoped `turbo run`.
+
+### Content guard
+
+`security/guard-secret-content.sh` is the other direction of the path-based `permissions.deny` rules: it catches a real key pasted into an ordinary source file. Three constraints hold it in shape:
+
+- **`PreToolUse`, never `PostToolUse`.** A post-edit hook cannot undo the write - the credential would already be on disk, in the editor buffer, and in any backup. Blocking beforehand is the only point at which it never lands.
+- **Only high-signal literal prefixes** (`AKIA`, private-key blocks, `ghp_`, `sk-ant-`, ...). There is deliberately no entropy or `password = ...` heuristic, and no bare Cloudflare-token shape: an earlier audit found that over-broad matching denied legitimate edits (minified JS, content hashes, base64), and a false denial on every edit is worse than the gap.
+- **The reason names the pattern and line numbers only.** The matched text is never echoed, so the secret is not copied into the transcript, the debug log, or any hook log.
 
 ### OXC invariants for `quality/` hooks
 
 `format-changed.sh` handles code plus JSON/JSONC/CSS; `lint-changed.sh` handles only JS/TS-family code. The lint hook holds four constraints that must not be relaxed:
 
 - **Runs oxlint from the repo root** on a root-relative path, and gives `--config` a root-relative path too. `.oxlintrc.json` resolves `settings.better-tailwindcss.entryPoint` against the process CWD, so linting from anywhere else changes the diagnostics and diverges from `pnpm run ci`; and an **absolute** `--config` stops the `overrides[].files` globs matching, which reports every PascalCase component under `apps/front-*/src/**/*.tsx` as a `unicorn/filename-case` violation.
-- **Exports `SYNCKIT_TIMEOUT=120000` by default.** Tailwind canonicalization starts a sync worker that can exceed its 30-second default on low-power development machines.
+- **Exports `SYNCKIT_TIMEOUT=120000` by default.** Tailwind canonicalization starts a sync worker that can exceed its 30-second default on low-power development machines. The post-edit hook `timeout` is therefore `150` in both `.claude/settings.json` and `.cursor/hooks.json`: at the old `30`, the harness killed the hook before this budget ever applied, and a timed-out `PostToolUse` hook drops its diagnostics silently.
 - **Passes `--format=agent`** so output is one line per diagnostic (`file:line:col: severity plugin(rule): message help: …`) instead of the TTY-dependent code frames the `default` format renders.
 - **Passes `--no-error-on-unmatched-pattern`.** Without it, editing a file that `ignorePatterns` or `.gitignore` excludes (`*.gen.ts`, `worker-configuration.d.ts`) makes oxlint exit 1 with "No files found to lint", which the hook would report to the agent as a lint failure that does not exist.
 
@@ -136,7 +122,8 @@ Known limits, by design: the guards do not see through `eval`, `sh -c`, heredocs
 | Log | Command |
 |-----|---------|
 | Cursor sessions | `tail -f hooks/logs/session-start.log` |
-| Claude instruction load | `tail -f hooks/logs/instructions-loaded.log` |
+| Claude instruction load | `tail -f hooks/logs/instructions-loaded.log` - one line per loaded file with `path`, `reason` (`session_start`, `path_glob_match`, `nested_traversal`, `include`, `compact`), `memory_type`, and the `trigger` file for path-scoped rules |
+| Last Stop gate run | `$TMPDIR/claude-stop-gate-<session>.log` |
 | Cursor hook errors | Customize → Hooks output channel |
 
 Both logs rotate once past 256 KB (`*.log.1`), so `hooks/logs/` stays bounded. The `InstructionsLoaded` handler is `"async": true` - it is debug telemetry that enforces nothing, and this event ignores hook exit codes, so it must not sit on the critical path.
@@ -145,7 +132,6 @@ Both logs rotate once past 256 KB (`*.log.1`), so `hooks/logs/` stays bounded. T
 
 - Edit scripts only under `hooks/` - do not duplicate under `.cursor/hooks/` or `.claude/hooks/`.
 - When adding a hook, update [`.cursor/hooks.json`](../.cursor/hooks.json), [`.claude/settings.json`](../.claude/settings.json) (if applicable), [README.md](README.md), and this file.
-- Align new guards with [guardrails](../.cursor/rules/core/guardrails.mdc); never weaken secret or destructive-git protection without explicit user approval.
+- Align new guards with [guardrails](../.claude/rules/core/guardrails.md); never weaken secret or destructive-git protection without explicit user approval.
 - `chmod +x` new scripts before committing. Files under `lib/` are sourced, not executed, and stay non-executable.
-- Re-run the manual test in [README.md](README.md#manual-test-before-wiring) after touching a guard: a syntax error there denies **every** Bash command, because the guards fail closed.
-- Follow conventions in the root [AGENTS.md](../AGENTS.md).
+- Run `pnpm hooks:test` after touching a guard, and add a deny case and an allow case for every new rule: a syntax error there denies **every** Bash command, because the guards fail closed. Keep literal credentials out of `tests/run.sh` (split them across quotes, as the existing cases do), or the content guard blocks the edit.

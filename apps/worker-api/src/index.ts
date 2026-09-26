@@ -54,9 +54,9 @@ app.use(
     dsn: env.SENTRY_DSN,
     environment: env.ENVIRONMENT,
     release: SENTRY_RELEASE,
-    tracesSampleRate: FULL_TRACING_ENVIRONMENTS.has(env.ENVIRONMENT)
-      ? 1
-      : SAMPLED_TRACES_RATE,
+    tracesSampler: () =>
+      FULL_TRACING_ENVIRONMENTS.has(env.ENVIRONMENT) ||
+      Math.random() < SAMPLED_TRACES_RATE,
     dataCollection: SENTRY_DATA_COLLECTION,
     // Console text can carry privileged client data; onError already logs the
     // stack to Workers Observability.

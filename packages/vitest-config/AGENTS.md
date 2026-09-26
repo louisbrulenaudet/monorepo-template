@@ -6,7 +6,7 @@
 
 Cloudflare naming: the Workers Vitest pool is the **unit** layer; Wrangler `createTestHarness()` is the **integration** layer for multi-Worker production builds (see below). Do not rip out the pool to "upgrade" to the harness.
 
-Editing rules and anti-patterns load from `.claude/rules/quality/vitest-config.md` or `.cursor/rules/quality/vitest-config.mdc` when touching this package. Test-authoring rules live under `.claude/rules/tests/` / `.cursor/rules/tests/`.
+Exports, editing rules, and anti-patterns: rule `quality/vitest-config` (loads with this package). Test authoring: `tests/*` rules.
 
 ## Structure
 
@@ -22,15 +22,6 @@ packages/vitest-config/
 ├── AGENTS.md
 └── CLAUDE.md
 ```
-
-## Factory selection
-
-| I am writing… | Import |
-|---------------|--------|
-| A `front-*` SPA | `@repo/vitest-config` → `defineNodeConfig` |
-| A `worker-*` / `queue-*` / `webhook-*` / `mcp-*` app | `@repo/vitest-config/workers` → `defineWorkersConfig` |
-
-Keep the Workers entry separate so Node-only apps never resolve `@cloudflare/vitest-plugin`. Shared mock-hygiene defaults are intentionally duplicated across the two entry files (no relative ESM imports between them).
 
 This package has no `check-types` script (same model as `@repo/typescript-config`); consuming apps typecheck their Vitest configs.
 
@@ -69,8 +60,6 @@ export default defineWorkersConfig(
 
 `resolvePackageRoot` runs `realpathSync` so explorer path walks match its workspace-folder cache (avoids `Fatal Error: Attempted to get parent of root folder "/"` on macOS).
 
-App scripts: `test` = `vitest run` (CI/agents/Turbo cache); `test:watch` = `vitest` (Turbo task is cache false + persistent true; humans only).
-
 ## Unit vs integration (Cloudflare)
 
 | Layer | Tool | Use for |
@@ -96,20 +85,6 @@ Checklist for that change:
 
 Official docs: https://developers.cloudflare.com/workers/testing/ and https://developers.cloudflare.com/workers/testing/test-harness/
 
-## Hard constraints
-
-- Never set `reporters` in shared defaults (breaks Vitest 4.1 auto `agent` reporter detection).
-- Never set `isolate: false` or a Node `pool` inside `defineWorkersConfig`.
-- Never attach `cloudflareTest` to `front-*`.
-- Never replace per-Worker pool suites with `createTestHarness` for single-Worker route tests.
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `pnpm turbo run test --filter=front-app --filter=worker-api` | Spot-check consumers after factory changes |
-| `pnpm -w exec oxfmt packages/vitest-config` / `oxlint packages/vitest-config` | Format / lint this package |
-
 ## Contribution
 
-Factory changes are monorepo-wide - spot-check `front-app` and `worker-api` with filtered Vitest. See root [AGENTS.md](../../AGENTS.md).
+Factory changes are monorepo-wide: run `pnpm turbo run test --filter=front-app --filter=worker-api` before merging.

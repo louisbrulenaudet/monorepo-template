@@ -13,6 +13,7 @@ import { defineConfig, loadEnv, type Plugin, type PluginOption } from "vite";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 const analyzeBundle = process.env["ANALYZE"] === "true";
+const isStaticAnalysis = process.argv.some((arg) => arg.includes("knip"));
 const repoRoot = path.resolve(appDir, "../..");
 const productionEnvKeys = ["VITE_API_BASE_URL"] as const;
 const optionalProductionOriginKeys = ["VITE_SENTRY_DSN"] as const;
@@ -31,7 +32,6 @@ function isPlaceholderOrigin(value: string): boolean {
 }
 
 function assertProductionOriginEnv(mode: string, command: string): void {
-  const isStaticAnalysis = process.argv.some((arg) => arg.includes("knip"));
   if (isStaticAnalysis || command !== "build" || mode !== "production") {
     return;
   }
@@ -93,16 +93,11 @@ function cspHeaders(apiBaseUrl: string, sentryDsn: string | undefined): string {
   ].join("\n");
 }
 
-function generatedBuildArtifactsPlugin(mode: string, command: string) {
+function generatedBuildArtifactsPlugin(mode: string) {
   return {
     name: "generated-build-artifacts",
     apply: "build" as const,
     closeBundle() {
-      if (command !== "build") {
-        return;
-      }
-
-      const isStaticAnalysis = process.argv.some((arg) => arg.includes("knip"));
       if (isStaticAnalysis) {
         return;
       }
@@ -168,7 +163,10 @@ export default defineConfig(({ command, mode }) => {
   assertProductionOriginEnv(mode, command);
 
   const plugins: PluginOption[] = [
-    devtools({ consolePiping: { enabled: false } }),
+    devtools({
+      consolePiping: { enabled: false },
+      eventBusConfig: { enabled: false },
+    }),
     DevTools({ embeddedVisibility: "passive" }),
     tanstackRouter({
       autoCodeSplitting: true,
@@ -177,7 +175,7 @@ export default defineConfig(({ command, mode }) => {
     react({ compiler: true }),
     tailwindcss(),
     cloudflare(),
-    generatedBuildArtifactsPlugin(mode, command),
+    generatedBuildArtifactsPlugin(mode),
   ];
 
   // Last, as the plugin requires. The build only injects debug IDs: the uncached
@@ -220,10 +218,7 @@ export default defineConfig(({ command, mode }) => {
     build: {
       minify: "oxc",
       sourcemap: mode === "development" ? "inline" : "hidden",
-      cssCodeSplit: true,
-      assetsInlineLimit: 4096,
       reportCompressedSize: false,
-      chunkSizeWarningLimit: 500,
       rolldownOptions: {
         devtools: {},
         onLog(level, log, log2) {
@@ -278,12 +273,8 @@ export default defineConfig(({ command, mode }) => {
     },
 
     server: {
-      host: true,
       port: 5174,
       strictPort: true,
-      hmr: {
-        overlay: true,
-      },
       forwardConsole: {
         unhandledErrors: true,
         logLevels: ["warn", "error"],
@@ -297,7 +288,6 @@ export default defineConfig(({ command, mode }) => {
       },
       fs: {
         allow: [repoRoot],
-        strict: true,
       },
     },
 

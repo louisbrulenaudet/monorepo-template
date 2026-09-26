@@ -11,7 +11,6 @@
   "version_metadata": {
     "binding": "CF_VERSION_METADATA",
   },
-  // "placement": { "mode": "smart" }, // only when calling a centralized backend (DB/Hyperdrive); adds latency for a pure edge gateway
   "cache": {
     "enabled": true,
   },
@@ -37,10 +36,6 @@
       "head_sampling_rate": 1,
     },
   },
-  // wrangler types + deploy validate these names; non-inheritable, so every env restates them. Local
-  // values go in apps/worker-api/.env, never .dev.vars: an unreadable .dev.vars aborts the Vitest pool,
-  // an unreadable .env is skipped (so sandboxed agents and CI run on the fake test bindings instead).
-  // Unset SENTRY_DSN locally disables Sentry.
   "secrets": {
     "required": ["SENTRY_DSN"],
   },
@@ -60,9 +55,7 @@
       },
       "vars": {
         "ENVIRONMENT": "staging",
-        // Wire value = AppEnvironment.STAGING (@repo/enums-common).
-        // Required before go-live. Empty → /api/* returns 503 (fail closed).
-        // Example: "https://front-app-staging.example.com"
+        // Empty → /api/* returns 503 (fail closed).
         "CORS_ORIGINS": "",
       },
       "observability": {
@@ -74,8 +67,6 @@
       },
     },
     "production": {
-      // Serves Worker Previews on workers.dev - and production Version URLs with it.
-      // Enable Cloudflare Access on Preview URLs before arming PREVIEWS_ENABLED.
       "preview_urls": true,
       "version_metadata": {
         "binding": "CF_VERSION_METADATA",
@@ -85,9 +76,7 @@
       },
       "vars": {
         "ENVIRONMENT": "production",
-        // Wire value = AppEnvironment.PRODUCTION (@repo/enums-common).
-        // Required before go-live. Empty → /api/* returns 503 (fail closed).
-        // Example: "https://app.example.com"
+        // Empty → /api/* returns 503 (fail closed).
         "CORS_ORIGINS": "",
       },
       "observability": {
@@ -97,17 +86,14 @@
           "head_sampling_rate": 0.01,
         },
       },
-      // `wrangler preview --env production`. Vars and bindings are not inherited -
-      // restate each one the code reads; observability here raises sampling to 100%.
+      // Vars and bindings are not inherited - restate each one the code reads.
       "previews": {
         "version_metadata": {
           "binding": "CF_VERSION_METADATA",
         },
         "vars": {
           "ENVIRONMENT": "preview",
-          // Wire value = AppEnvironment.PREVIEW. Wildcards are honored here only.
-          // Empty → /api/* returns 503 (fail closed).
-          // Example: "https://*-front-app-production.<subdomain>.workers.dev"
+          // Wildcards honored here only; empty → /api/* returns 503.
           "CORS_ORIGINS": "",
         },
         "observability": {
