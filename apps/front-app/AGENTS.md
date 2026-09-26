@@ -6,10 +6,10 @@
 
 Keep `@cloudflare/vite-plugin` for assets + SPA routing only. Do **not** use Vite `auxiliaryWorkers` to co-locate `worker-api`, and do not put API routes in this assets Worker (Cloudflare SPA+API-in-one-Worker tutorial is an anti-pattern here). `worker-api` stays on Wrangler.
 
-- **Dev**: `http://localhost:5174`
+- **Dev**: `http://localhost:5174`, loopback only - the Vite DevTools terminals are a shell, so never commit `server.host`; pass `--host` for a one-off LAN session
 - **API**: `worker-api` at `http://localhost:8700` via `src/config/env.ts` - never hardcode the origin elsewhere
 
-React, routing, query, and env patterns load from `.claude/rules/frontend/` or `.cursor/rules/frontend/` when editing `src/**`. Use **`ui-ux-design-best-practices`** for Tailwind motion depth. Wire schemas: `@repo/dtos-common` + `contracts` rules.
+React, routing, query, and env patterns: `frontend/*` rules (load with `src/**`). Tailwind motion depth: skill `ui-ux-design-best-practices`. Wire schemas: `@repo/dtos-common` + `contracts` rules.
 
 ## Structure (abbreviated)
 
@@ -68,20 +68,11 @@ Local env: `cp .env.example .env.local` (and `.env.production.example` for prod 
 | `pnpm -w turbo run dev --filter=front-app` | Vite on port 5174 plus the gateway |
 | `pnpm -w turbo watch dev --filter=front-app` | Same as `dev`, but restarts when watched dependency inputs change (optional; JIT + Vite HMR usually enough) |
 | `pnpm -w turbo run test --filter=front-app` | Vitest Node, vitest run |
-| `pnpm -w turbo run test:watch --filter=front-app` | Vitest watch, humans only |
-| `pnpm -w build` / `pnpm -w preview` | Build or preview through Turborepo |
-| `pnpm -w types` / `pnpm -w types:check` | Regenerate / verify committed Wrangler types |
-| `pnpm -w turbo run upload --filter=front-app` | `wrangler versions upload` (no traffic) |
-| `pnpm -w turbo run promote --filter=front-app` | Interactive `wrangler versions deploy` |
-| `pnpm -w turbo run deploy --filter=front-app` | `wrangler deploy` (upload + 100%) |
-| `pnpm -w preview:deploy` / `pnpm -w preview:delete` | Worker Preview (see `.claude/rules/ops/previews.md`) |
-| `pnpm -w run ci` | Full repository PR gate (local; not `--affected`) |
-| `pnpm -w check-types` | Verify route generation and typecheck the workspace |
+| `pnpm -w turbo run <upload\|promote\|deploy> --filter=front-app` | `wrangler versions upload` (no traffic) / interactive `versions deploy` / `wrangler deploy` (upload + 100%) |
+| `pnpm -w turbo run check-types --filter=front-app` | Route generation + typecheck |
 | `pnpm -w react-doctor:changed` | React Doctor offline changed-scope scan - run after React edits (deep workflow: skill `react-doctor`) |
 | `pnpm analyze` | Bundle stats (`dist/stats.html`) |
 
 In-app absolute imports use package.json `imports` (`#/*` → `./src/*`), e.g. `import { Button } from "#/components/ui/Button"`.
 
-## Contribution
-
-Follow this file and root [AGENTS.md](../../AGENTS.md). Update HTTP contracts in `@repo/dtos-common` with `worker-api` in the same PR. Run `pnpm run ci` before merging.
+HTTP contract changes land in `@repo/dtos-common`, `worker-api`, and this app in the same PR.

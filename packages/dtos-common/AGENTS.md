@@ -13,7 +13,7 @@
 
 Schemas use Zod Mini (`import * as z from "zod/mini"`) for tree-shakable Worker and SPA bundles.
 
-Schema changes are **contract changes**. Layer notes, consumer expectations, Zod authoring, and the full change workflow load from `.claude/rules/contracts/` or `.cursor/rules/contracts/` when editing `src/**`.
+Schema changes are **contract changes**. Layer notes, consumer expectations, Zod authoring, and the full change workflow: rule `contracts/contracts` (loads with `src/**`).
 
 Import through the layer subpath (`@repo/dtos-common/api`, etc.). The package root (`@repo/dtos-common`) is deliberately an empty barrel - add re-exports there only once something imports the root entry.
 
@@ -28,7 +28,7 @@ packages/dtos-common/
 │   └── index.ts            # Package entry - empty barrel; exports nothing yet
 ```
 
-Import via the declared subpath for that layer. One feature file per concern within a layer. Do **not** add a `package.json` `exports` entry for `rpc` / `queue` / `webhook` until the first schema lands in that layer.
+One feature file per concern within a layer.
 
 ## Where to Change Things
 
@@ -38,7 +38,6 @@ Import via the declared subpath for that layer. One feature file per concern wit
 | New RPC method schemas | `src/rpc/<feature>.ts` → `src/rpc/index.ts` → add `"./rpc"` to `package.json` `exports` |
 | New queue message schemas | `src/queue/<feature>.ts` → `src/queue/index.ts` → add `"./queue"` to `package.json` `exports` |
 | New webhook payload schemas | `src/webhook/<feature>.ts` → `src/webhook/index.ts` → add `"./webhook"` to `package.json` `exports` |
-| New public subpath | Add `"./<layer>"` to `package.json` `exports` when introducing the **first** schema for that layer |
 
 ## Contract Change Workflow
 
@@ -47,16 +46,4 @@ Import via the declared subpath for that layer. One feature file per concern wit
 3. Update every producer and consumer of that layer in the **same PR** (`api/` → `worker-api` + `front-app`).
 4. `pnpm check-types`.
 
-Prefer additive changes. Full workflow and layer rules: `contracts/contracts`.
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
-| `pnpm check-types` | TypeScript |
-| `pnpm -w turbo run test --filter=@repo/dtos-common` | Vitest (Node), `vitest run` - config present, no suite yet |
-
-## Contribution
-
-Coordinate wire-format changes with all consumers in the same PR. See root [AGENTS.md](../../AGENTS.md).
+Prefer additive changes.

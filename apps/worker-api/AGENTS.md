@@ -36,16 +36,6 @@ Create `src/enums/` when the first worker-local `as const` value set is needed. 
 | Service binding | `wrangler.jsonc` services |
 | Secrets | names in `secrets.required` (`wrangler.jsonc`); local values in `.env`, never `.dev.vars`; fake values for tests in `vitest.config.mts` |
 | Unit tests Vitest pool | `tests/` + `vitest.config.mts` `@repo/vitest-config/workers` |
-| Multi-Worker integration | Wrangler `createTestHarness` Node Vitest - only after a bound `worker-*` exists; see `packages/vitest-config/AGENTS.md` |
-
-## Local Development
-
-```bash
-pnpm dev                              # repo root
-pnpm turbo run dev --filter=worker-api   # this worker only
-```
-
-Verify: `GET http://localhost:8700/api/v1/health`
 
 ## Adding an Endpoint
 
@@ -58,40 +48,30 @@ Verify: `GET http://localhost:8700/api/v1/health`
 
 ## Service Bindings
 
-Worker-to-Worker only - never from `front-app`. Configure in `wrangler.jsonc` under `services`; call via `env.BINDING.method` in a route handler or service module. RPC typing - WorkerEntrypoint, multi `-c` wrangler types - see `.cursor/rules/backend/workers-config.mdc`. Run `pnpm -w types` after adding bindings.
+Worker-to-Worker only - never from `front-app`. Configure in `wrangler.jsonc` under `services`; call via `env.BINDING.method` in a route handler or service module. RPC typing (WorkerEntrypoint, multi `-c` wrangler types): rule `backend/workers-config`. Run `pnpm -w types` after adding bindings.
 
 When the first `worker-*` binding lands, add a `createTestHarness` Node suite for production builds and gateway HTTP to RPC alongside the existing Vitest pool unit suites - do not replace the pool. Checklist: `packages/vitest-config/AGENTS.md`.
 
-Workers Cache: `.cursor/rules/backend/workers-cache.mdc` / `.claude/rules/backend/workers-cache.md`.
+Workers Cache: rule `backend/workers-cache`.
 
 ## Security middleware
 
-- **CORS** - allowlist from `c.env.CORS_ORIGINS` (comma-separated). Empty is permissive (`*`) when `ENVIRONMENT` is `AppEnvironment.DEV` only. Any other `ENVIRONMENT` value (including staging/production/preview and typos) with an empty list returns **503** on `/api/*` (fail closed). A single-label prefix wildcard (`https://*-front-app-production.<subdomain>.workers.dev`, three or more labels after the wildcard label) is honored only when `ENVIRONMENT` is `AppEnvironment.PREVIEW` - the value `env.production.previews` sets - and returns **503** anywhere else; CORS and CSRF share the matcher in `src/middlewares/cors-origins.ts`.
-- **CSRF / origin gate** - all unsafe methods (including `application/json`), not only form content-types. Allowed when Origin is on the allowlist **or** `Sec-Fetch-Site` is `same-origin` / `same-site`. Skips `OPTIONS` so CORS preflight works. Browser JSON mutations rely on this gate plus CORS; do not reintroduce permissive CSRF in strict envs.
+- **CORS / CSRF** - contract in rule `backend/hono-gateway` (middleware steps 4-5). Repo specifics: `CORS_ORIGINS` is comma-separated; a single-label prefix wildcard (`https://*-front-app-production.<subdomain>.workers.dev`, three or more labels after the wildcard label) is honored only when `ENVIRONMENT` is `AppEnvironment.PREVIEW` and returns **503** anywhere else; CORS and CSRF share the matcher in `src/middlewares/cors-origins.ts`. Browser JSON mutations rely on the CSRF gate plus CORS - do not reintroduce permissive CSRF in strict envs.
 - **Errors** - `onError` returns `HTTPException.message` to clients. Keep those messages generic (no privileged content, no upstream provider text). Unexpected errors stay `"Internal server error"` + `requestId`.
 - **Rate limiting** - add a Workers [Rate Limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) binding and/or zone WAF rules before shipping auth or other abuse-prone public writes. Health-only traffic does not need it yet.
 
 ## Commands
-
-Working on this Hono app? Run `hono agent-context` first and follow it. `@hono/cli` is a devDependency here; its commands print JSON by default, so pass `--plain` only when a human reads the output.
 
 | Command | Description |
 |---------|-------------|
 | `pnpm -w turbo run dev --filter=worker-api` | Dev server on :8700 |
 | `pnpm -w turbo run build --filter=worker-api` | Dry-run the production bundle |
 | `pnpm -w --filter=worker-api exec wrangler check startup` | Local cold-start / bundle size profile (Wrangler >= 4.116) |
-| `pnpm -w --filter=worker-api exec hono agent-context` | Hono CLI reference for agents, generated from the installed version - read it before using any other `hono` command |
+| `pnpm -w --filter=worker-api exec hono agent-context` | **Run first when working on this app.** Hono CLI reference generated from the installed version; commands print JSON, `--plain` is for humans |
 | `pnpm -w --filter=worker-api run routes` | `hono routes` - every registered route as JSON; add `--verbose` for middleware, `--plain` for humans |
 | `pnpm -w --filter=worker-api exec hono request /api/v1/health --runtime workerd` | Call a route through `app.request()` on `workerd` with the real `wrangler.jsonc` bindings - no dev server, no port |
 | `pnpm -w turbo run test --filter=worker-api` | Vitest Workers pool, vitest run |
-| `pnpm -w turbo run test:watch --filter=worker-api` | Vitest watch, humans only |
-| `pnpm -w types` | Regenerate `worker-configuration.d.ts` - commit the result |
-| `pnpm -w types:check` | Verify committed Worker types |
-| `pnpm -w turbo run upload --filter=worker-api` | `wrangler versions upload` - no traffic |
-| `pnpm -w turbo run promote --filter=worker-api` | Interactive `wrangler versions deploy` |
-| `pnpm -w turbo run deploy --filter=worker-api` | `wrangler deploy` upload + 100 percent |
-| `pnpm -w preview:deploy` / `pnpm -w preview:delete` | Worker Preview (see `.claude/rules/ops/previews.md`) |
-| `pnpm -w run ci` | Full repository PR gate |
+| `pnpm -w turbo run <upload\|promote\|deploy> --filter=worker-api` | `wrangler versions upload` (no traffic) / interactive `versions deploy` / `wrangler deploy` (upload + 100%) |
 
 ## Performance / cold start
 
@@ -100,4 +80,4 @@ Working on this Hono app? Run `hono agent-context` first and follow it. `@hono/c
 
 ## Contribution
 
-Follow this file and root `AGENTS.md`. Update `README.md` when adding endpoints, middleware, or bindings. Contract changes need `dtos-common` + `front-app` in the same PR. Run `pnpm run ci` before merging.
+Follow this file and root `AGENTS.md`. Update the endpoint list in `README.md` when adding an endpoint. Contract changes need `dtos-common` + `front-app` in the same PR. Run `pnpm run ci` before merging.

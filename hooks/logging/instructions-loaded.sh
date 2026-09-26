@@ -19,8 +19,10 @@ LINE=""
 if command -v jq >/dev/null 2>&1; then
   LINE=$(printf '%s' "$INPUT" | jq -c '{
     event: .hook_event_name,
-    matcher: (.matcher // .trigger // null),
-    path: (.tool_input.file_path // .path // .file // null)
+    reason: (.load_reason // null),
+    memory_type: (.memory_type // null),
+    path: (.file_path // null),
+    trigger: (.trigger_file_path // null)
   }' 2>/dev/null || true)
 fi
 [ -z "$LINE" ] && LINE=$(printf '%s' "$INPUT" | tr '\n' ' ')

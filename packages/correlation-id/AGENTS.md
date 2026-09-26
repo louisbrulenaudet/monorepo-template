@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Single source of truth** for opaque UUID v4 correlation helpers used by `worker-api` and `front-app`. Values are sent as `X-Request-Id` and must never identify a client or matter (see skill `privileged-legal-data`).
+**Single source of truth** for opaque UUID v4 correlation helpers used by `worker-api` and `front-app`. Values are sent as `X-Request-Id` (do not rename the header) and must never identify a client or matter (see skill `privileged-legal-data`).
 
 This package is runtime-neutral (Workers + browser + Node). Browser `sessionStorage` persistence stays app-local under `front-app`.
 
@@ -16,11 +16,7 @@ packages/correlation-id/
 ├── tests/           # Vitest (Node) - correlation-id.test.ts
 │   └── tsconfig.json  # In check-types
 ├── vitest.config.ts # defineNodeConfig from @repo/vitest-config
-├── package.json
-├── turbo.json       # tags: ["lib"]
-├── README.md
-├── AGENTS.md
-└── CLAUDE.md
+└── turbo.json       # tags: ["lib"]
 ```
 
 ## When to Add Here vs. Locally
@@ -40,14 +36,6 @@ packages/correlation-id/
 4. Cover the new helper in `tests/` (this package is a security boundary - the opaque-id gate must stay tested).
 5. `pnpm check-types` from root.
 
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
-| `pnpm check-types` | TypeScript (src + tests projects) |
-| `pnpm -w turbo run test --filter=@repo/correlation-id` | Vitest (Node), vitest run |
-
 ## Contribution
 
-Keep the package thin (opaque gate + mint/accept only, no business logic). See root [AGENTS.md](../../AGENTS.md) and [README.md](README.md).
+Keep the package thin (opaque gate + mint/accept only, no business logic). Tests: `pnpm -w turbo run test --filter=@repo/correlation-id`.

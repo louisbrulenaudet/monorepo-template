@@ -4,7 +4,7 @@
 
 **Single source of truth** for shared constrained string values used across multiple packages and apps. Prevents duplicate string literals in `front-app`, `worker-api`, and `@repo/dtos-common`.
 
-Values are **`as const` objects** with a derived type - not TypeScript `enum` (`erasableSyntaxOnly`). Definition pattern, Zod `z.enum` integration, and wire-value breaking-change rules load from `.claude/rules/contracts/` or `.cursor/rules/contracts/` (and [naming](../../.cursor/rules/quality/naming.mdc)) when editing shared value sets.
+Values are **`as const` objects** with a derived type - not TypeScript `enum` (`erasableSyntaxOnly`). Definition pattern, Zod `z.enum` integration, and wire-value breaking-change rules live in rules `contracts/contracts` and `quality/naming`.
 
 ## Structure
 
@@ -32,14 +32,6 @@ Changing a member's **serialized string value** is a breaking contract change - 
 3. Import in consumers in the same PR.
 4. `pnpm check-types` from root.
 
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `pnpm format:fix` / `pnpm lint:fix` / `pnpm check` | OXC |
-| `pnpm check-types` | TypeScript |
-| `pnpm -w turbo run test --filter=@repo/enums-common` | Vitest (Node), `vitest run` - config present, no suite yet |
-
 ## Contribution
 
-Shared value sets only - keep the package thin (definitions + small helpers, no business logic). See root [AGENTS.md](../../AGENTS.md).
+Shared value sets only - keep the package thin (definitions + small helpers, no business logic).

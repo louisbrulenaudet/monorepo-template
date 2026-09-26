@@ -57,21 +57,19 @@ is_secret_path() {
   return 1
 }
 
-# Would a bulk stage sweep in a secret already in the tree? Gitignored files
-# never appear in --porcelain, so an ignored .env is not a hit.
-bulk_would_stage_secret() {
-  bw_paths=$(git -C "$ROOT" status --porcelain 2>/dev/null | sed -E 's/^...//; s/^.* -> //' || true)
-  [ -n "$bw_paths" ] || return 1
-  bw_oldifs=$IFS
+# Newline-separated path list -> 0 when any entry is a secret.
+paths_have_secret() {
+  [ -n "$1" ] || return 1
+  ph_oldifs=$IFS
   IFS=$PC_NL
-  for bw_p in $bw_paths; do
-    IFS=$bw_oldifs
-    if is_secret_path "$bw_p"; then
+  for ph_p in $1; do
+    IFS=$ph_oldifs
+    if is_secret_path "$ph_p"; then
       return 0
     fi
     IFS=$PC_NL
   done
-  IFS=$bw_oldifs
+  IFS=$ph_oldifs
   return 1
 }
 
@@ -102,27 +100,21 @@ classify_segment() {
   done
   IFS=$cs_oldifs
 
-  # 2. Bulk staging that would sweep in a secret already in the tree.
-  cs_bulk=0
+  # 2. What git would actually stage. Directory, `:/` and glob pathspecs, and
+  #    files inside an untracked directory, never appear in the command text.
+  #    Gitignored files are not staged, so an ignored .env is not a hit.
   case $cs_sub in
     add | stage)
-      if pc_has_flag -A "$@" || pc_has_flag --all "$@" \
-        || pc_has_flag -u "$@" || pc_has_flag --update "$@"; then
-        cs_bulk=1
-      fi
-      if printf '%s\n' "$cs_ops" | grep -qx '\.'; then
-        cs_bulk=1
-      fi
+      shift
+      cs_paths=$(git -C "$ROOT" add --dry-run "$@" 2>/dev/null | sed -n "s/^add '\(.*\)'\$/\1/p" || true)
       ;;
     commit)
-      if pc_has_flag -a "$@" || pc_has_flag --all "$@"; then
-        cs_bulk=1
-      fi
+      pc_has_flag -a "$@" || pc_has_flag --all "$@" || return 0
+      cs_paths=$(git -C "$ROOT" status --porcelain -uno 2>/dev/null | sed -E 's/^...//; s/^.* -> //' || true)
       ;;
   esac
-  if [ "$cs_bulk" -eq 1 ] && bulk_would_stage_secret; then
+  if paths_have_secret "$cs_paths"; then
     printf '%s' "$BLOCK_MSG"
-    return 0
   fi
   return 0
 }

@@ -1,28 +1,7 @@
 #!/usr/bin/env sh
 #
-# Claude Code only: Cursor has no before-file-edit event, so this script is not
-# referenced from .cursor/hooks.json and never emits a Cursor JSON verdict.
-# stdout stays silent unconditionally - PreToolUse does not inject stdout, and
-# stdout is ignored entirely on exit 2.
-#
-# Why PreToolUse and not PostToolUse: PostToolUse cannot undo a write. The
-# credential would already be on disk, and deleting it afterwards still leaves
-# it in the editor buffer and any backup. Blocking beforehand is the only point
-# at which the secret never lands.
-#
-# Complements, and does not duplicate, the `permissions.deny` rules that already
-# refuse edits to .env / *.pem / credentials.json BY PATH. This hook catches the
-# other direction: a real key pasted into an ordinary source file.
-#
-# Scope discipline: only high-signal, literal credential prefixes are matched.
-# There is deliberately NO generic entropy or `password = ...` heuristic - the
-# audit that produced this file found that over-broad matching (substring scans)
-# denied legitimate work, and a false denial on every edit is worse than the gap.
-#
-#
-# The reason names the pattern and the line numbers ONLY. The matched text is
-# never echoed, so the secret is not copied into the transcript, the debug log,
-# or any hook log.
+# Claude Code only (Cursor has no before-file-edit event); stdout stays silent.
+# Scope and rationale: hooks/AGENTS.md, "Content guard".
 
 set -eu
 

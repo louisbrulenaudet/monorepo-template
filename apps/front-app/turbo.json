@@ -20,7 +20,7 @@
       ]
     },
     "dev": {
-      "description": "Starts Vite and also worker-api so filtered `turbo run dev --filter=front-app` has a live gateway. Interruptible so `turbo watch` can restart when dependency inputs change.",
+      "description": "Vite dev server, started together with worker-api#dev.",
       "with": ["worker-api#dev"],
       "interruptible": true
     },
@@ -29,7 +29,7 @@
       "dependsOn": ["$TURBO_EXTENDS$", "build"]
     },
     "upload": {
-      "description": "wrangler versions upload of ./dist; requires this app's production Vite build first.",
+      "description": "wrangler versions upload of ./dist (no traffic change).",
       "dependsOn": ["$TURBO_EXTENDS$", "build"]
     }
   }

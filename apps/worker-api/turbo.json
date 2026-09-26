@@ -4,7 +4,7 @@
   "tags": ["app"],
   "tasks": {
     "dev": {
-      "description": "Wrangler local dev server. Interruptible so `turbo watch` can restart when dependency inputs change.",
+      "description": "Wrangler local dev server.",
       "interruptible": true
     }
   }
