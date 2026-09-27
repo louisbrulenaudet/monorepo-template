@@ -28,8 +28,9 @@ jobs:
   ci:
     name: Lint, typecheck, test, and build
     # The version PR is validated by release.yml's `gate` on the merge commit, before
-    # any tag is cut; skipping here avoids a permanently pending required check.
-    if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
+    # any tag is cut; skipping here avoids a permanently pending required check. Bound
+    # to the bot's exact branch, or any PR could skip the check by naming its branch.
+    if: ${{ !(github.head_ref == 'changeset-release/main' && github.event.pull_request.user.login == 'github-actions[bot]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -38,9 +39,9 @@ jobs:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-      # Empty off PRs on purpose: the full-graph path needs no base, and
-      # `github.event.before` is all-zeros on a new branch.
-      TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
+      # Write-only off PRs: same-repo PR runs hold the token and signing key (signing is an
+      # integrity check, not trust), so the release gate never replays an entry a PR wrote.
+      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw,remote:rw' || 'local:rw,remote:w' }}
       VITE_API_BASE_URL: https://worker-api-ci.monorepo-template.workers.dev
 
     steps:
@@ -59,8 +60,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
           install: false
 
-      # Must come from a step: `runner` / $RUNNER_TEMP is unavailable in workflow- and
-      # job-level `env:`, and referencing it there makes the file unparseable.
+      # Must be a step: `runner` in workflow/job `env:` makes the file unparseable (ops/ci).
       - name: Enable Node compile cache
         run: echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
 
@@ -75,6 +75,9 @@ jobs:
 
           - name: Boundaries
             run: pnpm run boundaries
+
+          - name: Agent hooks
+            run: pnpm run hooks:test
 
           - name: Lint
             run: pnpm run lint:ci

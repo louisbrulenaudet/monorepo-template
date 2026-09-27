@@ -34,14 +34,16 @@ Styling for the React SPAs. Tailwind **v4**, CSS-first (no `tailwind.config.js`)
 - **Do not hardcode a single-theme palette.** Utilities like `text-slate-200` / `bg-white/5` assume one background; on the opposite scheme they become unreadable. When the app declares `color-scheme: light dark`, colors must adapt in both.
 - Canonical pattern: raw values in `:root` + a dark scope, re-exposed as semantic `@theme inline` tokens; components use the semantic utility in both themes:
   ```css
-  :root { --color-background: oklch(1 0 0); --color-foreground: oklch(0.145 0 0); }
-  [data-theme="dark"] { --color-background: oklch(0.145 0 0); --color-foreground: oklch(0.985 0 0); }
+  :root { --background: oklch(1 0 0); --foreground: oklch(0.145 0 0); }
+  @media (prefers-color-scheme: dark) {
+    :root { --background: oklch(0.13 0 0); --foreground: oklch(0.985 0 0); }
+  }
   @theme inline {
-    --color-background: var(--color-background);
-    --color-foreground: var(--color-foreground);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
   }
   ```
-  → `<body class="bg-background text-foreground">`; add `--color-card` / `--color-border` / `--color-muted` / `--color-primary` the same way.
+  → `<body class="bg-background text-foreground">`; add `--card` / `--border` / `--muted-foreground` / `--primary` the same way.
 - `dark:` defaults to `prefers-color-scheme`. For a manual class/attribute toggle, declare the strategy once:
   ```css
   @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

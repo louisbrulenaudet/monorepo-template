@@ -31,7 +31,7 @@ push to main ──► Release  (concurrency release-main, queue: max, never can
 - **The version PR branch is force-pushed, not accumulated.** Every push to `main` resets `changeset-release/main` from the tip, re-runs `changeset version`, and force-pushes one commit. It can never be behind `main` or conflict with it, and manual edits to it are destroyed. Verified on PR #19: base tracked the newest `main` SHA with a single commit.
 - **Tags created with `GITHUB_TOKEN` do not trigger workflows.** This is why `cd.yml` has no `push: tags:` trigger and `release.yml` calls it directly. Do not "restore" a tag trigger; it is dead code (GitHub `GITHUB_TOKEN` docs; changesets/action#669).
 - **`queue: max`, not the default.** With `queue: single`, a third push replaces the pending run and that release is silently dropped.
-- **CI is skipped on `changeset-release/**` head branches** via a job-level `if` - a `pull_request` `branches-ignore` filters the *base* branch and cannot express this. The release commit is validated by `gate` on the merge commit instead, so no branch-protection exemption is needed.
+- **CI is skipped on the bot's `changeset-release/main` PR only** via a job-level `if` (branch and author both checked) - a `pull_request` `branches-ignore` filters the *base* branch and cannot express this. The release commit is validated by `gate` on the merge commit instead, so no branch-protection exemption is needed.
 
 ## Recovery
 

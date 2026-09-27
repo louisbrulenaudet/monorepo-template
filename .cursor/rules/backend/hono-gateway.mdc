@@ -33,7 +33,7 @@ Register in this order. The onion model runs "before" logic top-down and "after"
 **Root app (every route):**
 
 1. **`requestId()`** (`hono/request-id`) - **first**, so every error log and response can reference it. Sets `c.get("requestId")` and echoes the `X-Request-Id` response header. Add `RequestIdVariables` to the Hono generic's `Variables` so `c.get("requestId")` is typed.
-2. **`sentry(app, (env) => …)`** (`@sentry/hono/cloudflare`) - right after `requestId()`, followed by an inline middleware that `setTag("request_id", …)`s the opaque id. It reports `c.error` 5xx even when `onError` handles the error, so do not add `captureException` there. Keep `dataCollection` locked down (no user info, cookies, headers, bodies, query params, frame variables) - privileged client data, see [guardrails.md](../core/guardrails.md).
+2. **`sentry(app, (env) => …)`** (`@sentry/hono/cloudflare`) - right after `requestId()`, followed by an inline middleware that `setTag("request_id", …)`s the opaque id. It reports `c.error` 5xx even when `onError` handles the error, so do not add `captureException` there. Keep `dataCollection` locked down (no user info, cookies, headers, bodies, query params, frame variables) - privileged client data, see [guardrails.mdc](../core/guardrails.mdc).
 3. **`secureHeaders()`** (`hono/secure-headers`) - HSTS, `nosniff`, `no-referrer`, COOP/CORP on by default (and `X-Powered-By` removed). Add a locked-down `contentSecurityPolicy` (`default-src 'none'; frame-ancestors 'none'`) - harmless for JSON, hardening if a response is ever rendered. Set `permissionsPolicy` to deny camera/mic/geolocation/payment. CORP `same-origin` is fine for CORS-mode `fetch` from `front-app`; do not disable it to fix SPA reads.
 4. **`cors()`** on `/api/*` - preflight `OPTIONS` must clear before auth/routes. Read the allowlist from `c.env.CORS_ORIGINS` **per request** (env is not available at module scope on Workers). Put `X-Request-Id` in `exposeHeaders` so browsers can read the id. Empty allowlist is permissive (`*`) in `dev` only; any other `ENVIRONMENT` (including `staging` / `production` and typos) must set origins or `/api/*` returns **503**.
 5. **Origin / CSRF gate** on `/api/*` - unsafe methods only (any `Content-Type`, including `application/json`); must not block CORS preflight. Allows when Origin is on the allowlist **or** `Sec-Fetch-Site` is `same-origin` / `same-site`. Hono built-in `csrf()` only covers form content-types - do not rely on it alone for this JSON SPA gateway.
@@ -62,6 +62,9 @@ Register in this order. The onion model runs "before" logic top-down and "after"
 - Validate every input at the route boundary with `@hono/zod-validator`.
 - Import schemas from `@repo/dtos-common/api` - never redefine wire shapes locally.
 - Targets: `zValidator("json" | "param" | "query" | "header", Schema)`.
+- **Always pass the third argument (the hook).** Without it Hono answers with its default `{ success, error }` body, which serialises Zod internals and drops the `requestId` every other error carries; the house shape is `{ error, requestId, issues }`.
+- **Never `z.compile()`.** It builds its fast path with `new Function`, which workerd forbids during request handling, so a compiled schema silently falls back to the interpreted parser.
+- **Do not log validation failures.** The client receives every issue in the body and the invocation log records the 400; a `console` line duplicates both and lets a caller on a public route inflate log ingest.
 
 ## Handlers
 

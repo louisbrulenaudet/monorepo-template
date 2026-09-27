@@ -38,6 +38,6 @@ Branch and PR testing uses [Worker Previews](https://developers.cloudflare.com/w
 
 0. Once per account: set `env.production.previews.vars.CORS_ORIGINS` in `apps/worker-api/wrangler.jsonc`, and apply `preview_urls` (above). Empty `CORS_ORIGINS` makes the gateway smoke answer **503**; a missing `preview_urls` leaves the Preview without a URL. The script names both fixes.
 1. `pnpm preview:deploy` - Preview named after the branch (or `PREVIEW_NAME=…`), smoked at each app's `monorepo.healthPath`, URLs printed. `.claude/settings.json` denies it to agents: hand it to the user as `! pnpm preview:deploy`, or push the branch and read the Previews comment the workflow posts (`gh pr view <n> --comments`).
-2. Exercise the URL with `curl` (send `X-Request-Id` to correlate).
-3. Read logs and traces through the `cloudflare-observability` MCP server or the Preview's Observability tab - `wrangler tail` cannot target Previews.
+2. Probe the URLs with `node .agents/skills/run-app/scripts/smoke.mjs --url worker-api=<gateway URL> --url front-app=<front URL>`, then render the front Preview with the `pnpm exec playwright-cli` loop (skill `run-app`). The sandbox allowlist must name the account's `*.<subdomain>.workers.dev`, and `NODE_USE_ENV_PROXY=1` must be set so Node's `fetch` uses the sandbox proxy. Behind Access, the smoke sends `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` from the environment.
+3. Read logs and traces through the `cloudflare-observability` MCP server (authenticate once with `/mcp`), filtered by the `X-Request-Id` the smoke printed, or through the Preview's Observability tab - `wrangler tail` cannot target Previews.
 4. Patch, rerun step 1 (same name updates the same Preview), then `pnpm preview:delete`.

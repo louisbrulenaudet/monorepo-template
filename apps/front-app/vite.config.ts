@@ -9,7 +9,13 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { visualizer } from "rollup-plugin-visualizer";
-import { defineConfig, loadEnv, type Plugin, type PluginOption } from "vite";
+import {
+  defineConfig,
+  loadEnv,
+  type Plugin,
+  type PluginOption,
+  type ResolvedConfig,
+} from "vite";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 const analyzeBundle = process.env["ANALYZE"] === "true";
@@ -159,6 +165,27 @@ function sentryDebugIdSourceMapsPlugin(): Plugin {
   };
 }
 
+// @cloudflare/vite-plugin (<= 1.61.0, container-cleanup.ts) swaps server.config
+// for a shallow copy; Vite keys its inline <script type="module"> html-proxy
+// cache on config identity, so the injected DevTools script 500s. Remove once
+// workers-sdk mutates in place.
+function restoreServerConfigIdentityPlugin(): Plugin {
+  let resolvedConfig: ResolvedConfig | undefined;
+  return {
+    name: "restore-server-config-identity",
+    apply: "serve",
+    enforce: "post",
+    configResolved(config) {
+      resolvedConfig = config;
+    },
+    configureServer(server) {
+      if (resolvedConfig && server.config !== resolvedConfig) {
+        server.config = resolvedConfig;
+      }
+    },
+  };
+}
+
 export default defineConfig(({ command, mode }) => {
   assertProductionOriginEnv(mode, command);
 
@@ -175,6 +202,7 @@ export default defineConfig(({ command, mode }) => {
     react({ compiler: true }),
     tailwindcss(),
     cloudflare(),
+    restoreServerConfigIdentityPlugin(),
     generatedBuildArtifactsPlugin(mode),
   ];
 

@@ -12,9 +12,9 @@ TanStack Query owns **all server state**. Depth: skill **`tanstack-query`**. Thi
 ## Repo invariants
 
 - **Never** fetch in `useEffect` + `useState`, and never mirror query data into local state.
-- Define queries with **`queryOptions()`** in `src/services/worker-api/<feature>-query-options.ts` next to `<feature>.ts`. Reuse the same object for `useQuery` / `useSuspenseQuery` / `ensureQueryData` / `setQueryData` - do not inline `{ queryKey, queryFn }` at call sites.
+- Define queries with **`queryOptions()`** in `src/services/worker-api/<feature>-query-options.ts` next to `<feature>.ts`. Reuse the same object for `useQuery` / `useSuspenseQuery` / `queryClient.query` / `setQueryData` - do not inline `{ queryKey, queryFn }` at call sites.
 - Keys under the backend namespace, hierarchical (`['worker-api','…']`). Promote to a key factory once a feature has several related queries. Keys must be JSON-serializable.
 - `queryFn` delegates to `fetchJsonWithSchema` (forwards `signal`, throws on non-OK, validates with shared Zod - never `as T`). See [contracts.md](../contracts/contracts.md).
 - One module-singleton `QueryClient` in `src/config/query-client.ts` - never `new QueryClient()` in a component. Mount `<ReactQueryDevtools>` behind `import.meta.env.DEV` only.
 - Mutations: invalidate via `invalidateQueries` by default; full optimistic ritual only when needed (`cancelQueries` → snapshot → `setQueryData` → rollback → `invalidateQueries`).
-- Route loaders warm with `ensureQueryData(opts)`; components read the same `opts` (see [tanstack-router.md](tanstack-router.md)).
+- Route loaders warm with `queryClient.query({ ...opts, staleTime: "static" })` (`ensureQueryData` / `fetchQuery` / `prefetchQuery` are deprecated since 5.102); components read the same `opts` (see [tanstack-router.md](tanstack-router.md)).

@@ -1,12 +1,24 @@
 ---
-description: "Turbo query graph primitives and signed remote-cache key provisioning."
+description: "Turbo task-graph rationale, query graph primitives, and signed remote-cache key provisioning."
 alwaysApply: false
 globs: **/turbo.json,.github/workflows/**
 ---
 
-# Turborepo Query & Remote Cache
+# Turborepo
 
-Read-only graph primitives and signed-cache provisioning for this repo's turbo setup. Task/pipeline semantics live in root `turbo.json` comments and `core/boundaries`; CI invariants live in `ops/ci`.
+Task-graph rationale, read-only graph primitives, and signed-cache provisioning for this repo's turbo setup. Root `turbo.json` descriptions say what each task does; the why is in [Task graph](#task-graph) below. Package tags live in `core/boundaries`; CI invariants in `ops/ci`.
+
+**Docs:** ground truth for the pinned version is `node_modules/turbo/schema.json` (every `turbo.json` key and `futureFlags` entry, with descriptions), then `pnpm turbo docs <query>` (docs matching the installed CLI) or Context7 `/vercel/turborepo`, then `turborepo.dev`. The upstream-locked `turborepo` skill points at `node_modules/turbo/docs/`, which turbo 2.11.x does not ship - do not treat its absence as a broken install.
+
+## Task graph
+
+- **`transit` is a no-op edge** (transit-node pattern): it propagates source changes through declared workspace dependencies without serializing tasks. `check-types` and `test` depend on `transit`, not `^check-types`, so packages run in parallel yet still invalidate when a dependency's source changes. App-to-app service bindings are not package dependencies, so the caller declares an explicit `<callee>#transit` edge in its package `turbo.json` ([../backend/workers-config.mdc](../backend/workers-config.mdc)).
+- **JIT packages export source `.ts`**, so there is no declaration emit and no project references.
+- **No `types` edge on `check-types`.** `worker-configuration.d.ts` is committed, so it hashes as an ordinary tracked input; regenerating it mid-CI would dirty the tree. `types` writes a tracked file, so it is uncached like every write-mode task; `types:check` (`wrangler types --check`) is read-only, cached, and does not start workerd.
+- **`build` is deliberately not gated on `check-types`.** A task's hash includes its dependencies' hashes and `check-types` hashes `tests/`, so that edge made every test-only edit rebuild. With it gone and test files excluded from `build` inputs, a test-only edit keeps the build cached and out of `--affected`. The type gate lives in `pnpm run ci`, CD's `turbo run check-types build`, and the `deploy` / `upload` `check-types` edges.
+- **`global.inputs` is prepended to every task's `inputs`**, not folded into one global hash, so a task can drop an entry with a negation glob. Never add OXC configs there: `.oxlintrc.json` / `.oxfmtrc.json` belong to `//#lint:*` / `//#format:check`, and a global entry would invalidate `check-types` and `build` on a lint-rule-only edit.
+- **`//#hooks:test` is uncached** because `guard-secret-commit` shells out to git against the live index (the suite runs in about a second). It sits in `check` and `ci` because the guards fail closed: a syntax error in a git guard denies every Bash command.
+- **App `dev` tasks are `interruptible`** so `turbo watch` can restart them when dependency inputs change; `front-app#dev` runs `with: ["worker-api#dev"]` so a filtered `--filter=front-app` dev still has a live gateway.
 
 ## Turbo query (agent primitives)
 
@@ -20,9 +32,24 @@ Read-only graph primitives and signed-cache provisioning for this repo's turbo s
 | `turbo query ls [pkg]` | Package list / per-package deps and tasks |
 | `turbo query --schema` | GraphQL schema to load before writing custom queries |
 
+## Explaining a cache miss
+
+A task's hash covers its resolved `inputs`, its `env` values, the package's external dependencies from the lockfile, and the hash of every task it `dependsOn`. A miss that no input of the task itself explains usually comes from a dependency task.
+
+| Command | Use |
+|---------|-----|
+| `turbo run <task> --filter=<pkg> --dry=json` | Per-task `hash`, resolved `inputs` (file to git hash), `environmentVariables`, and `dependencies`, without running anything |
+| `turbo run <task> --filter=<pkg> --summarize`, twice, then diff the two `.turbo/runs/<run-id>.json` | Which input, env var, or dependency hash moved between two real runs |
+| `turbo query affected --base <ref> --head <ref>` | Why a task is selected: `reason.__typename` is `TaskFileChanged`, `TaskDependencyTaskChanged`, `TaskGlobalFileChanged`, ... |
+
+- `build` does not depend on `check-types` (see [Task graph](#task-graph)), so `turbo run build` alone never type-checks. Name both when you need the gate: `turbo run check-types build --filter=<app>...`.
+- `futureFlags.filterUsingTasks` stays off. In 2.11.4 it makes `--filter=...pkg` follow task edges only, which silently drops dependent packages for the transit-pattern tasks (`check-types`, `test`); `--affected` already gets task-level precision from `affectedUsingTaskInputs`. Before re-enabling it, confirm `turbo run check-types test --filter=...@repo/dtos-common --dry=json` still lists both apps.
+- `turbo query affected` counts uncommitted changes even with `--head`: a dirty `turbo.json` or root `package.json` marks every task `TaskGlobalFileChanged`. To reason about a clean commit range, run it in a scratch `git clone` of that commit.
+- Inside the Claude Code sandbox, any dry run whose task list includes `front-app#build` aborts during package traversal, because that task's `inputs` name `.env*` files the sandbox denies reading - the same cause that makes `ci:sandbox` drop `build`.
+
 ## Root tasks (`//#`)
 
-Repo-wide checks that cannot be per-package - OXC, Knip, syncpack - are declared in root `turbo.json` as `//#lint:check`, `//#lint:agent`, `//#format:check`, `//#knip`, `//#knip:agent`, `//#knip:production`, `//#deps:check`, `//#deps:format:check`. Each maps 1:1 to a root `package.json` script of the same name and runs as one process at repo-root CWD, so `pnpm run check` / `ci` / `ci:agent` can schedule them in parallel from a single `turbo run`.
+Repo-wide checks that cannot be per-package - OXC, Knip, syncpack, the agent hook suite - are declared in root `turbo.json` as `//#lint:check`, `//#lint:agent`, `//#format:check`, `//#knip`, `//#knip:agent`, `//#knip:production`, `//#deps:check`, `//#deps:format:check`, `//#hooks:test`. Each maps 1:1 to a root `package.json` script of the same name and runs as one process at repo-root CWD, so `pnpm run check` / `ci` / `ci:agent` can schedule them in parallel from a single `turbo run`.
 
 - **Always address them with the `//#` prefix.** A bare `turbo run lint:check` would fan out to any workspace that later adds a same-named script, which is exactly the per-package `oxlint` that breaks the Tailwind context rules.
 - **`//#deps:check` and `//#deps:format:check` are cached with hand-authored `inputs`**: the workspace manifests (`package.json`, `apps/*/package.json`, `packages/*/package.json`), `pnpm-workspace.yaml`, and `.syncpackrc.json` - the complete set syncpack reads, verified with `--dry-run=json`. Extend those globs if `pnpm-workspace.yaml` ever adds a workspace directory.

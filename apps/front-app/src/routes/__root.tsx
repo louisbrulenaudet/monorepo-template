@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { lazy, Suspense, type ReactNode } from "react";
+import { NotFoundFallback } from "#/components/feedback/NotFoundFallback";
 import { version } from "../../package.json";
 
 export interface RouterContext {
@@ -16,7 +17,9 @@ function RootLayout(): ReactNode {
     <>
       <div className="mx-auto max-w-7xl p-8 text-center">
         <Outlet />
-        <footer className="pt-2 text-xs text-neutral-500">v{version}</footer>
+        <footer className="pt-2 text-xs text-muted-foreground">
+          v{version}
+        </footer>
       </div>
       {LazyAppDevtools ? (
         <Suspense fallback={null}>
@@ -29,4 +32,5 @@ function RootLayout(): ReactNode {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
+  notFoundComponent: NotFoundFallback,
 });

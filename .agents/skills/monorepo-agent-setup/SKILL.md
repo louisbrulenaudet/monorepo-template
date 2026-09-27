@@ -18,21 +18,15 @@ Canonical layout and sync policy for **Cursor** and **Claude Code** in this repo
 | Hook scripts | [`hooks/`](../../../hooks/) (shared) | [`hooks/`](../../../hooks/) (shared) |
 | Subagents | [`.claude/agents/`](../../../.claude/agents/) | [`.cursor/agents/`](../../../.cursor/agents/) |
 | Review workflows | Skills under `.agents/skills/review*` (symlink) | Same skills under `.agents/skills/review*` |
-| Dependency-scoped reviews | `/review-<dep>` skills under `.agents/skills/review-<dep>/` (symlink) - one per dev dependency (claude-code, cursor, vite, oxc, typescript, turborepo, pnpm, wrangler, hono, tailwind, vitest, tanstack-router, tanstack-query, react, zod, knip, syncpack) | Same |
+| Stack reviews | `/review-stack` under `.agents/skills/review-stack/` (symlink) - protocol in `SKILL.md`, one companion per dependency in `deps/<dep>.md` | Same |
 | Deep skills | Symlinks → [`.agents/skills/`](../../) | [`.agents/skills/`](../../) (source of truth) |
 | Nested app guides | `CLAUDE.md` per app/package | `AGENTS.md` per app/package |
 
 - Claude: nested `CLAUDE.md` loads on demand; debug with `tail -f hooks/logs/instructions-loaded.log`.
 - Cursor: nested `AGENTS.md` by directory; `.mdc` rules attach via `globs` / `alwaysApply`. Debug: **Customize → Hooks**.
 - Rule folders (`core`, `frontend`, `backend`, `contracts`, `quality`, `tests`, `ops`) organize only; scoping is frontmatter (`paths` vs `globs`/`alwaysApply`).
-- Vite config rule: `.claude/rules/frontend/vite-config.md` ↔ `.cursor/rules/frontend/vite-config.mdc` - `apps/front-*/vite.config.ts` only.
-- Tailwind rule: `.claude/rules/frontend/tailwind.md` ↔ `.cursor/rules/frontend/tailwind.mdc` - `apps/front-*/src/**/*.{ts,tsx,css}`, `apps/front-*/index.html`.
-- Ports rule: `.claude/rules/backend/ports.md` ↔ `.cursor/rules/backend/ports.mdc` - `wrangler.jsonc`, app `package.json`, `front-*/vite.config.ts`.
-- TSConfig rule: `.claude/rules/quality/typescript-config.md` ↔ `.cursor/rules/quality/typescript-config.mdc` - `packages/typescript-config/**`, `**/tsconfig*.json`.
-- Vitest shared-config rule: `.claude/rules/quality/vitest-config.md` ↔ `.cursor/rules/quality/vitest-config.mdc` - `packages/vitest-config/**`.
-- Turbo rule: `.claude/rules/core/turborepo.md` ↔ `.cursor/rules/core/turborepo.mdc` - `**/turbo.json`, `.github/workflows/**`.
 
-See [`hooks/AGENTS.md`](../../../hooks/AGENTS.md) for hook authoring. Full layout and sync policy: this skill.
+See [`hooks/AGENTS.md`](../../../hooks/AGENTS.md) for hook authoring.
 
 ## Content taxonomy (what belongs where)
 
@@ -40,11 +34,11 @@ Put instructions in the layer that matches how often agents need them. Path-scop
 
 | Layer | Put here | Examples |
 |-------|----------|----------|
-| Root [`AGENTS.md`](../../../AGENTS.md) | Always-on project map for almost every task | Overview, architecture diagram, worker prefixes, where-to-put, essential pnpm scripts, architecture decision bullets, pointers |
+| Root [`AGENTS.md`](../../../AGENTS.md) | Always-on project map for almost every task | Overview, worker prefixes, where-to-put, essential pnpm scripts, architecture decision bullets, pointers |
 | Path-scoped rules (mirrored `.cursor` / `.claude`) | Only when editing matching files | Ports / `inspector_port` / `strictPort`, wrangler secrets, contract workflow, oxlint style, TSConfig presets |
 | Nested app/package `AGENTS.md` | Package-local workflows | `apps/front-app`, `worker-api`, `dtos-common` |
 | Skills | Deep / on-demand procedures | `monorepo-agent-setup`, `turborepo`, `hono`, review skills |
-| [`README.md`](../../../README.md) | Human-facing docs | Full port registry, copy-from-existing scaffold checklist |
+| [`README.md`](../../../README.md) | Human-facing docs | Architecture diagram, onboarding, scaffold checklist, human-only `/review-*` list |
 
 Do **not** duplicate path-scoped or linter detail in root `AGENTS.md`. Prefer a one-line pointer to the owning rule, skill, or README.
 
@@ -55,8 +49,8 @@ When changing agent setup, keep both tools in sync:
 1. **Rules:** edit both `.cursor/rules/<cat>/<name>.mdc` and `.claude/rules/<cat>/<name>.md` (remap frontmatter: Cursor `description`/`globs`/`alwaysApply` ↔ Claude `paths`).
 2. **Agents:** edit both `.cursor/agents/<name>.md` and `.claude/agents/<name>.md` (keep product-native keys: `model`, `tools`, `readonly`, `color`).
 3. **Hooks:** edit scripts only under `hooks/`; update both `.cursor/hooks.json` and `.claude/settings.json` when wiring changes.
-4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json` (when present). Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `privileged-legal-data`, `front-vitest`, `react-doctor`, `review-*`) live once under `.agents/skills/`.
-5. **Review skills:** edit `.agents/skills/review*/SKILL.md` (self-contained; Claude via symlink). Two families: **dimension** reviews (`review`, `review-architecture`, `review-ci`, `review-code-quality`, `review-configuration`, `review-performance`, `review-security`, `review-seo`, `review-tests`, `review-ui`) and **dependency-scoped stack reviews** (`review-claude-code`, `review-vite`, `review-oxc`, `review-typescript`, `review-turborepo`, `review-pnpm`, `review-wrangler`, `review-hono`, `review-tailwind`, `review-vitest`, `review-tanstack-router`, `review-tanstack-query`, `review-react`, `review-zod`, `review-knip`, `review-syncpack`). Both share the same output contract (Critical / Improvements / Optional plan) and `disable-model-invocation: true` - human-only. Dependency-scoped skills mandate ground-truth retrieval (installed documentation MCP collector → direct web fetch restricted to official domains → official changelogs) before suggestions; no hard-coded doc URLs, cite sources per finding. `review-*` and `pnpm` set `disable-model-invocation: true`, so **only a human can run them** - they cannot be preloaded into a subagent's `skills:` field or invoked through the Skill tool. Keep it that way for the whole-repo review deep dives; do not add it to a skill an agent needs. `privileged-legal-data` is deliberately **model-invocable** for exactly that reason: it is the preloadable checklist behind `guardrails.md` → "Privileged client data". When adding a security review agent later, preload that skill rather than copying its contents into the agent description. `front-vitest` is also model-invocable: the thin `tests/front-react` rule points at it for DOM/RTL/Router harness depth. `review-tests` is the audit half of the test value bar: the authoring gate and junk patterns live once in the `quality/testing` rule, which the skill reads rather than restates.
+4. **Skills:** install/update under `.agents/skills/` + `skills-lock.json` (when present). Claude entries are symlinks into `.agents/skills/` (except Cursor-only `skills-update`). Project-owned skills (`pnpm`, `ui-ux-design-best-practices`, `monorepo-agent-setup`, `privileged-legal-data`, `front-vitest`, `run-app`, `review-*`) live once under `.agents/skills/`.
+5. **Review skills:** edit `.agents/skills/review*/SKILL.md` (Claude via symlink). Two families: **dimension** reviews (`review`, `review-architecture`, `review-ci`, `review-code-quality`, `review-configuration`, `review-performance`, `review-security`, `review-seo`, `review-tests`, `review-ui`) and the **stack review** `review-stack`: its protocol (ground truth, evidence bar, accepted choices, severity, verification, output, follow-up) lives once in `review-stack/SKILL.md`, and each dependency is one companion `review-stack/deps/<dep>.md` whose frontmatter is the registry (`id`, `summary`, `families`, `packages`, `paths`) and whose body carries Ground truth, Scope, Probe, Axes, Critical when, Overlaps, Accepted. `review-stack/scripts/preflight.mjs` resolves selectors (including `changed`) and prints the version snapshot from that registry. To cover a new tool, add one companion; never a new skill directory or table row. The stack review runs from the main thread (no `context: fork`) because it fans out one subagent per dependency; it writes no files. Both families share the Critical / Improvements / Optional output contract and `disable-model-invocation: true` - human-only. The stack review mandates ground-truth retrieval (installed documentation MCP collector → direct web fetch restricted to official domains → official changelogs) before suggestions and cites a source per finding. `review-*` and `pnpm` set `disable-model-invocation: true`, so **only a human can run them** - they cannot be preloaded into a subagent's `skills:` field or invoked through the Skill tool. Keep it that way for the whole-repo review deep dives; do not add it to a skill an agent needs. `privileged-legal-data` is deliberately **model-invocable** for exactly that reason: it is the preloadable checklist behind `guardrails.md` → "Privileged client data". When adding a security review agent later, preload that skill rather than copying its contents into the agent description. `front-vitest` is also model-invocable: the thin `tests/front-react` rule points at it for DOM/RTL/Router harness depth. `review-tests` is the audit half of the test value bar: the authoring gate and junk patterns live once in the `quality/testing` rule, which the skill reads rather than restates.
 6. **MCP:** keep [`.mcp.json`](../../../.mcp.json) and [`.cursor/mcp.json`](../../../.cursor/mcp.json) server lists aligned (`type: "http"` on HTTP servers).
 7. **Nested guides:** update `AGENTS.md`; keep `CLAUDE.md` as `@AGENTS.md` + Claude-only bullets.
 
@@ -74,9 +68,9 @@ When changing agent setup, keep both tools in sync:
 
 ## Inventory (quick)
 
-- **Rules:** 25 mirrored basenames (`core/guardrails` and `quality/comments` always-on); `tests/` holds vitest + hono-workers + front-react (DOM/RTL depth in skill `front-vitest`); `ops/` holds `ci` + `cd`. No `drizzle-orm` rule until a DB-owning worker lands.
+- **Rules:** mirrored basenames (`core/guardrails` and `quality/comments` always-on); `tests/` holds vitest + hono-workers + front-react (DOM/RTL depth in skill `front-vitest`); `ops/` holds `ci`, `cd`, `previews`, `release`. No `drizzle-orm` rule until a DB-owning worker lands.
 - **Subagents:** `explorer`, `planner`, `verifier`, `bundle-analyzer`, `docs-researcher`.
-- **Skills:** 28 mirrored basenames plus 16 dependency-scoped `/review-<dep>` stack reviews (see Review skills above); deep skills (`react-doctor`, `turborepo`, `wrangler`, TanStack family) consulted as context by their matching review skill.
+- **Skills:** mirrored basenames plus the `/review-stack` stack review with one companion per dependency (see Review skills above); deep skills (`react-doctor`, `turborepo`, `wrangler`, TanStack family) are consulted as context by their matching companion.
 - **Cursor hooks:** `beforeShellExecution` (git guards, `failClosed`), `afterFileEdit` (format/lint), `sessionStart`.
 - **Claude hooks:** PreToolUse Bash (same git guards), PostToolUse Edit\|Write (format/lint), InstructionsLoaded.
 - **MCP:** documentation MCP servers registered in `.mcp.json` (currently `context7` - a library-docs collector - and `cloudflare-docs`). Keep the Cursor Cloudflare **plugin** disabled unless you need account-scoped bindings/builds/observability MCP (those trigger OAuth login); do not double-register a documentation collector via plugin.

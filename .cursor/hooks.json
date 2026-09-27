@@ -16,13 +16,24 @@
     "afterFileEdit": [
       {
         "command": "hooks/quality/check-changed.sh",
-        "timeout": 30
+        "timeout": 150
       }
     ],
     "sessionStart": [
       {
         "command": "hooks/logging/session-start.sh",
         "timeout": 10
+      },
+      {
+        "command": "hooks/session/session-context.sh",
+        "timeout": 10
+      }
+    ],
+    "stop": [
+      {
+        "command": "hooks/quality/stop-gate.sh",
+        "timeout": 180,
+        "loop_limit": 1
       }
     ]
   }

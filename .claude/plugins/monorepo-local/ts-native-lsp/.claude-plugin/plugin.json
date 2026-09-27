@@ -1,0 +1,29 @@
+{
+  "name": "ts-native-lsp",
+  "description": "TypeScript 7 native language server (tsc --lsp) from the workspace's own typescript package",
+  "version": "1.0.0",
+  "author": {
+    "name": "monorepo-template"
+  },
+  "lspServers": {
+    "typescript": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PROJECT_DIR}/node_modules/typescript/bin/tsc",
+        "--lsp",
+        "--stdio"
+      ],
+      "workspaceFolder": "${CLAUDE_PROJECT_DIR}",
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".mts": "typescript",
+        ".cts": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascriptreact",
+        ".mjs": "javascript",
+        ".cjs": "javascript"
+      }
+    }
+  }
+}

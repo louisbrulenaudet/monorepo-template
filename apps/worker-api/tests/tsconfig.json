@@ -2,7 +2,6 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": ["../tsconfig.json", "@repo/typescript-config/tests.json"],
   "compilerOptions": {
-    "moduleResolution": "bundler",
     "types": ["@cloudflare/vitest-plugin/types"]
   },
   "include": [

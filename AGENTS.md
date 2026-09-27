@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A minimal, production-oriented monorepo starter built on **pnpm workspaces** with **Turborepo**, **Cloudflare Workers**, **Hono**, and a **React (Vite) frontend** styled with **Tailwind CSS v4**. `front-app` talks to `worker-api` over **HTTP**; service bindings are the preferred pattern for Worker-to-Worker communication when you add more Workers.
+A minimal, production-oriented monorepo starter: **pnpm workspaces** + **Turborepo**, **Cloudflare Workers** + **Hono**, and a **React (Vite) SPA** styled with **Tailwind CSS v4**. `front-app` talks to `worker-api` over **HTTP**; Worker-to-Worker calls use **service-binding RPC**. Architecture diagram: [README.md](README.md).
 
 ## Quick Start
 
@@ -13,56 +13,7 @@ pnpm prepare    # Vite+ pre-commit hooks
 pnpm dev        # all dev servers
 ```
 
-After scaffolding a new worker under `apps/`, give it a `monorepo.deployOrder` in its `package.json` (lower promotes first; gateways before the SPAs that call them) and a `monorepo.healthPath` (public probe path, or `null` for no public HTTP surface), then run `pnpm install` before turbo commands. Nothing else lists apps: the changeset group, the root `--filter='./apps/*'` scripts, and CD all discover them.
-
-## Architecture
-
-```mermaid
-flowchart TB
-  subgraph entry [Public entry]
-    direction LR
-    Front["front-* :517x"]
-    Ext["External providers"]
-    McpClients["MCP clients"]
-  end
-
-  subgraph publicWorkers [Public Workers]
-    direction LR
-    Gateway["worker-api :8700"]
-    Webhook["webhook-* :876x"]
-    Mcp["mcp-* :878x"]
-  end
-
-  subgraph privateWorkers [Private Workers]
-    direction LR
-    Biz["worker-* RPC only"]
-    Queue["queue-*"]
-  end
-
-  subgraph shared [Shared packages]
-    direction LR
-    Enums["@repo/enums-common"]
-    DTOs["@repo/dtos-common"]
-    Corr["@repo/correlation-id"]
-    Enums --> DTOs
-  end
-
-  Front --> Gateway
-  Ext --> Webhook
-  McpClients --> Mcp
-
-  Gateway --> Biz
-  Webhook --> Biz
-  Mcp --> Biz
-
-  Gateway --> Queue
-  Webhook --> Queue
-  Biz --> Queue
-
-  shared -.-> Front
-  shared -.-> publicWorkers
-  shared -.-> privateWorkers
-```
+A new worker under `apps/` needs `monorepo.deployOrder` (lower promotes first; gateways before the SPAs that call them) and `monorepo.healthPath` (public probe path, or `null` for no public HTTP surface) in its `package.json`, then `pnpm install` before turbo commands. Nothing else lists apps: the changeset group, the root `--filter='./apps/*'` scripts, and CD all discover them.
 
 ## Worker Prefixes
 
@@ -75,11 +26,11 @@ flowchart TB
 | `mcp-` | `mcp-tools` | MCP server | Public HTTP MCP (SSE / streamable HTTP); tools call `worker-*` via RPC |
 | `front-` | `front-app` | React SPA | Vite → gateway over HTTP only |
 
-If a Worker is both RPC and a queue consumer, keep prefix **`worker-*`** (business range) and use the dual-handler layout. Use **`queue-*`** only for queue-only consumers.
+A Worker that is both RPC and a queue consumer keeps prefix **`worker-*`** with the dual-handler layout; **`queue-*`** is for queue-only consumers.
 
 ## Where to Put Things
 
-Root map for cross-cutting placement. App-local detail: `apps/*/AGENTS.md` and `packages/*/AGENTS.md`.
+App-local detail: `apps/*/AGENTS.md` and `packages/*/AGENTS.md`.
 
 | Task | Location |
 |------|---------|
@@ -91,33 +42,16 @@ Root map for cross-cutting placement. App-local detail: `apps/*/AGENTS.md` and `
 | Frontend feature | `apps/front-app/src/{pages,routes,services,hooks,components}/` |
 | Agent rules | `.claude/rules/<cat>/<name>.md` **and** its `.cursor/rules/<cat>/<name>.mdc` mirror, in the same change |
 | Bindings / secrets | `apps/<worker>/wrangler.jsonc` (secret names in `secrets.required`); local secret values in `apps/<worker>/.env`, never `.dev.vars` |
-| Tests (unit) | `apps/<app>/tests/` + `@repo/vitest-config` (Node) or `@repo/vitest-config/workers` (Cloudflare Vitest pool); every new test passes the authoring gate in rule `quality/testing` |
-| Tests (multi-Worker integration) | Wrangler `createTestHarness()` from a Node Vitest suite - only after a second Worker + service binding exists; see [`packages/vitest-config/AGENTS.md`](packages/vitest-config/AGENTS.md) |
+| Tests (unit) | `apps/<app>/tests/` + `@repo/vitest-config` (Node, `front-*`) or `@repo/vitest-config/workers` (Cloudflare pool, every Worker); every new test passes the authoring gate in rule `quality/testing` |
+| Tests (multi-Worker integration) | Wrangler `createTestHarness()` from a Node suite - only once a second Worker + service binding exists; see [`packages/vitest-config/AGENTS.md`](packages/vitest-config/AGENTS.md) |
 
 Queue-only / dual-handler workers: `handlers/request.ts`, `handlers/message.ts`, shared `services/`, minimal `index.ts`.
 
-### Worker testing split (Cloudflare)
-
-Align with [Cloudflare Workers testing](https://developers.cloudflare.com/workers/testing/):
-
-| Layer | Tool | When |
-|-------|------|------|
-| **Unit** (handlers, helpers, single-Worker routes) | `@cloudflare/vitest-plugin` via `defineWorkersConfig` - tests run inside workerd; prefer `exports.default.fetch` / `env` from `cloudflare:workers` | Default for every `worker-*` / `queue-*` / `webhook-*` / `mcp-*` app today |
-| **Integration** (gateway to business Worker, production builds, binding overrides) | Wrangler [`createTestHarness()`](https://developers.cloudflare.com/workers/testing/test-harness/) from Node Vitest | When the first `worker-*` is bound to `worker-api` (or a fixture pair). Do **not** replace the Vitest pool with the harness for single-Worker route suites |
-
-`front-*` stays on Node Vitest. Do not put the Workers pool on the SPA, and do not merge the SPA and gateway into one Vite/`auxiliaryWorkers` app (SPA to gateway is **HTTP only**).
-
 ## Environment
 
-Use Node 24 (≥ 24.11, the floor Vite+ `vp` requires) and the exact pnpm version pinned in root `package.json`. Worker secrets for local runs go in `apps/<worker>/.env` (the names are the ones in `secrets.required`), never in `.dev.vars` - Wrangler aborts on an unreadable `.dev.vars` but skips an unreadable `.env`, so sandboxed agents keep running the Worker tests. Secrets and wrangler vars: path-scoped rule `backend/workers-config`. Local ports when scaffolding: `backend/ports` (human tables in [README.md](README.md)).
+Node 24 (≥ 24.11, the floor Vite+ `vp` requires) and the exact pnpm version pinned in root `package.json`. Worker secrets for local runs go in `apps/<worker>/.env` (names from `secrets.required`), never `.dev.vars`: Wrangler aborts on an unreadable `.dev.vars` but skips an unreadable `.env`, so sandboxed agents keep running the Worker tests. Local ports: rule `backend/ports`.
 
-### Worktrees
-
-A worktree is a fresh checkout, so **run `pnpm install --frozen-lockfile --prefer-offline` in it before any turbo command**. Nothing automates this: `worktree.symlinkDirectories` cannot supply it, because pnpm keeps a `node_modules` at the root *and* inside every workspace package, and symlinking the root one would make a worktree `pnpm install` write back into the main checkout. The install is cheap on disk - pnpm hardlinks from the content-addressable store - and costs only CPU time, once per worktree.
-
-`worktree.sparsePaths` in `.claude/settings.json` is applied as a **cone-mode** sparse checkout (`core.sparseCheckoutCone=true`), which means every root-level *file* is checked out whether or not it is listed - only *directories* are filtered. So the only entries that do real work are the directories: `.agents`, `.changeset`, `.claude`, `.cursor`, `.github`, `.vite-hooks`, `.vscode`, `apps`, `hooks`, `packages`. The root-file entries are kept deliberately, so the list stays correct if the checkout ever stops being cone-mode; do not read them as required. When you add a root **directory** that the tooling needs, add it here - `.opencode` is excluded on purpose.
-
-[`.worktreeinclude`](.worktreeinclude) carries gitignored files in - currently only `.claude/settings.local.json`, for the warm Turbo and Node compile caches. It deliberately carries **no** env files: worktrees do not copy real credentials, so provision isolated ones explicitly per worktree. A `WorktreeCreate` hook would disable `.worktreeinclude` entirely, which is why there isn't one.
+A worktree is a fresh checkout: run `pnpm install --frozen-lockfile --prefer-offline` in it before any turbo command. Sparse-checkout and `.worktreeinclude` policy: rule `core/worktrees`.
 
 ## Root Scripts (pnpm)
 
@@ -125,124 +59,92 @@ A worktree is a fresh checkout, so **run `pnpm install --frozen-lockfile --prefe
 
 | Command | Description |
 |---------|-------------|
-| `pnpm run check` | Fastest tier: lint, format, and both syncpack checks as parallel `//#` root tasks. The fix-and-recheck loop |
-| `pnpm run fix` | Mirror of `check`: `deps:fix`, `deps:format`, `lint:fix`, then `format:fix` - format runs last so everything ends formatted. One predictable "make it clean" verb |
-| `pnpm run ci` | Full-repo local PR gate (no `--affected`): `pnpm boundaries`, then **one** `turbo run` of every check with `--continue=dependencies-successful`, then `pnpm audit`. Reports all failures in a single pass |
-| `pnpm run ci:affected` | Middle tier for mid-task iteration: `pnpm boundaries` plus the same gate scoped with `--affected`, minus knip and audit. Never a substitute for `pnpm run ci` before finishing |
-| `pnpm run ci:agent` | `ci` with `lint:agent` / `knip:agent`, `--output-logs=errors-only`, and `--log-order=grouped`. Only oxlint and Knip have agent formats - oxfmt and syncpack output stays human-shaped |
-| `pnpm run ci:sandbox` | `ci:agent` minus the two `build` tasks, for sandboxed agents: Claude Code denies `**/.env*` reads and `front-app` declares `.env*` as `build` inputs, so any task list including `build` aborts during traversal. Ask the user to run `pnpm run ci` for build coverage |
-| `pnpm lint:agent` | Lint with `--format=agent` - one machine-readable line per diagnostic, no auto-fix |
-| `pnpm lint:ci` | Lint pinned to `--format=github` (PR annotations); used by `.github/workflows/ci.yml` |
-| `pnpm react-doctor` / `pnpm react-doctor:changed` | React Doctor scan over `front-*` apps via the pinned local binary - fully offline (telemetry, score, share, and Socket.dev checks disabled in `doctor.config.jsonc`); `:changed` is the post-React-edit regression check. Agent contract: `.claude/rules/frontend/react-doctor.md`; embedded `react-doctor/*` oxlint rules run inside `pnpm lint:*` |
-| `pnpm types` | Regenerate `worker-configuration.d.ts` (**commit the result**) |
-| `pnpm types:check` | Verify committed Worker types match `wrangler.jsonc` (inside `pnpm run ci`) |
-| `pnpm boundaries` | Package dependency tags vs `turbo.json` (inside `pnpm run ci`) |
-| `pnpm knip` | Unused files, exports, and dependencies across workspaces (root `knip.jsonc`; inside `pnpm run ci`) |
-| `pnpm knip:production` | Knip `--production --strict`: shipped-code-only pass + workspace isolation (inside `pnpm run ci`) |
-| `pnpm knip:agent` | Knip with `--reporter symbols` - one machine-readable line per unused symbol, for agents |
-| `pnpm deps:check` | syncpack lint - third-party deps must use `catalog:` specifiers; internal `@repo/**` links must use `workspace:*`; peer ranges exempt (inside `pnpm run ci`) |
-| `pnpm deps:fix` | Autofix syncpack findings (`syncpack fix`); `pnpm deps:format:check` verifies `package.json` field ordering, run `pnpm deps:format` to normalize |
-| `pnpm preview:deploy` / `pnpm preview:delete` | Create/update or delete a Worker Preview of every app (branch-slug name, `PREVIEW_NAME=` overrides). Outward-facing, needs Cloudflare credentials. Contract: `.claude/rules/ops/previews.md` |
-| `pnpm changeset` | Add a changeset (version intent + changelog entry) for the current PR - required when touching deployable apps |
-| `pnpm release:status` | Read-only release state: pending changesets and the next versions (`changeset status --verbose`) - deliberately **not** in `pnpm run ci`, it exits 1 when changed packages lack a changeset |
+| `pnpm run check` | Fastest tier: lint, format, both syncpack checks, and the hook suite as parallel `//#` root tasks |
+| `pnpm run fix` | `deps:fix`, `deps:format`, `lint:fix`, then `format:fix` (format last) |
+| `pnpm run ci` | Full local PR gate: `pnpm boundaries`, one `turbo run --continue=dependencies-successful` of every check, `pnpm audit`. Reports all failures in one pass |
+| `pnpm run ci:affected` | `ci` scoped with `--affected`, minus knip and audit - mid-task only, never a substitute for `ci` |
+| `pnpm run ci:agent` | `ci` with `lint:agent` / `knip:agent`, `--output-logs=errors-only`, `--log-order=grouped` |
+| `pnpm run ci:sandbox` | `ci:agent` minus `build`: `front-app` declares `.env*` as `build` inputs, which the sandbox denies reading. Ask the user to run `pnpm run ci` for build coverage |
+| `pnpm lint:agent` | Lint with `--format=agent`, no auto-fix |
+| `pnpm react-doctor` / `:changed` | Offline React Doctor scan of `front-*`; `:changed` after React edits (rule `frontend/react-doctor`) |
+| `pnpm types` / `pnpm types:check` | Regenerate `worker-configuration.d.ts` (**commit it**) / verify it matches `wrangler.jsonc` |
+| `pnpm boundaries` | Package tags vs `turbo.json` |
+| `pnpm hooks:test` | `sh -n` plus the regression table for `hooks/` |
+| `pnpm knip` / `knip:production` / `knip:agent` | Unused files, exports, deps; `--production --strict`; one line per symbol |
+| `pnpm deps:check` / `deps:fix` / `deps:format` | syncpack lint (`catalog:` for third-party, `workspace:*` for `@repo/**`) / autofix / field ordering |
+| `pnpm preview:deploy` / `preview:delete` | Worker Preview of every app (branch-slug name). Outward-facing; denied to agents (rule `ops/previews`) |
+| `pnpm changeset` / `pnpm release:status` | Add a changeset / read-only release state (exits 1 when changed packages lack one, so not in `ci`) |
 
-**Dependency workflow:** add every new third-party dependency to the pnpm catalog in `pnpm-workspace.yaml` and reference it as `"catalog:"` (one-offs outside the catalog install fine via `catalogMode: prefer` but fail `syncpack lint`). Internal packages always use `"workspace:*"`. Run `pnpm deps:fix` when lint flags version drift, and keep `package.json` field ordering normalized with `pnpm deps:format`.
+**Dependencies:** add every third-party dependency to the catalog in `pnpm-workspace.yaml` and reference it as `"catalog:"` (one-offs install via `catalogMode: prefer` but fail `syncpack lint`); internal packages use `"workspace:*"`.
 
 ### Releases
 
-[Changesets](https://changesets.dev) drives versioning for the deployable apps. Every app under `apps/` is one `fixed` group in `.changeset/config.json` - the glob `[["*"]]`, which matches unscoped package names only and so never an `@repo/*` package - so they always bump together and a single `vX.Y.Z` tag is a valid release coordinate. **Nothing is published to npm** - every workspace is `private: true`; a release is a git tag plus a Cloudflare Workers promote.
+Every app under `apps/` bumps together as one Changesets `fixed` group, so one `vX.Y.Z` tag is a valid release coordinate. Nothing is published to npm; a release is a git tag plus a Cloudflare Workers promote.
 
-Three rules that bind while writing ordinary app code, not just release infrastructure - which is why they live here and not only in the path-scoped rule:
+- **Every PR that changes a deployable app ships a changeset** (`pnpm changeset`; `--empty` for no-release changes). Docs/tests/tooling-only PRs do not need one.
+- **Merging the `chore: release` PR is the release act; no `v*` tag is ever pushed by hand.** `gate` validates the merged commit on `main`, then the tag is cut and handed to CD.
+- **Runtime versions:** `/api/v1/health` returns `{ status, version }` (semver from `package.json`, inlined at build); `front-app` renders it in the root footer; `X-Worker-Version-Id` stays the opaque wrangler version id.
 
-- **Every PR that changes a deployable app ships a changeset** (`pnpm changeset`; pick patch/minor/major). Non-blocking reminder via the Changesets PR status comment; use `pnpm changeset --empty` for no-release changes. Docs/tests/tooling-only PRs do not need one.
-- **Merging the `chore: release` PR is the release act, and no `v*` tag is ever pushed by hand.** Merging lands the bumps on `main`, where `gate` validates the commit; only then is the tag cut and handed to CD.
-- **Runtime versions**: `/api/v1/health` returns `{ status, version }` (semver from `package.json`, inlined at build); `front-app` renders it in the root footer; `X-Worker-Version-Id` stays the opaque wrangler version id.
-
-The release state machine, the pipeline invariants, the recovery table, the repo settings CD depends on, and rollback all live in `.claude/rules/ops/release.md` / `.cursor/rules/ops/release.mdc`, which load when you touch `.changeset/**` or the release workflows. Contributor-facing walkthrough: [`.changeset/README.md`](.changeset/README.md).
+Release state machine, recovery, and rollback: rule `ops/release`; contributor walkthrough: [`.changeset/README.md`](.changeset/README.md).
 
 ### Scoping
 
-Turbo filters apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview`, `types` (`--filter=<pkg>`, `--filter=...pkg...`, `--affected`). Prefer scoped turbo while iterating; use `pnpm run ci` as the local PR gate (full graph). **GitHub CI only** for `--affected`.
-
-**Lint and format are `//#` root tasks, never per-package ones.** OXC, Knip, and syncpack run through Turborepo as root tasks (`//#lint:check`, `//#format:check`, `//#knip`, `//#deps:check`, ...), which is still a single pass at repo-root CWD - turbo only schedules them in parallel and reports them together. That matters because oxlint resolves `settings.better-tailwindcss.entryPoint` against process CWD, so a per-package `oxlint .` would silently break Tailwind context rules and re-spawn `tsgolint` per package. The `//#` prefix pins each task to the root package even if a workspace later adds a same-named script. Narrow with a path instead: `pnpm --filter=front-app run lint:check`. Never `cd` into a package to lint. `pnpm boundaries` is a CLI command, not a package task - it stays outside the `turbo run`, as does `pnpm audit` (network-bound, and its advisory DB is not a pure function of the commit).
-
-**Agent lint contract** (mirrors [OXC coding agents](https://oxc.rs/docs/guide/usage/coding-agents.html)): iterate with `pnpm lint:fix`, then finish every code change with `pnpm lint:agent` and read only that output - it is the machine-readable `--format=agent` form (`file:line:col: severity plugin(rule): message help:`). The human/CI format (`pnpm lint:check`) renders TTY-dependent code frames; do not parse it - which is why the gate has an agent tier, `pnpm run ci:agent`, that swaps in `lint:agent` and `knip:agent`. Inline suppressions: `oxlint-disable*` directives only - see `.claude/rules/quality/code-style.md`. Type checking stays with tsc via `turbo run check-types`; oxlint's experimental `options.typeCheck` is deliberately not used (it would lose Turbo per-package caching and `--affected`).
-
-**Knip policy** (root `knip.jsonc`, kept comment-free): both the default pass and `pnpm knip:production` must stay green. Never blanket-`ignore`; prefer scoped patterns (`ignoreIssues`, production-only suffixes like `"dep!"` / `"!tests/**!"`) or JSDoc `@internal` on test-only exports. Auto-fix unused dependencies and pnpm catalog entries with `knip --fix --fix-type dependencies,catalog`. Test-only exports carry an explicit `@internal` tag rather than relying on tests to keep them "used". Per-override rationale: `.claude/rules/quality/knip.md` / `.cursor/rules/quality/knip.mdc`.
+- Turbo filters (`--filter=<pkg>`, `--filter=...pkg...`, `--affected`) apply to `check-types`, `test`, `build`, `dev`, `deploy`, `preview`, `types`. Prefer scoped turbo while iterating; `--affected` is for GitHub CI. Run package scripts from the root or with `pnpm -w` - a raw package script bypasses Turbo dependencies.
+- **Lint, format, Knip, and syncpack are `//#` root tasks** - one whole-repo pass at repo-root CWD. Never `cd` into a package to lint; narrow with a path: `pnpm --filter=front-app run lint:check`. Why: rule `core/turborepo`.
+- **Lint contract:** iterate with `pnpm lint:fix`, finish with `pnpm lint:agent` and read only that output (`file:line:col: severity plugin(rule): message help:`); never parse the TTY-dependent `lint:check` output. Suppressions: `oxlint-disable*` only (rule `quality/code-style`). Type checking stays with tsc via `turbo run check-types`.
+- **Knip:** the default and `--production` passes both stay green; never blanket-`ignore`; per-override rationale in rule `quality/knip`.
 
 ### Verifying a change (agents)
 
 | Goal | Command |
 |------|---------|
-| One workspace's tests | `pnpm turbo run test --filter=<ws>` - a cache hit replays the stored log; add `--force` for a fresh execution |
+| One workspace's tests | `pnpm turbo run test --filter=<ws>` (a cache hit replays the log; `--force` re-executes) |
 | One test file | `pnpm --filter=<ws> exec vitest run tests/<path>.test.ts` |
-| Fast static recheck | `pnpm run check` - lint, format, syncpack in parallel; seconds |
-| Mid-task iteration | `pnpm run ci:affected` - adds types/test/build for affected packages only |
-| Full gate | `pnpm run ci` (one `turbo run --continue=dependencies-successful`, so every failure surfaces in one pass) - required before finishing |
-| Full gate, machine-readable | `pnpm run ci:agent` - agent formatters, output only from failing tasks |
-| Full gate, inside a sandbox | `pnpm run ci:sandbox` - `ci:agent` without the `build` tasks, so the `.env*` filesystem deny cannot abort the run; hand `build` verification back to the user |
-| worker-api smoke | background `pnpm --filter=worker-api dev`, then `curl -sf http://localhost:8700/api/v1/health` (expect `{ status, version }` JSON), then stop the dev process |
-| front-app smoke | background `pnpm --filter=front-app dev`, then `curl -sf http://localhost:5174/` and check the HTML contains `id="root"`, then stop |
-| Remote branch Preview (real edge, isolated) | Hand `! pnpm preview:deploy` to the user or read the PR's Previews comment; loop and sandbox caveats in `.claude/rules/ops/previews.md` |
-| worker-api routes / serverless smoke | `pnpm --filter=worker-api exec hono routes`; `pnpm --filter=worker-api exec hono request /api/v1/health --runtime workerd` - no dev server, `workerd` supplies the real `wrangler.jsonc` bindings |
+| Fast static recheck | `pnpm run check` |
+| Mid-task iteration | `pnpm run ci:affected` |
+| Full gate - required before finishing | `pnpm run ci`, or `pnpm run ci:agent` for machine-readable output |
+| Full gate inside a sandbox | `pnpm run ci:agent`; fall back to `pnpm run ci:sandbox` if traversal aborts, then hand `build` back to the user |
+| Run, smoke, browser-check, local traces, Preview probe | skill `run-app` |
 
-Run dev servers through the harness's background-task mechanism (never a bare `&` you cannot reap) and always stop them when done. Both smoke checks work inside the Claude Code sandbox (`sandbox.network.allowLocalBinding`). Where a user-level `Bash(curl *)` deny applies, probe with `node -e 'fetch(process.argv[1]).then(async (r) => { console.log(r.status, await r.text()); process.exitCode = r.ok ? 0 : 1; })' <url>` instead.
+Run dev servers through the harness's background-task mechanism (never a bare `&`) and stop them when done.
 
 ## Agent tooling
 
-Cursor / Claude dual-tree layout, sync policy, hooks, skills, and MCP: skill `monorepo-agent-setup`. Hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Nested `AGENTS.md` + `CLAUDE.md` live under each `apps/*`, `packages/*`, and `hooks/` - give new packages the same pair. Turbo graph primitives (`turbo query`) and signed-remote-cache provisioning are path-scoped in `core/turborepo`.
+Dual-tree layout, sync policy, hooks, skills, MCP: skill `monorepo-agent-setup`; hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Every `apps/*`, `packages/*`, and `hooks/` directory has an `AGENTS.md` + `CLAUDE.md` pair - give new packages the same. `turbo query` and remote-cache provisioning: rule `core/turborepo`.
 
-**Working on a Hono app? Run `pnpm --filter=worker-api exec hono agent-context` first and follow it.** `@hono/cli` (the `next` / 0.2 line) is a `worker-api` devDependency; `agent-context` prints the command reference generated from the installed version, so it cannot drift. Commands are JSON-first - add `--plain` only when a human reads the output.
-
-### Subagent roster
-
-Five read-only agents - `explorer`, `planner`, `verifier`, `bundle-analyzer`, `docs-researcher`. Descriptions load from `.claude/agents/*.md`; do not restate them here. Add more under `.claude/agents/` / `.cursor/agents/` when new surfaces land (see `monorepo-agent-setup`).
-
-`explorer` and `planner` exist because the built-in `Explore` and `Plan` agents load neither `CLAUDE.md` nor `.claude/rules/`, so every delegation to them depends on a human remembering to restate the constraints. The two local agents carry the repository map and the architectural constraints in their own prompts instead. Prefer them over the built-ins for anything in this repo.
-
-### Dependency-scoped stack reviews
-
-Beyond the dimension reviews (`/review-*`), one human-only `/review-<dep>` command exists per dev dependency (`review-claude-code`, `review-vite`, `review-oxc`, `review-typescript`, `review-turborepo`, `review-pnpm`, `review-wrangler`, `review-hono`, `review-tailwind`, `review-vitest`, `review-tanstack-router`, `review-tanstack-query`, `review-react`, `review-zod`, `review-knip`, `review-syncpack`). Run them periodically to verify each tool's config still follows current best practices: every skill mandates ground-truth retrieval (installed documentation MCP collector → direct web fetch of official docs) before suggesting changes and outputs a Critical / Improvements / Optional plan.
-
-### When to delegate
+**Subagents** (read-only): `explorer`, `planner`, `verifier`, `bundle-analyzer`, `docs-researcher`. Use `explorer` / `planner` instead of the built-in `Explore` / `Plan`, which load neither `CLAUDE.md` nor `.claude/rules/`; if you use a built-in anyway, restate the binding constraints in the prompt. Human-only `/review-*` commands are listed in [README.md](README.md).
 
 | Reach for | When |
 |-----------|------|
-| **Main thread** | Iterative work; phases sharing context; a small targeted change; latency-sensitive work. |
-| **Plan mode** | Uncertain approach, or multi-file change. Skip if the diff fits one sentence. |
-| **Skill** | Reusable procedure in current context - `/review-*`, `/git-commit`. |
-| **Subagent** | Output you will never re-read; tool restriction the main thread cannot express; fresh context so the reviewer is not the author. |
-| **Never a subagent** | Trivial or strictly sequential step, or shared mutable state with the main thread. |
+| **Main thread** | Iterative work; phases sharing context; a small targeted change; latency-sensitive work |
+| **Plan mode** | Uncertain approach, or multi-file change. Skip if the diff fits one sentence |
+| **Skill** | Reusable procedure in current context - `/review-*`, `/git-commit` |
+| **Subagent** | Output you will never re-read; a tool restriction the main thread cannot express; a reviewer who is not the author |
+| **Never a subagent** | Trivial or strictly sequential step, or shared mutable state with the main thread |
 
-Easy to get wrong:
-
-- **`tools` is the only real least-privilege gate.** Parent `acceptEdits` overrides subagent `permissionMode`. Omit `Edit`/`Write`/`Bash` for read-only; do not rely on the mode.
-- **The built-in `Explore` and `Plan` do not load `CLAUDE.md` or `.claude/rules/`.** Use `explorer` and `planner` instead, which carry that grounding themselves. If you do reach for a built-in, restate the binding constraints in the delegation prompt.
+- **`tools` is the only real least-privilege gate.** Parent `acceptEdits` overrides a subagent's `permissionMode`; omit `Edit`/`Write`/`Bash` for read-only agents.
 - **Agents never write scratch files into the working tree.** Findings come back in the reply.
 
 ## Enforced Boundaries
 
-`pnpm boundaries` (in `pnpm run ci`) fails on tag violations. Rules live in root `turbo.json` `boundaries.tags`; each package declares tags in its `turbo.json`.
+`pnpm boundaries` (inside `pnpm run ci`) fails on tag violations; rules in root `turbo.json` `boundaries.tags`, rationale in rule `core/boundaries`.
 
 - **Nothing may import an `app`.** Worker-to-Worker: service-binding RPC in `wrangler.jsonc`, never a package import.
-- New app/package needs `turbo.json` with `"extends": ["//"]` and a `tags` entry (`app`, `contracts`, `contracts-base`, `lib`, or `config`).
-
-Detail: `.claude/rules/core/boundaries.md` / `.cursor/rules/core/boundaries.mdc` when editing `turbo.json`.
+- A new app/package needs `turbo.json` with `"extends": ["//"]` and a `tags` entry (`app`, `contracts`, `contracts-base`, `lib`, or `config`).
 
 ## Decision Checklist
 
 1. Worker-to-Worker call? **Service binding RPC**, not HTTP.
 2. DB access? Schema + binding in **one** owning `worker-*` / `queue-*` under `src/db/` - never `packages/db-*`, never the same DB binding on multiple apps. Others use RPC or a queue.
 3. Public HTTP only for gateway, webhooks, MCP, and frontends - not for business RPC or queue-only workers.
-4. SPA to API? Keep `front-*` on `@cloudflare/vite-plugin` + assets `wrangler.jsonc`, and `worker-api` on Wrangler. Never co-locate the gateway as a Vite `auxiliaryWorkers` entry or put API routes in the assets Worker (Cloudflare SPA+API-in-one-Worker tutorial is an anti-pattern for this monorepo).
-5. Cross-Worker tests? Keep per-app Vitest pool suites; add `createTestHarness` only for multi-Worker production-build integration (see testing split above).
+4. SPA to API? `front-*` stays on `@cloudflare/vite-plugin` + assets `wrangler.jsonc`, `worker-api` on Wrangler. Never co-locate the gateway as a Vite `auxiliaryWorkers` entry or put API routes in the assets Worker.
+5. Cross-Worker tests? Keep per-app Vitest pool suites; add `createTestHarness` only for multi-Worker production-build integration.
 6. Testing a branch remotely? **Worker Previews** (`env.production.previews` + `pnpm preview:deploy`), never Version URLs or a new Wrangler environment. A Preview's service bindings reach the **production** callee.
 
-Shared DTO/enum ownership, naming, and code style are path-scoped under `.cursor/rules/` / `.claude/rules/` (`contracts`, `quality`).
+Shared DTO/enum ownership, naming, and code style are path-scoped rules (`contracts`, `quality`).
 
 ## Contribution
 
 - Run `pnpm run ci` before opening a PR.
 - HTTP contracts live in `@repo/dtos-common`; update `worker-api` and `front-app` together.
-- Continuous deployment: [`.github/workflows/cd.yml`](.github/workflows/cd.yml) is called by `release.yml` once a release tag is cut, and runs `wrangler versions upload` then `wrangler versions deploy <id>@100%` for every app discovered under `apps/`, in `monorepo.deployOrder`, then smokes the gateway at its declared `monorepo.healthPath`. **CD is paused** until production GitHub Environment secrets are configured; set the repository variable `CD_ENABLED` to `true` to arm it and leave upload / promote as-is.
-- Branch Previews: [`.github/workflows/preview.yml`](.github/workflows/preview.yml) - one Worker Preview per same-repo PR, deleted on close. **Paused** until `PREVIEWS_ENABLED` is `true`; arming steps in the README.
+- CD ([`cd.yml`](.github/workflows/cd.yml), rule `ops/cd`) and branch Previews ([`preview.yml`](.github/workflows/preview.yml), rule `ops/previews`) are **paused** until the `CD_ENABLED` / `PREVIEWS_ENABLED` repository variables are `true`.

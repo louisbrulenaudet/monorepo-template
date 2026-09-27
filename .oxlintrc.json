@@ -1,8 +1,5 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "env": {
-    "builtin": true
-  },
   "plugins": [
     "eslint",
     "typescript",
@@ -16,11 +13,7 @@
   "categories": {
     "correctness": "error",
     "suspicious": "error",
-    "pedantic": "off",
-    "style": "off",
-    "perf": "error",
-    "restriction": "off",
-    "nursery": "off"
+    "perf": "error"
   },
   "options": {
     "typeAware": true,
@@ -166,9 +159,7 @@
   "overrides": [
     {
       "files": [
-        "scripts/**/*.{js,mjs,cjs}",
         ".github/actions/**/*.{js,mjs,cjs}",
-        "apps/*/scripts/**/*.{js,mjs,cjs}",
         "**/*.config.{js,mjs,cjs,ts}",
         "**/vite.config.ts",
         "**/vitest.config.ts"
@@ -190,8 +181,7 @@
         "apps/worker-*/**/*.{ts,js,mjs}",
         "apps/webhook-*/**/*.{ts,js,mjs}",
         "apps/mcp-*/**/*.{ts,js,mjs}",
-        "apps/queue-*/**/*.{ts,js,mjs}",
-        "apps/front-*/src/worker*.{ts,tsx}"
+        "apps/queue-*/**/*.{ts,js,mjs}"
       ],
       "env": {
         "worker": true,
@@ -288,10 +278,8 @@
     {
       "files": [
         "**/*.test.{ts,tsx,js,jsx}",
-        "**/*.spec.{ts,tsx,js,jsx}",
         "**/tests/**/*.{ts,tsx,js,jsx}",
-        "**/vitest.setup.ts",
-        "e2e/**/*.{ts,tsx,js,jsx}"
+        "**/vitest.setup.ts"
       ],
       "env": {
         "vitest": true,
@@ -311,18 +299,6 @@
         "typescript/no-unsafe-return": "off",
         "typescript/no-unsafe-argument": "off",
         "vitest/require-to-throw-message": "off"
-      }
-    },
-    {
-      "files": ["**/*.eval.ts"],
-      "rules": {
-        "typescript/no-explicit-any": "off",
-        "typescript/no-unsafe-assignment": "off",
-        "typescript/no-unsafe-member-access": "off",
-        "typescript/no-unsafe-call": "off",
-        "typescript/no-unsafe-return": "off",
-        "typescript/no-unsafe-argument": "off",
-        "vitest/no-standalone-expect": "off"
       }
     }
   ]

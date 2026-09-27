@@ -4,36 +4,11 @@
 [![TypeScript](https://img.shields.io/static/v1?label=language&message=TypeScript&color=blue&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Cloudflare](https://img.shields.io/static/v1?label=runtime&message=Cloudflare&color=blue&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/)
 [![pnpm](https://img.shields.io/static/v1?label=package%20manager&message=pnpm&color=blueviolet&logo=pnpm&logoColor=white)](https://pnpm.io/)
-[![Turborepo](https://img.shields.io/static/v1?label=build&message=Turborepo&color=blueviolet&logo=turborepo&logoColor=white)](https://turbo.build/repo/docs)
+[![Turborepo](https://img.shields.io/static/v1?label=build&message=Turborepo&color=blueviolet&logo=turborepo&logoColor=white)](https://turborepo.dev/docs)
 
-A minimal, production-oriented monorepo starter built on pnpm workspaces with Turborepo, Cloudflare Workers, Hono, React (Vite), **Tailwind CSS v4**, and **TanStack Router/Query**. AI-ready, designed for edge deployment, and structured for production projects that scale.
+A minimal, production-oriented monorepo starter built on pnpm workspaces with Turborepo, Cloudflare Workers, Hono, React (Vite), **Tailwind CSS v4**, and **TanStack Router/Query**. It ships two apps - [`worker-api`](apps/worker-api/README.md), a Hono HTTP gateway, and [`front-app`](apps/front-app/README.md), a React SPA that calls it over HTTP - plus the shared packages, CI/CD, and agent tooling to grow into more Workers.
 
-## Architecture Overview
-
-### Monorepo Structure
-
-Starter apps today (`worker-api`, `front-app`). Prefixes below describe how the repo grows.
-
-```
-monorepo/
-├── apps/                    # Workers and frontends
-│   ├── worker-api/          # REST API gateway
-│   └── front-app/           # React SPA (Vite + TanStack)
-├── packages/                # Shared @repo/* packages
-│   ├── correlation-id/      # Opaque X-Request-Id helpers
-│   ├── dtos-common/         # Zod wire contracts (api live; rpc/queue/webhook scaffold)
-│   ├── enums-common/        # Shared constrained string values (`as const`)
-│   ├── typescript-config/   # TypeScript configuration presets
-│   └── vitest-config/       # Shared Vitest factories (Node + Workers pool)
-├── hooks/                   # AI agent hooks (not Vite+ git hooks - see hooks/README.md)
-├── package.json             # Root package configuration
-├── pnpm-workspace.yaml      # Workspace configuration
-└── turbo.json               # Turborepo configuration
-```
-
-### Architecture Components
-
-The monorepo is organized into two main categories: **Backend Services** and **Frontend Applications**, plus **Shared Packages** for common functionality.
+## Architecture
 
 ```mermaid
 flowchart TB
@@ -53,7 +28,7 @@ flowchart TB
 
   subgraph privateWorkers [Private Workers]
     direction LR
-    Biz["worker-* (RPC only)"]
+    Biz["worker-* RPC only"]
     Queue["queue-*"]
   end
 
@@ -61,6 +36,7 @@ flowchart TB
     direction LR
     Enums["@repo/enums-common"]
     DTOs["@repo/dtos-common"]
+    Corr["@repo/correlation-id"]
     Enums --> DTOs
   end
 
@@ -76,600 +52,136 @@ flowchart TB
   Webhook --> Queue
   Biz --> Queue
 
-  Front -.-> shared
-  publicWorkers -.-> shared
-  privateWorkers -.-> shared
+  shared -.-> Front
+  shared -.-> publicWorkers
+  shared -.-> privateWorkers
 ```
 
-#### Backend Services
+A Worker's name prefix states its role (`worker-api`, `worker-*`, `queue-*`, `webhook-*`, `mcp-*`, `front-*`); the full table is in [AGENTS.md](AGENTS.md). Browsers reach the gateway over HTTP only, Workers call each other through service-binding RPC, and every database has exactly one owning Worker.
 
-Cloudflare Workers are organized by runtime role:
+```
+.
+├── apps/            # Deployable Workers and SPAs
+├── packages/        # Shared @repo/* libraries and config presets
+├── hooks/           # Agent hook scripts for Cursor and Claude Code
+├── .changeset/      # Pending release notes
+├── .agents/         # Agent skills (source of truth)
+├── .claude/         # Claude Code rules, agents, settings
+├── .cursor/         # Cursor mirror of the same rules and agents
+└── .github/         # CI, release, CD, and Preview workflows
+```
 
-- **`worker-api`** - Public HTTP gateway (Hono): CORS, validation, routing; coordinates internal Workers via RPC.
-- **`worker-*`** - Business logic over **service-binding RPC** only (no public routes in production). May own Drizzle schema under `src/db/` and that database’s binding (exclusive owner).
-- **`queue-*`** - Queue-only consumers (`queue()` handler). Messages can be produced by `worker-api`, `worker-*`, or `webhook-*`. Use dual-handler layout when a local HTTP debug path is useful.
-- **`webhook-*`** - Public HTTP ingress for external provider callbacks; forward work via RPC or queues.
-- **`mcp-*`** - Public HTTP MCP servers; thin tools that call `worker-*` over RPC.
+| Shared package | Purpose |
+|----------------|---------|
+| [`@repo/correlation-id`](packages/correlation-id/README.md) | Opaque `X-Request-Id` helpers shared by the gateway and the SPA |
+| [`@repo/dtos-common`](packages/dtos-common/README.md) | Zod Mini wire contracts, one subpath per boundary (`/api` today) |
+| [`@repo/enums-common`](packages/enums-common/README.md) | Shared constrained string values as `as const` objects |
+| [`@repo/typescript-config`](packages/typescript-config/README.md) | TypeScript presets for Workers, React/Vite, and libraries |
+| [`@repo/vitest-config`](packages/vitest-config/README.md) | Vitest factories for Node and the Cloudflare Workers pool |
 
-Do **not** create shared `packages/db-*` schema packages. Put Drizzle schema under the owning app’s `src/db/` and keep **one DB binding owner**. Other apps reach that data via **service-binding RPC** (or a queue) - do not attach the same DB binding to multiple apps.
-
-#### Frontend Applications
-
-- **`front-app`** - React SPA (Vite 8, Tailwind v4, TanStack Router/Query) deployed on Cloudflare Workers. Talks to `worker-api` over HTTP only - never via service bindings.
-
-### Where to put things
-
-| Task | Location |
-|------|----------|
-| New API route | `apps/worker-api/src/routes/<feature>.ts` → mount in `src/index.ts` |
-| HTTP Zod schemas | `packages/dtos-common/src/api/<feature>.ts` |
-| RPC / queue / webhook schemas | `packages/dtos-common/src/<layer>/<feature>.ts` (layer: `rpc`, `queue`, or `webhook`) |
-| Shared string value set | `packages/enums-common/src/` |
-| Worker-local value set | `apps/<worker>/src/enums/` |
-| DB schema (one owner) | `apps/<owner>/src/db/` - never `packages/db-*` |
-| Frontend API client | `apps/front-app/src/services/worker-api/<feature>.ts` |
-| Frontend page + route | `apps/front-app/src/pages/` + `src/routes/` |
-| Local Worker secrets | `apps/<worker>/.env`, names declared in `secrets.required` (`wrangler.jsonc`) - never `.dev.vars` |
-| Frontend env | `apps/front-app/.env.local` (from `.env.example`) |
-
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- **Node.js** 24 (see `.nvmrc` and root `package.json` `engines`); we recommend [fnm](https://github.com/Schniz/fnm) for version management
-- **pnpm** via the root `packageManager` field (Corepack recommended)
-- **Cloudflare account** only if you need `pnpm login` / deploy / remote Worker features
+- **Node.js 24** (≥ 24.11; `.nvmrc` pins the exact version) - [fnm](https://github.com/Schniz/fnm) is a good version manager
+- **pnpm** at the version pinned in the root `package.json` `packageManager` field (Corepack recommended)
+- **Cloudflare account** only for `pnpm login`, deploys, and remote Worker features
 
-### Install and prepare
+### Install
 
 ```sh
-pnpm install
+pnpm install   # dependencies + workspace links - always from the repo root
 pnpm login     # optional - Cloudflare auth for remote Wrangler features
-pnpm prepare   # Vite+ pre-commit hooks
+pnpm prepare   # Vite+ pre-commit hook
 ```
 
-No type-generation step: `worker-configuration.d.ts` is **committed**, per Cloudflare's recommendation, so a fresh clone lints and type-checks immediately. After editing a Worker's `wrangler.jsonc`, run `pnpm types` and commit the regenerated file - `pnpm run ci` runs `pnpm types:check` (`wrangler types --check`), which fails if it has drifted. `wrangler types` runs entirely locally: no Cloudflare auth or network.
+There is no generate step: `worker-configuration.d.ts` is committed, so a fresh clone lints and type-checks immediately. After editing a Worker's `wrangler.jsonc`, run `pnpm types` and commit the result - `pnpm run ci` fails when it has drifted.
 
-Copy env templates before the first run:
+Neither env file is needed for a first run. Worker secrets go in `apps/<worker>/.env`, keyed by the names in that Worker's `secrets.required` (`worker-api` only has the optional `SENTRY_DSN`); frontend overrides go in `apps/front-app/.env.local`, copied from `.env.example`.
 
-- Workers: put the keys a Worker declares in `secrets.required` (`wrangler.jsonc`) in `apps/<worker>/.env`. `worker-api` needs only `SENTRY_DSN`, and leaving it unset disables Sentry
-- Frontend: `apps/front-app/.env.example` → `.env.local`
+### First run
 
-Agent worktrees do not copy real env files. Provision isolated development credentials explicitly in each worktree when runtime access is required.
+1. `pnpm dev` starts every dev server.
+2. `http://localhost:8700/api/v1/health` answers `{ "status": "ok", "version": "0.0.0" }`.
+3. `http://localhost:5174` serves the SPA; its footer shows the API version.
+4. **Shift+Alt+D** reveals the Vite DevTools dock. Its Rolldown panel stays empty until a build has run: `pnpm turbo run build --filter=front-app`.
 
-Notes:
-- Use `pnpm install` from the repo root so workspace links stay consistent.
-- This repo pins `pnpm` via `packageManager` in the root `package.json`.
+Work on one app with `pnpm turbo run dev --filter=worker-api`. `pnpm run` lists every root script; `pnpm run check` is the seconds-long static check and `pnpm run ci` the full local PR gate.
 
-### First successful run (verify locally)
+### Git hooks
 
-1. Start all dev servers from the repo root:
-   ```sh
-   pnpm dev
-   ```
-2. Verify the API: `GET` `http://localhost:8700/api/v1/health`
-3. Open the frontend: `http://localhost:5174`
-4. Reveal the Vite DevTools dock with **Shift+Alt+D**. Its Rolldown panel stays empty until a build has run: `pnpm turbo run build --filter=front-app`.
-
-Focused work on one package: `pnpm turbo run dev --filter=worker-api` (see [Scoping](#scoping-pnpm--turborepo)).
-
-## Root Scripts (pnpm)
-
-| Command | Description |
-|---------|-------------|
-| `pnpm install` | Install and link workspace packages |
-| `pnpm install --frozen-lockfile` | Install with frozen lockfile (CI) |
-| `pnpm login` | Login to Cloudflare (repo-pinned Wrangler) |
-| `pnpm update` | Update dependencies to latest (rewrites pnpm catalog) |
-| `pnpm check` | Lint, format, and syncpack checks in one parallel `turbo run` (no typecheck) |
-| `pnpm run ci` | Full-repo local PR gate: `pnpm boundaries`, then one `turbo run` of lint, format, syncpack, knip, types:check, check-types, test, and build with `--continue=dependencies-successful`, then `pnpm audit`. Every failure surfaces in a single pass (GitHub CI uses `--affected` for the turbo phase) |
-| `pnpm run check` / `pnpm run ci:affected` / `pnpm run ci:agent` | Faster tiers of the same gate: static checks only; `--affected` scope minus knip and audit; and the machine-readable variant for agents |
-| `pnpm test` | Vitest via `turbo run test` (per-app; Node or Cloudflare pool) |
-| `pnpm test:watch` | Vitest watch via `turbo run test:watch` (humans; persistent, uncached) |
-| `pnpm boundaries` | Check package dependency tags against `turbo.json` |
-| `pnpm changeset` | Record a release intent for the current PR (interactive) |
-| `pnpm release:status` | Read-only: pending changesets and the next versions |
-| `pnpm deploy` | Deploy all apps/workers (via Turborepo) |
-| `pnpm build` | Build all packages and apps (via Turborepo) |
-| `pnpm format:fix` | Auto-fix formatting with oxfmt |
-| `pnpm lint:fix` | Auto-fix lint issues with oxlint |
-| `pnpm lint:agent` | Lint with machine-readable `--format=agent` output (no auto-fix) |
-| `pnpm dev` | Start all dev servers (via Turborepo) |
-| `pnpm preview` | Build and preview `front-app` locally (via Turborepo) |
-| `pnpm types` | Regenerate `worker-configuration.d.ts` (commit it) |
-| `pnpm types:check` | Verify committed Worker types match `wrangler.jsonc` |
-| `pnpm check-types` | TypeScript across all workers and packages |
-| `pnpm prepare` | Install or reinstall Vite+ git hooks (`vp config`) |
-| `pnpm skills-update` | Refresh locked agent skills (see AGENTS.md) |
-
-### Scoping (pnpm / Turborepo)
-
-Pass turbo flags on turbo-backed tasks (`dev`, `build`, `check-types`, `test`, `test:watch`, `deploy`):
-
-| Flag | Effect | Example |
-|------|--------|---------|
-| `--filter=<package>` | One package | `pnpm turbo run dev --filter=worker-api` |
-| `--filter=...pkg...` | Package + dependents/deps | `pnpm turbo run build --filter=...front-app...` |
-| `--affected` | Only changed packages vs base | `pnpm turbo run build --affected` |
-
-Local `pnpm run ci` is full-repo (no `--affected`); `pnpm run ci:affected` is the opt-in scoped tier for mid-task iteration, never the PR gate. GitHub CI runs `check-types`, `test`, and `build` with `--affected`, and always verifies app `types:check`.
+`pnpm prepare` installs the [Vite+](https://viteplus.dev/guide/commit-hooks) pre-commit hook (`.vite-hooks/pre-commit`). It runs `vp staged` - oxfmt and oxlint safe fixes on staged files only, configured in the `staged` block of the root [`vite.config.ts`](vite.config.ts). `vp hooks status` checks that the dispatcher is active, and `VP_GIT_HOOKS=0 git commit …` skips it for one commit. The agent hooks in [`hooks/`](hooks/README.md) are a separate system that never runs on a human commit.
 
 ## Development ports
 
-Mnemonic: **87xx = Workers** (gateway → business → queue → webhook → MCP → reserve). Frontends use Vite’s **51xx / 41xx**.
+Workers use **87xx** by role: gateway 8700-8709, business 8710-8739, queue 8740-8759, webhook 8760-8779, MCP 8780-8789. Frontends use **5170-5199** for Vite dev and **4170-4199** for preview; today `worker-api` runs on 8700 and `front-app` on 5174 (preview 4174). The assigned registry and the local-dev rules live in [`.claude/rules/backend/ports.md`](.claude/rules/backend/ports.md).
 
-| Role | Prefix | Local HTTP ports |
-|------|--------|------------------|
-| HTTP gateway | `worker-api` | **8700–8709** |
-| Business worker (RPC) | `worker-*` | **8710–8739** |
-| Queue-only consumer | `queue-*` | **8740–8759** |
-| Webhook ingress | `webhook-*` | **8760–8779** |
-| MCP server | `mcp-*` | **8780–8789** |
-| Growth reserve | - | **8790–8799** |
-| Frontend (Vite) | `front-*` | **5170–5199** (dev), **4170–4199** (preview) |
+## Create a new Worker
 
-### Assigned registry
+There is no generator: copy the closest sibling under `apps/` and wire it in.
 
-| Service | Path | Dev | Preview |
-|---------|------|----:|--------:|
-| worker-api | `apps/worker-api/wrangler.jsonc` | **8700** | - |
-| front-app | `apps/front-app/vite.config.ts` | **5174** | **4174** |
+1. **Name** it with the prefix for its role (table in [AGENTS.md](AGENTS.md)), e.g. `apps/worker-account`, and rename `name` in both `package.json` and `wrangler.jsonc`.
+2. **Port**: take the next free port in the role's range - `dev.port` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`.
+3. **Release wiring** in the `package.json` `monorepo` block: `deployOrder` (lower promotes first - gateways before the SPAs that call them) and `healthPath` (the public path CD probes, or `null` when the app has no public HTTP surface). CD discovers apps from `apps/*` and fails closed when either is missing.
+4. **Turbo**: a package `turbo.json` with `"extends": ["//"]` and `"tags": ["app"]`, which `pnpm boundaries` checks.
+5. **Secrets**: declare their names in `secrets.required` in `wrangler.jsonc`.
+6. **Install and typegen**: `pnpm install`, then `pnpm types`, and commit the generated `worker-configuration.d.ts`.
 
-Notes:
-- Workers: set `dev.port` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`. Use `inspector_port: 0`.
-- Frontends: set Vite `server.port` / `preview.port` with `strictPort: true`.
-- Assign the next free port in the role’s range. RPC and queue-only apps still get a local port for standalone `wrangler dev`, but have no public URL in production.
-- Prefer multi-config local runs when testing bindings (first `-c` is HTTP-primary).
+Service bindings and RPC typing: [`.claude/rules/backend/workers-config.md`](.claude/rules/backend/workers-config.md). Queue consumers use the dual-handler layout in [AGENTS.md](AGENTS.md).
 
-## 1. Create a New Cloudflare Worker
+## Releases and deploys
 
-### App Naming Nomenclature
+Versioning is [Changesets](https://changesets.dev). Every app under `apps/` shares one version, a release is a `vX.Y.Z` git tag plus a Cloudflare Workers promote, and nothing is published to npm. Add `pnpm changeset` to any PR that changes an app or a shared contract package, check what is queued with `pnpm release:status`, and release by merging the `chore: release` PR. Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md); pipeline invariants and recovery: [`.claude/rules/ops/release.md`](.claude/rules/ops/release.md).
 
-| Purpose | Prefix | Example |
-|---------|--------|---------|
-| HTTP gateway | `worker-api` (sticky) | `worker-api` |
-| Business logic (RPC) | `worker-` | `worker-account` |
-| Queue-only consumer | `queue-` | `queue-email` |
-| Webhook ingress | `webhook-` | `webhook-example` |
-| MCP server | `mcp-` | `mcp-tools` |
-| Frontend application | `front-` | `front-app` |
+### Continuous deployment
 
-### Key Distinctions
-
-- **Gateway (`worker-api`):** Public HTTP only; validates requests and calls `worker-*` over RPC.
-- **Business Workers (`worker-*`):** RPC-only in production (`WorkerEntrypoint`); may own Drizzle schema under `src/db/` and that database’s binding (exclusive). If they also consume queues, keep this prefix and use the dual-handler layout.
-- **Queue-only (`queue-*`):** `queue()` consumers with no public HTTP in production; may own schema when they are the sole writer for that data.
-- **Webhook Workers (`webhook-*`):** Public HTTP for external callbacks; forward via RPC or queues.
-- **MCP Servers (`mcp-*`):** Public HTTP MCP transport; thin tools that call `worker-*` over RPC - never rotate long-lived credentials on this surface.
-- **Frontends (`front-*`):** React + Vite; HTTP to the gateway only - never service bindings.
-- **Do not** create shared `packages/db-*` schema packages.
-
-### Scaffold checklist (copy from an existing app)
-
-There is no generator CLI. Copy the closest sibling under `apps/` and wire it into the monorepo:
-
-1. **Copy** `apps/worker-api` (or another closest match) to `apps/<prefix-name>` (e.g. `apps/worker-account`).
-2. **Rename** `package.json` `name`, `wrangler.jsonc` `name`, and any display strings.
-3. **Assign ports** from the [Development ports](#development-ports) registry - set `dev.port` / `inspector_port: 0` in `wrangler.jsonc` and `monorepo.devPort` in `package.json`.
-4. **Declare the promote order and the health probe** - `monorepo.deployOrder` in `package.json`, lower first (gateways before the SPAs that call them), plus `monorepo.healthPath`: the public path CD probes after promoting, or `null` when the app has no public HTTP surface. CD discovers apps from `apps/*` and fails closed on either value missing, so this is the only place a new app announces itself to the release pipeline.
-5. **Add** `package.json` scripts (`dev`, `deploy`, `check-types`, `types`, `types:check`, lint/format via `pnpm -w exec` from repo root) and a `turbo.json` with tags (see [AGENTS.md](AGENTS.md)).
-6. **Extend** `@repo/typescript-config/workers.json` (or the matching preset); declare any secret names in `secrets.required`.
-7. **Install and typegen** (commit the generated `worker-configuration.d.ts` with the new Worker):
-   ```sh
-   pnpm install
-   pnpm types
-   ```
-
-Copy wrangler patterns (`compatibility_date`, `observability`, `env.staging` / `env.production`) from the existing app - see [`.cursor/rules/backend/workers-config.mdc`](.cursor/rules/backend/workers-config.mdc).
-
-## 2. Develop a Specific Worker
-
-Prefer a filtered turbo task from the repo root:
-
-```sh
-pnpm turbo run dev --filter=worker-name
-```
-
-Or run the package script directly:
-
-```sh
-cd apps/worker-name
-pnpm dev
-```
-
-- This runs the `dev` script defined in `apps/worker-name/package.json`
-- Open the port shown in your terminal (for example, http://localhost:8721)
-- Each worker exposes `pnpm dev`, `pnpm format:fix`, `pnpm lint:fix`, `pnpm types`, `pnpm check-types`, `pnpm deploy`
-
-### Testing Service Bindings Between Workers
-
-Prefer a single multi-config `wrangler dev` (first `-c` is HTTP-primary):
-
-```sh
-wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-account/wrangler.jsonc
-```
-
-Or run each Worker in its own terminal (`cd apps/worker-account && pnpm dev`, then `cd apps/worker-api && pnpm dev`) and confirm service bindings show as connected in the wrangler output.
-
-### Dual-Handler Pattern
-
-Use this layout for **`queue-*`** apps and for **`worker-*`** apps that also consume queues:
-
-```
-src/
-├── handlers/
-│   ├── request.ts    # Optional HTTP (local debug only)
-│   └── message.ts    # Queue message consumption
-├── services/         # Shared business logic
-└── index.ts         # Minimal delegation entry point
-```
-
-- **`queue-*`:** queue-only in production (no public HTTP).
-- **`worker-*` with queues:** keep the business prefix; expose RPC and optionally dual-handler HTTP for local testing.
-
-## 3. Environment Configuration
-
-Each worker uses environment-specific configuration. Frontends use Vite env files (see [apps/front-app/README.md](apps/front-app/README.md)).
-
-### Development Environment
-- **Workers:** `apps/<worker>/.env` for local secrets (keys listed in `secrets.required`). Not `.dev.vars`: Cloudflare supports either file, and the Workers test pool aborts on an unreadable `.dev.vars` in the Claude Code sandbox but skips an unreadable `.env`
-- **Frontend:** `.env.local` (from `.env.example`) - only `VITE_*` keys reach the browser
-
-### Staging/Production Environments
-- **Configuration:** `env.staging` and `env.production` blocks in `wrangler.jsonc`
-- **Deploy:** `wrangler deploy --env staging` or `--env production`
-- **Service Bindings:** Connected to deployed workers
-
-### Environment Variables Example
-
-```jsonc
-// In wrangler.jsonc
-{
-  "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "my-worker",
-  "compatibility_date": "2026-08-11",
-  "vars": {
-    "ENVIRONMENT": "dev"
-  },
-  "env": {
-    "staging": {
-      "vars": { "ENVIRONMENT": "staging" },
-      "observability": { "enabled": true, "traces": { "enabled": true } }
-    },
-    "production": {
-      "vars": { "ENVIRONMENT": "production" },
-      "observability": { "enabled": true, "traces": { "enabled": true } }
-      // "routes": [{ "pattern": "api.example.com", "custom_domain": true }]
-    }
-  }
-}
-```
-
-### Multi-worker local dev
-
-When service bindings connect Workers, run each in a separate terminal, or use multiple `-c` flags (first config is HTTP-primary):
-
-```sh
-wrangler dev -c apps/worker-api/wrangler.jsonc -c apps/worker-example/wrangler.jsonc
-```
-### Service Binding Configuration
-
-```jsonc
-{
-  "services": [
-    {
-      "binding": "WORKER_API",
-      "service": "worker-api"
-    }
-  ]
-}
-```
-
-## 4. Release and Deploy Your Workers
-
-### Releases
-
-Versioning is [Changesets](https://changesets.dev). Every app under `apps/` is one `fixed` group (`"fixed": [["*"]]`, a glob over package names, not a list), so they always share one version - which is what makes a single `vX.Y.Z` tag a valid release coordinate. **Nothing is published to npm**: every workspace is `private: true`. A release is a git tag plus a Cloudflare Workers promote.
-
-```mermaid
-flowchart LR
-  PR["PR + changeset"] -->|"CI --affected +<br/>changeset status comment"| M["merge to main"]
-  M --> G["gate<br/>full-graph CI, always"]
-  M --> S["select-mode"]
-  S -->|"changesets pending"| V["chore: release PR<br/>(branch reset + force-pushed)"]
-  V -->|merge| M
-  S -->|"none pending"| T["create-release-tag<br/>idempotent vX.Y.Z"]
-  G --> T
-  T -->|"newly created +<br/>CD_ENABLED"| D["CD: versions upload --tag X.Y.Z<br/>promote @100% → smoke → GitHub Release"]
-```
-
-Day to day:
-
-1. Add `pnpm changeset` to any PR that changes `apps/*` or a shared contract package. Use `pnpm changeset --empty` when a change to a deployable should not ship a release.
-2. Check what is queued at any time with `pnpm release:status`.
-3. **Merging the `chore: release` PR is the release act.** It lands the version bumps and CHANGELOGs on `main`; `gate` validates that commit; then the tag is cut and CD runs.
-
-> [!IMPORTANT]
-> Do not push commits to `changeset-release/main`. That branch is reset from the `main` tip and force-pushed on every push to `main`, so edits are discarded. Corrections belong in a new changeset on `main`.
-
-Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md). Pipeline invariants: [`.claude/rules/ops/release.md`](.claude/rules/ops/release.md).
-
-### Deploys
-
-[`.github/workflows/cd.yml`](.github/workflows/cd.yml) is **called by the Release workflow** once a tag is cut - it is not tag-triggered, because tags created with `GITHUB_TOKEN` do not start workflow runs. It runs, against the tagged commit, in the `production` GitHub Environment:
-
-1. `wrangler versions upload --env production` (with `--strict`, commit `--tag` / `--message`)
-2. `wrangler versions deploy <version-id>@100% --yes --env production`
-3. `curl` the gateway's declared `monorepo.healthPath` smoke check, then create the GitHub Release
-
-for every app discovered under `apps/`. Uploads run concurrently - they change no traffic, so their order is irrelevant and a failure cannot split production. Promotes then run sequentially in each app's `monorepo.deployOrder` (`worker-api` 1, `front-app` 2), so the gateway is live before the SPA that calls it and a partial production state is attributable.
+[`cd.yml`](.github/workflows/cd.yml) uploads a version of every app, promotes each to 100% in `monorepo.deployOrder`, smokes the gateway, and creates the GitHub Release. The production Workers are `worker-api-production` and `front-app-production`. Pipeline detail: [`.claude/rules/ops/cd.md`](.claude/rules/ops/cd.md).
 
 > [!NOTE]
-> **CD is paused** until production Environment secrets are configured. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them. Until then, use the local helpers below. Before real traffic, also set `CORS_ORIGINS` in `apps/worker-api/wrangler.jsonc` under `env.production.vars` - it ships empty, which fails closed (`/api/*` returns 503, so the CD smoke check fails after both Workers are promoted), and because vars ship inside the uploaded version the fix needs a new release, not a CD re-run.
-
-Recovering from a failed release (full table in [`.claude/rules/ops/release.md`](.claude/rules/ops/release.md)):
-
-| Fails | Do this |
-| --- | --- |
-| `gate` is red | Fix on a PR. No tag and no deploy happened. |
-| Tag already exists | Nothing to do - the deploy is skipped by design, not failing. |
-| Upload / promote / smoke | The tag stands. Re-run CD via `workflow_dispatch` with the tag, or `pnpm --filter=<app> exec wrangler rollback --env production`. |
-
-**GitHub secrets / variables** (repo-level or on the `production` environment):
+> **CD is paused** until the `production` GitHub Environment holds the values below. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them.
 
 | Name | Kind | Purpose |
 | --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | secret | Wrangler auth |
+| `CLOUDFLARE_API_TOKEN` | secret | Wrangler auth - a scoped token, never a global API key |
 | `CLOUDFLARE_ACCOUNT_ID` | secret | Target account |
 | `VITE_API_BASE_URL` | variable | Production API origin baked into `front-app` |
-| `VITE_SENTRY_DSN` | variable | Optional `front-app` Sentry DSN (public); also used by Preview builds, and empty disables Sentry |
+| `VITE_SENTRY_DSN` | variable | Optional public `front-app` Sentry DSN, also used by Preview builds; empty disables Sentry |
 | `SENTRY_ORG` | variable | Optional; arms the CD step that uploads each app's source maps to the Sentry project named like the app |
 | `SENTRY_AUTH_TOKEN` | secret | Sentry org auth token for that step (scoped to the step, never the build) |
-| `CD_ENABLED` | variable | Must be `true` for `release.yml` to call CD; unset leaves the deploy job skipped |
+| `CD_ENABLED` | variable | Must be `true` for `release.yml` to call CD |
 
-`worker-api` declares `SENTRY_DSN` in `secrets.required`, so a deploy fails until the Worker secret exists: run `pnpm --filter=worker-api exec wrangler secret put SENTRY_DSN --env <staging|production>` once per environment. Worker Previews do not require it, so Sentry stays off on Previews.
+Token permissions: Account → Workers Scripts Edit (required) and Account Settings Read (typical for Wrangler); Zone → Workers Routes Edit only with zone routes; Account → Secrets Store Edit only when binding Secrets Store.
 
-**API token permissions** (scoped token; do not use a global API key):
+Before the first production deploy:
 
-| Permission | When |
-| --- | --- |
-| Account → Workers Scripts Edit | Required |
-| Account → Account Settings Read | Typical for Wrangler |
-| Zone → Workers Routes Edit | Only if using zone routes |
-| Account → Secrets Store Edit | Only if binding Secrets Store |
+- Run `pnpm --filter=worker-api exec wrangler secret put SENTRY_DSN --env <staging|production>` once per environment. `worker-api` lists it in `secrets.required`, so a deploy fails until it exists; Previews do not need it, so Sentry stays off there.
+- Set `CORS_ORIGINS` under `env.production.vars` in `apps/worker-api/wrangler.jsonc`. It ships empty, which fails closed (`/api/*` answers 503 and the CD smoke fails), and vars ship inside the uploaded version, so fixing it takes a new release rather than a CD re-run.
 
-Actual production Worker names: `worker-api-production`, `front-app-production`.
-
-Local helpers:
-
-```sh
-# One-shot upload + 100% (same effect as CD, coupled)
-pnpm --filter=worker-api run deploy
-pnpm --filter=front-app run deploy
-
-# Or split steps
-pnpm --filter=worker-api run upload
-pnpm --filter=worker-api run promote
-```
+To ship by hand: `pnpm --filter=<app> run deploy` (upload and 100% in one step), or `run upload` then `run promote`. Roll back with `pnpm --filter=<app> exec wrangler rollback --env production`.
 
 ### Branch Previews
 
-[Worker Previews](https://developers.cloudflare.com/workers/previews/) give every branch or pull request an isolated, production-like copy of each Worker, served under the production Worker (`worker-api-production`, `front-app-production`) with its own URL, logs, and traces. Vars and bindings come from `env.production.previews` in each `wrangler.jsonc` and are never inherited from production; there `ENVIRONMENT` is `preview`.
+[Worker Previews](https://developers.cloudflare.com/workers/previews/) give a branch an isolated, production-like copy of each Worker with its own URL, logs, and traces. `pnpm preview:deploy` creates one named after the branch (`PREVIEW_NAME=demo` overrides) and smokes it; `pnpm preview:delete` removes it. [`preview.yml`](.github/workflows/preview.yml) does the same for every same-repo PR and deletes it when the PR closes.
 
-```sh
-pnpm preview:deploy   # Preview named after the branch; prints and smokes the URLs
-pnpm preview:delete   # remove it again
-PREVIEW_NAME=demo pnpm preview:deploy
-```
+> [!NOTE]
+> **Previews are paused** until the repository variable `PREVIEWS_ENABLED` is `true`. First do the once-per-account setup in [`.claude/rules/ops/previews.md`](.claude/rules/ops/previews.md) - turn on `preview_urls`, set the Preview `CORS_ORIGINS`, and put Cloudflare Access on the `front-app` Preview URLs, which are public by default. Then create a `preview` GitHub Environment holding `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (same permissions as CD), plus the optional `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` of an Access service token included in a Service Auth policy, so the smoke probe passes Access.
 
-The gateway is previewed first, then `front-app` is built against the gateway **Preview** URL, so the SPA Preview talks to the API Preview. Pull requests get the same through [`.github/workflows/preview.yml`](.github/workflows/preview.yml): one Preview per same-repo PR (`pr-<number>`), a single comment listing the URLs, and deletion when the PR closes.
+## Agent tooling
 
-Once per account, before the first run:
+[AGENTS.md](AGENTS.md) is the entry point for coding agents - Cursor reads it directly, Claude Code through [CLAUDE.md](CLAUDE.md). Every app, package, and `hooks/` carries its own `AGENTS.md` and `CLAUDE.md` pair, and path-scoped rules are mirrored under `.claude/rules/` and `.cursor/rules/`.
 
-1. **Turn on workers.dev Preview URLs** for both Workers: `pnpm --filter=<app> exec wrangler triggers deploy --config wrangler.jsonc --env production` with `<app>` set to `worker-api`, then `front-app`. `--config` bypasses a local Vite build's redirected config, which would target the wrong Worker. `preview_urls: true` only applies through `wrangler deploy` / `triggers deploy`, never through the `versions upload` CD uses; without it a Preview has no URL.
-2. **Set `CORS_ORIGINS`** in `apps/worker-api/wrangler.jsonc` → `env.production.previews.vars` to `https://*-front-app-production.<subdomain>.workers.dev`. It ships empty, which fails closed: the gateway Preview answers **503** on `/api/*`, including the smoke check.
-3. **Enable Cloudflare Access** on the `front-app` Preview URLs (Worker → Settings → Domains & Routes → Preview URLs). Preview URLs are **public by default**, and `preview_urls: true` also exposes production Version URLs. Leave the gateway Preview on its CORS allowlist: Access there would break the SPA's cross-origin calls unless you also configure the Access application's CORS settings.
+> [!IMPORTANT]
+> **Start Claude Code from the repository root.** `.claude/settings.json` - permission denies, hooks, sandbox - [loads only from the directory a session starts in](https://code.claude.com/docs/en/large-codebases), so a session started in `apps/worker-api/` reads every instruction file but runs without the enforcement layer. For package-scoped work, start at the root and filter: `pnpm turbo run <task> --filter=<package>`.
 
-To arm the workflow, create a `preview` GitHub Environment holding the secrets below, then set the repository variable `PREVIEWS_ENABLED` to `true`.
-
-| Name | Kind | Purpose |
-| --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | secret (`preview` environment) | Scoped token, same permissions as CD - Previews live under the production Workers |
-| `CLOUDFLARE_ACCOUNT_ID` | secret (`preview` environment) | Target account |
-| `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` | secret (`preview` environment, optional) | Access service token, included in a **Service Auth** policy, so the smoke probe passes Access |
-| `PREVIEWS_ENABLED` | variable | Must be `true` for the workflow to run |
-
-Limitations, isolation, and the agent workflow: [`.claude/rules/ops/previews.md`](.claude/rules/ops/previews.md).
-
-## Best Practices
-
-### Architecture Best Practices
-
-- **Colocate schema under the owning Worker’s `src/db/`:** never a shared `packages/db-*` package; never share the same DB binding across apps - other apps use RPC (or a queue)
-- **Implement dual-handler pattern:** For queue consumers, separate message handling from optional local HTTP debug handlers
-- **Use service bindings (RPC):** For inter-worker communication instead of HTTP calls
-- **Maintain clear separation of concerns:** Each Worker has a specific runtime role (gateway, business, queue, webhook, MCP, frontend)
-
-### Development Best Practices
-
-- **Always run `pnpm install`** after adding workers or dependencies
-- **Use `pnpm turbo run dev --filter=<package>`** for focused development on one app (plain `pnpm dev` starts everything)
-- **Follow naming conventions:** `worker-*`, `queue-*`, `webhook-*`, `mcp-*`, `front-*`
-- **Use appropriate port ranges:** see [Development ports](#development-ports)
-- **Test service bindings:** Verify connections between workers before deployment
-
-### Code Quality Best Practices
-
-- **Use strict TypeScript everywhere:** Enforce type safety across all workers
-- **Validate all data with Zod schemas:** Shared contracts live in `@repo/dtos-common`
-- **Return explicit HTTP status codes** and typed JSON errors at the gateway boundary
-- **Follow OXC formatting standards:** Consistent code style across the monorepo (oxfmt + oxlint)
-- **Use shared packages:** Leverage `@repo/*` packages for wire contracts and configs
-- **Run `pnpm run ci` before opening a PR** (see [Contribution](#contribution))
-
-### Service Communication
-
-Workers communicate via service bindings:
-
-```typescript
-// Call a business Worker over RPC
-const result = await env.ACCOUNT_SERVICE.getAccount(userId);
-
-// Call another business Worker
-const completion = await env.WORKER_GENAI.completion(request);
-```
-## Git Hooks
-
-This repo has **two** hook systems. They do not replace each other:
-
-| System | When it runs | Docs |
-|--------|--------------|------|
-| **Vite+** (`.vite-hooks/`) | Human `git commit` | This section |
-| **Agent hooks** (`hooks/`) | Cursor / Claude Code tool loop | [hooks/README.md](hooks/README.md) |
-
-```mermaid
-flowchart LR
-  subgraph human [Human git]
-    Commit["git commit"] --> ViteHooks[".vite-hooks/pre-commit"]
-    ViteHooks --> Staged["vp staged"] --> Oxc["oxfmt + oxlint"]
-  end
-  subgraph agent [AI agent loop]
-    Shell["beforeShellExecution"] --> GitHooks["hooks/git/*"]
-    Edit["afterFileEdit"] --> Quality["hooks/quality/*"]
-  end
-```
-
-### Vite+ pre-commit
-
-[Vite+](https://viteplus.dev/guide/commit-hooks) provides the hook dispatcher (`vp config`, run by `pnpm prepare`) and `vp staged`, which applies oxfmt and oxlint safe fixes to staged files, preserving unrelated working-tree edits. Commands live in the `staged` block of the root [`vite.config.ts`](vite.config.ts).
-
-```sh
-pnpm prepare       # install / reinstall hooks (runs vp config)
-vp hooks status    # verify dispatcher is active
-VP_GIT_HOOKS=0 git commit -m "..."  # bypass hooks for one commit
-```
+- **Dimension reviews** - `/review` runs every dimension; `/review-architecture`, `/review-ci`, `/review-code-quality`, `/review-configuration`, `/review-performance`, `/review-security`, `/review-seo`, `/review-tests`, and `/review-ui` each run one.
+- **Stack reviews** - human-only `/review-stack <selector> [focus]`: a dep (`oxc`, `sentry`, `wrangler`...), a family (`frontend`, `workers`, `toolchain`, `tanstack`, `observability`, `agents`), `all`, or `changed` (deps touched since the last release), comma-separated to combine - e.g. `/review-stack oxc`, `/review-stack tanstack caching`, `/review-stack changed`. Bare `/review-stack` lists every dep. It retrieves ground truth first (the installed documentation MCP collector, then the official docs), runs one subagent per dep in parallel, verifies every cited finding, and replies with a single plan whose items carry IDs (`C1`, `I2`...) you can answer with `fix C1, I2` or `accept O1`. It writes no files. A new tool is one file: `.agents/skills/review-stack/deps/<id>.md`.
+- **Hooks** - the agent guard, format, and lint hooks: [hooks/README.md](hooks/README.md).
+- **`.cursorignore`** trims what the model sees; it is not an access-control boundary.
 
 ## Contribution
 
-- Run **`pnpm run ci`** before opening a PR (boundaries, then one `turbo run` covering lint, format, syncpack, knip, types:check, check-types, test, build, then audit). GitHub CI mirrors those gates and uses `--affected` for the turbo phase.
-- Wire-format changes: update `@repo/dtos-common` and every producer/consumer in the **same PR** (HTTP → `worker-api` + `front-app`).
-- When you add endpoints, bindings, or env vars, update the relevant app/package **README** and **AGENTS.md**.
+- Run `pnpm run ci` before opening a PR; GitHub CI runs the same gates.
+- Add a changeset (`pnpm changeset`) to every PR that changes an app or a shared contract package.
+- Wire-format changes update `@repo/dtos-common` and every producer and consumer in the same PR.
 
-## AI agent instructions
-
-> [!IMPORTANT]
-> **Start Claude Code from the repository root.** `CLAUDE.md` files are inherited from parent directories, but `.claude/settings.json` is **not** - [it loads only from the directory you start in](https://code.claude.com/docs/en/large-codebases). A session started in `apps/worker-api/` still loads every instruction file, but none of the permission denies, hooks, or sandbox config in the root `.claude/settings.json`. The session looks correctly configured while the enforcement layer is absent. For package-scoped work, start at the root and use `pnpm turbo run <task> --filter=<package>` instead.
-
-- **[AGENTS.md](AGENTS.md)** - cross-tool project conventions and Cursor's root instructions.
-- **[CLAUDE.md](CLAUDE.md)** - Claude Code entry point; imports `AGENTS.md` per [Claude memory docs](https://code.claude.com/docs/en/memory).
-- **Per-app/package** - each workspace has matching `AGENTS.md` and `CLAUDE.md`.
-- **[hooks/README.md](hooks/README.md)** - shared agent hook scripts (not Vite+ git hooks).
-- **Rules** - mirrored trees under `.cursor/rules/**/*.mdc` and `.claude/rules/**/*.md`.
-- **Skills** - source of truth under `.agents/skills/` (see skill `monorepo-agent-setup`). Sparse worktrees include `.agents` so mirrored skill links resolve.
-- **Versioned Turbo docs** - use `pnpm turbo docs task-caching` to query documentation matching the installed CLI.
-- **Security** - `.cursorignore` reduces model context but is not an access-control boundary.
-
-## Shared Packages (`@repo/*`)
-
-Local packages under `packages/`. Each package has its own README.
-
-### Available Shared Packages
-
-- **`@repo/correlation-id`** - Opaque `X-Request-Id` helpers (SPA session wrapper stays in `front-app`)
-- **`@repo/dtos-common`** - Zod Mini wire contracts. Public export today: `/api`. Scaffold dirs exist for `/rpc`, `/queue`, `/webhook` - add `package.json` `exports` with the first schema in each layer
-- **`@repo/enums-common`** - Shared constrained string values (`as const` objects)
-- **`@repo/typescript-config`** - TypeScript presets (`strict.json`, `library.json`, `workers.json`, `vite-react.json`, `vite-node.json`)
-- **`@repo/vitest-config`** - Shared Vitest factories (`defineNodeConfig`, `defineWorkersConfig`)
-
-### Benefits of Shared Packages
-- **Code sharing:** Eliminate duplication across workers
-- **Consistency:** Centralized configurations and utilities
-- **Easy updates:** Update once, propagate to all workers
-- **Type safety:** Shared TypeScript configurations ensure consistency
-
-### How to Use Shared Packages
-
-1. **Add to your worker's `package.json`:**
-   ```json
-   "dependencies": {
-     "@repo/dtos-common": "workspace:*",
-     "@repo/enums-common": "workspace:*",
-     "@repo/typescript-config": "workspace:*"
-   }
-   ```
-
-2. **Import and use in your code:**
-   ```typescript
-   import { HttpMethod } from "@repo/enums-common";
-   import { HealthResponseSchema } from "@repo/dtos-common/api";
-   ```
-
-3. **Development workflow:**
-   - Changes in shared packages are reflected immediately in workers
-   - Run `pnpm install` after adding new shared package dependencies
-
-### More Information
-- [pnpm workspace protocol docs](https://pnpm.io/workspaces#workspace-protocol)
-- [Turborepo monorepo docs](https://turbo.build/repo/docs)
-
-## Service Bindings
-
-Service bindings allow Workers to communicate directly with each other without going through publicly accessible URLs. They provide the separation of concerns that microservice architectures offer, without configuration pain, performance overhead, or the need to learn RPC protocols.
-
-### Key Benefits
-
-- **Zero overhead:** Workers run on the same thread, providing zero latency
-- **Not just HTTP:** Direct method calls between Workers using JavaScript functions
-- **No additional costs:** Service bindings don't increase Cloudflare pricing
-- **Secure communication:** No public URLs required
-
-### Configuration
-
-Add service bindings to your worker's `wrangler.jsonc`:
-
-```jsonc
-{
-  "services": [
-    {
-      "binding": "BUSINESS_LOGIC_SERVICE",
-      "service": "worker-name"
-    }
-  ]
-}
-```
-
-### RPC Method Invocation
-
-RPC requires the **callee** to extend `WorkerEntrypoint` and expose public methods. The **caller** gets typed `env.BINDING.method()` stubs from `wrangler types` when you pass every bound Worker's config (see [Workers RPC - TypeScript](https://developers.cloudflare.com/workers/runtime-apis/rpc/typescript/)).
-
-**Callee** (`worker-name`):
-
-```typescript
-import { WorkerEntrypoint } from "cloudflare:workers";
-
-export default class extends WorkerEntrypoint {
-  async fetch() {
-    return new Response("ok");
-  }
-  doSomething(input: string) {
-    return { input, ok: true };
-  }
-}
-```
-
-**Caller** (e.g. `worker-api`):
-
-```typescript
-export default {
-  async fetch(_request: Request, env: Env): Promise<Response> {
-    const result = await env.BUSINESS_LOGIC_SERVICE.doSomething("payload");
-    return Response.json(result);
-  },
-} satisfies ExportedHandler<Env>;
-```
-
-Regenerate types on the caller after adding bindings:
-
-```bash
-wrangler types -c ./wrangler.jsonc -c ../worker-name/wrangler.jsonc
-```
+Licensed under the [Apache License 2.0](LICENSE).

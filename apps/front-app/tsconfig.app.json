@@ -4,7 +4,6 @@
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
-    "types": ["vite/client"],
     "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.app.tsbuildinfo"
   }
 }

@@ -1,11 +1,9 @@
 ---
 paths:
   - "**/*.test.ts"
-  - "**/*.spec.ts"
   - "**/tests/**"
   - "**/vitest.config.ts"
   - "**/vitest.config.mts"
-  - "**/vitest.evals.config.ts"
 ---
 
 # Testing Rules
@@ -15,7 +13,7 @@ Toolchain and Workers pool details: [vitest.md](../tests/vitest.md), [hono-worke
 - Put unit tests under the app or package at a `tests/` directory that mirrors the source area.
 - Keep Vitest tests deterministic and avoid assertions that depend on test order.
 - Test at the **trust boundaries** the app actually enforces today (shared Zod Mini schemas, constrained value sets, CORS/fail-closed responses, route status codes). Prefer asserting observable behavior over internals. Do not invent auth or idempotency tests for surfaces that do not exist yet.
-- `any` is allowed **only** in `*.test.ts` / `*.spec.ts` (`typescript/no-explicit-any` is relaxed there) - do not reach for it in source to make a test pass.
+- `any` is allowed **only** in test files (`typescript/no-explicit-any` is relaxed there) - do not reach for it in source to make a test pass.
 - Keep other Oxc rules satisfied in tests too (block statements, no floating promises - `await` or `void`). Filenames stay kebab-case.
 
 ## Authoring gate

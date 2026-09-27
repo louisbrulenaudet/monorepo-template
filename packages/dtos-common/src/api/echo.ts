@@ -14,7 +14,12 @@ export const EchoRequestSchema = z.strictObject(
         ),
       ),
   },
-  "unexpected field in request body",
+  {
+    error: (issue) =>
+      issue.code === "unrecognized_keys"
+        ? "unexpected field in request body"
+        : "request body must be a JSON object",
+  },
 );
 
 // Enum of string literals, not z.boolean(): query values arrive as strings.
@@ -24,7 +29,12 @@ export const EchoQuerySchema = z.strictObject(
       z.enum(["true", "false"], 'uppercase must be "true" or "false"'),
     ),
   },
-  "unexpected query parameter",
+  {
+    error: (issue) =>
+      issue.code === "unrecognized_keys"
+        ? "unexpected query parameter"
+        : undefined,
+  },
 );
 
 /** @internal */

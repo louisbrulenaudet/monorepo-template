@@ -60,8 +60,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
           install: false
 
-      # Must come from a step: `runner` / $RUNNER_TEMP is unavailable in workflow- and
-      # job-level `env:`, and referencing it there makes the file unparseable.
+      # Must be a step: `runner` in workflow/job `env:` makes the file unparseable (ops/ci).
       - name: Set runner-temp paths
         run: |
           echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
