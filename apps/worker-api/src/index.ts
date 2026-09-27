@@ -1,3 +1,4 @@
+import type { Context } from "hono";
 import type { RequestIdVariables } from "hono/request-id";
 import { resolveCorrelationId } from "@repo/correlation-id";
 import { AppEnvironment } from "@repo/enums-common";
@@ -101,12 +102,12 @@ app.use("/api/*", csrfMiddleware);
 
 const api = new Hono<AppEnv>();
 
-api.use(async (c, next) => {
-  if (c.env.ENVIRONMENT === AppEnvironment.PRODUCTION) {
-    return await next();
-  }
-  return timing()(c, next);
-});
+api.use(
+  timing({
+    enabled: (c: Context<AppEnv>) =>
+      c.env.ENVIRONMENT !== AppEnvironment.PRODUCTION,
+  }),
+);
 
 api.use(timeout(API_TIMEOUT_MS));
 

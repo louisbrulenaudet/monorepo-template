@@ -9,13 +9,9 @@ on:
         description: "Release tag to deploy (e.g. v0.1.0)"
         required: true
         type: string
-    secrets:
-      # Cloudflare credentials are absent on purpose: they live on the `production`
-      # Environment, never passed in by a caller.
-      TURBO_TOKEN:
-        required: false
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY:
-        required: false
+    # No `secrets:` on purpose: Cloudflare credentials live on the `production`
+    # Environment, and no Turbo token means the build never restores remote-cache
+    # output that a PR run could have planted.
   workflow_dispatch:
     inputs:
       tag:
@@ -52,9 +48,6 @@ jobs:
     # Cloudflare and GitHub tokens are step-scoped below on purpose - install, build,
     # and smoke never see them.
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       VITE_APP_ENVIRONMENT: production
       VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
@@ -64,11 +57,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.tag }}
+          # Fully qualified, so a same-named branch can never shadow the tag.
+          ref: refs/tags/${{ inputs.tag }}
           persist-credentials: false
           fetch-depth: 1
 
       - name: Resolve release version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: bash .github/actions/cd/resolve-release-version.sh
 
       - name: Require deploy inputs
@@ -85,14 +82,15 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
           install: false
 
-      # Must come from a step: `runner` / $RUNNER_TEMP is unavailable in workflow- and
-      # job-level `env:`, and referencing it there makes the file unparseable.
+      # Must be a step: `runner` in workflow/job `env:` makes the file unparseable (ops/ci).
       - name: Enable Node compile cache
         run: echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm turbo run build --filter='./apps/*'
+      # check-types is named explicitly because `build` does not depend on it, and this build
+      # never sees the gate's cache. The trailing `...` adds the packages the apps ship.
+      - run: pnpm turbo run check-types build --filter='./apps/*...'
 
       - name: Upload a version of every app
         env:

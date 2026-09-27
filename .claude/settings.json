@@ -37,6 +37,7 @@
       "Bash(pnpm -r --if-present run test)",
       "Bash(pnpm install)",
       "Bash(pnpm install --frozen-lockfile)",
+      "Bash(pnpm exec playwright-cli *)",
       "WebFetch(domain:code.claude.com)",
       "WebFetch(domain:developers.cloudflare.com)",
       "WebFetch(domain:oxc.rs)",
@@ -48,7 +49,7 @@
       "WebFetch(domain:docs.cursor.com)",
       "WebFetch(domain:claude.com)",
       "WebFetch(domain:developer.mozilla.org)",
-      "WebFetch(domain:turbo.build)",
+      "WebFetch(domain:turborepo.dev)",
       "WebFetch(domain:tanstack.com)",
       "WebFetch(domain:react.dev)",
       "WebFetch(domain:zod.dev)",
@@ -81,6 +82,12 @@
       "Read(**/.prod.vars.*)",
       "Read(**/.staging.vars)",
       "Read(**/.staging.vars.*)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.development)",
+      "Read(**/.env.staging)",
+      "Read(**/.env.test)",
+      "Read(**/.env.production)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
       "Read(**/*.p12)",
@@ -114,7 +121,17 @@
       "Agent(statusline-setup)"
     ],
     "ask": [
+      "Edit(/hooks/**)",
+      "Edit(/.claude/status-line.sh)",
       "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git clean -fd:*)",
+      "Bash(git clean -fdx:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git branch -D:*)",
+      "Bash(git tag -d:*)",
+      "Bash(git filter-branch:*)",
       "Bash(pnpm deploy:*)",
       "Bash(pnpm run deploy:*)",
       "Bash(pnpm turbo run deploy:*)",
@@ -186,8 +203,38 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/hooks/quality/check-changed.sh"
             ],
-            "timeout": 30,
+            "timeout": 150,
             "statusMessage": "Formatting and linting the edited file"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/quality/stop-gate.sh"
+            ],
+            "timeout": 180,
+            "statusMessage": "Running the fast gate on the diff"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/session/session-context.sh"
+            ],
+            "timeout": 10,
+            "statusMessage": "Checking the checkout"
           }
         ]
       }
@@ -208,9 +255,18 @@
       }
     ]
   },
+  "extraKnownMarketplaces": {
+    "monorepo-local": {
+      "source": {
+        "source": "directory",
+        "path": "./.claude/plugins/monorepo-local"
+      }
+    }
+  },
   "enabledPlugins": {
+    "ts-native-lsp@monorepo-local": true,
+    "typescript-lsp@claude-plugins-official": false,
     "security-guidance@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
     "github@claude-plugins-official": true,
@@ -222,12 +278,13 @@
     "autoAllowBashIfSandboxed": true,
     "allowUnsandboxedCommands": false,
     "excludedCommands": [
-      "gh *"
+      "gh *",
+      "pnpm exec playwright-cli *"
     ],
     "network": {
       "allowedDomains": [
-        "github.com",
-        "api.github.com",
+        "raw.githubusercontent.com",
+        "codeload.github.com",
         "objects.githubusercontent.com",
         "registry.npmjs.org",
         "vercel.com",
@@ -262,8 +319,16 @@
     },
     "enableWeakerNetworkIsolation": true,
     "filesystem": {
+      "allowRead": [
+        "./apps/front-app/.env",
+        "./apps/front-app/.env.production"
+      ],
       "allowWrite": [
         "~/Library/pnpm/package-manager-store"
+      ],
+      "denyWrite": [
+        "./hooks",
+        "./.claude/status-line.sh"
       ]
     }
   },
@@ -280,6 +345,7 @@
       ".claude",
       ".cursor",
       ".github",
+      ".playwright",
       ".vite-hooks",
       ".vscode",
       ".cursorignore",
@@ -311,12 +377,15 @@
   "env": {
     "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "20",
     "TURBO_TELEMETRY_DISABLED": "1",
+    "TURBO_UI": "false",
     "WRANGLER_SEND_METRICS": "false",
     "REACT_DOCTOR_NO_TELEMETRY": "1",
     "WRANGLER_LOG_PATH": "/tmp/claude/wrangler-logs",
+    "WRANGLER_REGISTRY_PATH": "/tmp/claude/wrangler-registry",
     "VP_GIT_HOOKS": "0",
     "GIT_CONFIG_COUNT": "1",
     "GIT_CONFIG_KEY_0": "core.fsmonitor",
-    "GIT_CONFIG_VALUE_0": "false"
+    "GIT_CONFIG_VALUE_0": "false",
+    "NODE_USE_ENV_PROXY": "1"
   }
 }

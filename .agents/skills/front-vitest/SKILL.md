@@ -54,13 +54,13 @@ const { result } = renderHook(() => useCustomHook(), { wrapper });
 await waitFor(() => expect(result.current.isSuccess).toBe(true));
 ```
 
-Suspense gap: Query testing guide does not prescribe a Vitest Suspense harness retrieved 2026-08-11. Prefer fetchQuery / ensureQueryData on queryOptions unless Suspense UI is the subject. If testing useSuspenseQuery, wrap with Suspense plus an error boundary. Do not combine suspense hooks with enabled or placeholderData.
+Suspense gap: Query testing guide does not prescribe a Vitest Suspense harness retrieved 2026-08-11. Prefer queryClient.query(opts) on queryOptions unless Suspense UI is the subject. If testing useSuspenseQuery, wrap with Suspense plus an error boundary. Do not combine suspense hooks with enabled or placeholderData.
 
 ## TanStack Router file-based
 
 Import committed routeTree from `#/routeTree.gen`. Never hand-edit; regenerate via `pnpm --filter=front-app run routes:generate`.
 
-Canonical pattern matches Router package tests and apps/front-app/src/main.tsx: QueryClientProvider outside RouterProvider with no children. Always pass context.queryClient when loaders call ensureQueryData.
+Canonical pattern matches Router package tests and apps/front-app/src/main.tsx: QueryClientProvider outside RouterProvider with no children. Always pass context.queryClient when loaders call queryClient.query.
 
 ```ts
 import { routeTree } from "#/routeTree.gen";
@@ -92,6 +92,6 @@ Doc caveat: some TanStack how-tos wrap RouterProvider with children and a dummy 
 | window is not defined | Add `// @vitest-environment happy-dom` on line 1 of the test file |
 | act environment warning | Setup IS_REACT_ACT_ENVIRONMENT or use RTL |
 | JSX fails under Vitest | Add @vitejs/plugin-react to Vitest config; do not merge full app Vite config |
-| Suspended UI missing | Suspense + error boundary, or test via fetchQuery |
+| Suspended UI missing | Suspense + error boundary, or test via queryClient.query |
 | Flaky sync act | await act with async callback, or RTL |
 | Loader stale after search | Fix loaderDeps in route; put search in initialEntries |

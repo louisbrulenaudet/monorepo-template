@@ -40,11 +40,7 @@ Changing this package is a monorepo-wide breaking change.
 
 ## App wiring
 
-Front apps import defineNodeConfig and resolvePackageRoot from @repo/vitest-config. Worker apps import defineWorkersConfig and resolvePackageRoot from @repo/vitest-config/workers with an absolute wrangler.configPath via path.join(root, "wrangler.jsonc").
-
-Every app must set root and test.dir via resolvePackageRoot(import.meta.dirname) so the Vitest VS Code explorer realpath cache matches (avoids Fatal Error parent of root folder).
-
-Scripts: test uses vitest run for CI, agents, and Turbo cache. test:watch uses vitest. The Turbo test:watch task is cache false and persistent true.
+Every app sets `root` and `test.dir` via `resolvePackageRoot(import.meta.dirname)` (Vitest VS Code explorer realpath cache); worker apps pass an absolute `wrangler.configPath`. Copyable configs: package AGENTS.md. Scripts: `test` = `vitest run` (CI, agents, Turbo cache); `test:watch` = `vitest` (humans only).
 
 ## Anti-patterns
 

@@ -62,6 +62,9 @@ Register in this order. The onion model runs "before" logic top-down and "after"
 - Validate every input at the route boundary with `@hono/zod-validator`.
 - Import schemas from `@repo/dtos-common/api` - never redefine wire shapes locally.
 - Targets: `zValidator("json" | "param" | "query" | "header", Schema)`.
+- **Always pass the third argument (the hook).** Without it Hono answers with its default `{ success, error }` body, which serialises Zod internals and drops the `requestId` every other error carries; the house shape is `{ error, requestId, issues }`.
+- **Never `z.compile()`.** It builds its fast path with `new Function`, which workerd forbids during request handling, so a compiled schema silently falls back to the interpreted parser.
+- **Do not log validation failures.** The client receives every issue in the body and the invocation log records the 400; a `console` line duplicates both and lets a caller on a public route inflate log ingest.
 
 ## Handlers
 

@@ -44,10 +44,10 @@ export function CopyPromptButton({
       id="copy-prompt-btn"
       type="button"
       onClick={() => void handleClick()}
-      className="group inline-flex cursor-pointer items-center gap-2.5 squircle-button border border-gray-950 bg-gray-950 px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800"
+      className="group inline-flex cursor-pointer items-center gap-2.5 squircle-button border border-foreground bg-foreground px-5 py-3 text-sm font-medium text-background shadow-sm transition-colors hover:bg-foreground/90"
     >
       <span
-        className="relative flex h-5 w-23.5 shrink-0 items-center justify-start text-white"
+        className="relative flex h-5 w-23.5 shrink-0 items-center justify-start text-background"
         aria-hidden="true"
       >
         <ClaudeIcon className="size-5 -rotate-6 transition-transform duration-300 ease-out group-hover:-translate-x-1 group-hover:-rotate-12" />

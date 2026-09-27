@@ -2,8 +2,6 @@ packages:
   - apps/*
   - packages/*
 
-# Prefer catalog versions on `pnpm add` when a package is listed; still allow
-# one-off deps that are not in the catalog (escalate to `strict` later if desired).
 catalogMode: prefer
 
 catalog:
@@ -15,6 +13,7 @@ catalog:
   '@cloudflare/vitest-plugin': ^1.2.7
   '@hono/cli': 0.2.0-next.9
   '@hono/zod-validator': ^0.9.1
+  '@playwright/cli': ^0.1.21
   # @sentry/hono peers on the exact same @sentry/cloudflare version; bump all three together.
   '@sentry/cli': ^3.8.0
   '@sentry/cloudflare': 11.0.0
@@ -34,7 +33,7 @@ catalog:
   '@testing-library/jest-dom': ^7.0.1
   '@testing-library/react': ^16.3.3
   '@testing-library/user-event': ^14.6.7
-  '@types/node': 26.6.2
+  '@types/node': 24.19.0
   '@types/react': ^19.3.0
   '@types/react-dom': ^19.3.0
   '@vitejs/devtools': ^0.7.6
@@ -68,18 +67,15 @@ catalog:
   wrangler: ^4.140.0
   zod: ^4.6.5
 
-# Temporary transition group: @cloudflare/vitest-plugin still pins vitest ^4.1.0
-# (workers-sdk has no v5-compatible release yet). Workers apps stay here until
-# Cloudflare ships v5 support, then move back to `catalog:` and this is deleted.
+# Temporary: @cloudflare/vitest-plugin still pins vitest ^4.1.0. Once it supports v5,
+# move the Workers apps back to `catalog:` and delete this group.
 catalogs:
   vitest4:
     vitest: ^4.1.11
 
-auditConfig:
-  ignoreCves: []
-  ignoreGhsas: []
-
-minimumReleaseAge: 480
+# Transitive @types/node '*' ranges would otherwise resolve to the newest major, ahead of the Node 24 engine.
+overrides:
+  '@types/node': 'catalog:'
 
 minimumReleaseAgeExclude:
   - '@cloudflare/*'
@@ -101,5 +97,4 @@ allowBuilds:
   sharp: true
   workerd: true
 
-# Fail closed when a dependency outside allowBuilds attempts an install script.
 strictDepBuilds: true

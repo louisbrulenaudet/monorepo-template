@@ -1,0 +1,14 @@
+{
+  "name": "monorepo-local",
+  "description": "Plugins that only make sense inside this repository",
+  "owner": {
+    "name": "monorepo-template"
+  },
+  "plugins": [
+    {
+      "name": "ts-native-lsp",
+      "source": "./ts-native-lsp",
+      "description": "TypeScript 7 native language server (tsc --lsp) from the workspace's own typescript package"
+    }
+  ]
+}

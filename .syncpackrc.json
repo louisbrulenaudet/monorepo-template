@@ -1,6 +1,18 @@
 {
   "$schema": "./node_modules/syncpack/schema.json",
+  "dependencyGroups": [
+    {
+      "aliasName": "sentry-sdk",
+      "dependencies": ["@sentry/cloudflare", "@sentry/hono", "@sentry/react"]
+    }
+  ],
   "versionGroups": [
+    {
+      "label": "sentry sdk in lockstep",
+      "dependencies": ["sentry-sdk"],
+      "dependencyTypes": ["pnpmCatalog"],
+      "policy": "sameRange"
+    },
     {
       "label": "internal workspace links",
       "dependencies": ["@repo/**"],

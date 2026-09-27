@@ -1,15 +1,6 @@
 #!/usr/bin/env sh
-# Purpose: Claude Code status line - current model, context-window usage, session cost, prompt-cache
-#          health, and git branch.
-# Target: Claude Code statusLine (receives session JSON on stdin). Wired from .claude/settings.json.
-# Canonical location: .claude/status-line.sh - committed, so every clone shares the same status line.
-#
-# jq preferred; falls back to sed when jq is unavailable (mirrors hooks/git/*.sh robustness pattern).
-# Degrades gracefully: missing/null fields render as "n/a" rather than failing the status line.
-#
-# Cost and cache are here because they are the two numbers that reveal wasted spend: cost makes an
-# expensive session visible while it is still running, and a falling cache hit ratio is what a
-# re-billed prompt prefix looks like (long idle gaps, or a mid-session /model or /effort switch).
+# Claude Code statusLine (session JSON on stdin): model, context window, cost, prompt-cache, branch.
+# jq preferred with a sed fallback; missing fields render as "n/a" rather than failing the line.
 
 set -u
 
@@ -60,11 +51,6 @@ is_decimal() {
   esac
 }
 
-# Context-window usage is the most important signal: how full it is (used %) and how much
-# room is left (free tokens). Prefer the schema's own used_percentage when it is available
-# (jq path); otherwise derive both figures from context_window_size/total_input_tokens.
-# Null/missing fields (no API response yet, or an older CLI without context_window) degrade
-# to "n/a" rather than guessing.
 CTX="Ctx n/a"
 if is_int "${CTX_SIZE:-}" && is_int "${CTX_USED_TOK:-}" && [ "$CTX_SIZE" -gt 0 ]; then
   FREE=$(( CTX_SIZE - CTX_USED_TOK ))

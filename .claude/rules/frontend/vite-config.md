@@ -28,7 +28,7 @@ paths:
 
 ## Monorepo
 
-- `server.fs.strict: true`, `server.fs.allow: [repoRoot]` (`path.resolve(appDir, "../..")`) for `@repo/*`.
+- `server.fs.allow: [repoRoot]` (`path.resolve(appDir, "../..")`) for `@repo/*`; leave `server.fs.strict` at its default (`true`).
 - In-app absolute imports use package.json `"imports"` (`#/*` → `./src/*`); Vite resolves them natively - do not add `resolve.alias` for the same map.
 
 ## Dev server
@@ -38,7 +38,7 @@ paths:
 
 ## Build, env, deps
 
-- Leave `build.target` unset (Vite 8 default `baseline-widely-available`). `sourcemap`: inline (development mode) / `hidden` (production - maps kept for symbolication, excluded from upload via `*.map` in generated `dist/.assetsignore`). `reportCompressedSize: false`; `cssCodeSplit: true`. Leave `modulePreload.polyfill` at its Vite default `true` unless you intentionally drop older-browser preload support.
+- Leave `build.target` unset (Vite 8 default `baseline-widely-available`). `sourcemap`: inline (development mode) / `hidden` (production - maps kept for symbolication, excluded from upload via `*.map` in generated `dist/.assetsignore`). `reportCompressedSize: false`; leave `cssCodeSplit`, `assetsInlineLimit`, and `chunkSizeWarningLimit` at their defaults. Leave `modulePreload.polyfill` at its Vite default `true` unless you intentionally drop older-browser preload support.
 - Chunk vendors: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`. HTML `Cache-Control: no-cache` via generated `_headers`.
 - Handle `vite:preloadError` in the client entry: reload once per session (sessionStorage guard) so returning users recover from stale-chunk loads after deploys.
 - Only `VITE_*` in client bundle - no secrets. Fail production `build` on missing/placeholder required vars; skip under static analysis (`knip`). Generate `dist/_headers` + append to `dist/.assetsignore` in a build plugin - never hand-edit ([guardrails.md](../core/guardrails.md)). Deploy in `wrangler.jsonc`.

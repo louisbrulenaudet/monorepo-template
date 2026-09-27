@@ -1,6 +1,6 @@
 ---
 name: review-tests
-description: "Test-suite value review: finds tests that re-assert source, duplicate stronger proof, couple to implementation, or keep test-only production seams alive, and returns a delete / tighten / move plan with per-candidate evidence. USE WHEN: user runs /review-tests or explicitly asks to audit or prune tests. DO NOT USE WHEN: writing or changing a test (the quality/testing rule gates that) or reviewing Vitest configuration (/review-vitest)."
+description: "Test-suite value review: finds tests that re-assert source, duplicate stronger proof, couple to implementation, or keep test-only production seams alive, and returns a delete / tighten / move plan with per-candidate evidence. USE WHEN: user runs /review-tests or explicitly asks to audit or prune tests. DO NOT USE WHEN: writing or changing a test (the quality/testing rule gates that) or reviewing Vitest configuration (/review-stack vitest)."
 disable-model-invocation: true
 context: fork
 background: true

@@ -157,7 +157,7 @@ Configured in `pnpm-workspace.yaml`:
 | `allowBuilds` | Map of packages allowed (`true`) or denied (`false`) to run install scripts |
 | `trustPolicy: no-downgrade` | Reject installs that would downgrade package trust/provenance |
 | `blockExoticSubdeps: true` | Block exotic (non-registry) transitive dependencies |
-| `minimumReleaseAge: 480` | 8-hour cooldown on newly published versions |
+| `minimumReleaseAge` (unset) | pnpm's default 24-hour cooldown on newly published versions |
 | `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `wrangler`, `miniflare`, `typescript`) |
 
 When `pnpm install` fails on a blocked build script:

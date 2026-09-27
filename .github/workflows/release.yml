@@ -124,6 +124,3 @@ jobs:
     uses: ./.github/workflows/cd.yml
     with:
       tag: ${{ needs.tag.outputs.tag }}
-    secrets:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}

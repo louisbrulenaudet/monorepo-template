@@ -1,25 +1,10 @@
-# .cursorignore - FULL AI block: no indexing, no Agent/Tab/Inline-Edit access, no @-mention.
-# https://cursor.com/docs/reference/ignore-file
-#
-# Cursor already auto-respects .gitignore, so node_modules/, dist/, caches, and other
-# gitignored paths are excluded from indexing WITHOUT being listed here. This file is
-# reserved for the narrow case gitignore does not cover: files that must stay in the repo
-# (or on disk) but that the model must never read or touch - i.e. secrets/credentials.
-#
-# Large, generated, or vendored files the agent may still legitimately open on demand
-# (lockfile, generated *.d.ts, compiled skill manuals) belong in .cursorindexingignore,
-# which removes them from search WITHOUT blocking access.
-#
-# Note: per the docs this is best-effort due to LLM unpredictability, NOT a hard security
-# boundary. Real secrets should stay out of the repo and context entirely where possible.
+# Secrets only: full AI block (no indexing, no Agent/Tab/Inline Edit). Best-effort, not a security boundary.
+# Gitignored paths are already skipped; large or generated files the agent may open go in .cursorindexingignore.
 
-# Cloudflare local secrets (keep the *.example templates readable)
-**/.dev.vars
-**/.dev.vars.*
-**/.prod.vars
-**/.prod.vars.*
-**/.staging.vars
-**/.staging.vars.*
+# Cloudflare local secrets
+**/.dev.vars*
+**/.prod.vars*
+**/.staging.vars*
 
 # Environment files (keep the *.example templates readable)
 **/.env
@@ -35,8 +20,7 @@
 **/*.p12
 **/*.pfx
 
-# Generic credential / secret files (mirrors the commit-secret guard regex and Cursor's own
-# recommended secret patterns: https://cursor.com/docs/reference/ignore-file)
+# Generic credential files (mirrors the commit-secret guard)
 **/credentials.json
 **/secrets.json
 

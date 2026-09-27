@@ -1,0 +1,12 @@
+---
+paths:
+  - ".worktreeinclude"
+  - ".claude/settings.json"
+---
+
+# Worktrees
+
+A worktree is a fresh checkout: run `pnpm install --frozen-lockfile --prefer-offline` in it before any turbo command. `worktree.symlinkDirectories` cannot replace that install - pnpm keeps a `node_modules` at the root and inside every workspace package, and a symlinked root one would make a worktree `pnpm install` write back into the main checkout. The install hardlinks from the pnpm store, so it costs CPU once per worktree, not disk.
+
+- `worktree.sparsePaths` in `.claude/settings.json` is applied as a **cone-mode** sparse checkout: every root-level file is checked out whether listed or not, and only directories are filtered. The directory entries do the work (`.agents`, `.changeset`, `.claude`, `.cursor`, `.github`, `.playwright`, `.vite-hooks`, `.vscode`, `apps`, `hooks`, `packages`); the root-file entries stay so the list is still correct if the checkout ever stops being cone-mode. Add any new root directory the tooling needs; `.opencode` is excluded on purpose.
+- `.worktreeinclude` copies gitignored files that match one of its patterns into each new worktree; it has none today, so a worktree starts with cold Turbo and Node compile caches. Never add env or credential files - provision isolated credentials per worktree ([guardrails.md](guardrails.md)). A `WorktreeCreate` hook would disable `.worktreeinclude` entirely, which is why there is none.

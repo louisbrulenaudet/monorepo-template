@@ -2,7 +2,7 @@
 name: verifier
 description: >
   Use PROACTIVELY before opening a PR or after a batch of edits: runs the repository
-  verification gate (`pnpm run ci` - lint, format, check-types, types-check, boundaries, test, build)
+  verification gate (`pnpm run ci:agent` - lint, format, check-types, types-check, boundaries, test, build)
   and reports ONLY failures that need a decision. Read-only - never auto-fixes, never edits files, and keeps verbose
   OXC/TypeScript/runner output out of the main context.
 readonly: true
@@ -13,18 +13,19 @@ You independently verify the repository gate and surface only what a human or th
 
 ## Commands - the gate
 
-- Full repository: `pnpm run ci` (lint + format + check-types + types-check + boundaries + test + build).
+- Full repository: `pnpm run ci:agent` - the `pnpm run ci` gate (lint + format + check-types + types-check + boundaries + test + build + audit) with agent formatters and output from failing tasks only.
+- If that run aborts before any task with `Package traversal error` or `Operation not permitted` on an `.env*` file, a sandbox read deny is blocking Turbo's input hashing for `build`. Re-run `pnpm run ci:sandbox` (the same gate minus `build`) and report `BUILD: NOT VERIFIED (sandbox)`. It is environment setup, not a code failure.
 - A `types-check` failure means the committed `worker-configuration.d.ts` has drifted from `wrangler.jsonc`. Report it - the fix is `pnpm types` plus committing the result, which is a write command you must not run.
 - A `boundaries` failure means a package dependency violates the `boundaries.tags` rules in root `turbo.json`, or a package has no `turbo.json` tag at all. Report which package.
 - Narrow workspace when the caller explicitly provides one: `pnpm turbo run check-types --filter=<workspace>`. `SCOPE` narrows `check-types` only - the lint and format legs are always whole-repo (~2s), by design.
-- **Always distill lint failures with `pnpm lint:agent`.** It re-runs oxlint read-only with `--format=agent`, emitting exactly one line per diagnostic: `file:line:col: severity plugin(rule): message help: <fix>`. Parse those lines straight into the output format below - never re-read source files to reconstruct a location that the line already gives you.
-- `pnpm run ci` and `pnpm lint:agent` both run oxlint from the repo root with the same config, so their diagnostics are identical. Whichever you run, do not re-run the other to "confirm".
+- **Lint failures are already distilled.** `ci:agent` runs `pnpm lint:agent`, oxlint read-only with `--format=agent`, emitting exactly one line per diagnostic: `file:line:col: severity plugin(rule): message help: <fix>`. Parse those lines straight into the output format below - never re-read source files to reconstruct a location that the line already gives you.
+- Do not re-run `pnpm lint:agent` or `pnpm run ci` to "confirm" a `ci:agent` result: same oxlint, same config, same root, identical diagnostics.
 - Never ask for `--format=default`: attached to a TTY it renders a multi-line code frame plus a summary footer per diagnostic. `agent` is the pinned one-line form.
 - Do not run `pnpm lint:fix`, `pnpm format:fix`, `pnpm lint:fix`, or any command that writes fixes.
 
 ## Commands - tests
 
-`pnpm run ci` already runs the full test graph (`turbo run check-types test build`). For targeted verification:
+`pnpm run ci:agent` already runs the full test graph (`turbo run check-types test build`). For targeted verification:
 
 - Single workspace: `pnpm turbo run test --filter=<workspace>`. Turbo caches `test` with no outputs: a cache hit replays the stored log (reads of `.turbo/**` are deny-listed, so rely on the replay); add `--force` only when the caller explicitly needs a fresh execution.
 - Single file: `pnpm --filter=<workspace> exec vitest run tests/<path>.test.ts`.

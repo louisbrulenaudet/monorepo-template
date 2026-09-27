@@ -2,13 +2,14 @@
   "$schema": "./node_modules/turbo/schema.json",
   "futureFlags": {
     "affectedUsingTaskInputs": true,
-    "filterUsingTasks": true,
+    // Off on purpose - see core/turborepo (drops dependents for transit tasks).
+    "filterUsingTasks": false,
     "watchUsingTaskInputs": true,
     "strictTaskEntrypointSelection": true,
-    // Remote-cache artifact signing (HMAC-SHA256). Requires TURBO_REMOTE_CACHE_SIGNATURE_KEY
-    // (>= 32 bytes) locally and in CI, or signed fetches fail closed.
     "longerSignatureKey": true,
-    "globalConfiguration": true
+    "globalConfiguration": true,
+    "errorsOnlyShowHash": true,
+    "githubActionsRemoteBaseRefFallback": true
   },
   "global": {
     "ui": "tui",
@@ -17,35 +18,25 @@
     "cacheMaxSize": "10GB",
     "remoteCache": {
       "enabled": true,
-      // Verifies artifacts against TURBO_REMOTE_CACHE_SIGNATURE_KEY on fetch and upload.
       "signature": true
     },
-    // Prepended to every task's `inputs` (not folded into a single global hash), so a
-    // task can drop a specific entry with a negation glob. OXC configs must never be added
-    // here: .oxlintrc.json and .oxfmtrc.json belong to the //#lint:* / //#format:check inputs,
-    // and a global entry would re-invalidate check-types and build on a lint-rule-only edit.
+    // Prepended to each task's inputs; never add OXC configs here (core/turborepo).
     "inputs": ["pnpm-workspace.yaml"],
     "passThroughEnv": [
       "CI",
       "NODE_ENV",
       "NODE_COMPILE_CACHE",
       "NODE_DISABLE_COMPILE_CACHE",
-      // Without it os.tmpdir() falls back to /tmp, where Miniflare (Workers Vitest pool)
-      // cannot mkdir inside the Claude Code sandbox.
+      // Else os.tmpdir() is /tmp, where Miniflare cannot mkdir in the Claude Code sandbox.
       "TMPDIR",
-      // Wrangler telemetry opt-out and log directory must reach every wrangler task under
-      // strict envMode; without WRANGLER_LOG_PATH, sandboxed runs log EPERM into ~/.wrangler.
+      // Without the log/registry paths, sandboxed wrangler hits EPERM in ~/.wrangler.
       "WRANGLER_SEND_METRICS",
-      "WRANGLER_LOG_PATH"
+      "WRANGLER_LOG_PATH",
+      "WRANGLER_REGISTRY_PATH"
     ]
   },
-  // Machine-enforced version of the architecture in AGENTS.md. Run via `pnpm boundaries`
-  // (part of `pnpm run ci`). Tags are assigned in each package's own turbo.json.
   "boundaries": {
     "tags": {
-      // Deployable entry points: front-*, worker-*, queue-*, webhook-*, mcp-*.
-      // Apps are never installable dependencies - Worker-to-Worker calls go through
-      // service-binding RPC declared in wrangler.jsonc, never a package import.
       "app": {
         "dependencies": {
           "allow": ["contracts", "contracts-base", "config", "lib"]
@@ -54,27 +45,21 @@
           "deny": ["app", "contracts", "contracts-base", "config", "lib"]
         }
       },
-      // Shared wire contracts (@repo/dtos-common): may build on the enum base, never on an app.
       "contracts": {
         "dependencies": {
           "allow": ["contracts-base", "config"]
         }
       },
-      // Leaf of the contract chain (@repo/enums-common). Depends on nothing internal,
-      // so the documented `enums -> dtos` direction can never invert into a cycle.
       "contracts-base": {
         "dependencies": {
           "allow": ["config"]
         }
       },
-      // Runtime-neutral shared helpers (@repo/correlation-id). Apps may depend on lib;
-      // lib must not depend on apps or contracts.
       "lib": {
         "dependencies": {
           "allow": ["config"]
         }
       },
-      // Build-time presets (@repo/typescript-config, @repo/vitest-config): consumed by everything, depend on nothing internal.
       "config": {
         "dependencies": {
           "allow": []
@@ -82,37 +67,33 @@
       }
     }
   },
-  // OXC, Knip, and syncpack run as `//#` root tasks: one whole-repo pass each, at repo-root CWD,
-  // scheduled in parallel by a single `turbo run`. Never give them per-package tasks - a per-package
-  // `oxlint .` breaks the context-aware Tailwind rules and re-spawns tsgolint per package. The `//#`
-  // prefix pins them to root even if a workspace later adds a same-named script.
   "tasks": {
     "//#lint:check": {
-      "description": "Whole-repo oxlint pass, human format. Uncached: typeAware lint depends on the entire tsconfig graph plus the Tailwind entry point, so an under-specified input hash would cache a pass over code that was never linted.",
+      "description": "Whole-repo oxlint pass, human format.",
       "cache": false
     },
     "//#lint:agent": {
-      "description": "Same pass with --format=agent - the machine-readable form agents parse.",
+      "description": "Same oxlint pass with --format=agent (machine-readable).",
       "cache": false
     },
     "//#format:check": {
-      "description": "Whole-repo oxfmt --check. Uncached until its inputs are authored and verified against --dry=json.",
+      "description": "Whole-repo oxfmt --check.",
       "cache": false
     },
     "//#knip": {
-      "description": "Unused files, exports, and dependencies across every workspace. Uncached until its inputs are authored and verified against --dry=json.",
+      "description": "Unused files, exports, and dependencies across every workspace.",
       "cache": false
     },
     "//#knip:agent": {
-      "description": "Same pass with --reporter symbols.",
+      "description": "Same Knip pass with --reporter symbols.",
       "cache": false
     },
     "//#knip:production": {
-      "description": "Knip --production --strict: shipped-code-only pass plus workspace isolation.",
+      "description": "Knip --production --strict: shipped code only, workspace isolation.",
       "cache": false
     },
     "//#deps:check": {
-      "description": "syncpack lint: catalog: specifiers for third-party deps, workspace:* for internal links. Cached: syncpack reads only the workspace manifests, the workspace catalog, and its rc file, so these inputs are the complete hash (verified with --dry-run=json; a bare **/package.json glob would pull in nested node_modules). Extend the manifest globs if pnpm-workspace.yaml ever adds a workspace directory.",
+      "description": "syncpack lint: catalog: for third-party deps, workspace:* for internal.",
       "inputs": [
         "package.json",
         "apps/*/package.json",
@@ -122,7 +103,7 @@
       ]
     },
     "//#deps:format:check": {
-      "description": "syncpack format --check: package.json field ordering. Run pnpm deps:format to fix. Cached with the same complete input set as //#deps:check.",
+      "description": "syncpack format --check: package.json field ordering.",
       "inputs": [
         "package.json",
         "apps/*/package.json",
@@ -131,37 +112,49 @@
         ".syncpackrc.json"
       ]
     },
+    "//#hooks:test": {
+      "description": "sh -n plus the regression table for the agent guard hooks.",
+      "cache": false
+    },
     "transit": {
-      "description": "Internal no-op graph edge (transit-node pattern). Propagates source changes through declared workspace dependencies without serializing check-types tasks. App-to-app service bindings are not package dependencies and require an explicit callee#transit edge in the caller's package configuration.",
+      "description": "No-op graph edge that propagates dependency source changes.",
       "dependsOn": ["^transit"],
       "inputs": ["$TURBO_DEFAULT$", "!README.md", "!AGENTS.md", "!CLAUDE.md"]
     },
     "check-types": {
-      "description": "Type-check with tsc --noEmit. Uses the transit node (not ^check-types) so packages run in parallel while still invalidating when dependency source changes. JIT packages export source .ts directly, so no declaration emit or project references. No `types` edge: worker-configuration.d.ts is committed, so it is a tracked $TURBO_DEFAULT$ input and hashes directly - regenerating it here would dirty the tree mid-CI.",
+      "description": "Type-check with tsc --noEmit.",
       "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "!README.md", "!AGENTS.md", "!CLAUDE.md"],
       "outputs": ["node_modules/.tmp/*.tsbuildinfo"]
     },
     "types": {
-      "description": "Regenerate the committed worker-configuration.d.ts (wrangler types). Writes a tracked source file, so it is uncached like the other write-mode tasks - run it after editing wrangler.jsonc, then commit the result. CI verifies freshness with types:check instead of running this.",
+      "description": "Regenerate the committed worker-configuration.d.ts (wrangler types).",
       "cache": false,
       "inputs": ["wrangler.jsonc"],
       "outputs": []
     },
     "types:check": {
-      "description": "Verify the committed worker-configuration.d.ts still matches wrangler.jsonc (wrangler types --check). Read-only and cached; fails when the file has drifted, prompting `pnpm types` + commit. Unlike `types`, --check does not start workerd, so it is cheap in CI.",
+      "description": "Verify worker-configuration.d.ts matches wrangler.jsonc (read-only).",
       "inputs": ["wrangler.jsonc", "worker-configuration.d.ts"],
       "outputs": []
     },
     "build": {
-      "description": "Build production output to dist/; gated on the package's own check-types and upstream builds.",
-      "dependsOn": ["^build", "check-types"],
-      "inputs": ["$TURBO_DEFAULT$", "!README.md", "!AGENTS.md", "!CLAUDE.md"],
+      "description": "Build production output to dist/.",
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!AGENTS.md",
+        "!CLAUDE.md",
+        "!tests/**",
+        "!vitest.config.*",
+        "!vitest.setup.*"
+      ],
       "outputs": ["dist/**"],
       "env": ["NODE_ENV"]
     },
     "test": {
-      "description": "Run Vitest for the package (Workers pool for worker-* apps; Node for front-*).",
+      "description": "Run Vitest (Workers pool for worker-* apps; Node for front-*).",
       "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "!README.md", "!AGENTS.md", "!CLAUDE.md"],
       "outputs": [],
@@ -176,7 +169,7 @@
       ]
     },
     "test:watch": {
-      "description": "Vitest watch mode (persistent, uncached). Humans only - agents must use the test task.",
+      "description": "Vitest watch mode. Humans only - agents must use the test task.",
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
@@ -190,23 +183,22 @@
       ]
     },
     "dev": {
-      "description": "Run the local dev server (persistent, uncached).",
+      "description": "Run the local dev server.",
       "cache": false,
       "persistent": true,
       "passThroughEnv": ["VITE_API_BASE_URL"]
     },
     "preview": {
-      "description": "Serve the production build locally (persistent, uncached).",
+      "description": "Serve the production build locally.",
       "dependsOn": ["build"],
       "cache": false,
       "persistent": true,
       "passThroughEnv": ["VITE_API_BASE_URL", "NODE_ENV"]
     },
     "deploy": {
-      "description": "wrangler deploy --env production (upload + immediate 100%). Local/bootstrap; GitHub CD uses versions upload + versions deploy.",
+      "description": "wrangler deploy --env production: upload + 100% at once (local/bootstrap).",
       "dependsOn": ["^build", "check-types"],
       "cache": false,
-      "outputLogs": "new-only",
       "passThroughEnv": [
         "CI",
         "NODE_ENV",
@@ -219,7 +211,6 @@
       "description": "wrangler versions upload --env production (no traffic change).",
       "dependsOn": ["^build", "check-types"],
       "cache": false,
-      "outputLogs": "new-only",
       "passThroughEnv": [
         "CI",
         "NODE_ENV",
@@ -231,10 +222,9 @@
       ]
     },
     "promote": {
-      "description": "wrangler versions deploy --env production (interactive local promote/rollback helper).",
+      "description": "wrangler versions deploy --env production (interactive promote/rollback).",
       "cache": false,
       "interactive": true,
-      "outputLogs": "new-only",
       "passThroughEnv": [
         "CI",
         "NODE_ENV",

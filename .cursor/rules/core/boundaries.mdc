@@ -6,7 +6,7 @@ globs: **/turbo.json
 
 # Package Boundaries
 
-`turbo.json` under `boundaries.tags` is the **source of truth** and it is already commented - read it rather than trusting a copy. `pnpm boundaries` (inside `pnpm run ci`) enforces it: a violation **fails CI**, it is not a convention. This file carries only what the config cannot say about itself.
+Root `turbo.json` `boundaries.tags` is the enforcement: `pnpm boundaries` (inside `pnpm run ci`) **fails CI** on a violation, it is not a convention. This rule is the rationale.
 
 ## Tag map
 
@@ -22,5 +22,6 @@ globs: **/turbo.json
 
 - **Nothing may depend on an `app`.** `app.dependents.deny` lists all four tags, so apps are entry points and never installable dependencies. Worker-to-Worker calls go through service-binding RPC declared in `wrangler.jsonc` - never a package import.
 - **The contract chain cannot invert.** `contracts` → `contracts-base` → `config` are declared as allow-lists, so the documented `enums → dtos` direction is genuinely enforced and cannot become a cycle.
+- **`lib` must not depend on apps or contracts.** `lib.dependencies.allow` is `["config"]`: apps may depend on `lib`, never the reverse.
 - **A new package must declare its tag.** Add `turbo.json` with `"extends": ["//"]` and a `tags` entry, or `pnpm boundaries` reports it as untagged.
 - **`config` depends on nothing internal.** `config.dependencies.allow` is `[]`, so `@repo/typescript-config` and `@repo/vitest-config` cannot depend on any tagged workspace package.

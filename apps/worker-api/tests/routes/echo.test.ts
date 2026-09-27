@@ -89,6 +89,12 @@ describe("POST /api/v1/echo", () => {
       issues: [{ path: "", message: "unexpected field in request body" }],
     },
     {
+      name: "a non-object body",
+      body: ["hello"],
+      search: "",
+      issues: [{ path: "", message: "request body must be a JSON object" }],
+    },
+    {
       name: "an invalid uppercase query value",
       body: { message: "hello" },
       search: "?uppercase=yes",
