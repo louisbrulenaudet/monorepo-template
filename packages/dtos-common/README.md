@@ -2,7 +2,7 @@
 
 Shared Zod Mini wire contracts - the single source of truth for payload shapes at every boundary. A schema change is a contract change: update every producer and consumer in the same PR, and prefer additive changes (new optional fields, new endpoints) over breaking edits.
 
-One subpath per boundary: `/api` (HTTP, `front-app` to `worker-api`) is exported today, while `/rpc`, `/queue`, and `/webhook` get their directory and `package.json` export with their first schema. Import through a layer subpath - the package root is deliberately an empty barrel.
+One subpath per boundary: `/api` (HTTP, `front-app` to `worker-api`) is exported today, while `/rpc`, `/queue`, and `/webhook` get their directory and `package.json` export with their first schema. Import through a layer subpath - the package has no root entry.
 
 ## Usage
 

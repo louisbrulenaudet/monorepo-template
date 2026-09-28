@@ -37,7 +37,8 @@ App-local detail: `apps/*/AGENTS.md` and `packages/*/AGENTS.md`.
 | HTTP route | `apps/worker-api/src/routes/<feature>.ts` → mount in `src/index.ts` |
 | Zod schemas | `packages/dtos-common/src/{api,rpc,queue,webhook}/` |
 | Shared enums | `packages/enums-common`; worker-local under `apps/<worker>/src/enums/` |
-| Opaque correlation ids | `packages/correlation-id` (`X-Request-Id`); SPA session wrapper in `front-app` |
+| Request id (`X-Request-Id`) | `requestIdMiddleware` in `packages/hono-middleware`: minted per request by the gateway, never sent by the SPA |
+| Hono middleware shared by public-HTTP Workers | `packages/hono-middleware` (one export per middleware; each app registers them in its own `index.ts`) |
 | DB schema / migrations | `apps/<owner>/src/db/` (one owner; never `packages/db-*`) |
 | Frontend feature | `apps/front-app/src/{pages,routes,services,hooks,components}/` |
 | Agent rules | `.claude/rules/<cat>/<name>.md` **and** its `.cursor/rules/<cat>/<name>.mdc` mirror, in the same change |
@@ -70,6 +71,7 @@ A worktree is a fresh checkout: run `pnpm install --frozen-lockfile --prefer-off
 | `pnpm types` / `pnpm types:check` | Regenerate `worker-configuration.d.ts` (**commit it**) / verify it matches `wrangler.jsonc` |
 | `pnpm boundaries` | Package tags vs `turbo.json` |
 | `pnpm hooks:test` | `sh -n` plus the regression table for `hooks/` |
+| `pnpm spell:check` / `spell:words` | cspell over the repo, dotfiles included / unknown words only, one per line. Vocabulary: `.cspell/project-words.txt` (not in `check` or `ci`) |
 | `pnpm knip` / `knip:production` / `knip:agent` | Unused files, exports, deps; `--production --strict`; one line per symbol |
 | `pnpm deps:check` / `deps:fix` / `deps:format` | syncpack lint (`catalog:` for third-party, `workspace:*` for `@repo/**`) / autofix / field ordering |
 | `pnpm preview:deploy` / `preview:delete` | Worker Preview of every app (branch-slug name). Outward-facing; denied to agents (rule `ops/previews`) |
@@ -130,7 +132,7 @@ Dual-tree layout, sync policy, hooks, skills, MCP: skill `monorepo-agent-setup`;
 `pnpm boundaries` (inside `pnpm run ci`) fails on tag violations; rules in root `turbo.json` `boundaries.tags`, rationale in rule `core/boundaries`.
 
 - **Nothing may import an `app`.** Worker-to-Worker: service-binding RPC in `wrangler.jsonc`, never a package import.
-- A new app/package needs `turbo.json` with `"extends": ["//"]` and a `tags` entry (`app`, `contracts`, `contracts-base`, `lib`, or `config`).
+- A new app/package needs `turbo.json` with `"extends": ["//"]` and a `tags` entry (`app`, `contracts`, `contracts-base`, `framework`, `lib`, or `config`).
 
 ## Decision Checklist
 

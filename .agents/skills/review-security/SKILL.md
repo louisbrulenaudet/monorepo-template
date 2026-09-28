@@ -26,7 +26,7 @@ Text after the slash command is additional scope/focus - narrow the review accor
 
 Align with root [AGENTS.md](../../../AGENTS.md) and [apps/worker-api/AGENTS.md](../../../apps/worker-api/AGENTS.md) for env and validation patterns.
 
-**Legal-sector delta:** this skill covers the generic surface (headers, CSP, CORS/CSRF, validation, dependency audit). The client-privilege rules - identifiers in logs, traces, cache keys and error bodies; matter/tenancy isolation; retention on durable writes; document text treated as untrusted input; third-party disclosure - live once in the [`privileged-legal-data`](../privileged-legal-data/SKILL.md) skill, with the always-loaded prohibitions in [guardrails.md](../../../.claude/rules/core/guardrails.md). Apply both; do not restate that checklist here.
+**Sensitive data:** also apply [guardrails.md](../../../.claude/rules/core/guardrails.md) → "Sensitive data" - identifiers in logs, traces, cache keys and error bodies; tenant isolation; retention on durable writes; document text treated as untrusted input; third-party disclosure. Do not restate it here.
 
 ## Deep technical review
 

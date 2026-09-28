@@ -9,14 +9,8 @@ export const HttpMethod = {
 
 export type HttpMethod = (typeof HttpMethod)[keyof typeof HttpMethod];
 
-export const CORS_ALLOWED_HTTP_METHODS: readonly HttpMethod[] = [
-  HttpMethod.GET,
-  HttpMethod.POST,
-  HttpMethod.PUT,
-  HttpMethod.PATCH,
-  HttpMethod.DELETE,
-  HttpMethod.OPTIONS,
-];
+export const CORS_ALLOWED_HTTP_METHODS: readonly HttpMethod[] =
+  Object.values(HttpMethod);
 
 const HTTP_METHOD_LOOKUP = new Map<string, HttpMethod>(
   Object.values(HttpMethod).map((method) => [method, method]),

@@ -10,7 +10,6 @@ const sharedTestDefaults: InlineConfig = {
   clearMocks: true,
   unstubEnvs: true,
   unstubGlobals: true,
-  passWithNoTests: true,
   fsModuleCache: true,
 };
 

@@ -1,41 +1,13 @@
 #!/usr/bin/env sh
 
-set -eu
-set -f # never glob-expand untrusted command text
+HOOK_LIB="${0%/*}/../lib"
+[ -r "$HOOK_LIB/guard.sh" ] || {
+  printf 'guard fault in %s: cannot read %s/guard.sh\n' "${0##*/}" "$HOOK_LIB" >&2
+  exit 2
+}
+. "$HOOK_LIB/guard.sh"
 
 BLOCK_MSG="Blocked: this command would stage/commit a secret file (.env / .dev.vars / *.pem / *.key / credentials). Never commit secrets - see .cursor/rules/core/guardrails.mdc and .claude/rules/core/guardrails.md. Confirm the file is git-ignored and stage only non-secret files."
-
-cursor_deny_json() {
-  [ -n "${CURSOR_PROJECT_DIR:-}" ] || return 0
-  cj=$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr -d '\n')
-  printf '{"permission":"deny","user_message":"%s","agent_message":"%s"}\n' "$cj" "$cj"
-}
-
-emit_allow() {
-  trap - EXIT INT TERM HUP
-  [ -n "${CURSOR_PROJECT_DIR:-}" ] && printf '%s\n' '{"permission":"allow"}'
-  exit 0
-}
-
-emit_deny() {
-  trap - EXIT INT TERM HUP
-  cursor_deny_json "$1"
-  printf '%s\n' "$1" >&2
-  exit 2
-}
-
-emit_fault() {
-  trap - EXIT INT TERM HUP
-  printf 'guard fault in %s: %s\n' "${0##*/}" "$1" >&2
-  cursor_deny_json "guard fault: $1" 2>/dev/null || true
-  exit 2
-}
-
-trap 'emit_fault "unexpected error"' EXIT INT TERM HUP
-
-PC_LIB="${0%/*}/lib/parse-command.sh"
-[ -r "$PC_LIB" ] || emit_fault "cannot read $PC_LIB"
-. "$PC_LIB"
 
 is_secret_path() {
   sp=${1##*/}
@@ -88,17 +60,10 @@ classify_segment() {
 
   # 1. An explicitly named secret pathspec. Option VALUES are excluded by
   #    pc_operands, so a commit message mentioning .env.local is fine.
-  cs_ops=$(pc_operands "$@")
-  IFS=$PC_NL
-  for cs_op in $cs_ops; do
-    IFS=$cs_oldifs
-    if is_secret_path "$cs_op"; then
-      printf '%s' "$BLOCK_MSG"
-      return 0
-    fi
-    IFS=$PC_NL
-  done
-  IFS=$cs_oldifs
+  if paths_have_secret "$(pc_operands "$@")"; then
+    printf '%s' "$BLOCK_MSG"
+    return 0
+  fi
 
   # 2. What git would actually stage. Directory, `:/` and glob pathspecs, and
   #    files inside an untracked directory, never appear in the command text.
@@ -119,32 +84,4 @@ classify_segment() {
   return 0
 }
 
-INPUT=$(cat 2>/dev/null || true)
-ROOT="${CURSOR_PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}"
-
-[ -n "$INPUT" ] || emit_allow
-
-command -v jq >/dev/null 2>&1 || emit_fault "jq is required to parse the hook payload; install jq"
-command -v awk >/dev/null 2>&1 || emit_fault "awk is required to parse the command; install awk"
-
-CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // .command // empty' 2>/dev/null || true)
-[ -n "$CMD" ] || emit_allow
-
-REASON=''
-SEGS=$(pc_segments "$CMD")
-oldifs=$IFS
-IFS=$PC_NL
-for seg in $SEGS; do
-  IFS=$oldifs
-  REASON=$(classify_segment "$seg")
-  if [ -n "$REASON" ]; then
-    break
-  fi
-  IFS=$PC_NL
-done
-IFS=$oldifs
-
-if [ -n "$REASON" ]; then
-  emit_deny "$REASON"
-fi
-emit_allow
+guard_command classify_segment

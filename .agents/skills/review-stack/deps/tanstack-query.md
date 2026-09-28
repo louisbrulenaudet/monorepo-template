@@ -22,7 +22,7 @@ TanStack Query in `front-app` and its consumption of `worker-api` over HTTP: que
 - [apps/front-app/src/services/](../../../../apps/front-app/src/services/) (fetchers + `queryOptions` definitions), [apps/front-app/src/hooks/](../../../../apps/front-app/src/hooks/)
 - `QueryClient` instantiation/defaults and provider placement; router integration (loader ↔ queryClient)
 - Devtools wiring (`@tanstack/react-query-devtools`, production gating)
-- Correlation-id header propagation from SPA to gateway ([packages/correlation-id](../../../../packages/correlation-id))
+- Request-id handling: the SPA reads the gateway's `X-Request-Id` response header into `FetchApiError` ([apps/front-app/src/utils/fetch-api.ts](../../../../apps/front-app/src/utils/fetch-api.ts)); `sentry-trace` / `baggage` carry the trace
 
 ## Probe
 
@@ -34,7 +34,7 @@ Read services/hooks end-to-end; trace one query from loader through component.
 - **Cache semantics**: deliberate `staleTime`/`gcTime` per data type (not all-default); no `cacheTime` v4 leftovers; structural sharing intact; optimistic updates with rollback via current mutation APIs.
 - **Invalidation & mutations**: targeted `invalidateQueries` predicates; mutation → refetch flows correct; errors surfaced to UI consistently.
 - **Loading UX**: `useSuspenseQuery` where idiomatic vs classic hooks; no waterfalls from sequential dependent queries that could be parallel or prefetched in loaders.
-- **Transport**: typed fetch wrapper against DTOs from `@repo/dtos-common`; correlation id attached; base URL from env only.
+- **Transport**: typed fetch wrapper against DTOs from `@repo/dtos-common`; no client-minted request id; base URL from env only.
 - **Devtools**: mounted only outside production; version aligned with runtime.
 - **Agent loop**: adding a query follows one documented pattern (service + `queryOptions` + hook); fast front-app test loop (skill `front-vitest` for the RTL/query harness).
 

@@ -9,12 +9,11 @@ catalog:
   '@changesets/cli': ^3.0.3
   # 1.58.0 replaces `server.config` with a copy, which breaks Vite's inline-module
   # HTML proxy cache in dev ("No matching HTML proxy module"); still broken in 1.60.1. Unpin once fixed upstream.
-  '@cloudflare/vite-plugin': 1.60.1
-  '@cloudflare/vitest-plugin': ^1.2.7
+  '@cloudflare/vite-plugin': 1.62.0
+  '@cloudflare/vitest-plugin': ^1.3.1
   '@hono/cli': 0.2.0-next.9
   '@hono/zod-validator': ^0.9.1
   '@playwright/cli': ^0.1.21
-  # @sentry/hono peers on the exact same @sentry/cloudflare version; bump all three together.
   '@sentry/cli': ^3.8.0
   '@sentry/cloudflare': 11.0.0
   '@sentry/hono': 11.0.0
@@ -23,17 +22,17 @@ catalog:
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
   '@tanstack/react-devtools': ^0.10.13
-  '@tanstack/react-query': ^5.103.2
-  '@tanstack/react-query-devtools': ^5.103.2
-  '@tanstack/react-router': ^1.170.39
+  '@tanstack/react-query': ^5.104.0
+  '@tanstack/react-query-devtools': ^5.104.0
+  '@tanstack/react-router': ^1.170.40
   '@tanstack/react-router-devtools': ^1.167.2
-  '@tanstack/router-cli': 1.167.38
-  '@tanstack/router-plugin': ^1.168.40
+  '@tanstack/router-cli': 1.167.39
+  '@tanstack/router-plugin': ^1.168.41
   '@testing-library/dom': ^10.4.2
   '@testing-library/jest-dom': ^7.0.1
   '@testing-library/react': ^16.3.3
   '@testing-library/user-event': ^14.6.7
-  '@types/node': 24.19.0
+  '@types/node': 26.6.3
   '@types/react': ^19.3.0
   '@types/react-dom': ^19.3.0
   '@vitejs/devtools': ^0.7.6
@@ -41,9 +40,10 @@ catalog:
   '@vitejs/devtools-rolldown': ^0.7.6
   '@vitejs/devtools-vite': ^0.7.6
   '@vitejs/devtools-vitest': ^0.7.6
-  '@vitest/ui': ^5.0.1
+  '@vitest/ui': ^5.0.2
   '@vitejs/plugin-react': ^6.1.1
   cross-env: ^10.1.0
+  cspell: ^10.3.4
   eslint-plugin-better-tailwindcss: ^4.7.0
   happy-dom: ^20.14.5
   hono: ^4.13.9
@@ -62,9 +62,9 @@ catalog:
   turbo: 2.11.4
   typescript: ^7.0.2
   vite: ^8.3.1
-  vite-plus: 1.0.0-rc.0
-  vitest: ^5.0.1
-  wrangler: ^4.140.0
+  vite-plus: ^1.0.0
+  vitest: ^5.0.2
+  wrangler: ^4.143.0
   zod: ^4.6.5
 
 # Temporary: @cloudflare/vitest-plugin still pins vitest ^4.1.0. Once it supports v5,
@@ -83,6 +83,16 @@ minimumReleaseAgeExclude:
   - miniflare
   - typescript
   - '@hono/cli@0.2.0-next.9'
+  - '@voidzero-dev/vite-plus-core@1.0.0'
+  - '@voidzero-dev/vite-plus-darwin-arm64@1.0.0'
+  - '@voidzero-dev/vite-plus-darwin-x64@1.0.0'
+  - '@voidzero-dev/vite-plus-linux-arm64-gnu@1.0.0'
+  - '@voidzero-dev/vite-plus-linux-arm64-musl@1.0.0'
+  - '@voidzero-dev/vite-plus-linux-x64-gnu@1.0.0'
+  - '@voidzero-dev/vite-plus-linux-x64-musl@1.0.0'
+  - '@voidzero-dev/vite-plus-win32-arm64-msvc@1.0.0'
+  - '@voidzero-dev/vite-plus-win32-x64-msvc@1.0.0'
+  - vite-plus@1.0.0
 
 blockExoticSubdeps: true
 

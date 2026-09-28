@@ -41,7 +41,7 @@ For each candidate, read the complete test, its production owner, the owner's no
 Keep a test that independently enforces:
 
 - a wire contract - `@repo/dtos-common` shape, status code, header, route path;
-- security behavior - CORS / CSRF fail-closed, correlation-id opacity, client-safe errors (skill `privileged-legal-data`);
+- security behavior - CORS / CSRF fail-closed, request id minted per request by the gateway, never taken from the client, client-safe errors;
 - a config default, a fail-closed branch, or an architecture boundary;
 - call ordering, when the order is observable;
 - a regression with a credible failure mode.

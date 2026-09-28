@@ -12,5 +12,5 @@ export default defineWorkersConfig(
     // Empty DSN keeps the Sentry SDK disabled under test.
     miniflare: { bindings: { SENTRY_DSN: "" } },
   },
-  { root, test: { dir: root, passWithNoTests: false } },
+  { root, test: { dir: root } },
 );

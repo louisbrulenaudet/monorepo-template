@@ -15,17 +15,16 @@ Schemas use Zod Mini (`import * as z from "zod/mini"`) for tree-shakable Worker 
 
 Schema changes are **contract changes**. Layer notes, consumer expectations, Zod authoring, and the full change workflow: rule `contracts/contracts` (loads with `src/**`).
 
-Import through the layer subpath (`@repo/dtos-common/api`, etc.). The package root (`@repo/dtos-common`) is deliberately an empty barrel - add re-exports there only once something imports the root entry.
+Import through the layer subpath (`@repo/dtos-common/api`, etc.). The package has no root entry (`@repo/dtos-common`): add a `"."` export only once something needs to import the root.
 
 ## Structure
 
 ```
 packages/dtos-common/
 ├── src/
-│   ├── api/
-│   │   ├── <feature>.ts    # Schemas per feature (kebab-case)
-│   │   └── index.ts        # Named re-exports
-│   └── index.ts            # Package entry - empty barrel; exports nothing yet
+│   └── api/
+│       ├── <feature>.ts    # Schemas per feature (kebab-case)
+│       └── index.ts        # Named re-exports
 ```
 
 One feature file per concern within a layer.

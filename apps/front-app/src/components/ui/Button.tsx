@@ -1,45 +1,18 @@
 import type { ButtonHTMLAttributes } from "react";
 import { cx } from "#/utils/cx";
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
-type ButtonSize = "sm" | "md" | "lg";
-
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-};
-
-const SIZES: Record<ButtonSize, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
-  lg: "h-11 px-5 text-base",
-};
-
-const VARIANTS: Record<ButtonVariant, string> = {
-  primary:
-    "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
-  secondary:
-    "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70",
-  ghost:
-    "bg-transparent text-foreground hover:bg-foreground/10 active:bg-foreground/15",
-};
+const BASE =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 active:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-60";
 
 export function Button({
   className,
-  variant = "primary",
-  size = "md",
   type,
-  disabled,
   ...props
-}: ButtonProps) {
-  const base =
-    "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 disabled:cursor-not-allowed disabled:opacity-60";
-
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       type={type ?? "button"}
-      disabled={disabled}
-      className={cx(base, SIZES[size], VARIANTS[variant], className)}
+      className={cx(BASE, className)}
       {...props}
     />
   );

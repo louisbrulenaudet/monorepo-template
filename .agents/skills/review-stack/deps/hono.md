@@ -3,7 +3,7 @@ id: hono
 summary: worker-api routing, middleware order, validation, errors
 families: [workers]
 packages: [hono, @hono/zod-validator, @hono/cli]
-paths: [apps/worker-api/src/**, packages/correlation-id/**, .claude/rules/backend/hono-gateway.md]
+paths: [apps/worker-api/src/**, packages/hono-middleware/**, .claude/rules/backend/hono-gateway.md]
 ---
 
 # Hono
@@ -21,7 +21,7 @@ Hono in `worker-api` (and any future HTTP-surface Worker) on Cloudflare Workers:
 
 - [apps/worker-api/src/index.ts](../../../../apps/worker-api/src/index.ts) and [apps/worker-api/src/routes/](../../../../apps/worker-api/src/routes/)
 - Contracts in [packages/dtos-common/](../../../../packages/dtos-common/) (`api/`, Zod schemas at boundaries)
-- Correlation-id middleware ([packages/correlation-id](../../../../packages/correlation-id), `X-Request-Id`)
+- Request-id middleware ([packages/hono-middleware/src/request-id.ts](../../../../packages/hono-middleware/src/request-id.ts), `X-Request-Id`)
 - [apps/worker-api/AGENTS.md](../../../../apps/worker-api/AGENTS.md); CORS/body-limit/security middleware configuration
 - Route tests under `apps/worker-api/tests/`
 

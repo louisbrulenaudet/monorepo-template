@@ -1,43 +1,12 @@
 #!/usr/bin/env sh
 
-set -eu
-set -f # never glob-expand untrusted command text
-
-cursor_deny_json() {
-  [ -n "${CURSOR_PROJECT_DIR:-}" ] || return 0
-  cj=$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr -d '\n')
-  printf '{"permission":"deny","user_message":"%s","agent_message":"%s"}\n' "$cj" "$cj"
-}
-
-emit_allow() {
-  trap - EXIT INT TERM HUP
-  [ -n "${CURSOR_PROJECT_DIR:-}" ] && printf '%s\n' '{"permission":"allow"}'
-  exit 0
-}
-
-emit_deny() {
-  trap - EXIT INT TERM HUP
-  cursor_deny_json "$1"
-  printf '%s\n' "$1" >&2
+HOOK_LIB="${0%/*}/../lib"
+[ -r "$HOOK_LIB/guard.sh" ] || {
+  printf 'guard fault in %s: cannot read %s/guard.sh\n' "${0##*/}" "$HOOK_LIB" >&2
   exit 2
 }
+. "$HOOK_LIB/guard.sh"
 
-emit_fault() {
-  trap - EXIT INT TERM HUP
-  printf 'guard fault in %s: %s\n' "${0##*/}" "$1" >&2
-  cursor_deny_json "guard fault: $1" 2>/dev/null || true
-  exit 2
-}
-
-trap 'emit_fault "unexpected error"' EXIT INT TERM HUP
-
-PC_LIB="${0%/*}/lib/parse-command.sh"
-[ -r "$PC_LIB" ] || emit_fault "cannot read $PC_LIB"
-. "$PC_LIB"
-
-# Every test uses `if`, never `cmd && assignment`: under `set -e` the failure
-# semantics of that form vary between shells, and a stray non-zero status would
-# fail closed on ordinary git commands.
 classify_segment() {
   cs_oldifs=$IFS
   IFS=$PC_NL
@@ -72,8 +41,12 @@ classify_segment() {
       if pc_has_flag --force "$@" || pc_has_flag --force-with-lease "$@" \
         || pc_has_flag --force-if-includes "$@" || pc_has_flag -f "$@"; then
         cs_why="git push --force rewrites remote history"
+      elif pc_has_flag --mirror "$@"; then
+        cs_why="git push --mirror overwrites and deletes remote refs"
       elif pc_has_flag --delete "$@" || pc_has_flag -d "$@"; then
         cs_why="git push --delete removes a remote branch/tag"
+      elif pc_operands "$@" | grep -q '^[+:]'; then
+        cs_why="git push +<ref> or :<ref> force-pushes or deletes a remote ref"
       fi
       ;;
     branch)
@@ -87,12 +60,19 @@ classify_segment() {
       fi
       ;;
     checkout)
-      # `git checkout -- <path>` and `git checkout .` discard working-tree
+      # `git checkout -- <path>`, `git checkout .` and `-f` discard working-tree
       # changes. A plain `git checkout <branch>` is not destructive.
       if [ "$cs_dashdash" -eq 1 ]; then
         cs_why="git checkout -- <path> discards uncommitted changes"
+      elif pc_has_flag -f "$@" || pc_has_flag --force "$@"; then
+        cs_why="git checkout -f discards uncommitted changes"
       elif pc_operands "$@" | grep -qx '\.'; then
         cs_why="git checkout . discards uncommitted changes"
+      fi
+      ;;
+    switch)
+      if pc_has_flag --discard-changes "$@" || pc_has_flag -f "$@" || pc_has_flag --force "$@"; then
+        cs_why="git switch --discard-changes discards uncommitted changes"
       fi
       ;;
     restore)
@@ -114,35 +94,10 @@ classify_segment() {
       ;;
   esac
 
-  printf '%s' "$cs_why"
+  if [ -n "$cs_why" ]; then
+    printf 'Blocked: %s. Per .cursor/rules/core/guardrails.mdc and .claude/rules/core/guardrails.md, destructive/irreversible git operations must not run autonomously. Ask the user to confirm this exact command, and let them run it themselves if they approve.' "$cs_why"
+  fi
   return 0
 }
 
-INPUT=$(cat 2>/dev/null || true)
-
-[ -n "$INPUT" ] || emit_allow
-
-command -v jq >/dev/null 2>&1 || emit_fault "jq is required to parse the hook payload; install jq"
-command -v awk >/dev/null 2>&1 || emit_fault "awk is required to parse the command; install awk"
-
-CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // .command // empty' 2>/dev/null || true)
-[ -n "$CMD" ] || emit_allow
-
-REASON=''
-SEGS=$(pc_segments "$CMD")
-oldifs=$IFS
-IFS=$PC_NL
-for seg in $SEGS; do
-  IFS=$oldifs
-  REASON=$(classify_segment "$seg")
-  if [ -n "$REASON" ]; then
-    break
-  fi
-  IFS=$PC_NL
-done
-IFS=$oldifs
-
-if [ -n "$REASON" ]; then
-  emit_deny "Blocked: $REASON. Per .cursor/rules/core/guardrails.mdc and .claude/rules/core/guardrails.md, destructive/irreversible git operations must not run autonomously. Ask the user to confirm this exact command, and let them run it themselves if they approve."
-fi
-emit_allow
+guard_command classify_segment

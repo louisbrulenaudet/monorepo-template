@@ -60,7 +60,8 @@ jobs:
           # Fully qualified, so a same-named branch can never shadow the tag.
           ref: refs/tags/${{ inputs.tag }}
           persist-credentials: false
-          fetch-depth: 1
+          # Full history: `sentry:deploy` associates every commit since the previous release.
+          fetch-depth: 0
 
       - name: Resolve release version
         env:
@@ -116,6 +117,16 @@ jobs:
 
       - name: Smoke production health
         run: bash .github/actions/cd/smoke-versions.sh
+
+      # After smoke, not with the source maps: Sentry resolves a `Fixes <SHORT-ID>` issue
+      # when set-commits links its commit to a release, so this must wait until the fix is live.
+      - name: Mark Sentry releases deployed
+        if: ${{ vars.SENTRY_ORG != '' }}
+        continue-on-error: true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+        run: pnpm --filter='./apps/*' run --if-present sentry:deploy
 
       # GitHub creates the deployment record from the `environment:` above; only the
       # Release is ours to write.

@@ -5,10 +5,10 @@ import { FetchApiError } from "#/utils/fetch-api";
 describe("getClientSafeErrorDetails", () => {
   it("does not echo raw Error.message", () => {
     const details = getClientSafeErrorDetails(
-      new Error("SELECT * FROM matters WHERE client_id = secret"),
+      new Error("SELECT * FROM users WHERE email = secret"),
     );
 
-    expect(details.message).not.toContain("matters");
+    expect(details.message).not.toContain("users");
     expect(details.message).not.toContain("secret");
     expect(details.requestId).toBeNull();
   });

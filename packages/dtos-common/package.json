@@ -7,16 +7,10 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@repo/vitest-config": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "typescript": "catalog:"
   },
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
     "./api": {
       "types": "./src/api/index.ts",
       "default": "./src/api/index.ts"
@@ -32,7 +26,6 @@
     "webhook",
     "zod"
   ],
-  "main": "./src/index.ts",
   "monorepo": {
     "kind": "library",
     "role": "contracts",
@@ -40,15 +33,12 @@
   },
   "private": true,
   "scripts": {
-    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
+    "check-types": "tsc --noEmit",
     "format:check": "pnpm -w exec oxfmt --check packages/dtos-common",
     "format:fix": "pnpm -w exec oxfmt packages/dtos-common",
     "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/dtos-common",
-    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/dtos-common",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/dtos-common"
   },
   "sideEffects": false,
-  "type": "module",
-  "types": "./src/index.ts"
+  "type": "module"
 }

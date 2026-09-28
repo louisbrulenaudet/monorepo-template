@@ -4,16 +4,17 @@
 
 `worker-api` is the **public HTTP gateway**: **Cloudflare Workers** + **Hono**, port **8700** in dev. Entry point for `front-app` over HTTP; coordinates internal Workers via service bindings when those bindings exist.
 
-Starter surface: `GET /api/v1/health` and `POST /api/v1/echo` (the `zValidator` reference implementation - json + query targets, shared 400 hook; gated off in production because it reflects caller input without auth or rate limiting). Hono lifecycle, middleware order, and validation patterns load from `.claude/rules/backend/hono-gateway.md` or `.cursor/rules/backend/hono-gateway.mdc` when editing `src/**`.
+Starter surface: `GET /api/v1/health` and `POST /api/v1/echo` (the `validator()` reference implementation - json + query targets; gated off in production because it reflects caller input without auth or rate limiting). Hono lifecycle, middleware order, and validation patterns load from `.claude/rules/backend/hono-gateway.md` or `.cursor/rules/backend/hono-gateway.mdc` when editing `src/**`.
 
 ## Structure
 
 ```
 apps/worker-api/
 ├── src/
-│   ├── middlewares/          # cors, csrf (env-dependent Hono wrappers)
+│   ├── middlewares/          # cors, csrf (env-dependent Hono wrappers, gateway-only)
+│   ├── app-env.ts            # AppEnv = HonoEnv<Env> (bindings contract for @repo/hono-middleware)
 │   ├── routes/<feature>.ts   # One route module per feature
-│   └── index.ts              # Middleware registration + route mounts
+│   └── index.ts              # Middleware registration (shared exports + local) + route mounts
 ├── tests/                    # Vitest suites - Cloudflare pool / workerd
 │   ├── env.d.ts              # ProvidedEnv extends Env
 │   └── tsconfig.json         # @cloudflare/vitest-plugin/types; in check-types
@@ -29,7 +30,7 @@ Create `src/enums/` when the first worker-local `as const` value set is needed. 
 | Task | Location |
 |------|---------|
 | New endpoint | `src/routes/<feature>.ts` then mount in `src/index.ts` |
-| Middleware | `src/middlewares/<name>.ts` then register in `src/index.ts` before route mounts |
+| Middleware | `src/middlewares/<name>.ts` then register in `src/index.ts` before route mounts; `packages/hono-middleware` once a second Hono app needs it |
 | Shared schema | `packages/dtos-common/src/api/<feature>.ts` |
 | Worker-local value set | `src/enums/` - create the directory on first use |
 | Non-trivial handler logic | `src/services/<feature>.ts` - create on first use |
@@ -40,7 +41,7 @@ Create `src/enums/` when the first worker-local `as const` value set is needed. 
 ## Adding an Endpoint
 
 1. Contract in `packages/dtos-common/src/api/<feature>.ts`.
-2. Route `src/routes/<feature>.ts` - use `zValidator` on every **input** - json / param / query / header. Input-less GETs with a constant body (e.g. health) should assert the shared schema in Vitest, not re-parse on every request.
+2. Route `src/routes/<feature>.ts` - use `validator()` from `@repo/hono-middleware` on every **input** - json / param / query / header. Input-less GETs with a constant body (e.g. health) should assert the shared schema in Vitest, not re-parse on every request.
 3. Mount in `src/index.ts`.
 4. Keep the handler thin; move non-trivial logic to `src/services/<feature>.ts` or call via `env.BINDING`.
 5. Declare new secrets in `secrets.required`, with a fake test value in `vitest.config.mts`.
@@ -56,8 +57,8 @@ Workers Cache: rule `backend/workers-cache`.
 
 ## Security middleware
 
-- **CORS / CSRF** - contract in rule `backend/hono-gateway` (middleware steps 4-5). Repo specifics: `CORS_ORIGINS` is comma-separated; a single-label prefix wildcard (`https://*-front-app-production.<subdomain>.workers.dev`, three or more labels after the wildcard label) is honored only when `ENVIRONMENT` is `AppEnvironment.PREVIEW` and returns **503** anywhere else; CORS and CSRF share the matcher in `src/middlewares/cors-origins.ts`. Browser JSON mutations rely on the CSRF gate plus CORS - do not reintroduce permissive CSRF in strict envs.
-- **Errors** - `onError` returns `HTTPException.message` to clients. Keep those messages generic (no privileged content, no upstream provider text). Unexpected errors stay `"Internal server error"` + `requestId`.
+- **CORS / CSRF** - contract in rule `backend/hono-gateway` (middleware steps 6-7). Repo specifics: `CORS_ORIGINS` is comma-separated; a single-label prefix wildcard (`https://*-front-app-production.<subdomain>.workers.dev`, three or more labels after the wildcard label) is honored only when `ENVIRONMENT` is `AppEnvironment.PREVIEW` and returns **503** anywhere else; CORS and CSRF share the matcher in `src/middlewares/cors-origins.ts`. Browser JSON mutations rely on the CSRF gate plus CORS - do not reintroduce permissive CSRF in strict envs.
+- **Errors** - middlewares and handlers throw `HTTPException`; `errorHandler` (`@repo/hono-middleware`) returns its `message` to clients. Keep those messages generic (no sensitive content, no upstream provider text). Unexpected errors stay `"Internal server error"` + `requestId`.
 - **Rate limiting** - add a Workers [Rate Limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) binding and/or zone WAF rules before shipping auth or other abuse-prone public writes. Health-only traffic does not need it yet.
 
 ## Commands

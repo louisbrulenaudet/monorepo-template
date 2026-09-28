@@ -15,7 +15,7 @@ Branch and PR testing uses [Worker Previews](https://developers.cloudflare.com/w
 - **`ENVIRONMENT` is `AppEnvironment.PREVIEW`** in Previews: strict CORS, and the only environment where a `CORS_ORIGINS` wildcard (`https://*-front-app-production.<subdomain>.workers.dev`, three or more labels after the wildcard label) is honored; a wildcard anywhere else returns 503. Every `=== AppEnvironment.PRODUCTION` gate treats a Preview as non-production (echo route, `Server-Timing`, pretty JSON), which is one more reason to keep Previews behind Access.
 - **Never in `previews`:** production data bindings, queue consumers, cron triggers, routes. Previews cannot consume queues or run `scheduled()`; routes and crons always target production.
 - **Service bindings from a Preview call the bound Worker's production deployment**, not its Preview. A PR that changes both sides of a binding is not integration-tested by Previews - keep the `createTestHarness` suite for that.
-- **Durable Objects and Containers are isolated per Preview automatically; KV, D1, R2, Queues, Workflows are not.** Adding one of those means a separate Preview resource in `previews`, and - for anything holding client or matter data - a retention and deletion rule in the owning app's `AGENTS.md` (skill `privileged-legal-data`).
+- **Durable Objects and Containers are isolated per Preview automatically; KV, D1, R2, Queues, Workflows are not.** Adding one of those means a separate Preview resource in `previews`, and - for anything holding user data - a retention and deletion rule in the owning app's `AGENTS.md`.
 
 ## Frontends (Vite plugin)
 

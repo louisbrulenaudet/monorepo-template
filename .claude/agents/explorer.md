@@ -22,7 +22,6 @@ pnpm workspaces + Turborepo. Cloudflare Workers and a React SPA. Every workspace
 | `apps/worker-api` | `worker-api` | `app` | Hono HTTP gateway on Workers. Dev port 8700 |
 | `packages/dtos-common` | `@repo/dtos-common` | `contracts` | Zod wire contracts, split `src/{api,rpc,queue,webhook}/` |
 | `packages/enums-common` | `@repo/enums-common` | `contracts-base` | Shared `as const` enums |
-| `packages/correlation-id` | `@repo/correlation-id` | `lib` | `X-Request-Id` helpers |
 | `packages/typescript-config` | `@repo/typescript-config` | `config` | tsconfig presets |
 | `packages/vitest-config` | `@repo/vitest-config` | `config` | Vitest factories - Node and Workers pools |
 
@@ -67,4 +66,4 @@ NOT FOUND: <what you looked for and the patterns you tried>   # only when nothin
 
 Lead with the single most relevant path. Cap at 15 lines. If a question has one answer, give one line - do not pad with near-misses.
 
-Never paste file contents, never summarise what the code does beyond naming it, and never recommend a change. Locating is the whole job; judgement belongs to the caller.
+Never paste file contents, never summarize what the code does beyond naming it, and never recommend a change. Locating is the whole job; judgment belongs to the caller.

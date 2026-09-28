@@ -21,7 +21,7 @@ That is the **existing** script (`apps/front-app/package.json` → `"analyze": "
 ## Where the numbers come from
 
 - **Vite's own stdout table is your data source.** The build prints one line per emitted chunk with raw, gzip, and brotli sizes (`reportCompressedSize` and `rollup-plugin-visualizer` are both configured with `gzipSize`/`brotliSize`). Rank from that table.
-- **Do not try to read `dist/stats.html`.** The visualiser writes a treemap there for a human to open in a browser, and `permissions.deny` blocks `Read(**/dist/**)` repo-wide, so the attempt will fail. That deny rule is intentional - do not work around it with `cat`, `grep`, or a script, and do not ask for it to be relaxed.
+- **Do not try to read `dist/stats.html`.** The visualizer writes a treemap there for a human to open in a browser, and `permissions.deny` blocks `Read(**/dist/**)` repo-wide, so the attempt will fail. That deny rule is intentional - do not work around it with `cat`, `grep`, or a script, and do not ask for it to be relaxed.
 - Chunk-splitting intent lives in `apps/front-app/vite.config.ts` (vendor chunks: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`). Read it to name a chunk, not to change it.
 
 ## Rules

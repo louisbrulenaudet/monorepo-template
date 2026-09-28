@@ -1,0 +1,51 @@
+{
+  "name": "@repo/hono-middleware",
+  "description": "Shared Hono middlewares and handlers for public-HTTP Workers: request id, Sentry, secure headers, JSON errors, validation.",
+  "version": "0.0.0",
+  "dependencies": {
+    "@hono/zod-validator": "catalog:",
+    "@repo/enums-common": "workspace:*",
+    "@sentry/cloudflare": "catalog:",
+    "@sentry/hono": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "hono": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "keywords": [
+    "cloudflare-workers",
+    "hono",
+    "middleware",
+    "shared",
+    "typescript"
+  ],
+  "main": "./src/index.ts",
+  "monorepo": {
+    "kind": "library",
+    "role": "hono-middleware",
+    "agentGuide": "AGENTS.md"
+  },
+  "peerDependencies": {
+    "hono": "catalog:"
+  },
+  "private": true,
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "format:check": "pnpm -w exec oxfmt --check packages/hono-middleware",
+    "format:fix": "pnpm -w exec oxfmt packages/hono-middleware",
+    "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/hono-middleware",
+    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/hono-middleware"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "types": "./src/index.ts"
+}

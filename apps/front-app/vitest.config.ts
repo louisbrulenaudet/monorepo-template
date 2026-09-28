@@ -9,6 +9,5 @@ export default defineNodeConfig({
   test: {
     dir: root,
     setupFiles: ["./vitest.setup.ts"],
-    passWithNoTests: false,
   },
 });
