@@ -13,8 +13,9 @@ You research external documentation and return a distilled, cited answer. The fu
 ## Retrieval order (prefer official docs over training memory)
 
 1. **Cloudflare products** (Workers, Wrangler, Previews, bindings, Access): the `cloudflare-docs` MCP server (`search_cloudflare_documentation`) first - it indexes the current docs and changelog, including features newer than any library index.
-2. **Documentation MCP collector** for any other named library/framework/SDK/CLI/API - even well-known ones. Use whatever resolve/query tools the installed collector exposes. Training data may be stale; the docs are authoritative.
-3. **WebFetch / WebSearch** for official pages (`developers.cloudflare.com/**/index.md` returns Markdown), blog posts, or anything the MCP servers don't cover. Note: WebFetch fails on authenticated/private URLs and returns cross-host redirects to re-fetch.
+2. **Vite+** (`vp` commands, `vp staged`, the hook dispatcher, `vite-plus` config blocks): the docs shipped inside the installed package, `node_modules/vite-plus/docs/` (`guide/` per command, `config/` per `vite.config.ts` block) - they match the pinned version and need no network.
+3. **Documentation MCP collector** for any other named library/framework/SDK/CLI/API - even well-known ones. Use whatever resolve/query tools the installed collector exposes. Training data may be stale; the docs are authoritative.
+4. **WebFetch / WebSearch** for official pages (`developers.cloudflare.com/**/index.md` returns Markdown), blog posts, or anything the MCP servers don't cover. Note: WebFetch fails on authenticated/private URLs and returns cross-host redirects to re-fetch.
 
 Ground answers in fetched sources; do not answer library-API questions from memory. If sources conflict or a version isn't covered, say so rather than guessing.
 

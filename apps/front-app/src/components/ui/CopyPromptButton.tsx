@@ -4,21 +4,10 @@ import { CursorIcon } from "#/components/icons/CursorIcon";
 import { OpenAiIcon } from "#/components/icons/OpenAiIcon";
 import { ZedIcon } from "#/components/icons/ZedIcon";
 import { AGENT_SETUP_PROMPT } from "#/config/agent-setup-prompt";
-import { copyText } from "#/utils/copy-text";
-
-export type CopyPromptButtonProps = {
-  prompt?: string;
-  label?: string;
-  copiedLabel?: string;
-};
 
 const COPIED_RESET_MS = 2_000;
 
-export function CopyPromptButton({
-  prompt = AGENT_SETUP_PROMPT,
-  label = "Copy Prompt",
-  copiedLabel = "Copied!",
-}: CopyPromptButtonProps) {
+export function CopyPromptButton() {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<number | undefined>(undefined);
 
@@ -27,8 +16,9 @@ export function CopyPromptButton({
   }, []);
 
   const handleClick = async () => {
-    const succeeded = await copyText(prompt);
-    if (!succeeded) {
+    try {
+      await navigator.clipboard.writeText(AGENT_SETUP_PROMPT);
+    } catch {
       return;
     }
 
@@ -56,7 +46,7 @@ export function CopyPromptButton({
         <ZedIcon className="ml-0.5 size-5 rotate-6 transition-transform duration-300 ease-out group-hover:translate-x-1 group-hover:rotate-12" />
       </span>
       <span className="copy-prompt-label" aria-live="polite">
-        {copied ? copiedLabel : label}
+        {copied ? "Copied!" : "Copy Prompt"}
       </span>
     </button>
   );

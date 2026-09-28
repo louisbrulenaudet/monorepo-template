@@ -1,4 +1,4 @@
-import { createRouter, type ErrorComponentProps } from "@tanstack/react-router";
+import { createRouter } from "@tanstack/react-router";
 import { RouteErrorFallback } from "#/components/feedback/RouteErrorFallback";
 import { queryClient } from "#/config/query-client";
 import { routeTree } from "./routeTree.gen";
@@ -14,10 +14,6 @@ function RouterPending() {
   );
 }
 
-function RouterError({ error }: ErrorComponentProps) {
-  return <RouteErrorFallback error={error} />;
-}
-
 export const router = createRouter({
   routeTree,
   context: { queryClient },
@@ -25,7 +21,7 @@ export const router = createRouter({
   defaultPreloadStaleTime: 0,
   scrollRestoration: true,
   defaultPendingComponent: RouterPending,
-  defaultErrorComponent: RouterError,
+  defaultErrorComponent: RouteErrorFallback,
 });
 
 declare module "@tanstack/react-router" {

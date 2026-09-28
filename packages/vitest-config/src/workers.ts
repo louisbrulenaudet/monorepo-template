@@ -11,7 +11,6 @@ const sharedTestDefaults: InlineConfig = {
   clearMocks: true,
   unstubEnvs: true,
   unstubGlobals: true,
-  passWithNoTests: true,
 };
 
 type CloudflareTestOptions = Parameters<typeof cloudflareTest>[0];

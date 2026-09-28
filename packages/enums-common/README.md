@@ -18,10 +18,10 @@ export type MyValueSet = (typeof MyValueSet)[keyof typeof MyValueSet];
 Read members, or list them for UI options and allow-lists:
 
 ```typescript
-import { HttpMethod } from "@repo/enums-common";
+import { AppEnvironment } from "@repo/enums-common";
 
-const method = HttpMethod.GET;
-const allowed = Object.values(HttpMethod);
+const environment = AppEnvironment.PRODUCTION;
+const allowed = Object.values(AppEnvironment);
 ```
 
 Spread an exported readonly list where an API expects `string[]`, such as Hono CORS:
@@ -35,13 +35,13 @@ allowHeaders: [...CORS_ALLOWED_HEADERS],
 In a `@repo/dtos-common` schema, pass the object for every member, or an `as const` tuple for a subset - a plain `string[]` would widen the inferred type to `string`:
 
 ```typescript
-import { HttpMethod } from "@repo/enums-common";
+import { AppEnvironment } from "@repo/enums-common";
 import * as z from "zod/mini";
 
-export const HttpMethodSchema = z.enum(HttpMethod);
+export const AppEnvironmentSchema = z.enum(AppEnvironment);
 
-const writeMethods = [HttpMethod.POST, HttpMethod.PUT] as const;
-export const WriteMethodSchema = z.enum(writeMethods);
+const deployedEnvironments = [AppEnvironment.STAGING, AppEnvironment.PRODUCTION] as const;
+export const DeployedEnvironmentSchema = z.enum(deployedEnvironments);
 ```
 
 Agent and contributor detail: [AGENTS.md](AGENTS.md).

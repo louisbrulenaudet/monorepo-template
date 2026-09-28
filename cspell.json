@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en",
+  "useGitignore": true,
+  "enableGlobDot": true,
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": "./.cspell/project-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["project-words"],
+  "ignorePaths": [
+    ".agents/skills/git-commit/**",
+    ".agents/skills/hono/**",
+    ".agents/skills/playwright-cli/**",
+    ".agents/skills/pnpm/**",
+    ".agents/skills/react-doctor/**",
+    ".agents/skills/security-audit/**",
+    ".agents/skills/tanstack-config/**",
+    ".agents/skills/tanstack-devtools/**",
+    ".agents/skills/tanstack-query/**",
+    ".agents/skills/tanstack-router/**",
+    ".agents/skills/turborepo/**",
+    ".agents/skills/vercel-react-best-practices/**",
+    ".agents/skills/workers-best-practices/**",
+    ".agents/skills/wrangler/**",
+    ".git/**",
+    "**/routeTree.gen.ts",
+    "**/worker-configuration.d.ts",
+    "**/*.svg",
+    "pnpm-lock.yaml",
+    "skills-lock.json"
+  ]
+}

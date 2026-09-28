@@ -4,9 +4,12 @@ export {
   isStrictCorsAppEnvironment,
   parseAppEnvironment,
 } from "./app-environment";
-export { CorsAllowedHeader, CORS_ALLOWED_HEADERS } from "./cors-allowed-header";
 export {
-  HttpMethod,
+  CORS_ALLOWED_HEADERS,
+  CorsExposedHeader,
+  CORS_EXPOSED_HEADERS,
+} from "./cors-allowed-header";
+export {
   CORS_ALLOWED_HTTP_METHODS,
   parseHttpMethod,
   isUnsafeHttpMethod,

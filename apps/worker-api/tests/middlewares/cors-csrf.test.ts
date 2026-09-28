@@ -1,6 +1,6 @@
 import { AppEnvironment } from "@repo/enums-common";
 import { env, exports } from "cloudflare:workers";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import app from "../../src/index";
 
 void app;
@@ -79,6 +79,7 @@ describe("CORS and CSRF middleware", () => {
   });
 
   it("returns 503 when production CORS_ORIGINS is empty", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const response = await app.request(
       HEALTH_URL,
       {},
@@ -93,6 +94,7 @@ describe("CORS and CSRF middleware", () => {
   });
 
   it("returns 503 when production CORS_ORIGINS holds a wildcard, even for a matching Origin", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const response = await app.request(
       HEALTH_URL,
       { headers: { Origin: PREVIEW_ORIGIN } },

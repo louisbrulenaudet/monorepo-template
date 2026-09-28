@@ -39,10 +39,25 @@
     "tags": {
       "app": {
         "dependencies": {
-          "allow": ["contracts", "contracts-base", "config", "lib"]
+          "allow": ["contracts", "contracts-base", "config", "framework", "lib"]
         },
         "dependents": {
-          "deny": ["app", "contracts", "contracts-base", "config", "lib"]
+          "deny": [
+            "app",
+            "contracts",
+            "contracts-base",
+            "config",
+            "framework",
+            "lib"
+          ]
+        }
+      },
+      "framework": {
+        "dependencies": {
+          "allow": ["contracts-base", "config", "lib"]
+        },
+        "dependents": {
+          "deny": ["contracts", "contracts-base", "config", "lib"]
         }
       },
       "contracts": {
@@ -114,6 +129,10 @@
     },
     "//#hooks:test": {
       "description": "sh -n plus the regression table for the agent guard hooks.",
+      "cache": false
+    },
+    "//#spell:check": {
+      "description": "Whole-repo cspell lint.",
       "cache": false
     },
     "transit": {

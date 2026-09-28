@@ -2,7 +2,7 @@ export const AGENT_SETUP_PROMPT = `You are setting up a pnpm + Turborepo monorep
 
 Stack:
 - Apps live in apps/ (worker-api HTTP gateway, front-app React SPA, plus worker-*, queue-*, webhook-*, mcp-* prefixes).
-- Shared packages live in packages/ (@repo/enums-common, @repo/dtos-common, @repo/correlation-id, @repo/vitest-config, ...).
+- Shared packages live in packages/ (@repo/enums-common, @repo/dtos-common, @repo/hono-middleware, @repo/vitest-config, ...).
 - Frontend: React 19 + Vite + Tailwind CSS v4 + TanStack Router/Query. It talks to worker-api over HTTP only.
 - Worker-to-Worker communication uses service-binding RPC, never HTTP or package imports.
 - Third-party dependency versions are centralized in the pnpm catalog (pnpm-workspace.yaml) and referenced as "catalog:".

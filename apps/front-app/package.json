@@ -3,7 +3,6 @@
   "description": "React SPA (Vite + TanStack Router/Query) deployed on Cloudflare; talks to worker-api over HTTP only.",
   "version": "0.0.0",
   "dependencies": {
-    "@repo/correlation-id": "workspace:*",
     "@repo/dtos-common": "workspace:*",
     "@repo/enums-common": "workspace:*",
     "@sentry/react": "catalog:",
@@ -91,6 +90,7 @@
     "promote": "wrangler versions deploy --env production",
     "routes:check": "tsr generate && git diff --exit-code -- src/routeTree.gen.ts",
     "routes:generate": "tsr generate",
+    "sentry:deploy": "sentry-cli releases set-commits \"$npm_package_name@$npm_package_version\" --auto --ignore-missing && sentry-cli releases finalize \"$npm_package_name@$npm_package_version\" && sentry-cli deploys new --release \"$npm_package_name@$npm_package_version\" --env production",
     "sentry:sourcemaps": "sentry-cli releases new \"$npm_package_name@$npm_package_version\" --project \"$npm_package_name\" && sentry-cli sourcemaps upload --project \"$npm_package_name\" --release=\"$npm_package_name@$npm_package_version\" dist/assets",
     "test": "vitest run",
     "test:watch": "vitest",

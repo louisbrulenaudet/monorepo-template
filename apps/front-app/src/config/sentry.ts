@@ -4,6 +4,8 @@ import { AppEnvironment } from "@repo/enums-common";
 import {
   type Breadcrumb,
   captureException,
+  type ErrorEvent,
+  type EventHint,
   init,
   reactErrorHandler,
 } from "@sentry/react";
@@ -23,7 +25,7 @@ function stripSearchAndHash(url: string): string {
   return end === -1 ? url : url.slice(0, end);
 }
 
-// Console text and query strings can carry privileged client data.
+// Console text and query strings can carry sensitive user data.
 function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
   if (breadcrumb.category === "console") {
     return null;
@@ -38,6 +40,38 @@ function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
     }
   }
   return breadcrumb;
+}
+
+const sentryEventIds = new WeakMap<object, string>();
+const sentryEventIdListeners = new Set<() => void>();
+
+/** @internal */
+export function rememberSentryEventId(
+  event: ErrorEvent,
+  hint: EventHint,
+): ErrorEvent {
+  const error = hint.originalException;
+  if (event.event_id && typeof error === "object" && error !== null) {
+    sentryEventIds.set(error, event.event_id);
+    for (const listener of sentryEventIdListeners) {
+      listener();
+    }
+  }
+  return event;
+}
+
+export function subscribeToSentryEventIds(listener: () => void): () => void {
+  sentryEventIdListeners.add(listener);
+  return () => {
+    sentryEventIdListeners.delete(listener);
+  };
+}
+
+export function sentryEventId(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+  return sentryEventIds.get(error);
 }
 
 // Every entry point reads VITE_SENTRY_DSN literally, not through env.ts: the
@@ -58,6 +92,7 @@ export function initSentry(): RootOptions | undefined {
       : SAMPLED_TRACES_RATE,
     ...(apiBaseUrl ? { tracePropagationTargets: [apiBaseUrl] } : {}),
     beforeBreadcrumb: scrubBreadcrumb,
+    beforeSend: rememberSentryEventId,
     dataCollection: {
       userInfo: false,
       cookies: false,

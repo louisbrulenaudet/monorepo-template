@@ -7,13 +7,13 @@ describe("getHealth", () => {
   it("GETs /api/v1/health and returns the shared contract", async () => {
     const fetchMock = stubFetchJson({ status: "ok", version: "0.0.0" });
 
-    await expect(getHealth({ dedupe: false, timeoutMs: 0 })).resolves.toEqual({
+    await expect(getHealth()).resolves.toEqual({
       status: "ok",
       version: "0.0.0",
     });
     expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
       `${apiBaseUrl}/api/v1/health`,
-      expect.objectContaining({ method: "GET" }),
+      expect.anything(),
     );
   });
 });

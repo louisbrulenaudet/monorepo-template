@@ -8,7 +8,6 @@ import { fetchJsonWithSchema } from "#/utils/fetch-api";
 export async function getHealth(options?: {
   signal?: AbortSignal;
   timeoutMs?: number;
-  dedupe?: boolean;
 }): Promise<HealthResponse> {
   return fetchJsonWithSchema(
     `${apiBaseUrl}/api/v1/health`,

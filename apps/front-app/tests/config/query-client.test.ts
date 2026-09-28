@@ -35,7 +35,7 @@ describe("createQueryClient error reporting", () => {
     expect(reportError).not.toHaveBeenCalled();
   });
 
-  it("ignores cancelled queries", async () => {
+  it("ignores canceled queries", async () => {
     const reportError = await failQuery(new CancelledError());
     expect(reportError).not.toHaveBeenCalled();
   });

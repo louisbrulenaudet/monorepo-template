@@ -16,10 +16,6 @@ worker-api:
   - changed-files:
       - any-glob-to-any-file: apps/worker-api/**
 
-correlation-id:
-  - changed-files:
-      - any-glob-to-any-file: packages/correlation-id/**
-
 dtos-common:
   - changed-files:
       - any-glob-to-any-file: packages/dtos-common/**

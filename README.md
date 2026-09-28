@@ -36,7 +36,6 @@ flowchart TB
     direction LR
     Enums["@repo/enums-common"]
     DTOs["@repo/dtos-common"]
-    Corr["@repo/correlation-id"]
     Enums --> DTOs
   end
 
@@ -73,9 +72,9 @@ A Worker's name prefix states its role (`worker-api`, `worker-*`, `queue-*`, `we
 
 | Shared package | Purpose |
 |----------------|---------|
-| [`@repo/correlation-id`](packages/correlation-id/README.md) | Opaque `X-Request-Id` helpers shared by the gateway and the SPA |
 | [`@repo/dtos-common`](packages/dtos-common/README.md) | Zod Mini wire contracts, one subpath per boundary (`/api` today) |
 | [`@repo/enums-common`](packages/enums-common/README.md) | Shared constrained string values as `as const` objects |
+| [`@repo/hono-middleware`](packages/hono-middleware/README.md) | Hono middlewares shared by the public-HTTP Workers: request id, Sentry, secure headers, JSON errors, validation |
 | [`@repo/typescript-config`](packages/typescript-config/README.md) | TypeScript presets for Workers, React/Vite, and libraries |
 | [`@repo/vitest-config`](packages/vitest-config/README.md) | Vitest factories for Node and the Cloudflare Workers pool |
 
@@ -110,7 +109,7 @@ Work on one app with `pnpm turbo run dev --filter=worker-api`. `pnpm run` lists 
 
 ### Git hooks
 
-`pnpm prepare` installs the [Vite+](https://viteplus.dev/guide/commit-hooks) pre-commit hook (`.vite-hooks/pre-commit`). It runs `vp staged` - oxfmt and oxlint safe fixes on staged files only, configured in the `staged` block of the root [`vite.config.ts`](vite.config.ts). `vp hooks status` checks that the dispatcher is active, and `VP_GIT_HOOKS=0 git commit …` skips it for one commit. The agent hooks in [`hooks/`](hooks/README.md) are a separate system that never runs on a human commit.
+`pnpm prepare` installs the [Vite+](https://viteplus.dev/guide/commit-hooks) pre-commit hook (`.vite-hooks/pre-commit`). It runs `vp staged --fail-on-changes` - oxfmt and oxlint safe fixes on staged files only, configured in the `staged` block of the root [`vite.config.ts`](vite.config.ts). When a fix changes a file, the commit stops and leaves the fix unstaged: review it, `git add` it, and commit again; the `lint-staged automatic backup` entry it leaves in `git stash list` can be dropped once the commit succeeds. `vp hooks status` checks that the dispatcher is active, and `VP_GIT_HOOKS=0 git commit …` skips it for one commit. The agent hooks in [`hooks/`](hooks/README.md) are a separate system that never runs on a human commit.
 
 ## Development ports
 
@@ -146,8 +145,8 @@ Versioning is [Changesets](https://changesets.dev). Every app under `apps/` shar
 | `CLOUDFLARE_ACCOUNT_ID` | secret | Target account |
 | `VITE_API_BASE_URL` | variable | Production API origin baked into `front-app` |
 | `VITE_SENTRY_DSN` | variable | Optional public `front-app` Sentry DSN, also used by Preview builds; empty disables Sentry |
-| `SENTRY_ORG` | variable | Optional; arms the CD step that uploads each app's source maps to the Sentry project named like the app |
-| `SENTRY_AUTH_TOKEN` | secret | Sentry org auth token for that step (scoped to the step, never the build) |
+| `SENTRY_ORG` | variable | Optional; arms the CD steps that upload each app's source maps to the Sentry project named like the app, then mark its release deployed (auto-resolving `Fixes <SHORT-ID>` issues) |
+| `SENTRY_AUTH_TOKEN` | secret | Sentry org auth token for those steps (scoped to the steps, never the build) |
 | `CD_ENABLED` | variable | Must be `true` for `release.yml` to call CD |
 
 Token permissions: Account → Workers Scripts Edit (required) and Account Settings Read (typical for Wrangler); Zone → Workers Routes Edit only with zone routes; Account → Secrets Store Edit only when binding Secrets Store.
@@ -173,7 +172,7 @@ To ship by hand: `pnpm --filter=<app> run deploy` (upload and 100% in one step),
 > [!IMPORTANT]
 > **Start Claude Code from the repository root.** `.claude/settings.json` - permission denies, hooks, sandbox - [loads only from the directory a session starts in](https://code.claude.com/docs/en/large-codebases), so a session started in `apps/worker-api/` reads every instruction file but runs without the enforcement layer. For package-scoped work, start at the root and filter: `pnpm turbo run <task> --filter=<package>`.
 
-- **Dimension reviews** - `/review` runs every dimension; `/review-architecture`, `/review-ci`, `/review-code-quality`, `/review-configuration`, `/review-performance`, `/review-security`, `/review-seo`, `/review-tests`, and `/review-ui` each run one.
+- **Dimension reviews** - `/review` runs every dimension; `/review-architecture`, `/review-ci`, `/review-code-quality`, `/review-configuration`, `/review-performance`, `/review-security`, `/review-seo`, `/review-simplicity`, `/review-tests`, and `/review-ui` each run one.
 - **Stack reviews** - human-only `/review-stack <selector> [focus]`: a dep (`oxc`, `sentry`, `wrangler`...), a family (`frontend`, `workers`, `toolchain`, `tanstack`, `observability`, `agents`), `all`, or `changed` (deps touched since the last release), comma-separated to combine - e.g. `/review-stack oxc`, `/review-stack tanstack caching`, `/review-stack changed`. Bare `/review-stack` lists every dep. It retrieves ground truth first (the installed documentation MCP collector, then the official docs), runs one subagent per dep in parallel, verifies every cited finding, and replies with a single plan whose items carry IDs (`C1`, `I2`...) you can answer with `fix C1, I2` or `accept O1`. It writes no files. A new tool is one file: `.agents/skills/review-stack/deps/<id>.md`.
 - **Hooks** - the agent guard, format, and lint hooks: [hooks/README.md](hooks/README.md).
 - **`.cursorignore`** trims what the model sees; it is not an access-control boundary.

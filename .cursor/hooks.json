@@ -21,10 +21,6 @@
     ],
     "sessionStart": [
       {
-        "command": "hooks/logging/session-start.sh",
-        "timeout": 10
-      },
-      {
         "command": "hooks/session/session-context.sh",
         "timeout": 10
       }

@@ -3,33 +3,14 @@
 # Claude Code only: refuses hand-edits of generated artifacts. Why a hook and not
 # `Edit(...)` denies (they also blocked the generators in the sandbox): hooks/AGENTS.md.
 
-set -eu
-
-emit_allow() {
-  trap - EXIT INT TERM HUP
-  exit 0
-}
-
-emit_deny() {
-  trap - EXIT INT TERM HUP
-  printf '%s\n' "$1" >&2
+HOOK_LIB="${0%/*}/../lib"
+[ -r "$HOOK_LIB/guard.sh" ] || {
+  printf 'guard fault in %s: cannot read %s/guard.sh\n' "${0##*/}" "$HOOK_LIB" >&2
   exit 2
 }
+. "$HOOK_LIB/guard.sh"
 
-emit_fault() {
-  trap - EXIT INT TERM HUP
-  printf 'guard fault in %s: %s\n' "${0##*/}" "$1" >&2
-  exit 2
-}
-
-trap 'emit_fault "unexpected error"' EXIT INT TERM HUP
-
-INPUT=$(cat 2>/dev/null || true)
-[ -n "$INPUT" ] || emit_allow
-
-command -v jq >/dev/null 2>&1 || emit_fault "jq is required to parse the hook payload; install jq"
-
-FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null || true)
+FILE=$(field '.tool_input.file_path')
 [ -n "$FILE" ] || emit_allow
 
 case "/$FILE" in

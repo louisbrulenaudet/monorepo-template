@@ -3,51 +3,30 @@
 # Claude Code only (Cursor has no before-file-edit event); stdout stays silent.
 # Scope and rationale: hooks/AGENTS.md, "Content guard".
 
-set -eu
-
-emit_allow() {
-  trap - EXIT INT TERM HUP
-  exit 0
-}
-
-emit_deny() {
-  trap - EXIT INT TERM HUP
-  printf '%s\n' "$1" >&2
+HOOK_LIB="${0%/*}/../lib"
+[ -r "$HOOK_LIB/guard.sh" ] || {
+  printf 'guard fault in %s: cannot read %s/guard.sh\n' "${0##*/}" "$HOOK_LIB" >&2
   exit 2
 }
-
-emit_fault() {
-  trap - EXIT INT TERM HUP
-  printf 'guard fault in %s: %s\n' "${0##*/}" "$1" >&2
-  exit 2
-}
-
-trap 'emit_fault "unexpected error"' EXIT INT TERM HUP
-
-INPUT=$(cat 2>/dev/null || true)
-[ -n "$INPUT" ] || emit_allow
-
-command -v jq >/dev/null 2>&1 || emit_fault "jq is required to parse the hook payload; install jq"
+. "$HOOK_LIB/guard.sh"
 
 # Write -> .content; Edit -> .new_string. Both are scanned the same way.
-CONTENT=$(printf '%s' "$INPUT" | jq -r '.tool_input.content // .tool_input.new_string // empty' 2>/dev/null || true)
+CONTENT=$(field '.tool_input.content // .tool_input.new_string')
 [ -n "$CONTENT" ] || emit_allow
 
-FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null || true)
+FILE=$(field '.tool_input.file_path')
 [ -n "$FILE" ] || FILE='(unknown file)'
 
 # Each entry: <label>|<extended regex>. Lengths are chosen so that obvious
 # placeholders (AKIA..., sk-ant-xxx) do not match.
 scan() {
-  sc_label=$1
-  sc_re=$2
   # `-e` is required, not stylistic: the private-key pattern begins with `-`,
   # which grep would otherwise parse as an option bundle. Without it grep errors
   # out, the `|| true` swallows the failure, and the scan silently passes.
   # Only line NUMBERS leave this function - never the matching text.
-  sc_lines=$(printf '%s\n' "$CONTENT" | grep -nE -e "$sc_re" 2>/dev/null | cut -d: -f1 | tr '\n' ' ' || true)
+  sc_lines=$(printf '%s\n' "$CONTENT" | grep -nE -e "$2" 2>/dev/null | cut -d: -f1 | tr '\n' ' ' || true)
   if [ -n "$sc_lines" ]; then
-    emit_deny "Blocked: this write appears to contain a live credential ($sc_label) at line(s): ${sc_lines% }. File: $FILE. Never commit secrets - see .claude/rules/core/guardrails.md. Put the real value in apps/<worker>/.env (git-ignored) or a Worker secret, and reference it through the environment; keep only a placeholder in tracked source."
+    emit_deny "Blocked: this write appears to contain a live credential ($1) at line(s): ${sc_lines% }. File: $FILE. Never commit secrets - see .claude/rules/core/guardrails.md. Put the real value in apps/<worker>/.env (git-ignored) or a Worker secret, and reference it through the environment; keep only a placeholder in tracked source."
   fi
 }
 

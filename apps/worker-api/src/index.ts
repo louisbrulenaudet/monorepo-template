@@ -1,17 +1,20 @@
 import type { Context } from "hono";
-import type { RequestIdVariables } from "hono/request-id";
-import { resolveCorrelationId } from "@repo/correlation-id";
 import { AppEnvironment } from "@repo/enums-common";
-import { sentry, setTag } from "@sentry/hono/cloudflare";
+import {
+  apiSecureHeaders,
+  errorHandler,
+  jsonMethodNotAllowed,
+  notFoundHandler,
+  requestIdMiddleware,
+  sentryMiddleware,
+} from "@repo/hono-middleware";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
-import { methodNotAllowed } from "hono/method-not-allowed";
 import { prettyJSON } from "hono/pretty-json";
-import { requestId } from "hono/request-id";
-import { secureHeaders } from "hono/secure-headers";
 import { timeout } from "hono/timeout";
 import { timing } from "hono/timing";
+import type { AppEnv } from "./app-env";
 import { version } from "../package.json";
 import { corsMiddleware } from "./middlewares/cors";
 import { csrfMiddleware } from "./middlewares/csrf";
@@ -20,83 +23,13 @@ import healthRoute from "./routes/health";
 
 const API_TIMEOUT_MS = 15_000;
 const MAX_BODY_BYTES = 3 * 1024 * 1024;
-// Mirrors each environment's observability.traces.head_sampling_rate.
-const FULL_TRACING_ENVIRONMENTS = new Set<string>([
-  AppEnvironment.DEV,
-  AppEnvironment.PREVIEW,
-]);
-const SAMPLED_TRACES_RATE = 0.01;
-const SENTRY_RELEASE = `worker-api@${version}`;
-const SENTRY_DATA_COLLECTION = {
-  userInfo: false,
-  cookies: false,
-  httpHeaders: false,
-  httpBodies: [],
-  urlQueryParams: false,
-  stackFrameVariables: false,
-};
-
-type AppEnv = {
-  Bindings: Env;
-  Variables: RequestIdVariables;
-};
 
 const app = new Hono<AppEnv>();
 
-app.use(
-  requestId({
-    headerName: "",
-    generator: (c) => resolveCorrelationId(c.req.header("X-Request-Id")),
-  }),
-);
-
-app.use(
-  sentry(app, (env) => ({
-    dsn: env.SENTRY_DSN,
-    environment: env.ENVIRONMENT,
-    release: SENTRY_RELEASE,
-    tracesSampler: () =>
-      FULL_TRACING_ENVIRONMENTS.has(env.ENVIRONMENT) ||
-      Math.random() < SAMPLED_TRACES_RATE,
-    dataCollection: SENTRY_DATA_COLLECTION,
-    // Console text can carry privileged client data; onError already logs the
-    // stack to Workers Observability.
-    beforeBreadcrumb: (breadcrumb) =>
-      breadcrumb.category === "console" ? null : breadcrumb,
-  })),
-);
-
-app.use(async (c, next) => {
-  setTag("request_id", c.get("requestId"));
-  await next();
-  c.header("X-Request-Id", c.get("requestId"));
-});
-
-app.use(
-  methodNotAllowed({
-    app,
-    onMethodNotAllowed: (c, methods) =>
-      c.json({ error: "Method Not Allowed" }, 405, {
-        Allow: methods.join(", "),
-      }),
-  }),
-);
-
-app.use(
-  secureHeaders({
-    contentSecurityPolicy: {
-      defaultSrc: ["'none'"],
-      frameAncestors: ["'none'"],
-    },
-    permissionsPolicy: {
-      camera: [],
-      geolocation: [],
-      microphone: [],
-      payment: [],
-    },
-  }),
-);
-
+app.use(requestIdMiddleware);
+app.use(sentryMiddleware(app, { release: `worker-api@${version}` }));
+app.use(jsonMethodNotAllowed(app));
+app.use(apiSecureHeaders);
 app.use("/api/*", corsMiddleware);
 app.use("/api/*", csrfMiddleware);
 
@@ -104,22 +37,28 @@ const api = new Hono<AppEnv>();
 
 api.use(
   timing({
-    enabled: (c: Context<AppEnv>) =>
-      c.env.ENVIRONMENT !== AppEnvironment.PRODUCTION,
+    enabled: (c: Context<AppEnv>) => c.env.ENVIRONMENT === AppEnvironment.DEV,
   }),
 );
 
-api.use(timeout(API_TIMEOUT_MS));
+api.use(
+  timeout(
+    API_TIMEOUT_MS,
+    () => new HTTPException(504, { message: "Gateway Timeout" }),
+  ),
+);
 
 api.use(
   bodyLimit({
     maxSize: MAX_BODY_BYTES,
-    onError: (c) => c.json({ error: "Request body too large" }, 413),
+    onError: () => {
+      throw new HTTPException(413, { message: "Request body too large" });
+    },
   }),
 );
 
-api.use(async (c, next) => {
-  if (c.env.ENVIRONMENT !== AppEnvironment.PRODUCTION) {
+api.use(async function devPrettyJson(c, next) {
+  if (c.env.ENVIRONMENT === AppEnvironment.DEV) {
     return prettyJSON()(c, next);
   }
   return await next();
@@ -128,7 +67,7 @@ api.use(async (c, next) => {
 // Echo is a demo surface: it reflects caller-supplied input on an
 // unauthenticated public POST and has no rate-limit binding. 404 rather than
 // 403 so production does not advertise that the route exists at all.
-api.use("/echo", async (c, next) => {
+api.use("/echo", async function hideEchoInProduction(c, next) {
   if (c.env.ENVIRONMENT === AppEnvironment.PRODUCTION) {
     return c.notFound();
   }
@@ -153,24 +92,7 @@ app.get("/", (c) =>
   ),
 );
 
-app.notFound((c) =>
-  c.json({ error: "Not Found", requestId: c.get("requestId") }, 404),
-);
-
-app.onError((error, c) => {
-  const reqId = c.get("requestId");
-  if (error instanceof HTTPException) {
-    return c.json({ error: error.message, requestId: reqId }, error.status);
-  }
-  console.error(
-    JSON.stringify({
-      level: "error",
-      requestId: reqId,
-      message: error.message,
-      stack: error.stack,
-    }),
-  );
-  return c.json({ error: "Internal server error", requestId: reqId }, 500);
-});
+app.notFound(notFoundHandler);
+app.onError(errorHandler);
 
 export default app;

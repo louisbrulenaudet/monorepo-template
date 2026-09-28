@@ -51,7 +51,7 @@ expect_cursor() {
   fi
 }
 
-for f in "$HOOKS"/*/*.sh "$HOOKS"/*/lib/*.sh; do
+for f in "$HOOKS"/*/*.sh; do
   runs=$((runs + 1))
   sh -n "$f" || fail "syntax: ${f#"$ROOT"/}"
 done
@@ -64,7 +64,19 @@ expect 2 $D "$(bash_payload 'git checkout -- src/index.ts')" 'checkout --'
 expect 2 $D "$(bash_payload 'git clean -fd')" 'clean -fd'
 expect 2 $D "$(bash_payload 'git branch -D feature')" 'branch -D'
 expect 2 $D "$(bash_payload 'git restore src/index.ts')" 'restore <path>'
+expect 2 $D "$(bash_payload 'echo `git reset --hard`')" 'backtick substitution'
+expect 2 $D "$(bash_payload 'sh -c "git reset --hard"')" 'sh -c payload'
+expect 2 $D "$(bash_payload 'bash -lc "cd apps && git push --force"')" 'bundled -lc payload'
+expect 2 $D "$(bash_payload 'eval "git reset --hard"')" 'eval payload'
+expect 2 $D "$(bash_payload 'git push origin +main')" 'push +refspec'
+expect 2 $D "$(bash_payload 'git push origin :old-branch')" 'push :refspec'
+expect 2 $D "$(bash_payload 'git push --mirror')" 'push --mirror'
+expect 2 $D "$(bash_payload 'git checkout -f main')" 'checkout -f'
+expect 2 $D "$(bash_payload 'git switch --discard-changes main')" 'switch --discard-changes'
 expect 0 $D "$(bash_payload 'git status')" 'status'
+expect 0 $D "$(bash_payload 'bash -c "git status"')" 'harmless sh -c payload'
+expect 0 $D "$(bash_payload 'git push -u origin feature')" 'push a new branch'
+expect 0 $D "$(bash_payload 'git switch main')" 'switch <branch>'
 expect 0 $D "$(bash_payload 'git checkout main')" 'checkout <branch>'
 expect 0 $D "$(bash_payload 'git restore --staged src/index.ts')" 'restore --staged'
 expect 0 $D "$(bash_payload 'git commit -m "reset --hard later"')" 'flag text inside a message'
@@ -83,6 +95,7 @@ expect 0 $S "$(bash_payload 'git add config.env.ts')" 'source file with env in i
 expect 0 $S "$(bash_payload 'git add .env.example')" 'example env file'
 expect 0 $S "$(bash_payload 'git commit -m "document .env.local setup"')" 'secret name inside a message'
 expect 0 $S "$(bash_payload 'git status')" 'status'
+expect 2 $S "$(bash_payload 'sh -c "git add .env"')" 'sh -c payload'
 expect_cursor 2 $S "$(jq -nc '{command:"git add .env"}')" deny 'Cursor deny verdict'
 
 C=security/guard-secret-content.sh

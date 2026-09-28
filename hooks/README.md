@@ -6,20 +6,20 @@ Shell hooks that run inside the Cursor and Claude Code agent loop: they block de
 
 ```
 hooks/
+├── lib/
+│   ├── guard.sh                   # Shared guard prelude: payload, verdicts, fail-closed trap (sourced)
+│   └── parse-command.sh           # Quote-aware command parser (sourced)
 ├── git/
-│   ├── lib/parse-command.sh       # Quote-aware command parser (sourced, not run)
 │   ├── guard-destructive-git.sh   # Block reset --hard, push --force, etc.
 │   └── guard-secret-commit.sh     # Block staging or committing secret files
 ├── security/
 │   ├── guard-generated-files.sh   # Block hand-edits to generated artifacts
 │   └── guard-secret-content.sh    # Block writes whose content holds a credential
 ├── quality/
-│   ├── check-changed.sh           # Format, then lint, each edited file
-│   ├── format-changed.sh          # oxfmt (non-blocking)
-│   ├── lint-changed.sh            # oxlint (exit 2 on errors)
+│   ├── check-changed.sh           # oxfmt (non-blocking), then oxlint (exit 2 on errors), per edited file
 │   └── stop-gate.sh               # Fast gate on the diff before the agent finishes
 ├── session/session-context.sh     # Session-start warnings (missing install, busy ports)
-├── logging/                       # Debug logs: Cursor sessionStart, Claude InstructionsLoaded
+├── logging/instructions-loaded.sh # Debug log of the instruction files Claude Code loads
 ├── tests/run.sh                   # Regression suite behind pnpm hooks:test
 └── logs/                          # Debug output (git-ignored, size-capped)
 ```
@@ -43,7 +43,6 @@ echo '{"tool_input":{"command":"git push --force"}}' | sh hooks/git/guard-destru
 ## Debugging
 
 ```bash
-tail -f hooks/logs/session-start.log         # Cursor session events
 tail -f hooks/logs/instructions-loaded.log   # Which instruction files Claude Code loaded, and why
 ```
 

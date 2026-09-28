@@ -1,15 +1,12 @@
 import type { HealthResponse } from "@repo/dtos-common/api";
 import type { Context } from "hono";
 import { Hono } from "hono";
+import type { AppEnv } from "../app-env";
 import { version } from "../../package.json";
 
-type HealthEnv = {
-  Bindings: Env;
-};
+const health = new Hono<AppEnv>();
 
-const health = new Hono<HealthEnv>();
-
-function getHealth(c: Context<HealthEnv>): Response {
+function getHealth(c: Context<AppEnv>): Response {
   const payload: HealthResponse = { status: "ok", version };
   return c.json(payload, 200, {
     "Cache-Control": "no-store",

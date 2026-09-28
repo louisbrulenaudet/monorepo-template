@@ -22,7 +22,7 @@ flowchart LR
   Hooks --> QO["src/services/worker-api/<br/>health-query-options.ts"]
   QO --> Svc["src/services/worker-api/health.ts"]
   Svc --> Fetch["src/utils/fetch-api.ts<br/>fetchJsonWithSchema"]
-  Fetch -- "GET /api/v1/health<br/>X-Request-Id from utils/correlation-id" --> API["worker-api :8700 (HTTP only)"]
+  Fetch -- "GET /api/v1/health<br/>X-Request-Id read from the response" --> API["worker-api :8700 (HTTP only)"]
   API --> Parse["@repo/dtos-common/api<br/>HealthResponseSchema parse"]
   Parse --> UI["React UI<br/>components/feedback/ApiHealthIndicator"]
 

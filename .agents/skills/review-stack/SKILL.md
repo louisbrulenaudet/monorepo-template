@@ -72,7 +72,7 @@ Every finding carries all three:
 
 - **Where** - repo-relative `path:line` (or the exact key) that exhibits it.
 - **Source** - the retrieved page or changelog entry (URL + version) that states the current recommendation.
-- **Consequence** - what concretely goes wrong or is lost: a broken or silently green gate, a removed or deprecated API in use, a security, secret, or privileged-data exposure, measurable speed or cache loss, or friction an agent or developer actually hits.
+- **Consequence** - what concretely goes wrong or is lost: a broken or silently green gate, a removed or deprecated API in use, a security, secret, or sensitive-data exposure, measurable speed or cache loss, or friction an agent or developer actually hits.
 
 Missing **Source**, or dependent on a fact outside the repo (dashboard setting, hosted-runner behavior, registry or SaaS project state), it is **Needs validation**: no severity, and it names the exact missing fact plus how the owner can check it.
 
@@ -82,7 +82,7 @@ A choice listed under the companion's `## Accepted`, recorded in the rule it poi
 
 ## Severity
 
-- **Critical** - config is invalid or broken; a gate passes while checking nothing; code uses an API removed in the installed version or the next already-pinned major; a secret, privileged data, or a privileged surface is exposed; agents or CI consume a wrong output contract.
+- **Critical** - config is invalid or broken; a gate passes while checking nothing; code uses an API removed in the installed version or the next already-pinned major; a secret, sensitive data, or a privileged surface is exposed; agents or CI consume a wrong output contract.
 - **Improvement** - alignment with current best practice whose benefit you can state (faster runs, more cache hits, fewer false positives, less boilerplate, clearer agent loop).
 - **Optional** - polish; prefix `Nit:` when purely cosmetic.
 

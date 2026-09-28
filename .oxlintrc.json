@@ -197,6 +197,23 @@
         "Queue": "readonly",
         "DurableObjectNamespace": "readonly",
         "ServiceWorkerGlobalScope": "readonly"
+      },
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@hono/zod-validator",
+                "message": "Use validator() from @repo/hono-middleware: its failures reach errorHandler as the { error, requestId, issues } envelope."
+              },
+              {
+                "name": "@sentry/hono/cloudflare",
+                "message": "Use sentryMiddleware() from @repo/hono-middleware: it carries the locked-down dataCollection for sensitive data."
+              }
+            ]
+          }
+        ]
       }
     },
     {

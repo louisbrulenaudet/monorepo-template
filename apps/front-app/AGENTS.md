@@ -22,7 +22,7 @@ apps/front-app/
 │   ├── hooks/           # use-<feature>.ts
 │   ├── components/ui/   # Reusable primitives
 │   ├── config/          # env.ts, query-client.ts, instrument.ts, sentry.ts, sentry-tracing.ts
-│   ├── utils/           # fetch-api, correlation-id (SPA session wrapper)
+│   ├── utils/           # fetch-api, client-safe-error
 │   └── enums/           # Frontend-only value sets (`as const`)
 ├── tests/               # Vitest suites mirroring src/ (Node; DOM suites opt in per file)
 ├── vitest.config.ts     # defineNodeConfig from @repo/vitest-config
@@ -42,11 +42,11 @@ apps/front-app/
 | UI primitive | `src/components/ui/<Name>.tsx` |
 | Data hook | `src/hooks/use-<feature>.ts` |
 | API base URL | `src/config/env.ts` (`VITE_API_BASE_URL`) |
-| Sentry | `src/config/sentry.ts`, initialised by `src/config/instrument.ts`, which must stay the first import of `main.tsx`, in its own import block. It reads `VITE_SENTRY_DSN` directly, not through `env.ts`, so an unset DSN folds the SDK out of the bundle. `VITE_APP_ENVIRONMENT` (`AppEnvironment`, matches worker-api) is read in `src/config/env.ts`. Router tracing loads lazily from `sentry-tracing.ts` (its own `sentry-vendor~` chunk). Query/mutation errors other than `FetchApiError` are reported through `createQueryClient` in `query-client.ts`. Builds only inject debug IDs; CD uploads the maps (`sentry:sourcemaps`) |
+| Sentry | `src/config/sentry.ts`, initialized by `src/config/instrument.ts`, which must stay the first import of `main.tsx`, in its own import block. It reads `VITE_SENTRY_DSN` directly, not through `env.ts`, so an unset DSN folds the SDK out of the bundle. `VITE_APP_ENVIRONMENT` (`AppEnvironment`, matches worker-api) is read in `src/config/env.ts`. Router tracing loads lazily from `sentry-tracing.ts` (its own `sentry-vendor~` chunk). Query/mutation errors other than `FetchApiError` are reported through `createQueryClient` in `query-client.ts`. Builds only inject debug IDs; CD uploads the maps (`sentry:sourcemaps`). The error screen (`RouteErrorFallback`) shows the Sentry event id of the error it renders as `Error id`: `beforeSend` (`rememberSentryEventId`) keys each sent event's id by its error object, and the screen reads it with `useSyncExternalStore`, because React reports a caught error only after the fallback has rendered. Not `lastEventId()`: it is global, so it moves with every later error |
 | Frontend-only value set | `src/enums/<feature>.ts` |
 | Shared value set | `packages/enums-common/src/index.ts` |
 | SPA / deploy config | `wrangler.jsonc`, `vite.config.ts` |
-| Opaque API correlation | `@repo/correlation-id` + `src/utils/correlation-id.ts` + `fetch-api.ts` (`X-Request-Id`) |
+| API request id | `fetch-api.ts` reads the gateway's `X-Request-Id` response header into `FetchApiError.requestId`; the SPA never sends one |
 | Unit tests | `tests/` mirroring `src/` + `vitest.config.ts` (`@repo/vitest-config`) |
 
 ## Adding a Feature

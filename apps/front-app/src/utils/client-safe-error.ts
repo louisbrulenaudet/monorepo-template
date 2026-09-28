@@ -12,7 +12,7 @@ const REQUEST_FAILED_MESSAGE =
 
 /**
  * Client-facing copy only - never echo raw Error.message (may contain internal
- * or privileged wording from upstreams).
+ * or sensitive wording from upstreams).
  */
 export function getClientSafeErrorDetails(
   error: unknown,

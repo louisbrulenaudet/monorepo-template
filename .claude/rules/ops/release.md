@@ -14,7 +14,7 @@ Nothing is published to npm. Every workspace is `private: true`, no `publishConf
 ## State machine
 
 ```text
-push to main ──► Release  (concurrency release-main, queue: max, never cancelled)
+push to main ──► Release  (concurrency release-main, queue: max, never canceled)
   ├─ gate         ALWAYS. uses ci.yml (full graph, not --affected)
   ├─ select-mode  'version' | 'none'   ('publish' is unreachable here)
   ├─ mode == 'version' → version → open/update the "chore: release" PR   [END]
@@ -48,5 +48,5 @@ push to main ──► Release  (concurrency release-main, queue: max, never can
 
 - *Actions → General → Allow GitHub Actions to create and approve pull requests* enabled.
 - `production` GitHub Environment holding `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` and the `VITE_API_BASE_URL` variable. CD stays paused until they exist: the `deploy` job also requires the repository variable `CD_ENABLED == 'true'`, gated at the caller because a job skipped inside a `workflow_call` target reports success.
-- Sentry (optional): the `SENTRY_ORG` variable arms the CD step that runs each app's `sentry:sourcemaps` between upload and promote. It also needs the `SENTRY_AUTH_TOKEN` secret, and Sentry project slugs equal to the app names. The step is `continue-on-error`, so a Sentry outage never blocks a release; `worker-api` also needs its `SENTRY_DSN` Worker secret, or deploy fails (`secrets.required`).
+- Sentry (optional): the `SENTRY_ORG` variable arms two CD steps: each app's `sentry:sourcemaps` between upload and promote, and its `sentry:deploy` (set-commits, finalize, deploy marker) after the production smoke. The split is load-bearing: Sentry resolves a `Fixes <SHORT-ID>` issue when set-commits links its commit to a release, so moving set-commits before promote would resolve issues before the fix is live. Both steps need the `SENTRY_AUTH_TOKEN` secret and Sentry project slugs equal to the app names; set-commits also needs this repository added to the Sentry GitHub integration. Both are `continue-on-error`, so a Sentry outage never blocks a release; `worker-api` also needs its `SENTRY_DSN` Worker secret, or deploy fails (`secrets.required`).
 - Before real traffic: `apps/worker-api/wrangler.jsonc` `env.production.vars.CORS_ORIGINS` ships empty, so `/api/*` fails closed with 503 and the CD smoke fails *after* both promotes. Setting it takes a new release - vars ship inside the uploaded version, so a CD re-run cannot fix it.
