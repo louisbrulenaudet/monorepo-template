@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/turbo/schema.json",
+  "agentGuidance": false,
   "futureFlags": {
     "affectedUsingTaskInputs": true,
     // Off on purpose - see core/turborepo (drops dependents for transit tasks).
@@ -32,7 +33,10 @@
       // Without the log/registry paths, sandboxed wrangler hits EPERM in ~/.wrangler.
       "WRANGLER_SEND_METRICS",
       "WRANGLER_LOG_PATH",
-      "WRANGLER_REGISTRY_PATH"
+      "WRANGLER_REGISTRY_PATH",
+      "CLOUDFLARE_REGISTRY_PATH",
+      "CF_SEND_TELEMETRY",
+      "DO_NOT_TRACK"
     ]
   },
   "boundaries": {
@@ -142,23 +146,17 @@
     },
     "check-types": {
       "description": "Type-check with tsc --noEmit.",
-      "dependsOn": ["transit"],
+      "dependsOn": ["transit", "types"],
       "inputs": ["$TURBO_DEFAULT$", "!README.md", "!AGENTS.md", "!CLAUDE.md"],
       "outputs": ["node_modules/.tmp/*.tsbuildinfo"]
     },
     "types": {
-      "description": "Regenerate the committed worker-configuration.d.ts (wrangler types).",
-      "cache": false,
-      "inputs": ["wrangler.jsonc"],
-      "outputs": []
-    },
-    "types:check": {
-      "description": "Verify worker-configuration.d.ts matches wrangler.jsonc (read-only).",
-      "inputs": ["wrangler.jsonc", "worker-configuration.d.ts"],
-      "outputs": []
+      "description": "Generate .cloudflare/types/index.d.ts from cloudflare.config.ts (cf workers types).",
+      "inputs": ["cloudflare.config.ts"],
+      "outputs": [".cloudflare/types/**"]
     },
     "build": {
-      "description": "Build production output to dist/.",
+      "description": "Build the Build Output into .cloudflare/output/ (cf build).",
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -169,7 +167,7 @@
         "!vitest.config.*",
         "!vitest.setup.*"
       ],
-      "outputs": ["dist/**"],
+      "outputs": [".cloudflare/output/**"],
       "env": ["NODE_ENV"]
     },
     "test": {
@@ -215,41 +213,26 @@
       "passThroughEnv": ["VITE_API_BASE_URL", "NODE_ENV"]
     },
     "deploy": {
-      "description": "wrangler deploy --env production: upload + 100% at once (local/bootstrap).",
-      "dependsOn": ["^build", "check-types"],
+      "description": "cf deploy --prebuilt --mode production: upload + 100% at once (local/bootstrap).",
+      "dependsOn": ["build", "check-types"],
       "cache": false,
       "passThroughEnv": [
         "CI",
         "NODE_ENV",
         "CLOUDFLARE_API_TOKEN",
-        "CLOUDFLARE_ACCOUNT_ID",
-        "CF_ACCOUNT_ID"
+        "CLOUDFLARE_ACCOUNT_ID"
       ]
     },
     "upload": {
-      "description": "wrangler versions upload --env production (no traffic change).",
-      "dependsOn": ["^build", "check-types"],
+      "description": "cf workers versions create --prebuilt --mode production (no traffic change).",
+      "dependsOn": ["build", "check-types"],
       "cache": false,
       "passThroughEnv": [
         "CI",
         "NODE_ENV",
         "CLOUDFLARE_API_TOKEN",
         "CLOUDFLARE_ACCOUNT_ID",
-        "CF_ACCOUNT_ID",
-        "WRANGLER_OUTPUT_FILE_PATH",
-        "WRANGLER_OUTPUT_FILE_DIRECTORY"
-      ]
-    },
-    "promote": {
-      "description": "wrangler versions deploy --env production (interactive promote/rollback).",
-      "cache": false,
-      "interactive": true,
-      "passThroughEnv": [
-        "CI",
-        "NODE_ENV",
-        "CLOUDFLARE_API_TOKEN",
-        "CLOUDFLARE_ACCOUNT_ID",
-        "CF_ACCOUNT_ID"
+        "WRANGLER_OUTPUT_FILE_PATH"
       ]
     }
   }

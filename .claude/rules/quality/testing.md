@@ -6,43 +6,49 @@ paths:
   - "**/vitest.config.mts"
 ---
 
-# Testing Rules
+# Testing
 
-Toolchain and Workers pool details: [vitest.md](../tests/vitest.md), [hono-workers.md](../tests/hono-workers.md). Front-app React/Query/Router Vitest: [front-react.md](../tests/front-react.md). Auditing an existing suite: skill `review-tests` (human-invoked).
+Runtime specifics: [hono-workers.md](../tests/hono-workers.md) (Workers pool), [front-react.md](../tests/front-react.md) (`front-*`). Auditing an existing suite: `/review tests` (human-invoked).
 
-- Put unit tests under the app or package at a `tests/` directory that mirrors the source area.
-- Keep Vitest tests deterministic and avoid assertions that depend on test order.
-- Test at the **trust boundaries** the app actually enforces today (shared Zod Mini schemas, constrained value sets, CORS/fail-closed responses, route status codes). Prefer asserting observable behavior over internals. Do not invent auth or idempotency tests for surfaces that do not exist yet.
-- `any` is allowed **only** in test files (`typescript/no-explicit-any` is relaxed there) - do not reach for it in source to make a test pass.
-- Keep other Oxc rules satisfied in tests too (block statements, no floating promises - `await` or `void`). Filenames stay kebab-case.
+## Toolchain
+
+- Tests live in the package's `tests/` directory mirroring the source area, as kebab-case `*.test.ts` (`.tsx` in `front-*`). Import from `"vitest"` (no globals), never `jest.*`; in-app imports use `#/*`, never an invented `@/` alias.
+- Run through turbo: `pnpm turbo run test --filter=<pkg>`; one file: `pnpm --filter=<pkg> exec vitest run tests/<path>.test.ts`. Package `test` scripts are `vitest run`; agents never leave watch mode or `--ui` running. Turbo caches `test` with no outputs: a hit replays the stored log, `--force` re-executes. Smoke-running the dev servers: skill `run-app`.
+- Each app owns a `vitest.config.ts` / `.mts` built from `@repo/vitest-config`, pinning `root` / `test.dir` with `resolvePackageRoot(import.meta.dirname)` (Vitest VS Code explorer). Two runtimes: `worker-*` / `queue-*` / `webhook-*` / `mcp-*` → `@repo/vitest-config/workers`; `front-*` → `@repo/vitest-config` (Node). Never the Workers pool or a `/workers` import on `front-*`, never Node pool knobs on Workers, never `isolate: false` / `--no-isolate` on Workers (it shares binding storage).
+- No root Vitest config with `test.projects` or the deprecated workspace: Turbo owns the graph. Never merge a `front-*` app's full `vite.config` into its Vitest config.
+- Leave `reporters` unset so agent / GitHub Actions auto-detection picks the reporter; a custom list must still include `agent`.
+- Prefer real pool bindings on Workers. On Node, mock only true I/O, through `vi.fn` / `vi.stubGlobal` or an injected fake - never module mocking (`vi.mock` & co. are lint errors via `vitest/no-restricted-vi-methods`).
+- `any` is allowed only in test files (`typescript/no-explicit-any` is relaxed there), never in source to make a test pass. Every other Oxc rule still applies (block statements, no floating promises - `await` or `void`).
+- Tests are deterministic and never depend on test order.
+
+## What to test
+
+- Test at the trust boundaries the app actually enforces today (shared Zod Mini schemas, constrained value sets, CORS / fail-closed responses, route status codes), asserting observable behavior (status, body, headers, binding effects, rendered output) over internals. Never invent auth or idempotency tests for surfaces that do not exist yet.
+- Never weaken source to make a test pass.
+- A change to a wire shape or constrained value set updates the tests asserting it in the same change.
 
 ## Authoring gate
 
-Before adding or changing a test, answer all four. If one has no answer, do not write the test yet.
+Before adding or changing a test, answer all four; if one has no answer, do not write the test yet.
 
 1. **Contract** - which observable behavior does it protect: a status, body, header, binding effect, rendered output, or a shared `@repo/*` schema or value set?
-2. **Regression** - name the smallest source change that is a real bug and makes it fail. If only behavior-preserving changes break it (renaming a class, reordering a map, editing a literal nothing else reads), it asserts implementation - rewrite it against the public entry.
+2. **Regression** - name the smallest source change that is a real bug and makes it fail. If only behavior-preserving changes break it (renaming a class, reordering a map, editing a literal nothing else reads), it asserts implementation: rewrite it against the public entry.
 3. **Owner** - why does existing coverage miss that bug? Each contract has one owning test at the strongest boundary that reaches it: the Worker `fetch` entry, the service function, the rendered component, or the `@repo/*` package that defines it. Add a second layer only for a risk the owner cannot reach. Extend an `it.each` table or an existing fixture before writing a near-duplicate.
-4. **Seam** - does it need an export, re-export, flag, or reset hook that no production code uses? Test through the real entry instead. An `@internal` export ([knip.md](knip.md)) is the last resort, for behavior the entry cannot reach cheaply - resetting module-level state, say.
+4. **Seam** - does it need an export, re-export, flag, or reset hook no production code uses? Test through the real entry instead. An `@internal` export ([knip.md](knip.md)) is the last resort, for behavior the entry cannot reach cheaply (resetting module-level state, say).
 
-A regression test must fail on the unfixed code for the reason its name gives: write it before the fix and run it, or revert the fix temporarily to prove the failure. One test at the owning boundary covers the bug - do not replay it at every layer it crosses.
+A regression test must fail on the unfixed code for the reason its name gives: write it before the fix and run it, or revert the fix temporarily to prove the failure. One test at the owning boundary covers the bug; do not replay it at every layer it crosses.
 
 ## Junk patterns
 
-Reject a test that matches one of these unless it names the contract only it guards:
+Reject a test matching one of these unless it names the contract only it guards:
 
 - The expected value is copied from the module under test (a label map, class names, a query key, a config literal) or computed by the helper under test.
 - A stub returns the value the test then asserts, with none of our logic in between.
 - It would still pass if our code were replaced by the bare library call - it tests React, Hono, Zod, or TanStack, not us.
-- A consumer re-tests a shared `@repo/*` helper that its own package already tests.
+- A consumer re-tests a shared `@repo/*` helper its own package already tests.
 - The same contract is asserted at two layers with no distinct risk.
 - A negative assertion passes for an unrelated reason: `not.toBe(403)` also passes on a 500, `not.toBe(evilOrigin)` also passes on `*`. Assert the exact expected value.
 - The name promises more than the input exercises.
 - Its only job is keeping a test-only export alive.
 
-Assertion-free tests, `.skip` / `.only`, conditional `expect`, truthiness-only matchers, and duplicate titles are lint errors (`vitest/*` in `.oxlintrc.json`); this section covers what lint cannot see.
-
-## Discipline
-
-- **Never weaken source to make a test pass** and never silence a failing test (no blanket skips, no loosened types). Fix the cause, or stop and report the exact command and output. See [guardrails.md](../core/guardrails.md).
-- When you change a wire shape or constrained value set, update the tests that assert it in the **same** change.
+Assertion-free tests, `.skip` / `.only`, conditional `expect`, truthiness-only matchers, and duplicate titles are already lint errors (`vitest/*` in `.oxlintrc.json`); this section covers what lint cannot see.

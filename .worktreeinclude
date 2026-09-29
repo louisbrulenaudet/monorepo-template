@@ -7,4 +7,4 @@
 # Deliberately absent: .dev.vars, .env*, and every other credential file. A worktree gets
 # its own provisioned credentials - see AGENTS.md "Environment". Copying real secrets into
 # every worktree is what .claude/rules/core/guardrails.md exists to prevent.
-# Also absent: hooks/logs/ (the hooks mkdir -p it) and dist/ / .wrangler/ (build outputs).
+# Also absent: hooks/logs/ (the hooks mkdir -p it) and .cloudflare/ (Build Output, generated types, local dev state).

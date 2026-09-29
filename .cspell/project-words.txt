@@ -1,6 +1,8 @@
+affordances
 agentic
 AKIA
 assetsignore
+autoconfiguration
 Autoprefixer
 Avenir
 baprs
@@ -9,7 +11,9 @@ bezier
 biomejs
 blobless
 bradlc
+bypassable
 cheatsheet
+clickjacking
 cloc
 cloudflare
 codegen
@@ -30,9 +34,7 @@ dedup
 deslop
 devframe
 doas
-domcontentloaded
 dtos
-eeur
 effectful
 empt
 enam
@@ -41,9 +43,7 @@ envrc
 EPERM
 esbenp
 esbuild
-evals
-externref
-fedramp
+extensionless
 FOIT
 Frontends
 frontmatter
@@ -51,16 +51,15 @@ fsmonitor
 gapless
 geolocation
 getsentry
-Ghsas
 github
 grayscale
 hardlinks
 heredocs
 hono
-hostnames
 HSTS
 Hyperdrive
 iconify
+indexability
 inlines
 interruptibility
 interruptible
@@ -70,7 +69,6 @@ jamiemason
 jank
 janky
 jsdom
-keepalive
 keyof
 Knip
 lastmod
@@ -80,8 +78,6 @@ lockfiles
 Logpush
 louisbrulenaudet
 Mcpjson
-MERCHANTABLITY
-millionco
 miniflare
 misconfig
 mktemp
@@ -99,6 +95,7 @@ nvmrc
 oklab
 oklch
 oldifs
+oneline
 openai
 opencode
 oxfmt
@@ -111,8 +108,8 @@ picomatch
 pids
 pipefail
 pousr
-preloadable
 prerender
+prerendering
 pressable
 RDDT
 realpath
@@ -123,6 +120,7 @@ Referer
 refetches
 refspec
 retargeted
+retriable
 rgba
 rollforward
 rollup
@@ -142,6 +140,7 @@ streamable
 stylesheet
 Subdeps
 subpaths
+subrequest
 subrequests
 symbolication
 SYNCKIT
@@ -178,11 +177,9 @@ VTDT
 WAAPI
 WCAG
 weakenings
-weur
 wnam
 workerd
 worktree
 worktreeinclude
 worktrees
 xlink
-yusukebe

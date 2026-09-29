@@ -23,7 +23,6 @@
   },
   "ignorePatterns": [
     "**/*.gen.ts",
-    "**/worker-configuration.d.ts",
     ".claude/**",
     ".agents/**",
     ".vscode/**",

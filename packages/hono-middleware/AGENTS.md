@@ -2,9 +2,9 @@
 
 ## Overview
 
-Hono middlewares and handlers shared by the public-HTTP Workers (`worker-api` today; `webhook-*` and `mcp-*` when they land). **One named export per middleware, no preset:** each app imports the pieces it needs and registers them itself, in the order set by rule `backend/hono-gateway`, so the chain stays readable in its own `index.ts`. Browser-only concerns (CORS, the Origin / CSRF gate) stay in `worker-api`, the only Hono app browsers reach.
+Hono middlewares and handlers shared by the public-HTTP Workers (`worker-api` today; `webhook-*` and `mcp-*` when they land). **One named export per middleware, no preset:** each app imports the pieces it needs and registers them itself, in the order set by rule `backend/hono-gateway` (which also owns the error envelope, logging, and Sentry contracts), so the chain stays readable in its own `index.ts`. Browser-only concerns (CORS, the Origin / CSRF gate) stay in `worker-api`, the only Hono app browsers reach.
 
-Tag `framework` (see rule `core/boundaries`): it may depend on `lib`, `contracts-base` and `config`, and only apps may depend on it.
+Tag `framework` (rule `core/boundaries`): it may depend on `lib`, `contracts-base`, and `config`, and only apps may depend on it.
 
 ## Structure
 
@@ -24,9 +24,8 @@ packages/hono-middleware/
 
 ## Contracts
 
-- **Bindings:** a consuming app declares `export type AppEnv = HonoEnv<Env>`. `Bindings extends BaseBindings` fails `tsc` when `wrangler.jsonc` lacks `SENTRY_DSN` in `secrets.required` or sets an `ENVIRONMENT` outside `AppEnvironment`. Add a key to `BaseBindings` only when a middleware here reads it.
-- **Errors:** reject by throwing `HTTPException(status, { message })`; `errorHandler` renders `{ error, requestId }`, plus `issues` when `cause` is a Zod error, and logs every 5xx - unhandled or a thrown `HTTPException` - as one structured object keyed by `requestId`; a 4xx is never logged. `jsonMethodNotAllowed` builds its body directly because the `Allow` header would not survive a throw.
-- **Sentry:** `dataCollection` and the console-breadcrumb drop keep sensitive data out of a third party; never loosen them per app. The sampler mirrors `head_sampling_rate` in every consuming app's `wrangler.jsonc` (1 in `dev` / `preview`, 0.01 elsewhere).
+- **Bindings:** a consuming app declares `export type AppEnv = HonoEnv<Env>`. `Bindings extends BaseBindings` fails `tsc` when the app's `cloudflare.config.ts` binds no `SENTRY_DSN` or an `ENVIRONMENT` outside `AppEnvironment`. Add a key to `BaseBindings` only when a middleware here reads it.
+- **Errors:** `errorHandler` adds `issues` when `cause` is a Zod error, and logs each 5xx as one structured object keyed by `requestId`.
 - **Apps may not bypass the package:** `.oxlintrc.json` restricts `@hono/zod-validator` and `@sentry/hono/cloudflare` imports under `apps/{worker,webhook,mcp,queue}-*`.
 - **Handlers are generic** (`<E extends { Variables: RequestIdVariables }>`): Hono's `Context` is invariant in its Env, so a handler typed on a narrow Env is not assignable to `app.onError` / `app.notFound`.
 

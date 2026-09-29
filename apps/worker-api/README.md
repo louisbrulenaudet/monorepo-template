@@ -5,7 +5,7 @@ Public HTTP gateway for the monorepo, built with Hono on Cloudflare Workers. `fr
 ## Run it
 
 ```sh
-pnpm turbo run dev --filter=worker-api   # Wrangler on http://localhost:8700
+pnpm turbo run dev --filter=worker-api   # cf dev (Vite) on http://localhost:8700
 curl -s http://localhost:8700/api/v1/health
 ```
 
@@ -15,9 +15,11 @@ curl -s http://localhost:8700/api/v1/health
 
 Run commands from the repository root, or with `pnpm -w` from this directory: raw package scripts bypass Turbo's dependency graph. Test, typegen, deploy, and Hono CLI commands are listed in [AGENTS.md](AGENTS.md).
 
+Bindings, the Worker name and observability per mode live in [`cloudflare.config.ts`](cloudflare.config.ts); the dev port and build settings in [`vite.config.ts`](vite.config.ts). This app keeps no `.env` or `.dev.vars`: Sentry is off locally unless the dev server starts with `SENTRY_DSN=<dsn>` in its environment.
+
 ## What ships today
 
-- `GET /api/v1/health` returns the release semver in `version`; the `X-Worker-Version-Id` header carries the opaque Wrangler version id.
+- `GET /api/v1/health` returns the release semver in `version`; the `X-Worker-Version-Id` header carries the opaque Worker version id.
 - `POST /api/v1/echo` is the worked `zValidator` example ([`src/routes/echo.ts`](src/routes/echo.ts)): it validates the JSON body and the `?uppercase=true` query flag, and answers a validation failure with `{ error, requestId, issues }`. It is not mounted in production (404 there), because it reflects caller input on an unauthenticated route with no rate limit.
 - Every response carries `X-Request-Id`, and every error body is `{ error, requestId }`, so a caller can quote the id of a failure and you can find it in the logs.
 

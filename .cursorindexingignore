@@ -4,7 +4,6 @@
 pnpm-lock.yaml
 
 # Type declarations - readable but not search-worthy
-**/worker-configuration.d.ts
 **/vite-env.d.ts
 
 # Agent skills load on demand by name; .claude/skills/* symlink into .agents/skills/, so list both
@@ -15,6 +14,7 @@ pnpm-lock.yaml
 **/drizzle/migrations/**
 
 # Build outputs & caches (also gitignored - listed to guarantee they never reach the index)
+**/.cloudflare/
 **/dist/
 **/build/
 **/.turbo/

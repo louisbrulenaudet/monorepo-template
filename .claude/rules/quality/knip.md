@@ -5,43 +5,26 @@ paths:
 
 # Knip Configuration & Policy
 
-Root `knip.jsonc` is intentionally comment-free; every override's rationale lives here. Official docs: [configuration](https://knip.dev/reference/configuration), [production mode](https://knip.dev/features/production-mode), [configuring project files](https://knip.dev/guides/configuring-project-files).
-
-## Root options
-
-| Option | Why |
-|--------|-----|
-| `includeEntryExports: true` | Every workspace is `"private": true`, so entry/barrel files (`packages/*/src/index.ts`) get full unused-export auditing |
-| `treatConfigHintsAsErrors: true` | Stale or redundant overrides (e.g. an `entry` a plugin now provides) fail the gate instead of rotting silently |
-
-## Workspace overrides
-
-### apps/front-*
-
-- `ignoreDependencies` entries are suffixed `!` = **production mode only**:
-  - `@tanstack/*-devtools` - imported by `AppDevtools.tsx`, which is lazy-loaded behind `import.meta.env.DEV`; production builds never statically include them, but Knip's static graph cannot evaluate that conditional.
-  - `tailwindcss` - build-time dependency consumed through `@tailwindcss/vite` + the `@import "tailwindcss"` in `src/index.css`.
-- `project` replicates the default glob plus production-only negations (`"!tests/helpers/**!"`, `"!vitest.setup.ts!"`) so test infrastructure - helpers like `tests/helpers/fetch-stub.ts` and the `setupFiles` entry `vitest.setup.ts` - is never flagged as unused shipped code. Do not use `ignore` or `ignoreFiles` for this - `ignoreFiles` rejects the production-only `!` suffix here.
-
-### apps/!(front-*)
-
-- Every app that is not the SPA - `worker-*` today, `queue-*` / `webhook-*` / `mcp-*` when they land. A negation rather than a list of prefixes because `treatConfigHintsAsErrors: true` makes a workspace key matching nothing a hard error, so unused prefixes cannot be declared ahead of time.
-- `ignoreDependencies: ["cloudflare"]` - `import ... from "cloudflare:workers"` in Workers-pool tests is a runtime protocol specifier resolving to no npm package.
-
-### Root (`"."`)
-
-- `project` excludes `.agents/**`, which holds vendored agent skills installed from `skills-lock.json` - their bundled scripts are not project code, and the Vitest plugin's default test glob would otherwise make their `*.test.cjs` files entries. The negation is needed in both forms: `"!.agents/**"` for the default pass and `"!.agents/**!"` for production mode, which reads only `!`-suffixed patterns. Restating the default glob must keep `css`, which the Tailwind plugin compiles, or `treatConfigHintsAsErrors` fails on a compiled-extension hint. Do not use `ignore` or `ignoreFiles` instead - both still analyze the files. Same boundary as `ignorePatterns` in `.oxlintrc.json`.
-- `ignoreDependencies: ["@vitest/ui"]` (both passes) - launched as a CLI by the Vite DevTools Vitest dock, never imported, and the root has no Vitest config for Knip's vitest plugin to bind to. It lives at the workspace root rather than in `apps/front-app` because `@vitejs/devtools-vitest` probes for it with `isPackageExists("@vitest/ui", { paths: [workspaceRoot] })` while `@vitejs/devtools` core probes integrations against the app `cwd`; under pnpm's isolated layout an app-local install is invisible to that probe and the dock fails with `VTDT0001`. Do not move it back.
-
-### packages/vitest-config
-
-- `ignoreFiles: ["src/package-root.d.ts"]` - sidecar type declarations for `package-root.js`; unlike `ignore`, the file stays analyzed for exports/types/unresolved issues.
-- Root `ignoreWorkspaces: ["packages/vitest-config!"]` (production mode only) - build/test-time config helper, never part of a shipped bundle.
+Root `knip.jsonc` is intentionally comment-free; every override's rationale lives here.
 
 ## Policy
 
-- Both passes must stay green: `pnpm knip` (default) and `pnpm knip:production` (`--production --strict`: shipped-code-only + workspace isolation). Both run inside `pnpm run ci`.
-- Never blanket-`ignore`. Prefer scoped patterns (`ignoreIssues`, `ignoreFiles`, production-only suffixes like `"dep!"` / `"!pattern!"`).
-- Exports kept solely for unit tests carry an explicit JSDoc `@internal` tag - production mode ignores tagged exports, so tests never mask dead shipped API - the tag alone is the reason, don't add prose above it restating "extracted/exported for tests". Such an export is the last resort, not the default: the authoring gate in [testing.md](testing.md) requires testing through the real entry first.
-- Auto-fix unused dependencies and pnpm catalog entries with `knip --fix --fix-type dependencies,catalog`; agent-readable output via `pnpm knip:agent` (`--reporter symbols`).
-- Generated files (`routeTree.gen.ts`, `worker-configuration.d.ts`) resolve cleanly today; if they ever false-positive, use `ignoreIssues` scoped patterns, not blanket `ignore`.
+- Both passes stay green: `pnpm knip` (default) and `pnpm knip:production` (`--production --strict`: shipped code only, workspace isolation); both run in `pnpm run ci`.
+- Never blanket-`ignore`. Prefer scoped patterns: `ignoreIssues`, `ignoreFiles`, production-only suffixes (`"dep!"`, `"!pattern!"`).
+- An export kept solely for unit tests carries a bare JSDoc `@internal` tag (production mode ignores tagged exports, so tests never mask dead shipped API); the tag is the whole reason, no prose restating "exported for tests". It is the last resort: the authoring gate in [testing.md](testing.md) tests through the real entry first.
+- Auto-fix unused dependencies and catalog entries with `knip --fix --fix-type dependencies,catalog`; agent-readable output: `pnpm knip:agent` (`--reporter symbols`).
+- Generated files resolve cleanly today (`routeTree.gen.ts`; `.cloudflare/**` is gitignored, and Knip skips gitignored files). If one ever false-positives, use a scoped `ignoreIssues`, never a blanket `ignore`.
+
+## Root options
+
+- `includeEntryExports: true`: every workspace is `private`, so entry and barrel files (`packages/*/src/index.ts`) get full unused-export auditing.
+- `treatConfigHintsAsErrors: true`: a stale or redundant override (e.g. an `entry` a plugin now provides) fails the gate instead of rotting.
+
+## Workspace overrides
+
+- **Both app keys** (`apps/front-*`, `apps/!(front-*)`): `entry: ["cloudflare.config.ts"]` - cf, the Vite plugin, and the Vitest plugin load it by convention and nothing imports it, so no Knip plugin knows it. `includeEntryExports: false` - an app's entry exports are consumed where Knip cannot see (the config's default export by cf and the Vite plugin, the Worker entrypoint's by the runtime); the Wrangler plugin's exemption for `main` exports went away with the Wrangler config.
+- **`apps/front-*`**: `ignoreDependencies` entries suffixed `!` apply in production mode only - `@tanstack/*-devtools` (imported by `AppDevtools.tsx`, lazy-loaded behind `import.meta.env.DEV`, a conditional Knip's static graph cannot evaluate) and `tailwindcss` (consumed through `@tailwindcss/vite` and `@import "tailwindcss"`). `project` replicates the default glob plus production-only negations (`"!tests/helpers/**!"`, `"!vitest.setup.ts!"`), so test infrastructure is never flagged as unused shipped code; not `ignore` or `ignoreFiles`, which rejects the `!` suffix here.
+- **`apps/!(front-*)`**: every non-SPA app (`worker-*` today; `queue-*` / `webhook-*` / `mcp-*` later). A negation, not a prefix list, because `treatConfigHintsAsErrors` makes a key that matches nothing a hard error, so future prefixes cannot be declared ahead of time. `ignoreDependencies: ["cloudflare"]`: `cloudflare:workers` in pool tests is a runtime protocol specifier, not an npm package.
+- **Root `"."`**: `project` excludes `.agents/**` (vendored skills from `skills-lock.json`; the Vitest plugin's default glob would make their `*.test.cjs` entries), in both forms - `"!.agents/**"` for the default pass and `"!.agents/**!"` for production mode, which reads only `!`-suffixed patterns. The restated default glob must keep `css` (the Tailwind plugin compiles it) or `treatConfigHintsAsErrors` fails on a compiled-extension hint. Not `ignore` / `ignoreFiles`: both still analyze the files. Same boundary as `ignorePatterns` in `.oxlintrc.json`.
+- **Root `ignoreDependencies`** (both passes): `wrangler` - kept only for the Wrangler-only commands (`tail`, `secret put`, `preview delete`, `preview secret put`) run through `pnpm exec wrangler` from scripts and by hand, which Knip does not read; `@vitest/ui` - launched as a CLI by the DevTools Vitest dock, never imported, and the root has no Vitest config for Knip's plugin to bind to. It is a root devDependency on purpose: an app-local install fails the DevTools Vitest dock with `VTDT0001`, so never move it into an app ([vite-config.md](../frontend/vite-config.md)).
+- **`packages/vitest-config`**: `ignoreFiles: ["src/package-root.d.ts"]` (sidecar declarations for `package-root.js`; unlike `ignore`, the file stays analyzed for exports, types, and unresolved imports); root `ignoreWorkspaces: ["packages/vitest-config!"]` (production mode only - build/test-time helper, never shipped).

@@ -9,83 +9,52 @@ paths:
 
 # Contract Rules
 
-Zod 4 with **Zod Mini** (`import * as z from "zod/mini"`) is the house style for `@repo/dtos-common` and app boundary validation. Prefer Mini for tree-shakable Worker and SPA bundles. Only `@repo/dtos-common/api` is in `package.json` `exports` today. `src/rpc/`, `src/queue/`, and `src/webhook/` are scaffolds - add the matching `exports` entry when the first schema in that layer lands (see `packages/dtos-common/AGENTS.md`). If a framework schema slot mandates another validator, use that validator only inside that slot and keep the rest of the app on Zod Mini.
+Zod 4 Mini (`import * as z from "zod/mini"`) is the house style for `@repo/dtos-common` and app boundary validation, for tree-shakable Worker and SPA bundles. If a framework schema slot mandates another validator, use it only inside that slot. `@repo/dtos-common` holds shapes and validation only, no business logic.
 
 ## Where a shape lives
 
-A shape has exactly one owner. Its home is the **narrowest scope that still contains every consumer** - define it there once and import it everywhere else; never copy it across a boundary.
+A shape has exactly one owner: the narrowest scope that still contains every consumer. Define it there once and import it everywhere else; never copy it across a boundary.
 
-- **Does it cross a boundary between two workspaces** (travels over the wire, queue, binding, or is imported by more than one app/package)? → it belongs in `@repo/dtos-common` under the matching layer subdirectory (`api/`, `rpc/`, `queue/`, `webhook/`). Layer notes and consumer expectations are below.
-- **Is it used inside a single app only** (tool inputs, request/response envelopes, upstream payloads)? → keep it app-local, co-located with that app and exported from the app's own DTO barrel. Do not promote it to the shared package until a second workspace actually needs it.
-- **Is it a UI-only view model** that never leaves the front end? → keep it app-local too - but the raw wire payload it is built from must still be validated with the shared schema before you map it into the view model. Local view models describe UI state; they never replace the wire contract.
+- Crosses a workspace boundary (wire, queue, binding, or imported by more than one app/package) → `@repo/dtos-common`, in its layer directory.
+- Used inside one app only (tool inputs, request/response envelopes, upstream payloads) → app-local, co-located and exported from the app's own DTO barrel. Promote it only when a second workspace needs it.
+- UI-only view model → app-local, but validate the raw wire payload with the shared schema before mapping it; a view model never replaces the wire contract.
 
-The test for "shared vs local" is reach, not similarity: two shapes that happen to look alike but never cross the same boundary stay separate; a shape consumed on both sides of a boundary moves up to the shared package.
+The test is reach, not similarity: look-alike shapes that never cross the same boundary stay separate; a shape consumed on both sides of a boundary moves up. Never mix layers in one file (an HTTP response schema belongs in `api/` even when an `rpc/` shape looks similar).
 
-**Do not mix layers** in one file - e.g. an HTTP response schema belongs in `api/`, not `rpc/`, even if fields look similar.
+| Layer | Import | Shape rules | Consumer validation |
+|-------|--------|-------------|---------------------|
+| HTTP REST | `@repo/dtos-common/api` | JSON-safe types only (no `Date` on the wire) | `validator()` in `worker-api`, `fetchJsonWithSchema` in `front-app` |
+| RPC | `@repo/dtos-common/rpc` | service-binding shapes; may use `z.coerce.date()` or ISO strings and richer joined read models not exposed on public HTTP | parse at the binding boundary before business logic |
+| Queue | `@repo/dtos-common/queue` | durable job payloads; version carefully once several producers or consumers exist; `…MessageSchema` | parse in `handlers/message.ts` (or equivalent) |
+| Webhook | `@repo/dtos-common/webhook` | third-party event bodies; `…EventSchema` | parse at the `webhook-*` route/handler entry, before handing off to business workers |
 
-### Layer notes (`@repo/dtos-common`)
+Only `api` is in `package.json` `exports` today; the first schema of another layer adds its entry ([packages/dtos-common/AGENTS.md](../../../packages/dtos-common/AGENTS.md)).
 
-| Layer | Directory / import | Notes |
-|-------|-------------------|-------|
-| **HTTP REST** | `src/api/` → `@repo/dtos-common/api` | JSON-safe types only (no `Date` objects on the wire). Used with `zValidator` in `worker-api` and `fetchJsonWithSchema` in `front-app`. |
-| **RPC** | `src/rpc/` → `@repo/dtos-common/rpc` | Service-binding shapes; may use `z.coerce.date()` or ISO strings and richer joined read models not exposed on public HTTP. |
-| **Queue** | `src/queue/` → `@repo/dtos-common/queue` | Durable/async job payloads; version carefully when multiple producers or consumers exist. Prefer `…MessageSchema` suffix. |
-| **Webhook** | `src/webhook/` → `@repo/dtos-common/webhook` | Third-party event bodies; validate at the `webhook-*` worker boundary before handing off to business workers. Prefer `…EventSchema` suffix. |
+## Naming and inference
 
-### Consumer expectations
-
-| Layer | Typical consumer | Validation |
-|-------|------------------|------------|
-| `api` | `worker-api`, `front-app` | `zValidator`, `fetchJsonWithSchema` |
-| `rpc` | Calling + called Worker | Parse at binding boundary before business logic |
-| `queue` | Producer + consumer Worker | Parse in `handlers/message.ts` (or equivalent) |
-| `webhook` | `webhook-*` worker | Parse at route/handler entry |
-
-Never redefine these shapes in apps. Schema suffixes (`Schema`, `RequestSchema`, `ResponseSchema`, `MessageSchema`, `EventSchema`) and inferred types: see [naming.md](../quality/naming.md) and [type-inference.md](type-inference.md).
+- Schema exports end in `Schema` / `RequestSchema` / `ResponseSchema` / `InputSchema` / `PayloadSchema` / `MessageSchema` / `EventSchema`.
+- Derive every type from its schema (`export type ExampleInput = z.infer<typeof ExampleInputSchema>`). All inferred types sit at the bottom of the file, after every schema, never interleaved. The type drops the `Schema` suffix and never takes a `Type` suffix (`ExampleInputType` is forbidden).
+- Never hand-write an `interface` / `type`, a `types.ts` file, or a parallel interface for a shape Zod or Drizzle already defines; DB row types come from the Drizzle table. Allowed: app-local types that never cross a package boundary, and mapping helpers between inferred types (e.g. an output projection).
+- Keep schemas lean: constrained members live in `z.enum(ValueSet)` / `z.enum([...] as const)`, never also spelled out in `.describe()` prose. Per-corpus planning guidance goes inline in the tool `description` and input `.describe()` text; there is no separate discovery catalog.
 
 ## Constrained string sets (`@repo/enums-common`)
 
-Same reach test as DTOs, applied to fixed wire-safe string values. Put a value set in `@repo/enums-common` when **any** of these is true:
+Same reach test. A value set is shared when any of these holds: more than one app or package uses it; it travels over the wire; a shared DTO schema references it; concerns that must agree on it share it (e.g. auth scopes read by auth and gateway code). Otherwise it stays app-local (one app, or UI-only with no API meaning). Default to local; promote on the second consumer.
 
-- more than one app or package uses it;
-- it is part of a serialized API contract (a value that travels over the wire);
-- it is referenced by a Zod schema that itself lives in the shared DTO package;
-- it is shared across concerns that must agree on it (e.g. auth scopes read by both the auth and gateway code).
-
-Keep it app-local when it is used inside a single app only, or is UI-only state with no API meaning. **Default to local; promote on the second consumer.**
-
-Mechanics: one constrained-value set per file, kebab-case filename; re-export up the barrel chain to the package root; when you introduce a new public subpath, add the matching `package.json` export. Define wire-safe values as a `const` object with `as const` plus a derived type (not `export enum` - `erasableSyntaxOnly` is enabled). Reference values from schemas with `z.enum(ValueSet)` for the full `as const` object, or `z.enum([...] as const)` for a subset - never re-type string literals. Import members from the const object, not raw strings or parallel string-literal unions.
-
-### Enum wire-value breaking changes
-
-Changing a member's **serialized string value** is a breaking contract change.
-
-| Change | Safe? |
-|--------|-------|
-| Add member | Yes (additive) |
-| Rename member key (`POST` → `CREATE` key) | Yes if wire value unchanged |
-| Change member wire value string | **No** - coordinate DTO + API + UI |
-| Remove member | **No** - version API |
-
-Update all consumers in the same PR.
+- One value set per kebab-case file, re-exported up the barrel chain to the package root; a new public subpath gets its `package.json` export.
+- Wire-safe values are an `as const` object plus a derived type - never `export enum` (`erasableSyntaxOnly`) or a parallel string-literal union. Schemas reference them with `z.enum(ValueSet)` (full set) or `z.enum([...] as const)` (subset), never re-typed literals; code imports members from the const object, not raw strings.
+- Changing a member's serialized string value is a breaking contract change. Adding a member, or renaming a key whose wire value is unchanged, is safe. Changing a wire value (coordinate DTO + API + UI) or removing a member (version the API) is not. Update every consumer in the same PR.
 
 ## Schema authoring
 
-- **Unknown keys**: pick a policy per file/feature and apply it consistently - if one schema in a file uses `.strict()`, the others should follow the same choice rather than mixing silently.
-- **Cross-field rules** go in `.refine()` / `.superRefine()`. Keep the messages safe to return to an API client - no internal paths, stack details, or secret values.
-- **Parse mode is a choice about failure handling**: use `.safeParse()` when you want to branch on a structured failure (the norm at trust boundaries here); use `.parse()` only where the throw is caught in a controlled context.
-- No business logic in `@repo/dtos-common` - shapes and validation only.
+- Unknown keys: one policy per file or feature - if one schema uses `.strict()`, the others in the file follow rather than mixing silently.
+- Cross-field rules go in `.refine()` / `.superRefine()`, with messages safe to return to an API client (no internal paths, stack details, or secret values).
+- `.safeParse()` when you branch on a structured failure (the norm at trust boundaries here); `.parse()` only where the throw is caught in a controlled context.
 
-## Contract change workflow
+## Change workflow
 
-1. Edit schemas in `packages/dtos-common/src/<layer>/` (`api`, `rpc`, `queue`, or `webhook`).
-2. Export from `src/<layer>/index.ts`.
-3. Update every producer and consumer of that layer in the **same PR**.
-4. For `api/` changes: also update `worker-api` route validation and `front-app` parsing / forms.
-5. Run `pnpm check-types`.
+1. Edit `packages/dtos-common/src/<layer>/<feature>.ts` and export it from `src/<layer>/index.ts`.
+2. Update every producer and consumer of that layer in the same PR; an `api/` change also updates `worker-api` route validation and `front-app` parsing and forms.
+3. `pnpm check-types`.
 
-Prefer **additive** changes. For breaking changes, version deliberately (new route, queue message version field, or new RPC method) and migrate. Update every consumer in the same PR.
-
-## Discipline
-
-- Keep schemas lean - see [type-inference.md](type-inference.md) for the full inference policy.
+Prefer additive changes. For a breaking one, version deliberately (new route, queue message version field, new RPC method) and migrate.

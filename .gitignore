@@ -1,4 +1,4 @@
-# Environment and Wrangler vars files
+# Environment, vars, and secret files
 .env
 .env.*
 .envrc
@@ -7,6 +7,8 @@
 .dev.vars*
 .prod.vars*
 .staging.vars*
+secrets.json
+credentials.json
 
 # Private keys and certificates - closes the human-commit path the agent guard already blocks
 *.pem
@@ -37,6 +39,7 @@ dist/
 build/
 .turbo
 .wrangler/
+.cloudflare/
 .vite/
 .vite-hooks/_/
 .tanstack/

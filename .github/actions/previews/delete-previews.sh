@@ -4,8 +4,6 @@
 # Target: preview.yml on a closed PR, and `pnpm preview:delete` locally.
 #
 # Every app is attempted even when one fails, so one run reports every leftover.
-# `--config wrangler.jsonc` bypasses a local Vite build's redirected config: one built
-# without CLOUDFLARE_ENV would silently point the delete at the top-level Worker.
 set -euo pipefail
 # shellcheck source=./lib.sh
 . "$(dirname "$0")/lib.sh"
@@ -15,8 +13,8 @@ apps="$(node .github/actions/lib/list-apps.mjs)"
 
 failed=()
 while IFS=$'\t' read -r app _; do
-  if ! pnpm --filter="$app" exec wrangler preview delete --config wrangler.jsonc \
-    --env "$PREVIEW_ENV" --name "$name" --skip-confirmation < /dev/null; then
+  if ! pnpm exec wrangler preview delete --worker-name "${app}-production" \
+    --name "$name" -y < /dev/null; then
     failed+=("$app")
   fi
 done <<< "$apps"

@@ -1,8 +1,8 @@
 # Purpose: shared helpers for deploy-previews.sh and delete-previews.sh (sourced).
 
-# Every Preview command must carry the same --env: without it, wrangler targets
-# the top-level Worker instead of the production Worker the Previews live under.
-PREVIEW_ENV="production"
+# Every Preview build and deploy must carry the same --mode: cloudflare.config.ts
+# accepts a Preview only under production, the Worker the Previews live under.
+PREVIEW_MODE="production"
 
 # Prints PREVIEW_NAME when set, else the current branch as a DNS-safe slug. The
 # Preview URL is <name>-<worker>-production.<subdomain>.workers.dev, and a DNS

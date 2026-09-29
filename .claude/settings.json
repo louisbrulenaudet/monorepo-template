@@ -320,7 +320,7 @@
     "enableWeakerNetworkIsolation": true,
     "filesystem": {
       "allowRead": [
-        "./apps/front-app/.env",
+        "**/apps/front-app/.env*",
         "./apps/front-app/.env.production"
       ],
       "allowWrite": [
@@ -343,6 +343,7 @@
       ".agents",
       ".changeset",
       ".claude",
+      ".cspell",
       ".cursor",
       ".github",
       ".playwright",
@@ -364,6 +365,8 @@
       "hooks",
       "apps",
       "packages",
+      "cspell.json",
+      "doctor.config.jsonc",
       "knip.jsonc",
       "package.json",
       "pnpm-lock.yaml",

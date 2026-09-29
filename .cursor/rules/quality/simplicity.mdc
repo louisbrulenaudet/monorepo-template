@@ -2,35 +2,34 @@
 description: "Simplicity - smallest correct diff; reuse, platform, installed deps before new code; no speculative abstraction"
 alwaysApply: true
 ---
-
 # Simplicity
 
-The best diff is the smallest one that fully solves the problem. Agents over-build: a layer, a helper, a fallback, or a dependency "for later" - later can build for itself. Writing less code never means understanding less.
+The best diff is the smallest one that fully solves the problem. Agents over-build - a layer, a helper, a fallback, a dependency "for later"; later can build for itself. Writing less code never means understanding less.
 
 ## Understand first
 
-- Read the task and every file the change touches, and trace the real flow end to end before choosing a solution. The smallest change in the wrong place is a second bug.
-- A bug report names a symptom. Grep every caller of the function you are about to touch and fix the shared function once, not only the path the report names.
+- Read the task and every file the change touches, and trace the real flow end to end before choosing a solution: the smallest change in the wrong place is a second bug.
+- A bug report names a symptom. Grep every caller of the function you are about to touch and fix the shared function once, not only the reported path.
 
 ## The ladder
 
 Stop at the first rung that holds:
 
-1. **Does it need to exist?** A speculative need is skipped - say so in one line.
-2. **Is it already in the repo?** Reuse the `@repo/*` package, helper, schema, or pattern a few files over. Re-implementing what already exists is the most common agent slop.
+1. **Does it need to exist?** Skip a speculative need and say so in one line.
+2. **Is it already in the repo?** Reuse the `@repo/*` package, helper, schema, or pattern a few files over; re-implementing what exists is the most common agent slop.
 3. **Does the platform do it?** Web and Workers APIs (`URL`, `URLSearchParams`, `Intl`, `crypto.randomUUID`, `structuredClone`, `AbortSignal.timeout`, `Response.json`), CSS over JS, a native element over a widget, a database constraint over app code.
 4. **Does an installed dependency do it?** Hono helpers and middleware, Zod, TanStack Query and Router features. Never add a dependency for what a few lines do; a justified one goes through the catalog.
 5. **Only then** write the minimum code that works.
 
-Two options of the same size: take the one that is correct on edge cases. Less code, not a flimsier algorithm.
+Between two options of the same size, take the one correct on edge cases: less code, not a flimsier algorithm.
 
 ## Do not generate
 
 - An interface, factory, generic, or strategy with one implementation; a wrapper that only delegates; a layer with one caller.
 - Options, parameters, flags, or config nobody sets. A value that never changes is a `const`.
 - A new file for a helper with one caller, or a barrel that re-exports one thing.
-- Defensive code the types already rule out: a null check on a non-nullable value, re-parsing data a Zod schema already parsed, a `try`/`catch` that only rethrows, or one that logs and swallows.
-- Fallbacks, retries, or caches that no observed failure or measurement asked for.
+- Defensive code the types already rule out: a null check on a non-nullable value, re-parsing data a Zod schema already parsed, a `try`/`catch` that only rethrows or that logs and swallows.
+- Fallbacks, retries, or caches no observed failure or measurement asked for.
 - Back-compat aliases, shims, or re-exports for code with no external caller - update the callers and delete the old name.
 - Stubs, TODO scaffolding, and extension points "for later".
 
@@ -38,12 +37,12 @@ Prefer deletion over addition and boring over clever. Fewer lines is not a goal 
 
 ## Never simplify away
 
-Validation at trust boundaries, error handling that prevents data loss, security and sensitive-data handling ([guardrails.md](../core/guardrails.md)), accessibility basics, and anything explicitly requested. If the user asks for the full version, build it without re-arguing. Non-trivial logic still leaves one test at its owning boundary ([testing.md](testing.md)).
+Validation at trust boundaries, error handling that prevents data loss, security and sensitive-data handling ([guardrails.mdc](../core/guardrails.mdc)), accessibility basics, and anything explicitly requested. If the user asks for the full version, build it without re-arguing. Non-trivial logic still gets one test at its owning boundary ([testing.mdc](testing.mdc)).
 
 ## Deliberate ceilings
 
-A shortcut with a known limit - a linear scan, a global lock, a naive heuristic, an in-memory cap - carries one comment naming the limit and the trigger to revisit it: `// ceiling: linear scan over all rows; index when the table passes ~10k`. It records a why, so it meets [comments.md](comments.md). A `ceiling:` without a trigger is not allowed. `/review-simplicity` collects them into a ledger.
+A shortcut with a known limit - linear scan, global lock, naive heuristic, in-memory cap - carries one comment naming the limit and the trigger to revisit it: `// ceiling: linear scan over all rows; index when the table passes ~10k`. It records a why, so it meets [comments.mdc](comments.mdc). A `ceiling:` without a trigger is not allowed. `/review simplicity` collects them into a ledger.
 
 ## Reporting
 
-For a large request, ship the smallest version that covers it and add one line: "Skipped X; add when Y." Do not stall on a question you can answer with a sensible default, and do not write paragraphs defending a simplification.
+For a large request, ship the smallest version that covers it and add one line: "Skipped X; add when Y." Do not stall on a question a sensible default answers, and do not write paragraphs defending a simplification.

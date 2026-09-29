@@ -3,7 +3,7 @@ import { AppEnvironment } from "@repo/enums-common";
 import { sentry } from "@sentry/hono/cloudflare";
 import type { BaseBindings, HonoEnv } from "./env";
 
-// Mirrors each environment's observability.traces.head_sampling_rate.
+// Mirrors each mode's observability.traces.headSamplingRate in cloudflare.config.ts.
 const FULL_TRACING_ENVIRONMENTS = new Set<AppEnvironment>([
   AppEnvironment.DEV,
   AppEnvironment.PREVIEW,

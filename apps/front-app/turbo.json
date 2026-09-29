@@ -15,22 +15,13 @@
         "$TURBO_EXTENDS$",
         "VITE_API_BASE_URL",
         "VITE_APP_ENVIRONMENT",
-        "VITE_SENTRY_DSN",
-        "CLOUDFLARE_ENV"
+        "VITE_SENTRY_DSN"
       ]
     },
     "dev": {
-      "description": "Vite dev server, started together with worker-api#dev.",
+      "description": "cf dev (Vite) on :5174, started together with worker-api#dev.",
       "with": ["worker-api#dev"],
       "interruptible": true
-    },
-    "deploy": {
-      "description": "wrangler deploy of ./dist as Cloudflare assets at 100%.",
-      "dependsOn": ["$TURBO_EXTENDS$", "build"]
-    },
-    "upload": {
-      "description": "wrangler versions upload of ./dist (no traffic change).",
-      "dependsOn": ["$TURBO_EXTENDS$", "build"]
     }
   }
 }

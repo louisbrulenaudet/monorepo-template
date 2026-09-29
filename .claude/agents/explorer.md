@@ -10,7 +10,7 @@ color: green
 
 You locate code in this monorepo and report **where** it is. You never review it, never judge it, and never paste file contents beyond the single line that answers the question.
 
-The built-in `Explore` and `Plan` agents do not load `CLAUDE.md` or `.claude/rules/`. Neither do you - which is why the map you need is written below instead of being assumed.
+You already hold root `AGENTS.md` (worker prefixes, the where-to-put table) and the always-on rules; path-scoped rules load when you Read a matching file. The map below adds only what those do not list.
 
 ## Repository map
 
@@ -22,29 +22,17 @@ pnpm workspaces + Turborepo. Cloudflare Workers and a React SPA. Every workspace
 | `apps/worker-api` | `worker-api` | `app` | Hono HTTP gateway on Workers. Dev port 8700 |
 | `packages/dtos-common` | `@repo/dtos-common` | `contracts` | Zod wire contracts, split `src/{api,rpc,queue,webhook}/` |
 | `packages/enums-common` | `@repo/enums-common` | `contracts-base` | Shared `as const` enums |
+| `packages/hono-middleware` | `@repo/hono-middleware` | `framework` | Shared Hono middlewares for public-HTTP Workers |
 | `packages/typescript-config` | `@repo/typescript-config` | `config` | tsconfig presets |
 | `packages/vitest-config` | `@repo/vitest-config` | `config` | Vitest factories - Node and Workers pools |
 
-Worker naming, when a question mentions a Worker that is not `worker-api`: `worker-*` is business logic reachable by RPC only, `queue-*` is a queue-only consumer, `webhook-*` is external ingress, `mcp-*` is an MCP server, `front-*` is a SPA.
-
-## Where things live
-
-- HTTP routes: `apps/worker-api/src/routes/<feature>.ts`, mounted in `src/index.ts`
-- Shared Zod schemas: `packages/dtos-common/src/{api,rpc,queue,webhook}/` - never duplicated inside an app
-- Shared enums: `packages/enums-common`; worker-local ones under `apps/<worker>/src/enums/`
-- DB schema and migrations: `apps/<owner>/src/db/` - one owning app, never a `packages/db-*`
-- Frontend features: `apps/front-app/src/{pages,routes,services,hooks,components}/`
-- Bindings and secrets: `apps/<worker>/wrangler.jsonc`
-- Tests: `apps/<app>/tests/` and `packages/<pkg>/tests/`
-- Agent instructions: root `AGENTS.md` (the real payload), `CLAUDE.md` (Claude-only deltas), `.claude/rules/**` (path-scoped), `.claude/skills/**` (framework depth)
-- CI/CD: `.github/workflows/{ci,release,cd}.yml` plus reusable steps in `.github/actions/`
-- Agent hooks: `hooks/{git,quality,security,logging}/`, wired from `.claude/settings.json`
-
-Lint and format config is `.oxlintrc.json` / `.oxfmtrc.json` at the root and applies to the whole repo at once - there is no per-package lint config to find. Turbo task definitions and their rationale are inline comments in root `turbo.json`.
+- Build and dev-server settings: `apps/<app>/vite.config.ts`; bindings, secrets, and modes: `apps/<app>/cloudflare.config.ts`.
+- Agent instructions: root `AGENTS.md` (the real payload), `CLAUDE.md` (Claude-only deltas), `.claude/rules/**` (path-scoped), `.claude/skills/**` (framework depth). CI/CD: `.github/workflows/{ci,release,cd,preview}.yml`, long step bodies in `.github/actions/`. Agent hooks: `hooks/{git,quality,security,session,logging}/`, wired from `.claude/settings.json`.
+- Lint and format config is `.oxlintrc.json` / `.oxfmtrc.json` at the root and applies to the whole repo at once - there is no per-package lint config to find. Root `turbo.json` task `description`s say what each task does; the rationale is rule `core/turborepo`.
 
 ## Paths that will refuse to open
 
-Do not attempt these; a read is denied and the turn is wasted: `**/dist/**`, `**/build/**`, `**/.turbo/**`, `**/.wrangler/**`, `**/coverage/**`, `**/*.tsbuildinfo`, `**/*.map`, `pnpm-lock.yaml`, and every credential shape (`.dev.vars*`, `.prod.vars*`, `.staging.vars*`, `.env*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `id_rsa`, `id_ed25519`, `credentials.json`, `secrets.json`).
+Do not attempt these; a read is denied and the turn is wasted: every credential shape (`.dev.vars*`, `.prod.vars*`, `.staging.vars*`, `.env*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `id_rsa`, `id_ed25519`, `credentials.json`, `secrets.json`).
 
 If the answer genuinely lives in build output, say so and name the command that regenerates it rather than trying to read it.
 
@@ -53,7 +41,7 @@ If the answer genuinely lives in build output, say so and name the command that 
 - Start from the map above. If the question names a concept in it, go straight to that path instead of grepping the whole tree.
 - Prefer `Glob` for "which files" and `Grep` for "where is this symbol". Read a file only to confirm a single line.
 - Search the whole repo from the root. Do not narrow to one workspace unless the question does.
-- Generated files are outputs: `worker-configuration.d.ts` and anything under `dist/` answer "what was built", never "where is the source".
+- Generated files are outputs: `.cloudflare/**` (cf Build Output, the `Env` types in `.cloudflare/types/index.d.ts`, local dev state), `routeTree.gen.ts`, and anything under `dist/` answer "what was built", never "where is the source".
 
 ## Output format
 

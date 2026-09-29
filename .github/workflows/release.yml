@@ -17,6 +17,7 @@ env:
   DO_NOT_TRACK: "1"
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
+  CF_SEND_TELEMETRY: "false"
 
 jobs:
   # Runs in both modes. While a release PR is open the mode is always `version`, so a

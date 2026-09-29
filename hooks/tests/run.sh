@@ -105,7 +105,8 @@ expect 0 $C "$(write_payload src/a.ts 'const k = "AKIA...";')" 'placeholder key'
 expect 0 $C "$(write_payload src/a.ts 'export const x = 1;')" 'ordinary source'
 
 G=security/guard-generated-files.sh
-expect 2 $G "$(write_payload apps/worker-api/worker-configuration.d.ts 'x')" 'wrangler types output'
+expect 2 $G "$(write_payload apps/worker-api/.cloudflare/types/index.d.ts 'x')" 'cf generated types'
+expect 2 $G "$(write_payload apps/front-app/.cloudflare/output/v0/workers/default/assets/index.html 'x')" 'cf Build Output'
 expect 2 $G "$(write_payload apps/front-app/src/routeTree.gen.ts 'x')" 'router tree output'
 expect 2 $G "$(write_payload pnpm-lock.yaml 'x')" 'lockfile'
 expect 2 $G "$(write_payload apps/front-app/dist/index.js 'x')" 'build output'
@@ -158,6 +159,21 @@ mkdir -p "$DIRTY/node_modules"
 : >"$DIRTY/node_modules/.pnpm-workspace-state-v1.json"
 touch -t 202001010000 "$DIRTY/pnpm-lock.yaml"
 expect_in 0 $X "$DIRTY" '{}' 'installed checkout, no dev ports'
+TYPED="$SCRATCH/typed"
+mkdir -p "$TYPED/node_modules" "$TYPED/apps/api"
+: >"$TYPED/node_modules/.pnpm-workspace-state-v1.json"
+touch -t 202001010000 "$TYPED/pnpm-lock.yaml"
+printf '{"name":"api","scripts":{"types":"cf workers types"}}' >"$TYPED/apps/api/package.json"
+: >"$TYPED/apps/api/cloudflare.config.ts"
+runs=$((runs + 1))
+out=$(printf '{}' | CLAUDE_PROJECT_DIR="$TYPED" sh "$HOOKS/$X" 2>/dev/null)
+case "$out" in
+  *'pnpm types'*) ;;
+  *) fail "$X: missing generated types must be reported (got: $out)" ;;
+esac
+mkdir -p "$TYPED/apps/api/.cloudflare/types"
+: >"$TYPED/apps/api/.cloudflare/types/index.d.ts"
+expect_in 0 $X "$TYPED" '{}' 'generated types present'
 runs=$((runs + 1))
 out=$(printf '{}' | CURSOR_PROJECT_DIR="$CLEAN" sh "$HOOKS/$X" 2>/dev/null)
 [ "$(printf '%s' "$out" | jq -r '.additional_context' 2>/dev/null | head -n 1)" = 'Session checks:' ] ||

@@ -20,6 +20,18 @@ elif [ pnpm-lock.yaml -nt node_modules/.pnpm-workspace-state-v1.json ]; then
   note "pnpm-lock.yaml changed after the last install. Run ${INSTALL} before trusting test or type-check results."
 fi
 
+if command -v jq >/dev/null 2>&1; then
+  for manifest in apps/*/package.json; do
+    [ -f "$manifest" ] || continue
+    APP_DIR=${manifest%/package.json}
+    [ -f "$APP_DIR/cloudflare.config.ts" ] || continue
+    jq -e '.scripts.types' "$manifest" >/dev/null 2>&1 || continue
+    if [ ! -f "$APP_DIR/.cloudflare/types/index.d.ts" ]; then
+      note "${APP_DIR#apps/} has no .cloudflare/types/index.d.ts yet. Run \`pnpm types\` before trusting \`Env\` errors from tsc, lint, or the LSP."
+    fi
+  done
+fi
+
 if command -v jq >/dev/null 2>&1 && command -v lsof >/dev/null 2>&1; then
   for manifest in apps/*/package.json; do
     [ -f "$manifest" ] || continue

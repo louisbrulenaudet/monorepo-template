@@ -1,0 +1,29 @@
+---
+description: "OXC and React Doctor config rationale - .oxlintrc.json options, front override, better-tailwindcss rule set, oxfmt class order."
+alwaysApply: false
+globs: .oxlintrc.json,.oxfmtrc.json,doctor.config.jsonc
+---
+
+# Lint and Static-Analysis Config
+
+OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format); React Doctor adds `doctor.config.jsonc`. This rule holds the rationale for their non-obvious settings; the authoring consequences live in [code-style.mdc](code-style.mdc), [tailwind.mdc](../frontend/tailwind.mdc), and [react.mdc](../frontend/react.mdc).
+
+## oxlint
+
+- `denyWarnings: true`: any warning fails CI.
+- `typeAware: true`, but oxlint's experimental `options.typeCheck` stays off: type checking stays with tsc (`turbo run check-types`), which keeps Turbo's per-package caching and `--affected`.
+- `respectEslintDisableDirectives: false` with `reportUnusedDisableDirectives: "error"`: `eslint-disable*` comments are ignored, and any stray one fails CI.
+- The `apps/front-*/src/**` override restates the full `plugins` list on purpose: override plugins extend the base, but trimming the list to `react` / `jsx-a11y` enables `react/react-in-jsx-scope` (dozens of false errors). Hook rules and `jsx-a11y` live in that override; no ESLint toolchain exists alongside.
+- OXC always runs from the repo root because `better-tailwindcss` resolves `settings.better-tailwindcss.entryPoint` against the process CWD, not against `.oxlintrc.json`: `oxlint .` inside `apps/front-app` resolves `apps/front-app/apps/front-app/src/index.css`, so the theme-aware rules print a "No tailwind css entry point found" banner on every message and `no-unknown-classes` rejects every `@theme` token. Scope by path instead (`pnpm --filter=front-app run lint:check`).
+
+## better-tailwindcss
+
+- Runs as an oxlint JS plugin on `apps/front-*/src/**/*.{ts,tsx}`; `entryPoint` points at `apps/front-app/src/index.css` so the theme is known.
+- Enabled, all `error`: `enforce-canonical-classes`, `no-concatenated-classes`, `no-conflicting-classes`, `no-deprecated-classes` (catches v3 names in v4), `no-duplicate-classes`, `no-unknown-classes`, `no-unnecessary-whitespace`. The four that need the theme: `enforce-canonical-classes`, `no-conflicting-classes`, `no-deprecated-classes`, `no-unknown-classes`. `no-unknown-classes` is the strongest guard for AI-authored markup.
+- `enforce-consistent-class-order` stays **off**: `oxfmt` owns ordering through `sortTailwindcss.stylesheet` (the `prettier-plugin-tailwindcss` algorithm, resolved relative to `.oxfmtrc.json`, so CWD-independent), and the two must not disagree.
+- `enforce-consistent-line-wrapping` stays **off**: `oxfmt` owns JS/JSX layout, and the two would fight over `className` wrapping.
+
+## React Doctor
+
+- The embedded oxlint plugin (`react-doctor/*` rules in the `front-*` override) fires through the post-edit lint hook; `react-doctor/no-fetch-in-effect` and `react-doctor/no-derived-state` are active. Extend the set deliberately, never blanket.
+- CLI-only rules and severity tuning live in root `doctor.config.jsonc`: `projects` lists every `front-*` app; score, share, and supply-chain checks are disabled (offline).

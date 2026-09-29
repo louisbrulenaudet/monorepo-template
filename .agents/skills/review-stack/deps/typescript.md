@@ -22,7 +22,7 @@ TypeScript configuration: strictness, module resolution, and preset layout for a
 - [packages/typescript-config/](../../../../packages/typescript-config/) - `library.json`, `strict.json`, `vite-node.json`, `vite-react.json`, `workers.json`
 - Per-app configs: [apps/front-app/tsconfig.json](../../../../apps/front-app/tsconfig.json) (+ `tsconfig.app.json`, `tsconfig.node.json`), [apps/worker-api/tsconfig.json](../../../../apps/worker-api/tsconfig.json), packages' tsconfigs
 - [.claude/rules/quality/typescript-config.md](../../../../.claude/rules/quality/typescript-config.md) ↔ `.cursor` twin
-- `check-types` task wiring; generated `worker-configuration.d.ts` handling
+- `check-types` task wiring (`dependsOn: ["transit", "types"]`); generated `.cloudflare/types/index.d.ts` handling (gitignored, reached through `include`)
 
 ## Probe
 
@@ -33,7 +33,7 @@ Read every preset and consuming tsconfig; map preset → consumers.
 - **Strictness**: every app/package extends the strictest appropriate preset; no unjustified per-app weakening; exact-optional/bind/call flags consistent with current recommendations.
 - **Module resolution & emit**: `moduleResolution: bundler` (or current recommendation) for Vite/Workers; no `noEmit` conflicts; `verbatimModuleSyntax` / type-import discipline; `isolatedModules` for single-file transpilers.
 - **Monorepo layout**: presets consumed everywhere (no drift); workspace imports over path aliases, never importing an app; precise include/exclude (tests, generated files).
-- **Workers specifics**: workers preset matches runtime types (`worker-configuration.d.ts`, `types` ordering); `nodejs_compat` reflected in lib settings.
+- **Workers specifics**: workers preset matches runtime types (`.cloudflare/types` in `include` with `"types": []`); every `cloudflare.config.ts` type-checked (worker-api: main tsconfig, with `allowImportingTsExtensions` from the shared presets for its `./src/index.ts` entrypoint import; front-app: `tsconfig.node.json`); `nodejs_compat` reflected in lib settings.
 - **Version currency**: new flags worth adopting; deprecated flags flagged; `@types/node` aligned with the Node 24 engine.
 - **Agent loop**: `turbo run check-types` caching effective; error output stable; presets documented so agents extend the right one.
 
@@ -43,7 +43,7 @@ Unsafe weakenings; broken resolution; deprecated flags that error on the install
 
 ## Overlaps
 
-Type-aware lint rules (tsgolint) belong to `oxc`; `worker-configuration.d.ts` freshness belongs to `wrangler`.
+Type-aware lint rules (tsgolint) belong to `oxc`; generating `.cloudflare/types` belongs to `cf`.
 
 ## Accepted
 

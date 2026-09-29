@@ -22,6 +22,7 @@ env:
   DO_NOT_TRACK: "1"
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
+  CF_SEND_TELEMETRY: "false"
   TURBO_UI: "false"
 
 jobs:
@@ -67,6 +68,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate cf types
+        run: pnpm run types
+
       - parallel:
           # PR-only: the release gate must stay a pure function of the commit.
           - name: Dependency audit
@@ -85,9 +89,6 @@ jobs:
           - name: Format
             run: pnpm run format:check
 
-          - name: Types check
-            run: pnpm run types:check
-
           - name: Knip
             run: pnpm run knip && pnpm run knip:production
 
@@ -102,7 +103,7 @@ jobs:
             if: github.event_name != 'pull_request'
             run: pnpm turbo run check-types test build --continue=dependencies-successful
 
-      - name: Wrangler deploy dry-run
+      - name: cf deploy dry-run
         run: pnpm turbo run deploy --filter='./apps/*' -- --dry-run
 
       - name: Upload build artifacts on failure
@@ -111,8 +112,9 @@ jobs:
         with:
           name: ci-failure-build-${{ github.run_id }}
           path: |
-            apps/*/dist/**
+            apps/*/.cloudflare/output/**
             .turbo/*.log
             apps/*/.turbo/*.log
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7

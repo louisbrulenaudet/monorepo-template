@@ -1,20 +1,28 @@
 ---
-description: "Code style - OXC is source of truth; thin handlers; no silencing rules"
+description: "Code style - OXC decides; thin handlers; unknown only at I/O boundaries; oxlint suppression form; strict tsconfig flags."
 alwaysApply: false
 globs: apps/**/*.{ts,tsx},packages/**/*.ts
 ---
 
 # Code Style
 
-OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format). Do not restyle to match personal habits - match the surrounding file and let `oxfmt` decide layout. These rules run with `denyWarnings: true` / `maxWarnings: 0`, so any warning fails CI. Do not silence a rule, add a blanket ignore, or cast through `any` / `as unknown` to clear an error - fix the cause (see [guardrails.mdc](../core/guardrails.mdc)).
+OXC decides style ([lint-config.mdc](lint-config.mdc)): match the surrounding file, let `oxfmt` decide layout, and fix every warning - any warning fails CI.
 
-## Discipline
+- Handlers (routes, tools) stay thin: validate at the boundary, delegate I/O to a client or service module, then map the response. No business logic inline in a handler.
+- Derive types from their source of truth instead of hand-writing shapes ([contracts.mdc](../contracts/contracts.mdc)).
+- `unknown` belongs only at an I/O boundary: a Zod parser, a type predicate's subject, an error / `cause` handler. Parse there and pass the domain type onward; never thread `unknown` / `object` / `Record<string, unknown>` through signatures or re-narrow with ad-hoc `typeof` chains.
+- Never annotate a literal wider than it is (`const handlers: Record<string, Handler> = { start }` drops the known key): keep inference or use `satisfies`.
+- Inline suppressions use the `oxlint-*` form only, with a reason (`// oxlint-disable-next-line <rule> -- <reason>`); `eslint-disable*` comments are ignored and fail CI as unused directives. An unsafe assertion that must stay carries `// oxlint-disable-next-line typescript/no-unsafe-type-assertion -- <invariant that makes it true>`.
 
-- Keep route/tool handlers thin: validate at the boundary, delegate I/O to a client or service module, then map the response. Business logic does not belong inline in the handler.
-- Prefer native type inference (see [type-inference.mdc](../contracts/type-inference.mdc)) over hand-written shapes.
-- `unknown` belongs only at an I/O boundary: a Zod parser, a type predicate's subject, or an error/`cause` handler. Parse there and pass the domain type onward - do not thread `unknown` / `object` / `Record<string, unknown>` through signatures or re-narrow with ad-hoc `typeof` chains.
-- Do not annotate a literal wider than it is (`const handlers: Record<string, Handler> = { start }` drops the known key). Keep inference or use `satisfies`.
-- An unsafe assertion that must stay carries `// oxlint-disable-next-line typescript/no-unsafe-type-assertion -- <invariant that makes it true>`.
-- Lint and format run as a whole-repo OXC pass from the root - never `cd` into a package and run `oxlint .` (breaks context-aware Tailwind rules). See **Scoping** in root `AGENTS.md`. Type checking stays with tsc (`turbo run check-types`); oxlint's experimental `options.typeCheck` is deliberately off - it would lose Turbo per-package caching and `--affected`.
-- The `apps/front-*/src/**` override in `.oxlintrc.json` restates the full `plugins` list on purpose: override plugins extend the base, but trimming the list to `react` / `jsx-a11y` enables `react/react-in-jsx-scope` (dozens of false errors).
-- Inline suppressions use the `oxlint-*` form only (`// oxlint-disable-next-line <rule>` with a reason). `.oxlintrc.json` sets `respectEslintDisableDirectives: false`, so `eslint-disable*` comments are ignored by the linter and, via `reportUnusedDisableDirectives: "error"`, any stray one fails CI.
+## Strict compiler flags
+
+`strict.json` in `@repo/typescript-config` rejects ordinary-looking code; write to these from the start:
+
+| Flag | Forces |
+|------|--------|
+| `exactOptionalPropertyTypes` | An optional prop may be absent, never explicitly `undefined`: `{ x: undefined }` is not assignable to `{ x?: string }` - omit the key |
+| `noUncheckedIndexedAccess` | Array and index-signature reads yield `T \| undefined`: narrow before use |
+| `noPropertyAccessFromIndexSignature` | Index-signature keys use bracket notation, not dot |
+| `verbatimModuleSyntax` | Type-only imports say `import type`, or they survive into JS |
+| `erasableSyntaxOnly` | No runtime TS constructs - no `enum`, namespaces, or parameter properties (hence `as const` value sets) |
+| `noImplicitOverride` | Subclass overrides are marked `override` |

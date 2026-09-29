@@ -1,6 +1,6 @@
 ---
 name: review-stack
-description: "Stack review of one or more third-party tools (OXC, TanStack, Vite, Wrangler, Sentry, pnpm, Claude Code...) against current official best practices: one parallel subagent per tool, verified findings, one consolidated plan in chat. USE WHEN: user runs /review-stack or explicitly asks for a dependency/stack review. DO NOT USE WHEN: reviewing app code, a PR, or a single dimension (/review-*), or implementing features."
+description: "Stack review of one or more third-party tools (OXC, TanStack, Vite, cf, Sentry, pnpm, Claude Code...) against current official best practices: one parallel subagent per tool, verified findings, one consolidated plan in chat. USE WHEN: user runs /review-stack or explicitly asks for a dependency/stack review. DO NOT USE WHEN: reviewing our code or design by domain (/review), a PR, or implementing features."
 argument-hint: "<dep|family|all|changed[:ref]>[,...] [focus]"
 disable-model-invocation: true
 ---

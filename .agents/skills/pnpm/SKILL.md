@@ -26,11 +26,11 @@ Do **not** put task logic in root `package.json` when it belongs in packages - s
 
 | Setting | Value |
 |---------|-------|
-| pnpm version | `11.20.0` (pinned via `packageManager` in root `package.json`) |
+| pnpm version | `12.6.0` (pinned via `devEngines.packageManager` in root `package.json`; resolved version and integrity in `pnpm-lock.yaml` `packageManagerDependencies`) |
 | Workspace globs | `apps/*`, `packages/*` in `pnpm-workspace.yaml` |
 | Install (local) | `pnpm install` |
 | Install (CI) | `pnpm install --frozen-lockfile` |
-| Update all deps | `pnpm update` → `pnpm update --recursive --latest` (bumps catalog entries in `pnpm-workspace.yaml`) |
+| Update all deps | `pnpm run update` → `pnpm update --recursive --latest` (bumps catalog entries in `pnpm-workspace.yaml`) |
 | Lockfile | Single `pnpm-lock.yaml` (pnpm workspace default) |
 | Policy location | `pnpm-workspace.yaml` only - project `.npmrc` is auth-only under pnpm 11 |
 
@@ -60,10 +60,11 @@ Shared versions live in the **default catalog** in `pnpm-workspace.yaml` with `c
 
 ```yaml
 catalog:
-  '@cloudflare/vite-plugin': ^1.51.0
+  '@cloudflare/vite-plugin': 2.0.0-beta.sha-ad79608dd
   '@tailwindcss/vite': ^4.3.3
   '@vitejs/plugin-react': ^6.0.5
   babel-plugin-react-compiler: ^1.0.0
+  cf: 1.0.0-beta.5
   hono: ^4.13.0
   oxfmt: ^0.62.0
   oxlint: ^1.77.0
@@ -73,9 +74,11 @@ catalog:
   tailwindcss: ^4.3.3
   typescript: ^7.0.2
   vite: ^8.2.0
-  wrangler: ^4.119.0
+  wrangler: ^4.143.0
   zod: ^4.5.2
 ```
+
+`cf` and `@cloudflare/vite-plugin` are exact beta pins: cf accepts only plugin versions `>=2.0.0-0 <3`, and the plugin ships a snapshot per push. Bump the two deliberately and together, and re-check both pins after `pnpm run update` (`pnpm update --recursive --latest`).
 
 TanStack packages (`@tanstack/*`) and `@types/*` are also in the catalog - see `pnpm-workspace.yaml` for the full list.
 
@@ -97,7 +100,7 @@ Keep front-app-only utilities (e.g. `rollup-plugin-visualizer`) out of the catal
 
 **Workflow for bumping a shared tool:**
 
-1. **All catalog + non-catalog deps:** `pnpm update` - runs `pnpm update --recursive --latest`, which rewrites catalog ranges in `pnpm-workspace.yaml` and keeps `"catalog:"` in manifests.
+1. **All catalog + non-catalog deps:** `pnpm run update` - runs `pnpm update --recursive --latest`, which rewrites catalog ranges in `pnpm-workspace.yaml` and keeps `"catalog:"` in manifests.
 2. **One catalog-managed package:** `pnpm update --recursive --latest <pkg>` (e.g. `oxfmt`).
 3. **Manual pin:** edit `pnpm-workspace.yaml` `catalog:`, then `pnpm install`.
 4. Run `pnpm run ci` after any dependency bump.
@@ -128,7 +131,7 @@ pnpm --filter worker-api... <cmd>
 pnpm --filter front-app <cmd>
 
 # Update all deps (including catalog entries in pnpm-workspace.yaml)
-pnpm update
+pnpm run update
 
 # Update one catalog-managed package to latest
 pnpm up -r -L oxfmt
@@ -158,7 +161,7 @@ Configured in `pnpm-workspace.yaml`:
 | `trustPolicy: no-downgrade` | Reject installs that would downgrade package trust/provenance |
 | `blockExoticSubdeps: true` | Block exotic (non-registry) transitive dependencies |
 | `minimumReleaseAge` (unset) | pnpm's default 24-hour cooldown on newly published versions |
-| `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `wrangler`, `miniflare`, `typescript`) |
+| `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `cf`, `wrangler`, `miniflare`, `typescript`) |
 
 When `pnpm install` fails on a blocked build script:
 
@@ -177,7 +180,7 @@ Use pnpm strict linking defaults. This repository has no hoisting override: work
 GitHub Actions uses:
 
 1. `pnpm/setup` (pnpm v11+ successor to `pnpm/action-setup`) with `runtime: node@24`, store `cache: true`, and `install: false` (default install is not frozen)
-2. `pnpm install --frozen-lockfile` (version comes from root `package.json` `packageManager`)
+2. `pnpm install --frozen-lockfile` (version comes from root `package.json` `devEngines.packageManager`)
 3. `pnpm turbo run <task> --affected`
 
 Rules:
@@ -190,7 +193,7 @@ Rules:
 
 | Mistake | Correct approach |
 |---------|------------------|
-| Duplicate root-owned tools in each `package.json` | Keep OXC, Turbo, and Wrangler tooling at the narrowest actual owner |
+| Duplicate root-owned tools in each `package.json` | Keep OXC, Turbo, cf, and Wrangler tooling at the narrowest actual owner |
 | `pnpm add foo` at root without `-w` | Use `-w` for root deps, `--filter` for packages |
 | Registry version for `@repo/*` | Use `workspace:*` |
 | Registry version for a catalogued package | Use `catalog:` |

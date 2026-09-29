@@ -12,18 +12,18 @@ Shared TypeScript presets. Every app and library extends one and overrides only 
 
 ## Usage
 
-A Worker gets its runtime types from the committed, `wrangler types`-generated `worker-configuration.d.ts` (regenerate with `pnpm types`):
+A Worker gets `Env` and its runtime types from `.cloudflare/types/index.d.ts`, which `pnpm types` (`cf workers types`) generates from its `cloudflare.config.ts`. The file is gitignored; `check-types` runs `types` first through Turborepo:
 
 ```jsonc
 // tsconfig.json
 {
   "extends": "@repo/typescript-config/workers.json",
-  "compilerOptions": { "types": ["./worker-configuration.d.ts"] },
-  "include": ["worker-configuration.d.ts", "src/**/*.ts"]
+  "compilerOptions": { "types": [] },
+  "include": ["src/**/*.ts", "cloudflare.config.ts", ".cloudflare/types"]
 }
 ```
 
-Add `"node"` to `types` (and install `@types/node`) only when the Worker uses `nodejs_compat`. With service bindings, the Worker's `types` script passes every bound Worker's `wrangler.jsonc` so RPC stubs are typed on `Env` - see [`workers-config`](../../.claude/rules/backend/workers-config.md).
+`allowImportingTsExtensions` (set by the presets) covers the `./src/index.ts` entrypoint import in `cloudflare.config.ts`. Add `"node"` to `types` (and install `@types/node`) only when Worker source imports Node built-ins. The Worker's `vite.config.ts` type-checks in its own `tsconfig.node.json` on `vite-node.json`, as in the SPA below. Service bindings and cross-Worker RPC typing: [`workers-config`](../../.claude/rules/backend/workers-config.md).
 
 A React SPA splits browser source from the Vite config, and uses `package.json` `"imports"` rather than `paths` for in-app absolute imports:
 

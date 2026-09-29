@@ -3,7 +3,7 @@ id: react
 summary: React 19 patterns, effects, Suspense, compiler readiness
 families: [frontend]
 packages: [react, react-dom, @types/react, @types/react-dom, react-doctor]
-paths: [apps/front-*/src/**, .claude/rules/frontend/react.md, .claude/rules/frontend/react-doctor.md, .claude/rules/frontend/frontend-architecture.md]
+paths: [apps/front-*/src/**, .claude/rules/frontend/react.md, .claude/rules/quality/lint-config.md]
 ---
 
 # React
@@ -47,4 +47,4 @@ Code splitting and chunk output belong to `vite`; query and router APIs belong t
 
 ## Accepted
 
-- Conventions in [.claude/rules/frontend/react.md](../../../../.claude/rules/frontend/react.md) and [frontend-architecture.md](../../../../.claude/rules/frontend/frontend-architecture.md).
+- Conventions in [.claude/rules/frontend/react.md](../../../../.claude/rules/frontend/react.md) (layout, providers, splitting, React Doctor workflow); React Doctor and oxlint config rationale in [lint-config.md](../../../../.claude/rules/quality/lint-config.md).

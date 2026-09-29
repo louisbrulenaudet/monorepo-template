@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Purpose: Fail the deploy before any install/build work when credentials or the
-# production origin are missing, with a named message instead of wrangler's auth error.
+# production origin are missing, with a named message instead of cf's auth error.
 # Target: called by cd.yml.
 set -euo pipefail
 

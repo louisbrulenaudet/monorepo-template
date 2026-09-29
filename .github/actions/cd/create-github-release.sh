@@ -9,7 +9,7 @@ set -euo pipefail
 : "${VERSION_IDS_FILE:?VERSION_IDS_FILE is required (exported by upload-versions.sh)}"
 
 deployed=""
-while IFS=$'\t' read -r app _dir _version_id; do
+while IFS=$'\t' read -r app _dir _version_id _worker_name; do
   deployed+="\`${app}\`, "
 done < "$VERSION_IDS_FILE"
 
@@ -18,11 +18,11 @@ notes="$(mktemp)"
   echo "Deployed ${deployed%, } @ \`${VERSION}\` to production."
   echo
   echo "- Commit: ${RELEASE_SHA}"
-  while IFS=$'\t' read -r app _dir version_id; do
+  while IFS=$'\t' read -r app _dir version_id _worker_name; do
     echo "- ${app} version id: \`${version_id}\`"
   done < "$VERSION_IDS_FILE"
   echo "- URL: ${VITE_API_BASE_URL}"
-  while IFS=$'\t' read -r app dir _version_id; do
+  while IFS=$'\t' read -r app dir _version_id _worker_name; do
     changelog="apps/${dir}/CHANGELOG.md"
     [ -f "$changelog" ] || continue
     excerpt="$(

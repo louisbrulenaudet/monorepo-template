@@ -32,7 +32,7 @@ Read root and package turbo configs; trace one build and one test hash through t
 ## Axes
 
 - **Task graph**: `dependsOn` correct (build ← `^build`, test/lint shape); `inputs`/`outputs` declared so caches hit; build-affecting env captured (`env`/`globalEnv`) without over-invalidating.
-- **Caching**: local cache sane; remote cache per repo provisioning; dev/deploy/promote marked uncached.
+- **Caching**: local cache sane; remote cache per repo provisioning; dev/deploy/upload marked uncached; `types` cached on `cloudflare.config.ts` with `.cloudflare/types/**` outputs.
 - **Boundaries**: root tags enforce "nothing imports an app"; each package has a valid tag (`app`, `contracts`, `contracts-base`, `lib`, `config`); `pnpm boundaries` inside `ci`.
 - **Scoping & CI**: filter idioms (`--filter=<pkg>`, `...pkg...`, `--affected`) used where intended; GitHub CI `--affected` limited to check/test/build.
 - **Version currency**: newer query/boundaries features worth adopting; deprecated keys removed.
@@ -44,7 +44,7 @@ Wrong dependencies causing bad caches or skipped work; boundary violations.
 
 ## Overlaps
 
-Workflow-level CI structure beyond turbo invocations is out of scope (`/review-ci`).
+Workflow-level CI structure beyond turbo invocations is out of scope (`/review ci`).
 
 ## Accepted
 

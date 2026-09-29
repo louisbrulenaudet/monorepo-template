@@ -4,6 +4,8 @@
   "treatConfigHintsAsErrors": true,
   "workspaces": {
     "apps/front-*": {
+      "entry": ["cloudflare.config.ts"],
+      "includeEntryExports": false,
       "ignoreDependencies": [
         "@tanstack/react-devtools!",
         "@tanstack/react-query-devtools!",
@@ -20,6 +22,8 @@
       ],
     },
     "apps/!(front-*)": {
+      "entry": ["cloudflare.config.ts"],
+      "includeEntryExports": false,
       "ignoreDependencies": ["cloudflare"],
     },
     ".": {
@@ -29,7 +33,7 @@
         "!.agents/**",
         "!.agents/**!",
       ],
-      "ignoreDependencies": ["@vitest/ui"],
+      "ignoreDependencies": ["@vitest/ui", "wrangler"],
     },
     "packages/vitest-config": {
       "ignoreFiles": ["src/package-root.d.ts"],
