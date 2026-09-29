@@ -75,6 +75,9 @@ catalogs:
 # Transitive @types/node '*' ranges would otherwise resolve to the newest major, ahead of the Node 24 engine.
 overrides:
   '@types/node': 'catalog:'
+  # Temporary: cf 1.0.0-beta.5 pins miniflare 5.20260926.0-alpha, which pins undici 7.29.0
+  # (GHSA-rfgv-xxqx-mfg5, GHSA-w293-vg96-wgc3). Delete once cf ships on miniflare >= 5.20260926.1-alpha.
+  'undici@>=7.0.0 <7.29.1': ^7.29.1
 
 minimumReleaseAgeExclude:
   - '@cloudflare/*'

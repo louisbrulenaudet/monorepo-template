@@ -154,6 +154,7 @@ treemap
 tsgolint
 Turborepo
 typescriptlang
+undici
 ungated
 unlabels
 unobserve
