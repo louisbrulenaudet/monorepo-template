@@ -58,7 +58,7 @@
   "js/ts.updateImportsOnFileMove.enabled": "always",
   "js/ts.preferences.preferTypeOnlyAutoImports": true,
   "js/ts.preferences.autoImportFileExcludePatterns": [
-    "**/worker-configuration.d.ts",
+    "**/.cloudflare/**",
     "**/*.gen.ts",
     "**/dist/**",
     "**/.wrangler/**"
@@ -76,16 +76,9 @@
   },
   "files.associations": {
     "*.css": "tailwindcss",
-    "wrangler.jsonc": "jsonc",
     ".oxlintrc.json": "jsonc",
     "**/.vite-hooks/*": "shellscript"
   },
-  "json.schemas": [
-    {
-      "fileMatch": ["apps/*/wrangler.jsonc", "apps/*/wrangler.json"],
-      "url": "./node_modules/wrangler/config-schema.json"
-    }
-  ],
   // unpkg is scoped to knip: the bare domain would trust any npm package.
   "json.schemaDownload.trustedDomains": {
     "https://json.schemastore.org/": true,
@@ -102,7 +95,7 @@
   "files.trimFinalNewlines": true,
   "files.eol": "\n",
   "files.readonlyInclude": {
-    "**/worker-configuration.d.ts": true,
+    "**/.cloudflare/**": true,
     "**/routeTree.gen.ts": true,
     "**/route-tree.gen.ts": true,
     "**/*.gen.ts": true,
@@ -115,6 +108,7 @@
   "files.exclude": {
     "**/node_modules": true,
     "**/.turbo": true,
+    "**/.cloudflare": true,
     "**/.wrangler": true,
     "**/dist": true,
     "**/build": true,
@@ -123,6 +117,7 @@
     "**/.vitest": true,
     "**/coverage": true,
     "**/test-results": true,
+    "**/.playwright-cli": true,
     "**/.cache": true,
     "**/.tailwindcss": true,
     "**/*.tsbuildinfo": true,
@@ -137,6 +132,8 @@
   "files.watcherExclude": {
     "**/node_modules/**": true,
     "**/.turbo/**": true,
+    "**/.cloudflare/output/**": true,
+    "**/.cloudflare/state/**": true,
     "**/.wrangler/**": true,
     "**/dist/**": true,
     "**/build/**": true,

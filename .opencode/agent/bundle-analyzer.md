@@ -26,14 +26,14 @@ That is the **existing** script (`apps/front-app/package.json` → `"analyze": "
 ## Where the numbers come from
 
 - **Vite's own stdout table is your data source.** The build prints one line per emitted chunk with raw, gzip, and brotli sizes (`reportCompressedSize` and `rollup-plugin-visualizer` are both configured with `gzipSize`/`brotliSize`). Rank from that table.
-- **Do not try to read `dist/stats.html`.** The visualizer writes a treemap there for a human to open in a browser, and `permission.edit` denies `**/dist/**` repo-wide - do not work around it with `cat`, `grep`, or a script, and do not ask for it to be relaxed.
+- **Do not read `apps/front-app/dist/stats.html`.** `rollup-plugin-visualizer` still writes its treemap there for a human to open in a browser: one large HTML page with the data embedded, which floods the context this agent exists to protect. Do not work around that with `cat`, `grep`, or a script. The client build itself lands in `apps/front-app/.cloudflare/output/v0/workers/default/assets/` (the cf Build Output), and the stdout table already names every chunk in it.
 - Chunk-splitting intent lives in `apps/front-app/vite.config.ts` (vendor chunks: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`). Read it to name a chunk, not to change it.
 
 ## Rules
 
 - **Never edit anything.** Not `vite.config.ts`, not a `package.json`, not a source file. If the fix is obvious, describe it in one line and stop - the caller decides.
 - Distinguish a real size regression from a build failure or a missing dependency. If the build fails, report the failing command and the error, and do not report sizes.
-- Do not run `pnpm build`, `pnpm deploy`, or `wrangler` anything.
+- Do not run `pnpm build`, `pnpm run deploy`, `pnpm run upload`, or any `cf` or `wrangler` command.
 - One build per invocation. Do not rebuild to "confirm" a number you already have.
 
 ## Output format

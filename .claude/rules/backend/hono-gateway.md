@@ -7,111 +7,69 @@ paths:
 
 # Hono Gateway (Workers) Rules
 
-`worker-api` and sibling `worker-*` / `webhook-*` apps use **Hono** on Cloudflare Workers. For deep patterns load the **`hono`** and **`workers-best-practices`** skills.
-
-## Request lifecycle
-
-```mermaid
-flowchart TD
-  Client["Client / front-app"] --> ReqId["request-id"]
-  ReqId --> Sentry["sentry"]
-  Sentry --> MNA["method not allowed (405)"]
-  MNA --> Sec["secure headers"]
-  Sec --> CORS["CORS (/api/*)"]
-  CORS --> CSRF["CSRF (unsafe methods)"]
-  CSRF --> Timing["timing (dev only)"]
-  Timing --> Timeout["timeout"]
-  Timeout --> Body["body limit"]
-  Body --> Validation["validator() at boundary"]
-  Validation --> Handler["thin route handler"]
-  Handler --> Binding["service binding (optional)"]
-  Handler --> Response["c.json()"]
-```
+`worker-api` and sibling `worker-*` / `webhook-*` apps run Hono on Cloudflare Workers. Depth: skills `hono`, `workers-best-practices`.
 
 ## Middleware order (`src/index.ts`)
 
-Register in this order. The onion model runs "before" logic top-down and "after" logic (response mutation) bottom-up. Steps 1-4 and the error handlers are individual exports of `@repo/hono-middleware` ([AGENTS.md](../../../packages/hono-middleware/AGENTS.md)); each app registers them itself, so the order stays visible in its `index.ts`.
+Register in this order; "before" logic runs top-down, response mutation bottom-up. Steps 1-4 and the error handlers are individual exports of `@repo/hono-middleware` ([AGENTS.md](../../../packages/hono-middleware/AGENTS.md)); each app registers them itself so the order stays visible in its `index.ts`.
 
 **Root app (every route):**
 
-1. **`requestIdMiddleware`** - **first**, so every later middleware, `errorHandler` and response can reference it. Mints `crypto.randomUUID()` per request into `c.get("requestId")`, tags it `request_id` on the Sentry scope (`withSentry` opens the per-request isolation scope around `app.fetch`, before any middleware), and sets the `X-Request-Id` response header after `next()`, so `onError` / `notFound` responses carry it too. It never reads an inbound `X-Request-Id`: a caller-supplied id could carry a user identifier, and one id shared across requests would no longer name a single invocation.
-2. **`sentryMiddleware(app, { release })`** (wraps `sentry()` from `@sentry/hono/cloudflare`, whose direct import oxlint blocks in apps). It reports `c.error` 5xx even when `onError` handles the error, so do not add `captureException` there. The locked-down `dataCollection` (no user info, cookies, headers, bodies, query params, frame variables) and the console-breadcrumb drop live in the package - sensitive data, see [guardrails.md](../core/guardrails.md).
+1. **`requestIdMiddleware`** - first, so every later middleware, `errorHandler`, and response can reference it. Mints `crypto.randomUUID()` into `c.get("requestId")`, tags `request_id` on the Sentry scope (`withSentry` opens the per-request isolation scope around `app.fetch`, before any middleware), and sets `X-Request-Id` after `next()`, so `onError` / `notFound` responses carry it. It never reads an inbound `X-Request-Id`: a caller-supplied id could carry a user identifier, and a shared id would no longer name one invocation.
+2. **`sentryMiddleware(app, { release })`** - wraps `sentry()` from `@sentry/hono/cloudflare`, whose direct import oxlint blocks in apps. It reports `c.error` 5xx even when `onError` handles the error: never add `captureException` there. The locked-down `dataCollection` (no user info, cookies, headers, bodies, query params, frame variables) and the console-breadcrumb drop live in the package; never loosen them per app.
 3. **`jsonMethodNotAllowed(app)`** - `405` plus `Allow` when the path exists but the method does not.
-4. **`apiSecureHeaders`** (`hono/secure-headers`) - HSTS, `nosniff`, `no-referrer`, COOP/CORP on by default (and `X-Powered-By` removed), plus a locked-down `contentSecurityPolicy` (`default-src 'none'; frame-ancestors 'none'`) - harmless for JSON, hardening if a response is ever rendered - and a `permissionsPolicy` denying camera/mic/geolocation/payment. CORP `same-origin` is fine for CORS-mode `fetch` from `front-app`; do not disable it to fix SPA reads.
-5. **`cors()`** on `/api/*` (gateway-local, `src/middlewares/cors.ts`) - preflight `OPTIONS` must clear before auth/routes. Read the allowlist from `c.env.CORS_ORIGINS` **per request** (env is not available at module scope on Workers). `exposeHeaders` is `CORS_EXPOSED_HEADERS` from `@repo/enums-common`, so browsers can read `X-Request-Id` and `X-Worker-Version-Id`. Empty allowlist is permissive (`*`) in `dev` only; any other `ENVIRONMENT` (including `staging` / `production` and typos) must set origins or `/api/*` returns **503**.
-6. **Origin / CSRF gate** on `/api/*` (gateway-local) - unsafe methods only (any `Content-Type`, including `application/json`); must not block CORS preflight. Allows when Origin is on the allowlist **or** `Sec-Fetch-Site` is `same-origin` / `same-site`. Hono built-in `csrf()` only covers form content-types - do not rely on it alone for this JSON SPA gateway.
+4. **`apiSecureHeaders`** (`hono/secure-headers`) - defaults (HSTS, `nosniff`, `no-referrer`, COOP/CORP, `X-Powered-By` removed) plus CSP `default-src 'none'; frame-ancestors 'none'` (harmless for JSON, hardening if a response is ever rendered - keep it) and a `permissionsPolicy` denying camera/mic/geolocation/payment. CORP `same-origin` is fine for CORS-mode `fetch` from `front-app`; never disable it to fix SPA reads.
+5. **`cors()`** on `/api/*` (gateway-local `src/middlewares/cors.ts`) - preflight `OPTIONS` clears before auth/routes. Read the allowlist from `c.env.CORS_ORIGINS` per request (env is unavailable at module scope on Workers). `exposeHeaders` is `CORS_EXPOSED_HEADERS` from `@repo/enums-common`, so browsers can read `X-Request-Id` and `X-Worker-Version-Id`. An empty allowlist is permissive (`*`) in `dev` only; any other `ENVIRONMENT` (staging, production, typos) must set origins or `/api/*` returns **503**. A single-label prefix wildcard (`https://*-front-app-production.<subdomain>.workers.dev`, three or more labels after the wildcard label) is honored only when `ENVIRONMENT` is `AppEnvironment.PREVIEW`; anywhere else it returns 503. CORS and the CSRF gate share the matcher in `src/middlewares/cors-origins.ts`.
+6. **Origin / CSRF gate** on `/api/*` (gateway-local) - unsafe methods only, any `Content-Type` including `application/json`; never blocks preflight. Allows when Origin is on the allowlist or `Sec-Fetch-Site` is `same-origin` / `same-site`. Hono's `csrf()` covers only form content-types, so never rely on it alone here. Browser JSON mutations rely on this gate plus CORS: never reintroduce a permissive CSRF in strict environments.
 
 End with `app.notFound(notFoundHandler)` and `app.onError(errorHandler)` on the root app: a sub-app without its own `onError` falls through to the parent's.
 
 **API sub-app (`/api/v1`):**
 
-7. **`timing()`** (`hono/timing`) - Server-Timing header, **dev only** (`c.env.ENVIRONMENT === AppEnvironment.DEV`). Workers timer metrics are inaccurate (timers advance only on I/O) and internal timings should not leak to clients, staging and previews included.
-8. **`timeout(ms, () => new HTTPException(504, …))`** (`hono/timeout`) - safety net returning `504`. Always pass the exception factory: Hono's default is one shared `HTTPException`, and Sentry skips an error object it has already captured, so only the first timeout per isolate would be reported. Read the caveat below before adding routes.
+7. **`timing()`** - `Server-Timing`, dev only (`c.env.ENVIRONMENT === AppEnvironment.DEV`): Workers timers advance only on I/O, and internal timings must not leak to clients, staging and Previews included.
+8. **`timeout(ms, () => new HTTPException(504, …))`** - always pass the exception factory: Hono's default is one shared `HTTPException`, and Sentry skips an error object it already captured, so only the first timeout per isolate would be reported. Read the timeout caveat below before adding routes.
 9. **`bodyLimit()`** - e.g. 3 MB cap; `413` on overflow.
 10. **`prettyJSON()`** - dev only.
 
 ## Errors
 
-A middleware or handler rejects by throwing `new HTTPException(status, { message })`; `errorHandler` renders `{ error, requestId }` (plus `issues` for validation failures). Never build that envelope by hand. The only exception is `jsonMethodNotAllowed`, because its `Allow` header would not survive the throw. Keep messages generic (see `apps/worker-api/AGENTS.md`).
+A middleware or handler rejects by throwing `new HTTPException(status, { message })`; `errorHandler` renders `{ error, requestId }` (plus `issues` for validation failures). Never build that envelope by hand; the one exception is `jsonMethodNotAllowed`, whose `Allow` header would not survive the throw. Clients receive `message`, so keep it generic (no sensitive content, no upstream provider text); unexpected errors stay `"Internal server error"` + `requestId`.
 
 ## Observability
 
-- **Native first.** With `observability.enabled` in `wrangler.jsonc`, Workers emits an invocation log per request (method, path, status, CPU/wall time, outcome) with no code. Do **not** re-implement a per-request access log in middleware - it only duplicates that data and doubles log ingest cost.
-- **Correlate failures by request id.** `requestIdMiddleware` mints the id; `errorHandler` logs every 5xx with it - unhandled errors and thrown 5xx `HTTPException`s alike, never a 4xx - and `errorHandler` / `notFoundHandler` echo it in the body, next to the `X-Request-Id` header. `front-app` shows it on its error screen, so a user or an agent can quote it.
-- **Log objects, never `JSON.stringify` strings.** Workers Logs indexes the keys of an object passed to `console.*`; a string is only text-searchable, so `requestId` would not be filterable.
-- **Debugging from a request id** (humans and agents): (1) Workers Logs - `cloudflare-observability` MCP or the dashboard - filter `requestId = <id>` for the error line and its stack, beside the invocation log (5xx only: a 4xx leaves just its invocation log); (2) Sentry - search `request_id:<id>` for the backend event, then open its trace to reach the SPA spans and errors, linked by `trace_id` through `sentry-trace` / `baggage` even when the trace was not sampled - an `Error id` on the SPA's error screen is a Sentry event id, so search Sentry for it directly; (3) Worker-to-Worker - Cloudflare does not propagate custom ids, so pass `requestId` as an explicit RPC argument or queue message field and log it the same way (traces nest on their own).
-- **Sentry for exceptions, Workers Observability for traffic.** `SENTRY_DSN` is a `secrets.required` secret (unset locally or in tests → SDK disabled). Release is `worker-api@<semver>`; `environment` is `ENVIRONMENT`, and front-app sends the same `AppEnvironment` value via `VITE_APP_ENVIRONMENT`. Trace sampling (`packages/hono-middleware/src/sentry.ts`) mirrors each environment's `head_sampling_rate` (100% in `dev` / `preview`, 1% elsewhere) in every app that uses it: change them together, and change front-app's `sentry.ts` with them, because the gateway continues the SPA's sampling decision. `beforeBreadcrumb` drops console breadcrumbs, because console text must not reach a third party. Source maps match by release, not debug ID: Wrangler bundles and uploads in one step, so nothing can inject IDs in between. That is why `upload` passes `--outdir dist`, so that `sentry:sourcemaps` uploads the maps of exactly the bundle that shipped.
-- **Reserve `console.error` for real failures** - Workers observability indexes `console` output, so error dashboards stay signal-heavy when success is left to invocation logs.
-- Sampling and retention live in `wrangler.jsonc` (`observability`, `head_sampling_rate`, `logs.invocation_logs`) - see [workers-config.md](workers-config.md).
+- **Native first.** With `observability.enabled`, Workers emits an invocation log per request (method, path, status, CPU/wall time, outcome). Never re-implement a per-request access log in middleware: it duplicates that data and doubles ingest.
+- `errorHandler` logs every 5xx with its `requestId` - unhandled errors and thrown 5xx `HTTPException`s alike, never a 4xx - and `errorHandler` / `notFoundHandler` echo the id in the body next to the `X-Request-Id` header; `front-app` shows it on its error screen.
+- **Log objects, never `JSON.stringify` strings**: Workers Logs indexes the keys of an object passed to `console.*`, so `requestId` stays filterable. Reserve `console.error` for real failures; success is the invocation log's job.
+- **Debugging from a request id**: (1) Workers Logs (`cloudflare-observability` MCP or dashboard), filter `requestId = <id>` for the error line and stack beside the invocation log - 5xx only, a 4xx leaves just its invocation log; (2) Sentry `request_id:<id>` for the backend event, then its trace for the SPA spans and errors, linked by `trace_id` through `sentry-trace` / `baggage` even when unsampled - an `Error id` on the SPA error screen is a Sentry event id, search it directly; (3) across Workers, see [service-bindings.md](service-bindings.md).
+- Never log, return, or hardcode a secret (`bindings.secret()`) value.
+- **Sentry for exceptions, Workers Observability for traffic.** `SENTRY_DSN` is a `bindings.secret()`; `test` and Preview bind `bindings.text("")`, and locally it is set only from the shell, so empty or unset keeps the SDK off. Release is `worker-api@<semver>`; `environment` is `ENVIRONMENT`, and `front-app` sends the same `AppEnvironment` value via `VITE_APP_ENVIRONMENT`. Trace sampling in `packages/hono-middleware/src/sentry.ts` mirrors each deployment's `headSamplingRate` (1 in `dev` / `preview`, 0.01 elsewhere) in every consuming app: change them together, and `front-app`'s `sentry.ts` with them, because the gateway continues the SPA's sampling decision. `beforeBreadcrumb` drops console breadcrumbs: console text must not reach a third party. Source maps match by release, not debug ID: `sentry:sourcemaps` uploads the maps in `.cloudflare/output/v0/workers/default/bundle/`, the Build Output the `--prebuilt` upload shipped.
 
 ## Timeout caveat (read before adding routes)
 
-`hono/timeout` is `Promise.race([next(), timer])`: on fire it returns `504`, but **does not cancel the handler** - downstream work (including any `fetch`) keeps running and, on Workers, is only guaranteed to finish under `c.executionCtx.waitUntil()`. It also **cannot wrap streaming / SSE responses**. For a streaming route, mount it outside the timeout (a separate sub-app) or carve it out with `except` from `hono/combine`; for true cancellation, pass `AbortSignal.timeout(ms)` to your subrequests. Keep `front-app`'s fetch timeout (`DEFAULT_TIMEOUT_MS` in `src/utils/fetch-api.ts`) above the gateway's, or the SPA aborts before the `504` and its `X-Request-Id` arrive; the health probe's shorter timeout is fine, because it only drives a status dot.
+`hono/timeout` is `Promise.race([next(), timer])`: on fire it returns `504` but **does not cancel the handler** - downstream work, `fetch` included, keeps running and on Workers is only guaranteed to finish under `c.executionCtx.waitUntil()`. It cannot wrap streaming / SSE responses: mount such a route outside the timeout (separate sub-app) or carve it out with `except` from `hono/combine`. For real cancellation pass `AbortSignal.timeout(ms)` to subrequests. Keep `front-app`'s fetch timeout (`DEFAULT_TIMEOUT_MS` in `src/utils/fetch-api.ts`) above the gateway's, or the SPA aborts before the `504` and its `X-Request-Id` arrive; the health probe's shorter timeout is fine, since it only drives a status dot.
 
 ## Validation
 
-- Validate every input at the route boundary with `validator(target, Schema)` from `@repo/hono-middleware`. It is `zValidator` with a hook that throws `HTTPException(400, { cause })`, so failures reach `errorHandler` as `{ error, requestId, issues }`. oxlint blocks importing `@hono/zod-validator` directly in apps: without that hook Hono answers with its default `{ success, error }` body, which serializes Zod internals and drops the `requestId`.
-- Import schemas from `@repo/dtos-common/api` - never redefine wire shapes locally.
-- Targets: `validator("json" | "param" | "query" | "header", Schema)`.
-- **Never `z.compile()`.** It builds its fast path with `new Function`, which workerd forbids during request handling, so a compiled schema silently falls back to the interpreted parser.
-- **Do not log validation failures.** The client receives every issue in the body and the invocation log records the 400; a `console` line duplicates both and lets a caller on a public route inflate log ingest.
+- Validate every input at the route boundary with `validator(target, Schema)` from `@repo/hono-middleware` (`"json" | "param" | "query" | "header"`): `zValidator` with a hook that throws `HTTPException(400, { cause })`, so failures reach `errorHandler` as `{ error, requestId, issues }`. oxlint blocks importing `@hono/zod-validator` in apps: without the hook Hono answers `{ success, error }`, serializing Zod internals and dropping the `requestId`.
+- **Never `z.compile()`**: it builds its fast path with `new Function`, which workerd forbids during request handling, so the schema silently falls back to the interpreted parser.
+- Never log validation failures: the body carries every issue and the invocation log records the 400; a `console` line duplicates both and lets a public caller inflate log ingest.
 
-## Handlers
+## Handlers and routes
 
-- **Thin handlers**: validate → call a service module or `env.BINDING` → `c.json()`.
-- No business logic inline in route files.
-- HTTP status codes: `400` validation, `401` unauthenticated, `403` forbidden, `404` not found, `413` body too large, `500` internal, `504` timeout.
+- Status codes: `400` validation, `401` unauthenticated, `403` forbidden, `404` not found, `413` body too large, `500` internal, `504` timeout.
 - RESTful paths: plural nouns (`/items`), verbs via HTTP method.
 
 ## Typing & structure
 
-- Type the app with `export type AppEnv = HonoEnv<Env>` in `src/app-env.ts`, where `HonoEnv` comes from `@repo/hono-middleware`. Its `Bindings extends BaseBindings` constraint is the only compile-time check that `wrangler.jsonc` declares what the shared middleware reads (`ENVIRONMENT` as an `AppEnvironment` value, `SENTRY_DSN`), because `app.use()` merges a middleware's Env into the app's instead of checking it.
-- Keep small custom middleware inline in `index.ts`. Extract to `src/middlewares/<name>.ts` (`createMiddleware<AppEnv>`, `hono/factory`) when it grows; move it to `@repo/hono-middleware` when a second Hono app needs it.
-- **Name every middleware**: pass a named function expression (`createMiddleware<AppEnv>(async function originGate(c, next) { … })`, `api.use(async function devPrettyJson(c, next) { … })`), never an anonymous arrow. `hono routes --verbose` prints `function.name`, and an anonymous one shows only as `[middleware]`.
-- Broad-with-carve-outs scoping: prefer `except` / `some` / `every` from `hono/combine` over duplicating `app.use()` per sub-route.
-- `hono/context-storage` (`getContext()`) is available (Node.js compatibility is on via compatibility_date 2026-08-04 or later) for deep call stacks, but a thin gateway should pass `c` explicitly - don't reach for it by default.
+- Type the app with `export type AppEnv = HonoEnv<Env>` in `src/app-env.ts` (`HonoEnv` from `@repo/hono-middleware`). Its `Bindings extends BaseBindings` constraint is the only compile-time check that `cloudflare.config.ts` declares what the shared middleware reads (`ENVIRONMENT` as an `AppEnvironment` value, `SENTRY_DSN`), because `app.use()` merges a middleware's Env instead of checking it.
+- A guard that depends on required config fails closed when the value is missing (throw or 503), never with a permissive fallback.
+- Small custom middleware stays inline in `index.ts`; extract to `src/middlewares/<name>.ts` (`createMiddleware<AppEnv>`, `hono/factory`) when it grows; move it to `@repo/hono-middleware` when a second Hono app needs it.
+- **Name every middleware** with a named function expression (`createMiddleware<AppEnv>(async function originGate(c, next) { … })`, `api.use(async function devPrettyJson(c, next) { … })`), never an anonymous arrow: `hono routes --verbose` prints `function.name`, and an anonymous one shows as `[middleware]`.
+- Broad scope with carve-outs: `except` / `some` / `every` from `hono/combine`, not one `app.use()` per sub-route.
+- `hono/context-storage` (`getContext()`) works (Node.js compatibility is on via `compatibilityDate`), but a thin gateway passes `c` explicitly; do not reach for it by default.
 
 ## Workers runtime
 
-- **No global mutable state** for per-request data - use Hono context (`c.get` / `c.set`).
-- **No floating promises** - always `await` or return async work. Background work after a response needs `c.executionCtx.waitUntil()`.
-- **No `setInterval` / long-lived timers** - CPU time limits apply.
-- Respect Workers constraints for streams, WebSockets, and subrequests.
-
-## Service bindings
-
-- Worker-to-Worker only - never from `front-app` (HTTP only for browsers).
-- Configure in `wrangler.jsonc` → `services`; call via `env.BINDING.method()`.
-- Run `pnpm types` after adding bindings to regenerate `worker-configuration.d.ts`.
-
-## Inspecting the app (Hono CLI)
-
-`@hono/cli` is a `worker-api` devDependency. Run `hono agent-context` first: it prints the command reference generated from the installed version, so it cannot drift from this rule. Every command is JSON by default - `--plain` is for humans only.
-
-- `hono routes` after changing middleware order or a mount - the registered table without booting a server (`--verbose` includes middleware).
-- `hono request <path> --runtime workerd` to exercise a route. The default `node` runtime has no `c.env`, so any handler that reads a binding or `ENVIRONMENT` needs `--runtime workerd`, which loads `wrangler.jsonc` and its local bindings; pass no file argument then.
-- Append `2>/dev/null` to `hono request`. The JSON result is on stdout, but on an error path the Worker's `console.error` stack embeds the CLI's base64 bundle in every frame, which puts several MB on stderr.
-- **`--trace` does not work here** (`@hono/cli` 0.2.0-next.9): under `--trace` the Sentry middleware's `matchedRoutes()` lookup throws, so every route answers 500, and `--trace` refuses `--runtime workerd`. The CLI still suggests it on a 404; ignore that. Read the chain from `hono routes --verbose` instead.
-- This is the fast loop between edits, not a replacement for the Vitest Workers pool suites.
-
-See [workers-config.md](workers-config.md) when editing `wrangler.jsonc`. See [workers-cache.md](workers-cache.md) when setting `Cache-Control` on responses.
+- No global mutable state for per-request data: use `c.get` / `c.set`.
+- Background work after a response goes through `c.executionCtx.waitUntil()` (floating promises are a lint error).
+- No `setInterval` or long-lived timers: CPU time limits apply.

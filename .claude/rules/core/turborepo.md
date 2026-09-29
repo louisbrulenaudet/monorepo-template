@@ -1,70 +1,51 @@
 ---
 paths:
   - "**/turbo.json"
-  - ".github/workflows/**"
 ---
 
 # Turborepo
 
-Task-graph rationale, read-only graph primitives, and signed-cache provisioning for this repo's turbo setup. Root `turbo.json` descriptions say what each task does; the why is in [Task graph](#task-graph) below. Package tags live in `core/boundaries`; CI invariants in `ops/ci`.
+Root `turbo.json` task `description`s say what each task does; the why is here. Tags: [boundaries.md](boundaries.md); CI invariants: [../ops/ci.md](../ops/ci.md).
 
-**Docs:** ground truth for the pinned version is `node_modules/turbo/schema.json` (every `turbo.json` key and `futureFlags` entry, with descriptions), then `pnpm turbo docs <query>` (docs matching the installed CLI) or Context7 `/vercel/turborepo`, then `turborepo.dev`. The upstream-locked `turborepo` skill points at `node_modules/turbo/docs/`, which turbo 2.11.x does not ship - do not treat its absence as a broken install.
+**Docs, in order:** `node_modules/turbo/schema.json` (every key and `futureFlags` entry for the pinned version), `node_modules/turbo/docs/` or `pnpm turbo docs <query>` (version-matched; the upstream-locked `turborepo` skill points there), Context7 `/vercel/turborepo`, then `turborepo.dev`. `agentGuidance: false` stops turbo writing its own pointer block into root `AGENTS.md`, which would cost context every session.
 
 ## Task graph
 
-- **`transit` is a no-op edge** (transit-node pattern): it propagates source changes through declared workspace dependencies without serializing tasks. `check-types` and `test` depend on `transit`, not `^check-types`, so packages run in parallel yet still invalidate when a dependency's source changes. App-to-app service bindings are not package dependencies, so the caller declares an explicit `<callee>#transit` edge in its package `turbo.json` ([../backend/workers-config.md](../backend/workers-config.md)).
-- **JIT packages export source `.ts`**, so there is no declaration emit and no project references.
-- **No `types` edge on `check-types`.** `worker-configuration.d.ts` is committed, so it hashes as an ordinary tracked input; regenerating it mid-CI would dirty the tree. `types` writes a tracked file, so it is uncached like every write-mode task; `types:check` (`wrangler types --check`) is read-only, cached, and does not start workerd.
-- **`build` is deliberately not gated on `check-types`.** A task's hash includes its dependencies' hashes and `check-types` hashes `tests/`, so that edge made every test-only edit rebuild. With it gone and test files excluded from `build` inputs, a test-only edit keeps the build cached and out of `--affected`. The type gate lives in `pnpm run ci`, CD's `turbo run check-types build`, and the `deploy` / `upload` `check-types` edges.
-- **`global.inputs` is prepended to every task's `inputs`**, not folded into one global hash, so a task can drop an entry with a negation glob. Never add OXC configs there: `.oxlintrc.json` / `.oxfmtrc.json` belong to `//#lint:*` / `//#format:check`, and a global entry would invalidate `check-types` and `build` on a lint-rule-only edit.
-- **`//#hooks:test` is uncached** because `guard-secret-commit` shells out to git against the live index (the suite runs in about a second). It sits in `check` and `ci` because the guards fail closed: a syntax error in a git guard denies every Bash command.
-- **App `dev` tasks are `interruptible`** so `turbo watch` can restart them when dependency inputs change; `front-app#dev` runs `with: ["worker-api#dev"]` so a filtered `--filter=front-app` dev still has a live gateway.
+- **`transit` is a no-op edge** (transit-node pattern): `check-types` and `test` depend on `transit`, not `^check-types`, so packages run in parallel yet invalidate when a dependency's source changes. App-to-app service bindings are not package dependencies: a Worker-name string binding reads nothing from the callee and needs no edge; whether typed cross-Worker RPC adds a `<callee>#transit` edge is decided with the first `worker-*` ([service-bindings.md](../backend/service-bindings.md)).
+- **`check-types` depends on `types`**: the generated `.cloudflare/types/index.d.ts` is gitignored, so `check-types` cannot hash it as a tracked input and a fresh clone type-checks with no manual step. `types` is cached (input `cloudflare.config.ts`, output `.cloudflare/types/**`, hash also covers the lockfile's cf and workerd versions). No drift check: nothing generated is committed.
+- **`build` is deliberately not gated on `check-types`**: `check-types` hashes `tests/`, so the edge made every test-only edit rebuild; with it gone and tests excluded from `build` inputs, a test-only edit keeps the build cached and out of `--affected`. The type gate lives in `pnpm run ci`, CD's `turbo run check-types build`, and the `deploy` / `upload` → `check-types` edges. So `turbo run build` alone never type-checks: name both (`turbo run check-types build --filter=<app>...`).
+- **`global.inputs` is prepended to every task's `inputs`**, not folded into one global hash, so a task can drop an entry with a negation glob. Never add OXC configs there: they belong to `//#lint:*` / `//#format:check`, and a global entry would invalidate `check-types` and `build` on a lint-only edit.
+- **`//#hooks:test` is uncached** (`guard-secret-commit` shells out to git against the live index; the suite takes ~1 s) and sits in `check` and `ci` because the guards fail closed: a syntax error in a git guard denies every Bash command.
+- **App `dev` tasks are `interruptible`** so `turbo watch` can restart them; `front-app#dev` runs `with: ["worker-api#dev"]` so a filtered front dev still has a gateway. `worker-api#dev` passes `SENTRY_DSN` through: Worker apps keep no env file, so the shell is the only source of a local secret, and `envMode: "strict"` strips anything unlisted.
+- **`global.passThroughEnv`** lists cf's `CF_SEND_TELEMETRY`, `DO_NOT_TRACK`, `CLOUDFLARE_REGISTRY_PATH` beside the `WRANGLER_*` entries, which stay for the Vitest pool and the Wrangler-only commands.
+- **`futureFlags.filterUsingTasks` stays off**: in 2.11.4 it makes `--filter=...pkg` follow task edges only, silently dropping dependent packages for the transit tasks, and CD's `--filter='./apps/*...'` relies on the package expansion; `--affected` already gets task precision from `affectedUsingTaskInputs`. Before re-enabling, confirm `turbo run check-types test --filter=...@repo/dtos-common --dry=json` still lists both apps.
 
-## Turbo query (agent primitives)
+## Inspecting the graph
 
-`turbo query` is the read-only way to inspect the graph without running tasks - prefer it over speculative dry runs:
+Prefer read-only `turbo query` over speculative dry runs: `turbo query affected [--tasks build | --packages]`, `turbo query ls [pkg]`, `turbo query --schema` (load before writing a custom query).
 
-| Command | Use |
-|---------|-----|
-| `turbo query affected` | Which tasks are affected by working-tree changes (JSON by default) |
-| `turbo query affected --tasks build` | Same, scoped to one task name |
-| `turbo query affected --packages` | Affected packages instead of tasks |
-| `turbo query ls [pkg]` | Package list / per-package deps and tasks |
-| `turbo query --schema` | GraphQL schema to load before writing custom queries |
+A task hash covers its resolved `inputs`, `env` values, the package's external lockfile dependencies, and the hash of every task it `dependsOn`, so a miss no own input explains usually comes from a dependency task.
 
-## Explaining a cache miss
-
-A task's hash covers its resolved `inputs`, its `env` values, the package's external dependencies from the lockfile, and the hash of every task it `dependsOn`. A miss that no input of the task itself explains usually comes from a dependency task.
-
-| Command | Use |
-|---------|-----|
-| `turbo run <task> --filter=<pkg> --dry=json` | Per-task `hash`, resolved `inputs` (file to git hash), `environmentVariables`, and `dependencies`, without running anything |
-| `turbo run <task> --filter=<pkg> --summarize`, twice, then diff the two `.turbo/runs/<run-id>.json` | Which input, env var, or dependency hash moved between two real runs |
-| `turbo query affected --base <ref> --head <ref>` | Why a task is selected: `reason.__typename` is `TaskFileChanged`, `TaskDependencyTaskChanged`, `TaskGlobalFileChanged`, ... |
-
-- `build` does not depend on `check-types` (see [Task graph](#task-graph)), so `turbo run build` alone never type-checks. Name both when you need the gate: `turbo run check-types build --filter=<app>...`.
-- `futureFlags.filterUsingTasks` stays off. In 2.11.4 it makes `--filter=...pkg` follow task edges only, which silently drops dependent packages for the transit-pattern tasks (`check-types`, `test`); `--affected` already gets task-level precision from `affectedUsingTaskInputs`. Before re-enabling it, confirm `turbo run check-types test --filter=...@repo/dtos-common --dry=json` still lists both apps.
-- `turbo query affected` counts uncommitted changes even with `--head`: a dirty `turbo.json` or root `package.json` marks every task `TaskGlobalFileChanged`. To reason about a clean commit range, run it in a scratch `git clone` of that commit.
-- Inside the Claude Code sandbox, any dry run whose task list includes `front-app#build` aborts during package traversal, because that task's `inputs` name `.env*` files the sandbox denies reading - the same cause that makes `ci:sandbox` drop `build`.
+- `turbo run <task> --filter=<pkg> --dry=json`: per-task `hash`, resolved `inputs`, `environmentVariables`, `dependencies`, without running.
+- `turbo run <task> --filter=<pkg> --summarize` twice, then diff the two `.turbo/runs/<run-id>.json`: which input, env var, or dependency hash moved.
+- `turbo query affected --base <ref> --head <ref>`: `reason.__typename` (`TaskFileChanged`, `TaskDependencyTaskChanged`, `TaskGlobalFileChanged`, …) says why a task is selected. It counts uncommitted changes even with `--head` (a dirty `turbo.json` or root `package.json` marks everything `TaskGlobalFileChanged`); reason about a clean range in a scratch `git clone`.
+- In the Claude Code sandbox, a dry run whose task list includes `front-app#build` hashes that task's `.env*` inputs, readable only through the `**/apps/front-app/.env*` allow; without it traversal aborts (the same reason `ci:sandbox` drops `build`).
 
 ## Root tasks (`//#`)
 
-Repo-wide checks that cannot be per-package - OXC, Knip, syncpack, the agent hook suite - are declared in root `turbo.json` as `//#lint:check`, `//#lint:agent`, `//#format:check`, `//#knip`, `//#knip:agent`, `//#knip:production`, `//#deps:check`, `//#deps:format:check`, `//#hooks:test`. Each maps 1:1 to a root `package.json` script of the same name and runs as one process at repo-root CWD, so `pnpm run check` / `ci` / `ci:agent` can schedule them in parallel from a single `turbo run`.
+Repo-wide checks - `//#lint:check`, `//#lint:agent`, `//#format:check`, `//#knip`, `//#knip:agent`, `//#knip:production`, `//#deps:check`, `//#deps:format:check`, `//#hooks:test` - each map 1:1 to the root `package.json` script of the same name and run as one process at repo-root CWD, so `check` / `ci` / `ci:agent` schedule them in parallel from one `turbo run`.
 
-- **Always address them with the `//#` prefix.** A bare `turbo run lint:check` would fan out to any workspace that later adds a same-named script, which is exactly the per-package `oxlint` that breaks the Tailwind context rules.
-- **`//#deps:check` and `//#deps:format:check` are cached with hand-authored `inputs`**: the workspace manifests (`package.json`, `apps/*/package.json`, `packages/*/package.json`), `pnpm-workspace.yaml`, and `.syncpackrc.json` - the complete set syncpack reads, verified with `--dry-run=json`. Extend those globs if `pnpm-workspace.yaml` ever adds a workspace directory.
-- **Every other root task stays `cache: false`.** A root task's `$TURBO_DEFAULT$` spans the whole repo, so caching without hand-authored `inputs` buys nothing. Before setting `cache: true` on one, author its `inputs` and verify the resolved file list with `turbo run <task> --dry-run=json` - explicit input globs do not honor `.gitignore` the way `$TURBO_DEFAULT$` does, so a bare `**/package.json` also matches nested `node_modules` manifests. An under-specified hash yields a cached *pass* over code that was never checked - a stale-green gate.
-- **`//#lint:check` should stay uncached.** `typeAware: true` couples it to the entire tsconfig graph plus the Tailwind entry point; enumerating that correctly is not worth the staleness risk.
-- **`audit` is never a root task.** `pnpm audit` is not a pure function of the commit (the advisory DB changes daily), and `envMode: "strict"` would strip the proxy and registry vars it inherits freely today. `boundaries` is likewise a CLI verb (`turbo boundaries`), not a task - keep both outside the `turbo run`.
+- **Always address them with the `//#` prefix**: a bare `turbo run lint:check` would fan out to any workspace that later adds a same-named script - the per-package `oxlint` that breaks the Tailwind rules.
+- **`//#deps:check` and `//#deps:format:check` are cached with hand-authored `inputs`**: the workspace manifests, `pnpm-workspace.yaml`, `.syncpackrc.json` - everything syncpack reads, verified with `--dry-run=json`. Extend them if `pnpm-workspace.yaml` adds a workspace directory.
+- **Every other root task stays `cache: false`**: a root task's `$TURBO_DEFAULT$` spans the repo, so caching needs hand-authored `inputs`, verified with `--dry-run=json` - explicit globs ignore `.gitignore` (a bare `**/package.json` matches nested `node_modules` manifests). An under-specified hash yields a cached pass over unchecked code.
+- **`//#lint:check` stays uncached**: `typeAware: true` couples it to the whole tsconfig graph plus the Tailwind entry point.
+- **Type-aware lint reads the gitignored `.cloudflare/types`**, so `check`, `fix`, the `ci*` scripts, the stop gate, and CI run `pnpm run types` first. A root task cannot depend on `<app>#types` without listing apps, so that ordering lives in the callers.
+- **`audit` and `boundaries` are never `turbo run` tasks**: `pnpm audit` is not a pure function of the commit (the advisory DB changes daily, and `envMode: "strict"` would strip the proxy/registry vars it inherits); `boundaries` is the `turbo boundaries` CLI verb.
 
 ## Remote cache
 
-Remote caching is enabled **and signed** (`remoteCache.signature: true`, `longerSignatureKey`). Local dev and CI need `TURBO_REMOTE_CACHE_SIGNATURE_KEY` (**>= 32 bytes**) alongside `TURBO_TOKEN`/`TURBO_TEAM`, or signed fetches fail closed. Without the key set locally, expect remote-cache misses; local caching is unaffected. Rotation invalidates every previously signed artifact - one rebuild per task, then the cache re-populates.
+Enabled and signed (`remoteCache.signature: true`, `longerSignatureKey`). Local dev and CI need `TURBO_REMOTE_CACHE_SIGNATURE_KEY` (>= 32 bytes, the same value everywhere) alongside `TURBO_TOKEN` / `TURBO_TEAM`, or signed fetches fail closed; without the key, expect remote misses - local caching is unaffected. Rotating the key invalidates every signed artifact once.
 
-### Provisioning a dev machine
+A dev machine gets none of them automatically: `turbo login && turbo link`, or export all three in the shell profile, never committed. Verify with a task CI already built: a cold local cache logs `cache hit, replaying logs`. Without them the machine is local-cache-only, by design.
 
-CI gets `TURBO_TOKEN` / `TURBO_TEAM` / `TURBO_REMOTE_CACHE_SIGNATURE_KEY` from repo secrets (`.github/workflows/*.yml`); a dev machine gets nothing automatically. Either run `turbo login && turbo link`, or export all three in the shell profile - the signature key must be the same >= 32-byte value CI uses, and none of them may ever be committed. Verify with a task CI already built: a remote hit logs `cache hit, replaying logs` on a cold local cache. A machine without them runs local-cache-only by design - correct, just slower.
-
-### Constrained machines
-
-On small hardware (4 cores / <4 GB RAM), prefer `--concurrency=2` on heavy graphs (`pnpm turbo run check-types test build --concurrency=2`) to limit memory pressure from parallel tsc/vitest/vite. Guidance only - never lower `concurrency` in `turbo.json`; that would slow CI runners.
+On 4 cores / <4 GB RAM, pass `--concurrency=2` on heavy graphs; never lower `concurrency` in `turbo.json` (it would slow CI).

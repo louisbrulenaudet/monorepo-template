@@ -9,13 +9,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { visualizer } from "rollup-plugin-visualizer";
-import {
-  defineConfig,
-  loadEnv,
-  type Plugin,
-  type PluginOption,
-  type ResolvedConfig,
-} from "vite";
+import { defineConfig, loadEnv, type Plugin, type PluginOption } from "vite";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 const analyzeBundle = process.env["ANALYZE"] === "true";
@@ -99,34 +93,31 @@ function cspHeaders(apiBaseUrl: string, sentryDsn: string | undefined): string {
   ].join("\n");
 }
 
-function generatedBuildArtifactsPlugin(mode: string) {
+function generatedBuildArtifactsPlugin(mode: string): Plugin {
   return {
     name: "generated-build-artifacts",
-    apply: "build" as const,
-    closeBundle() {
-      if (isStaticAnalysis) {
-        return;
-      }
-
-      const assetsIgnorePath = path.resolve(appDir, "dist/.assetsignore");
-      const assetsIgnore = readFileSync(assetsIgnorePath, "utf-8");
-      if (!assetsIgnore.split("\n").includes("*.map")) {
-        writeFileSync(assetsIgnorePath, `${assetsIgnore.trimEnd()}\n*.map\n`);
-      }
-
+    apply: "build",
+    applyToEnvironment: (environment) => environment.name === "client",
+    generateBundle() {
       const env = loadEnv(mode, appDir, "VITE_");
       const apiBaseUrl = env["VITE_API_BASE_URL"];
       if (!apiBaseUrl) {
         throw new Error(
-          "Missing VITE_API_BASE_URL: cannot generate dist/_headers. " +
+          "Missing VITE_API_BASE_URL: cannot generate _headers. " +
             "Set it in apps/front-app/.env.production or the deploy environment.",
         );
       }
 
-      writeFileSync(
-        path.resolve(appDir, "dist/_headers"),
-        cspHeaders(apiBaseUrl, env["VITE_SENTRY_DSN"]),
-      );
+      this.emitFile({
+        type: "asset",
+        fileName: "_headers",
+        source: cspHeaders(apiBaseUrl, env["VITE_SENTRY_DSN"]),
+      });
+      this.emitFile({
+        type: "asset",
+        fileName: ".assetsignore",
+        source: "*.map\n",
+      });
     },
   };
 }
@@ -165,27 +156,6 @@ function sentryDebugIdSourceMapsPlugin(): Plugin {
   };
 }
 
-// @cloudflare/vite-plugin (<= 1.61.0, container-cleanup.ts) swaps server.config
-// for a shallow copy; Vite keys its inline <script type="module"> html-proxy
-// cache on config identity, so the injected DevTools script 500s. Remove once
-// workers-sdk mutates in place.
-function restoreServerConfigIdentityPlugin(): Plugin {
-  let resolvedConfig: ResolvedConfig | undefined;
-  return {
-    name: "restore-server-config-identity",
-    apply: "serve",
-    enforce: "post",
-    configResolved(config) {
-      resolvedConfig = config;
-    },
-    configureServer(server) {
-      if (resolvedConfig && server.config !== resolvedConfig) {
-        server.config = resolvedConfig;
-      }
-    },
-  };
-}
-
 export default defineConfig(({ command, mode }) => {
   assertProductionOriginEnv(mode, command);
 
@@ -201,8 +171,7 @@ export default defineConfig(({ command, mode }) => {
     // Native (Rust) React Compiler via oxc-transform-react - no Babel pass.
     react({ compiler: true }),
     tailwindcss(),
-    cloudflare(),
-    restoreServerConfigIdentityPlugin(),
+    cloudflare({ types: { generate: false } }),
     generatedBuildArtifactsPlugin(mode),
   ];
 
@@ -246,7 +215,7 @@ export default defineConfig(({ command, mode }) => {
     build: {
       minify: "oxc",
       sourcemap: mode === "development" ? "inline" : "hidden",
-      reportCompressedSize: false,
+      reportCompressedSize: analyzeBundle,
       rolldownOptions: {
         devtools: {},
         onLog(level, log, log2) {

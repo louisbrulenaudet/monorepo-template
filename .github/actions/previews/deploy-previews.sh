@@ -2,17 +2,16 @@
 # Purpose: create or update a Worker Preview of every app under apps/, then smoke it.
 # Target: preview.yml (PREVIEW_NAME=pr-<N>) and `pnpm preview:deploy` locally, where
 # PREVIEW_NAME defaults to the current branch. Needs CLOUDFLARE_API_TOKEN and
-# CLOUDFLARE_ACCOUNT_ID, or a `wrangler login` session.
+# CLOUDFLARE_ACCOUNT_ID, or a `cf auth login` session.
 #
 # Order is monorepo.deployOrder, and it is load-bearing: a frontend is built only
 # after the gateway Preview exists, because its VITE_API_BASE_URL is that Preview's
-# URL. The build runs with the Cloudflare credentials unset.
+# URL. Every build runs with the Cloudflare credentials unset.
 set -euo pipefail
 # shellcheck source=./lib.sh
 . "$(dirname "$0")/lib.sh"
 
 name="$(resolve_preview_name)"
-message="${PREVIEW_MESSAGE:-$(git rev-parse --short HEAD)}"
 urls_file="${PREVIEW_URLS_FILE:-$(mktemp)}"
 : > "$urls_file"
 apps="$(node .github/actions/lib/list-apps.mjs)"
@@ -22,16 +21,13 @@ if [ -n "${CF_ACCESS_CLIENT_ID:-}" ] && [ -n "${CF_ACCESS_CLIENT_SECRET:-}" ]; t
   curl_access=(-H "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" -H "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}")
 fi
 
-# Reads the versioned `type: "preview"` record from WRANGLER_OUTPUT_FILE_PATH, as
-# upload-versions.sh does for uploads, instead of parsing `--json` stdout.
-wrangler_preview() {
+cf_preview() {
   local app="$1" out url
-  out="$(mktemp)"
-  WRANGLER_OUTPUT_FILE_PATH="$out" pnpm --filter="$app" exec wrangler preview \
-    --env "$PREVIEW_ENV" --name "$name" --message "$message" < /dev/null >&2
-  url="$(jq -r -s 'map(select(.type == "preview")) | last | .preview_urls[0] // empty' "$out")"
+  out="$(NO_COLOR=1 pnpm --filter="$app" exec cf previews deploy "$name" --prebuilt --mode "$PREVIEW_MODE" < /dev/null)" || return
+  printf '%s\n' "$out" >&2
+  url="$(jq -r 'select(.type == "preview") | .preview_urls[0] // empty' <<< "$out")"
   if [ -z "$url" ]; then
-    echo "::error::${app} Preview '${name}' was deployed but has no URL. workers.dev Preview URLs are applied by \`wrangler deploy\` / \`wrangler triggers deploy\`, never by \`versions upload\`: run \`pnpm --filter=${app} exec wrangler triggers deploy --config wrangler.jsonc --env ${PREVIEW_ENV}\` once." >&2
+    echo "::error::${app} Preview '${name}' was deployed but has no URL. previewUrls in cloudflare.config.ts takes effect through \`cf deploy\` / \`cf workers triggers deploy\`, never \`cf workers versions create\`: run \`pnpm --filter=${app} exec cf workers triggers deploy --mode ${PREVIEW_MODE}\` once." >&2
     return 1
   fi
   printf '%s' "$url"
@@ -70,7 +66,7 @@ smoke() {
   head -c 500 "$body_file" >&2
   echo >&2
   if [ "$role" = "http-gateway" ] && [ "$status" = "503" ]; then
-    echo "::error::A gateway 503 is the fail-closed CORS guard: set env.production.previews.vars.CORS_ORIGINS in apps/${app}/wrangler.jsonc (e.g. https://*-front-app-production.<subdomain>.workers.dev, the subdomain is in the URL above)." >&2
+    echo "::error::A gateway 503 is the fail-closed CORS guard: set the PREVIEW deployment's corsOrigins in apps/${app}/cloudflare.config.ts (e.g. https://*-front-app-production.<subdomain>.workers.dev, the subdomain is in the URL above)." >&2
   elif [ "$status" = "302" ] || [ "$status" = "403" ]; then
     echo "::error::Cloudflare Access is blocking the probe: set CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET to an Access service token." >&2
   fi
@@ -79,16 +75,15 @@ smoke() {
 
 gateway_url=""
 while IFS=$'\t' read -r app _dir role health_path; do
-  echo "::group::wrangler preview ${app} (${name})"
+  echo "::group::cf previews deploy ${app} (${name})"
+  build_env=(CLOUDFLARE_PREVIEW_BUILD=true)
   if [ "$role" = "frontend" ]; then
     : "${gateway_url:?no http-gateway Preview exists yet - a frontend needs its URL as VITE_API_BASE_URL}"
-    # --only: the type-check gate belongs to ci.yml; this build only needs dist/.
-    env -u CLOUDFLARE_API_TOKEN -u CLOUDFLARE_ACCOUNT_ID \
-      VITE_API_BASE_URL="$gateway_url" VITE_APP_ENVIRONMENT=preview \
-      CLOUDFLARE_ENV="$PREVIEW_ENV" NODE_ENV=production \
-      pnpm turbo run build --filter="$app" --only < /dev/null
+    build_env+=(VITE_API_BASE_URL="$gateway_url" VITE_APP_ENVIRONMENT=preview NODE_ENV=production)
   fi
-  url="$(wrangler_preview "$app")"
+  env -u CLOUDFLARE_API_TOKEN -u CLOUDFLARE_ACCOUNT_ID -u CF_ACCESS_CLIENT_ID -u CF_ACCESS_CLIENT_SECRET \
+    "${build_env[@]}" pnpm --filter="$app" exec cf build --mode "$PREVIEW_MODE" < /dev/null
+  url="$(cf_preview "$app")"
   echo "::endgroup::"
   echo "${app}: ${url}"
   [ "$role" = "http-gateway" ] && gateway_url="$url"

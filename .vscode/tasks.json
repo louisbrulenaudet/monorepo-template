@@ -5,7 +5,7 @@
   "tasks": [
     {
       "label": "dev: full stack",
-      "detail": "turbo run dev - worker-api (wrangler :8700) + front-app (vite :5174)",
+      "detail": "pnpm dev - cf dev (Vite) for worker-api (:8700) and front-app (:5174)",
       "type": "shell",
       "command": "pnpm dev",
       "isBackground": true,
@@ -20,7 +20,7 @@
     },
     {
       "label": "dev: front-app",
-      "detail": "pnpm turbo run dev --filter=front-app - Vite dev server on http://localhost:5174",
+      "detail": "pnpm turbo run dev --filter=front-app - cf dev (Vite) on http://localhost:5174, with worker-api",
       "type": "shell",
       "command": "pnpm turbo run dev --filter=front-app",
       "isBackground": true,
@@ -35,7 +35,7 @@
     },
     {
       "label": "dev: worker-api",
-      "detail": "pnpm turbo run dev --filter=worker-api - wrangler dev on http://localhost:8700",
+      "detail": "pnpm turbo run dev --filter=worker-api - cf dev (Vite) on http://localhost:8700",
       "type": "shell",
       "command": "pnpm turbo run dev --filter=worker-api",
       "isBackground": true,
@@ -50,7 +50,7 @@
     },
     {
       "label": "ci: full gate",
-      "detail": "pnpm run ci - boundaries + oxlint + oxfmt + check-types + types:check + test + build (full-repo pre-PR gate)",
+      "detail": "pnpm run ci - boundaries + oxlint + oxfmt + check-types + test + build (full-repo pre-PR gate)",
       "type": "shell",
       "command": "pnpm run ci",
       "group": {
@@ -88,8 +88,8 @@
       }
     },
     {
-      "label": "types: regenerate wrangler types",
-      "detail": "pnpm types - wrangler types (worker-configuration.d.ts) for every Worker",
+      "label": "types: regenerate Env types",
+      "detail": "pnpm types - cf workers types (.cloudflare/types/index.d.ts) for every Worker",
       "type": "shell",
       "command": "pnpm types",
       "group": "build",
@@ -150,7 +150,7 @@
     },
     {
       "label": "build",
-      "detail": "pnpm build - turbo run build (front-app: vite build; gated on check-types)",
+      "detail": "pnpm build - turbo run build (cf build into each app's .cloudflare/output/)",
       "type": "shell",
       "command": "pnpm build",
       "group": "build",

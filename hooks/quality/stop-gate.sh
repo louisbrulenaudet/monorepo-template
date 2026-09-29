@@ -41,10 +41,11 @@ STATE="${TMPDIR:-/tmp}/claude-stop-gate-${SESSION}"
 LOG="${TMPDIR:-/tmp}/claude-stop-gate-${SESSION}.log"
 export NO_COLOR=1 FORCE_COLOR=0 TURBO_UI=false
 STATUS=0
+pnpm run types >"$LOG" 2>&1 || STATUS=1
 # //#hooks:test stays out: its suite runs this script, so including it would let
 # a broken test fixture recurse into the real checkout.
 pnpm turbo run //#lint:agent //#format:check //#deps:check //#deps:format:check \
-  --output-logs=errors-only --continue=dependencies-successful >"$LOG" 2>&1 || STATUS=1
+  --output-logs=errors-only --continue=dependencies-successful >>"$LOG" 2>&1 || STATUS=1
 # Root tasks drop out of --affected when only workspace files changed, so the
 # type check runs as its own affected-scoped pass.
 pnpm turbo run check-types --affected \

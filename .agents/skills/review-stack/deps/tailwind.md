@@ -3,7 +3,7 @@ id: tailwind
 summary: v4 CSS-first config, Vite plugin, class hygiene
 families: [frontend]
 packages: [tailwindcss, @tailwindcss/vite, eslint-plugin-better-tailwindcss]
-paths: [apps/front-*/src/**/*.css, .claude/rules/frontend/tailwind.md]
+paths: [apps/front-*/src/**/*.css, .claude/rules/frontend/tailwind.md, .claude/rules/quality/lint-config.md]
 ---
 
 # Tailwind CSS
@@ -23,7 +23,7 @@ Tailwind CSS v4 in `front-app`: CSS-first configuration, build integration, and 
 - Global stylesheet entry (`apps/front-app/src/**/*.css`, `@import "tailwindcss"` / `@theme` blocks)
 - [apps/front-app/vite.config.ts](../../../../apps/front-app/vite.config.ts) (`@tailwindcss/vite` position)
 - Dark-mode strategy; class usage across [apps/front-app/src/](../../../../apps/front-app/src/)
-- [.claude/rules/frontend/tailwind.md](../../../../.claude/rules/frontend/tailwind.md) ↔ `.cursor` twin
+- [.claude/rules/frontend/tailwind.md](../../../../.claude/rules/frontend/tailwind.md) ↔ `.cursor` twin; the `better-tailwindcss` rule set and its rationale in [lint-config.md](../../../../.claude/rules/quality/lint-config.md)
 
 ## Probe
 

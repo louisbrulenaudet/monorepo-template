@@ -281,7 +281,7 @@ if (values.traces && gateway && overrides.size === 0) {
         sql:
           "SELECT s.outcome, s.duration_ms, s.error, l.message FROM spans s " +
           "LEFT JOIN logs l ON l.span_id = s.span_id AND l.seq = 0 " +
-          "WHERE s.parent_id IS NULL ORDER BY s.start_ms DESC LIMIT 10",
+          "WHERE s.parent_id IS NULL AND l.message IS NOT NULL ORDER BY s.start_ms DESC LIMIT 10",
       }),
     },
   );

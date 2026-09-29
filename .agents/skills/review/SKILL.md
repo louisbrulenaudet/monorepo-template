@@ -1,124 +1,79 @@
 ---
 name: review
-description: "Full multi-dimension code/PR/docs review → structured plan. USE WHEN: user runs /review or explicitly asks for this review. DO NOT USE WHEN: implementing features or fixing bugs unless the user asked for a review."
+description: "Code and design review of this repo by domain - architecture, ci, code-quality, configuration, performance, security, seo, simplicity, tests, ui: one parallel reviewer subagent per selected domain, verified findings, one consolidated plan in chat with IDs to answer. USE WHEN: user runs /review, optionally with domains (`/review security,ci`) and a focus (a path, a workspace, `diff`). DO NOT USE WHEN: checking a third-party tool's configuration against its docs (/review-stack), hunting correctness bugs in a diff (/code-review), a full security audit or pen test (/security-audit), or implementing features."
+argument-hint: "[all|<domain>[,<domain>...]] [focus]"
 disable-model-invocation: true
-context: fork
-background: true
-model: opus
-effort: high
 ---
 
 # Review
-Run a review of the current context (code, PR, or docs). Your reply must be a **plan of suggested changes**: concise, actionable, and structured-not only prose.
 
-## Invocation
+Review the repo, one domain per subagent, and give the owner a verified, prioritized plan with the smallest effective fix per item. A deviation from a checklist is not a finding until it has a repo location, a source, and a concrete consequence.
 
-Text after the slash command is additional scope/focus - narrow the review accordingly. If none given, use the default scope described below.
+One domain or ten, the process is the same: one reviewer per domain, in parallel, then one verification pass and **one reply**. It writes no files.
 
-## Best practices alignment
+## Registry
 
-This command is designed to align with industry best practices for (AI-assisted) code and technical reviews:
+Each `domains/<id>.md` is one domain. Its frontmatter is the registry - `id`, `summary`, `model`, optional `applies_when` - and its body is what the reviewer follows: `## Ground truth`, `## Scope`, `## Probe`, `## Axes`, `## Critical when`, `## Overlaps`, `## Accepted`, optional `## Extra output`. The contract every reviewer follows is [reviewer.md](reviewer.md).
 
-- **Explicit scope and dimensions** - Clear categories (architecture, scalability, performance, security, maintainability, CI) so feedback is scoped and not generic.
-- **Context and conventions** - Reference to AGENTS.md and key artifacts ensures context-aware, project-aligned suggestions.
-- **Actionable, explainable feedback** - Every item requires **what**, **where**, and **why**; suggestions must be implementable.
-- **Structured output** - Critical / Improvements / Optional with headings and bullets for scannable plans.
-- **Conduct and scope** - Be constructive and specific. Stay in scope; call out out-of-scope concerns as separate follow-up items. For minor polish, prefix with **Nit:** so the author knows it's non-blocking.
-- **Trade-offs** - When a suggestion involves trade-offs (e.g. performance vs readability), mention them briefly so the author can decide.
+**Adding a domain** = adding one `domains/<id>.md` with that frontmatter and those sections. Nothing else lists domains.
 
-## Deep technical review
+Read only the frontmatter here (Glob `domains/*.md`, first lines of each); each reviewer reads its own domain file in full.
 
-When asked for a full or deep codebase review, conduct a deep, end-to-end technical review with the objective of bringing the codebase to state-of-the-art production standards. Your analysis should be critical, exhaustive, and opinionated where justified. Align with the root [AGENTS.md](../../../AGENTS.md) and app-level [apps/worker-api/AGENTS.md](../../../apps/worker-api/AGENTS.md) for conventions and architecture.
+## Selector
 
-**Key artifacts to consider:** Root and app `package.json` / `pnpm-workspace.yaml` / `turbo.json`; root `package.json` scripts; [apps/front-app/vite.config.ts](../../../apps/front-app/vite.config.ts) (React, Tailwind, `@cloudflare/vite-plugin`); [apps/front-app/wrangler.jsonc](../../../apps/front-app/wrangler.jsonc) (SPA assets, env); [apps/worker-api/wrangler.jsonc](../../../apps/worker-api/wrangler.jsonc); `apps/worker-api/src/index.ts` (middleware order, routes); shared DTOs in `packages/dtos-common/` and enums in `packages/enums-common/`; `.github/workflows/ci.yml`; `.dev.vars` usage and secrets handling.
+`$ARGUMENTS`: the first word is the selector, the rest is the **focus**.
 
-Cover the following dimensions (if a dimension yields no findings, say so in one line in the plan):
+- none or `all` → every domain.
+- a domain `id`, or ids comma-separated (`security,ci`) → those.
+- anything else → print the `id` / `summary` table and stop.
 
-- **Architecture & configuration**
-  - Monorepo: apps vs packages, `@repo/dtos-common` / `@repo/enums-common` / `@repo/typescript-config` usage, Turborepo tasks and caching, root scripts and port allocation.
-  - Env and secrets: `secrets.required` + local `.env` (never `.dev.vars`) vs `wrangler.jsonc` vars; Vite `import.meta.env` (client-exposed keys only, e.g. `VITE_*` if used); no secrets in client bundle or repo.
-  - Deployment: Cloudflare Workers + Vite build output for `front-app`; `worker-api` as separate Worker; env-specific build modes (development/production).
-- **Scalability**
-  - Worker limits: CPU/memory and request timeouts; edge-safe code (e.g. nodejs_compat, no Node-only APIs in worker code).
-  - Scaling story: static SPA assets for `front-app`, `worker-api` as stateless API; shared packages and Turborepo build caching.
-  - Bottlenecks: API route design, large payloads or blocking work on the critical path; heavy client JS in React bundles.
-- **Performance optimization**
-  - Frontend: static asset delivery, Cloudflare caching for assets; code-splitting (`React.lazy`, route chunks), bundle size.
-  - Images: lazy loading and sizing; modern formats where used; avoid layout shift (CLS).
-  - worker-api: cold start impact, bundle size; timeouts on external calls if present.
-  - Network: payload size, duplicate requests; link prefetch or route preloading if added; avoid unnecessary heavy client JS.
-- **Security & robustness**
-  - Frontend: no secrets or sensitive logic in client bundle; security headers and CSP as configured for the deployment.
-  - worker-api: CORS origins and preflight, CSRF and body limits per middleware; third-party verification (e.g. Turnstile) only when implemented; service secrets only in env (local `.env` / wrangler secrets).
-  - Validation and errors: Zod schemas from `@repo/dtos-common` at HTTP boundaries; consistent Hono error handling; safe logging and no sensitive data in responses or logs.
-- **Maintainability & code quality**
-  - Conventions: naming (camelCase, CONSTANT_CASE, PascalCase enums and CONSTANT_CASE members per AGENTS.md); OXC and TypeScript strict; consistent patterns across apps.
-  - Structure: clear separation apps/packages; DTOs in `@repo/dtos-common`, routes and handlers in `worker-api`; React components and utils in `front-app/src/`.
-  - Evolution: duplication, readability, testability; sustainability of shared DTOs and API surface.
-- **CI, reproducibility & observability**
-  - CI: `.github/workflows/ci.yml` - install, lint/format (`pnpm check`), typecheck (`pnpm check-types`), build; cache and lockfile handling; branch/trigger strategy.
-  - Reproducibility: `pnpm install` and lockfile, env documented (secret names in `secrets.required`), build modes and deploy pipeline.
-- **User experience**
-  - Styling: Tailwind CSS, Vite plugin, dark mode, responsive design, mobile-first approach, consistent UI/UX patterns.
+The focus - a path, a workspace (`front-app`), `diff` (files changed against `main`, uncommitted and untracked included), or free text (`caching only`) - is passed verbatim to every selected reviewer and narrows each domain's `## Scope`.
 
-Apply these dimensions in addition to the review checklist below; structure all findings in the same plan output (Critical / Improvements / Optional).
+A domain whose `applies_when` does not hold is skipped **only when selected by `all`**, with one Coverage line `not applicable: <reason>`; naming it explicitly always runs it.
 
-## Steps
+## Execution safety
 
-1. **Gather context** – Identify scope (full codebase, PR, or specific area). Request more context if insufficient. Stay within scope; note out-of-scope concerns as separate follow-up items.
-2. **Read project conventions** – Review root [AGENTS.md](../../../AGENTS.md) and relevant app AGENTS.md for architecture, naming, and patterns.
-3. **Inspect key artifacts** – Open and skim the key artifacts listed above (package.json, turbo.json, wrangler.jsonc, vite.config.ts, front-app and worker-api source, CI workflow) to ground the review.
-4. **Review by dimension** – Go through each of the dimensions (Architecture & configuration, Scalability, Performance optimization, Security & robustness, Maintainability & code quality, CI, reproducibility & observability, User experience) and note findings or explicit "no issues."
-5. **Apply review checklist** – For each finding, confirm correctness, conventions, quality, and actionability.
-6. **Compose the plan** – Group findings into Critical, Improvements, and Optional; for each item state **what**, **where**, and **why**.
-7. **Verify coverage** – Ensure every dimension is addressed in the plan (with at least one finding or a one-line "no issues" note).
+- **No files.** No report, scratch, ledger, or notes, in the working tree or elsewhere. Findings live only in the reply.
+- **Read-only.** Source and config are read, never edited. Reviewers run only their domain's `## Probe` commands.
+- Never install, upgrade, run a fixer, deploy, promote, run `preview:*`, start a dev server, or call a deployed Worker or Preview unless the user asked. A probe blocked by the sandbox becomes a Needs-validation item naming the restriction; do not work around it.
+- Implement nothing until the user asks after the reply ([Follow-up](#follow-up)).
 
-## Checklist
+## Run shape
 
-Use this checklist to track that every dimension and step is covered before submitting the plan:
+1. **Select** - resolve the selector; evaluate `applies_when` for `all`.
+2. **Review** - launch one `reviewer` subagent per selected domain, **all in a single message** so they run in parallel, each with the `model` from its frontmatter. Each prompt contains: the path `.agents/skills/review/reviewer.md`, the path of its domain file, the focus (or "none: the domain's default scope"), and the other selected domain ids. A single domain still gets its own subagent: its reads stay out of the main context, and the author is not the verifier.
+3. **Verify** - in the main thread, per [Verification](#verification).
+4. **Report** - one reply, per [Output](#output).
 
-- [ ] Context gathered and scope clear
-- [ ] Root and app AGENTS.md consulted
-- [ ] Key artifacts inspected
-- [ ] **Architecture & configuration** - reviewed
-- [ ] **Scalability** - reviewed
-- [ ] **Performance optimization** - reviewed
-- [ ] **Security & robustness** - reviewed
-- [ ] **Maintainability & code quality** - reviewed
-- [ ] **CI, reproducibility & observability** - reviewed
-- [ ] **Styling** - reviewed
-- [ ] Review checklist (correctness, conventions, quality, actionability) applied to findings
-- [ ] Plan structured as Critical / Improvements / Optional with what/where/why
-- [ ] Every dimension appears in the plan (finding or one-line "no issues")
+Without the `reviewer` agent or parallel subagents (e.g. Cursor), run the same contract for each domain in turn, then verify and report exactly the same way.
 
-## Context usage
+## Verification
 
-Use the user's context effectively:
+Before anything reaches the reply:
 
-- Prefer `@code` for specific functions or classes when only part of a file is relevant.
-- Use `@file` when the whole file or component matters.
-- Use `@git` when reviewing commits, PRs, or recent changes.
-- Use `@docs` for framework/library correctness; use `@web` only when up-to-date external info is needed.
+1. For every Critical and Improvement item, re-open the cited `path:line` and confirm it says what the reviewer claims. A wrong location or claim is dropped; an overstated consequence is downgraded.
+2. **Try to refute every Critical once**: look for the strongest control that would stop it (middleware, schema, lint rule, framework default, a test) and the rule that accepts it. If one holds, downgrade or drop.
+3. Drop anything the domain's `## Accepted` or an owning rule records as deliberate, unless the reviewer cites a source that overturns its premise.
+4. A finding without a verifiable source, or dependent on state outside the repo, moves to Needs validation.
+5. Deduplicate across domains by slug and root cause (same file + same cause). The domain whose `## Overlaps` owns the concern keeps it; a `Hand-offs` item joins the owner's bucket when the owner was selected, and is reported under the originating domain otherwise.
+6. Spot-check at least one Optional per domain the same way; if it fails, re-check the rest of that domain's Optionals.
 
-If there isn't enough context to review meaningfully, say so and suggest which `@` references to add (e.g. `@file:path/to/module.ts`, `@git:commit-or-branch`).
+## Output
 
-## Review checklist
+One reply, in this order:
 
-When reviewing, consider (for a full or deep codebase review, also apply the **Deep technical review** dimensions above):
+1. **Scope** - one line: domains run, focus, and "partial" when a focus, a skipped domain, or a failed probe narrowed coverage.
+2. **Critical**, 3. **Improvements**, 4. **Optional** - each item `**C1** [domain] what - where - why - fix`, most severe and cheapest-to-fix first within a bucket. Prefix pure polish with `Nit:`.
+5. **Hardening** - `**H1** [domain] gap - where - source`: best-practice gaps with no demonstrated consequence. Not bugs; the owner decides.
+6. **Needs validation** - `**V1** [domain] hypothesis - missing fact - how to check`.
+7. **Domain extras** - each selected domain's `## Extra output` block, under its name.
+8. **Coverage** - per domain, one line: axes with findings, axes with no issues, axes not checked or not applicable, each with the reason.
 
-- **Correctness**: logic, edge cases, possible bugs.
-- **Conventions**: consistency with project standards (e.g. AGENTS.md, naming, patterns).
-- **Quality**: security, performance, or maintainability where relevant.
-- **Actionability**: every suggestion must be clear and implementable-no vague advice.
-- **Trade-offs**: when a suggestion involves trade-offs (e.g. performance vs readability), state them briefly so the author can decide.
-- **Scope**: limit findings to the review scope; call out out-of-scope concerns as separate follow-up tasks rather than blocking the current plan.
+IDs are `C`, `I`, `O`, `H`, `V` plus a counter per bucket, assigned after verification so they are gapless. Empty buckets say "None." A clean domain is a valid result: never pad it with low-value items, and never claim a domain is fully covered when an axis was not checked.
 
-## Output format
+## Follow-up
 
-Respond with a **plan** only (no implementation unless the user explicitly asks):
+The reply ends there. When the user answers with IDs (`fix C1, I3`, `accept O2`):
 
-1. **Critical** – must-fix issues (bugs, security, broken behavior).
-2. **Improvements** – worthwhile changes (clarity, robustness, consistency).
-3. **Optional** – nice-to-haves (style, minor refactors). Prefix with **Nit:** when the item is pure polish so the author knows it's non-blocking.
-
-For each item give: **what** to change, **where** (file and area), and **why**. Keep items short and scannable. For deep reviews, address every dimension above-if a dimension has no findings, say so in one line (e.g. "Scalability: no issues identified").
+- `fix <ids>` - implement exactly those items, nothing adjacent; add a regression test for each Critical that has an owning test boundary (rule `quality/testing`); then run the checks the touched files need (`pnpm run check` at least; the affected turbo tasks when code or config changed).
+- `accept <ids>` - add one line per item under that domain's `## Accepted`, or in the owning rule when one exists (both rule trees).

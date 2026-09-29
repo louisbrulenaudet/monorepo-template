@@ -4,8 +4,9 @@
   "tags": ["app"],
   "tasks": {
     "dev": {
-      "description": "Wrangler local dev server.",
-      "interruptible": true
+      "description": "cf dev (Vite + Cloudflare plugin) on :8700.",
+      "interruptible": true,
+      "passThroughEnv": ["$TURBO_EXTENDS$", "SENTRY_DSN"]
     }
   }
 }

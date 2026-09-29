@@ -2,9 +2,7 @@
 
 ## Overview
 
-**Single source of truth** for shared constrained string values used across multiple packages and apps. Prevents duplicate string literals in `front-app`, `worker-api`, and `@repo/dtos-common`.
-
-Values are **`as const` objects** with a derived type - not TypeScript `enum` (`erasableSyntaxOnly`). Definition pattern, Zod `z.enum` integration, and wire-value breaking-change rules live in rules `contracts/contracts` and `quality/naming`.
+**Single source of truth** for constrained string values shared across apps and packages, preventing duplicate literals in `front-app`, `worker-api`, and `@repo/dtos-common`. When a value set belongs here vs locally, the `as const` pattern, `z.enum` integration, and wire-value breaking changes: rule `contracts/contracts` (loads with `src/**`). Keep the package thin: definitions and small helpers, no business logic.
 
 ## Structure
 
@@ -14,24 +12,9 @@ packages/enums-common/src/
 └── index.ts        # Named re-exports (prefer explicit export { … } over export *)
 ```
 
-## When to Add Here vs. Locally
-
-| Criterion | `@repo/enums-common` | App-local (`src/enums/`) |
-|-----------|---------------------|--------------------------|
-| Used by more than one app/package | Yes | No |
-| Part of serialized API contract | Yes | No |
-| Referenced by shared Zod schema | Yes | No |
-| UI-only / single-app | No | Yes |
-
-Changing a member's **serialized string value** is a breaking contract change - see `contracts/contracts` (enum wire-value table).
-
 ## Adding a value set
 
-1. Create `src/<feature>.ts` with `as const` object + derived type.
-2. Named-export from `src/index.ts` (value + type).
+1. Create `src/<feature>.ts` with the `as const` object + derived type.
+2. Named-export value and type from `src/index.ts`, **with the `.ts` extension** on the relative path (`from "./app-environment.ts"`): `cloudflare.config.ts` imports this package (type-only), and Node loads it natively without adding extensions (rule `backend/workers-config`).
 3. Import in consumers in the same PR.
-4. `pnpm check-types` from root.
-
-## Contribution
-
-Shared value sets only - keep the package thin (definitions + small helpers, no business logic).
+4. `pnpm check-types` from the root.

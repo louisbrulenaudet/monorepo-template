@@ -3,7 +3,7 @@ id: oxc
 summary: oxlint rules and ignores, oxfmt, tsgolint, `--format=agent`
 families: [toolchain]
 packages: [oxlint, oxfmt, oxlint-tsgolint, oxc-transform-react, oxlint-plugin-react-doctor]
-paths: [.oxlintrc.json, .oxfmtrc.json, .claude/rules/quality/code-style.md, hooks/**]
+paths: [.oxlintrc.json, .oxfmtrc.json, .claude/rules/quality/code-style.md, .claude/rules/quality/lint-config.md, hooks/**]
 ---
 
 # OXC
@@ -21,9 +21,9 @@ The OXC toolchain (oxlint + oxfmt + oxlint-tsgolint): lint and format quality, s
 
 - [.oxlintrc.json](../../../../.oxlintrc.json), [.oxfmtrc.json](../../../../.oxfmtrc.json)
 - Root scripts in [package.json](../../../../package.json): `lint:check`, `lint:fix`, `lint:agent`, `lint:ci`, `format:*`
-- [.claude/rules/quality/code-style.md](../../../../.claude/rules/quality/code-style.md) ↔ `.cursor/rules/quality/code-style.mdc`
+- [.claude/rules/quality/code-style.md](../../../../.claude/rules/quality/code-style.md) and [lint-config.md](../../../../.claude/rules/quality/lint-config.md) ↔ their `.cursor/rules/quality/*.mdc` twins
 - Hook wiring calling format/lint after edits (`.claude/settings.json`, `.cursor/hooks.json`)
-- Ignore coverage: which paths oxlint/oxfmt skip vs repo-generated dirs (`dist/`, `worker-configuration.d.ts`)
+- Ignore coverage: which paths oxlint/oxfmt skip vs repo-generated dirs (`.cloudflare/`, `dist/`)
 
 ## Probe
 
@@ -49,4 +49,4 @@ Owns the better-tailwindcss lint rules and their context resolution (`tailwind` 
 
 ## Accepted
 
-- Style and suppression policy in [.claude/rules/quality/code-style.md](../../../../.claude/rules/quality/code-style.md); `**/*.md` and `**/package.json` are excluded from oxfmt on purpose (reasons inline in `.oxfmtrc.json`).
+- Style and suppression policy in [.claude/rules/quality/code-style.md](../../../../.claude/rules/quality/code-style.md), config rationale in [lint-config.md](../../../../.claude/rules/quality/lint-config.md); `**/*.md` and `**/package.json` are excluded from oxfmt on purpose (reasons inline in `.oxfmtrc.json`).

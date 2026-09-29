@@ -26,10 +26,8 @@
     ".agents/skills/turborepo/**",
     ".agents/skills/vercel-react-best-practices/**",
     ".agents/skills/workers-best-practices/**",
-    ".agents/skills/wrangler/**",
     ".git/**",
     "**/routeTree.gen.ts",
-    "**/worker-configuration.d.ts",
     "**/*.svg",
     "pnpm-lock.yaml",
     "skills-lock.json"

@@ -7,6 +7,7 @@
     "@changesets/cli": "catalog:",
     "@playwright/cli": "catalog:",
     "@vitest/ui": "catalog:",
+    "cf": "catalog:",
     "cross-env": "catalog:",
     "cspell": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
@@ -24,6 +25,11 @@
     "wrangler": "catalog:"
   },
   "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.6.0",
+      "onFail": "download"
+    },
     "runtime": {
       "name": "node",
       "version": ">=24.11 <25",
@@ -48,7 +54,6 @@
     "role": "root",
     "agentGuide": "AGENTS.md"
   },
-  "packageManager": "pnpm@12.6.0+sha512.3ef68f951cb111ac204b4a5a16f0b2ddf0da56a96e0413e81d855d9f0b55ef926714709028e1cd00c405c2c5fb7b9e8ec4dc46777c805d0373c2f2ff00fd20ec",
   "private": true,
   "scripts": {
     "audit": "pnpm audit --audit-level=high",
@@ -56,19 +61,19 @@
     "browser": "playwright-cli",
     "build": "turbo run build --continue=dependencies-successful",
     "changeset": "changeset",
-    "check": "turbo run //#lint:check //#format:check //#deps:check //#deps:format:check //#hooks:test --continue=dependencies-successful",
+    "check": "pnpm run types && turbo run //#lint:check //#format:check //#deps:check //#deps:format:check //#hooks:test --continue=dependencies-successful",
     "check-types": "turbo run check-types --continue=dependencies-successful",
-    "ci": "pnpm run boundaries && cross-env VITE_API_BASE_URL=https://worker-api-ci.monorepo-template.workers.dev turbo run //#lint:check //#format:check //#deps:check //#deps:format:check //#hooks:test //#knip //#knip:production types:check check-types test build --continue=dependencies-successful && pnpm run audit",
-    "ci:affected": "pnpm run boundaries && cross-env VITE_API_BASE_URL=https://worker-api-ci.monorepo-template.workers.dev turbo run //#lint:check //#format:check //#deps:check //#deps:format:check //#hooks:test types:check check-types test build --affected --continue=dependencies-successful",
-    "ci:agent": "pnpm run boundaries && cross-env TURBO_UI=false VITE_API_BASE_URL=https://worker-api-ci.monorepo-template.workers.dev turbo run //#lint:agent //#format:check //#deps:check //#deps:format:check //#hooks:test //#knip:agent //#knip:production types:check check-types test build --continue=dependencies-successful --output-logs=errors-only --log-order=grouped && pnpm run audit",
-    "ci:sandbox": "pnpm run boundaries && cross-env TURBO_UI=false turbo run //#lint:agent //#format:check //#deps:check //#deps:format:check //#hooks:test //#knip:agent //#knip:production types:check check-types test --continue=dependencies-successful --output-logs=errors-only --log-order=grouped && pnpm run audit",
-    "deploy": "turbo run deploy",
+    "ci": "pnpm run types && pnpm run boundaries && cross-env VITE_API_BASE_URL=https://worker-api-ci.monorepo-template.workers.dev turbo run //#lint:check //#format:check //#deps:check //#deps:format:check //#hooks:test //#knip //#knip:production check-types test build --continue=dependencies-successful && pnpm run audit",
+    "ci:affected": "pnpm run types && pnpm run boundaries && cross-env VITE_API_BASE_URL=https://worker-api-ci.monorepo-template.workers.dev turbo run //#lint:check //#format:check //#deps:check //#deps:format:check //#hooks:test check-types test build --affected --continue=dependencies-successful",
+    "ci:agent": "pnpm run types && pnpm run boundaries && cross-env TURBO_UI=false VITE_API_BASE_URL=https://worker-api-ci.monorepo-template.workers.dev turbo run //#lint:agent //#format:check //#deps:check //#deps:format:check //#hooks:test //#knip:agent //#knip:production check-types test build --continue=dependencies-successful --output-logs=errors-only --log-order=grouped && pnpm run audit",
+    "ci:sandbox": "pnpm run types && pnpm run boundaries && cross-env TURBO_UI=false turbo run //#lint:agent //#format:check //#deps:check //#deps:format:check //#hooks:test //#knip:agent //#knip:production check-types test --continue=dependencies-successful --output-logs=errors-only --log-order=grouped && pnpm run audit",
+    "deploy": "turbo run deploy --force",
     "deps:check": "syncpack lint",
     "deps:fix": "syncpack fix",
     "deps:format": "syncpack format",
     "deps:format:check": "syncpack format --check",
     "dev": "turbo run dev",
-    "fix": "pnpm run deps:fix && pnpm run deps:format && pnpm run lint:fix && pnpm run format:fix",
+    "fix": "pnpm run types && pnpm run deps:fix && pnpm run deps:format && pnpm run lint:fix && pnpm run format:fix",
     "format:check": "oxfmt --check .",
     "format:fix": "oxfmt .",
     "hooks:test": "sh hooks/tests/run.sh",
@@ -79,12 +84,11 @@
     "lint:check": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern .",
     "lint:ci": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --format=github .",
     "lint:fix": "cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix .",
-    "login": "wrangler login",
+    "login": "cf auth login",
     "prepare": "vp config --no-agent",
     "preview": "turbo run preview --filter='./apps/*'",
     "preview:delete": "bash .github/actions/previews/delete-previews.sh",
     "preview:deploy": "bash .github/actions/previews/deploy-previews.sh",
-    "promote": "turbo run promote --filter='./apps/*'",
     "react-doctor": "cross-env REACT_DOCTOR_NO_TELEMETRY=1 react-doctor --no-telemetry",
     "react-doctor:changed": "pnpm run react-doctor --scope changed --verbose",
     "release:status": "changeset status --verbose",
@@ -94,8 +98,7 @@
     "test": "turbo run test --continue=dependencies-successful",
     "test:watch": "turbo run test:watch",
     "types": "turbo run types --filter='./apps/*'",
-    "types:check": "turbo run types:check --filter='./apps/*'",
     "update": "pnpm update --recursive --latest",
-    "upload": "turbo run upload --filter='./apps/*'"
+    "upload": "turbo run upload --filter='./apps/*' --force"
   }
 }

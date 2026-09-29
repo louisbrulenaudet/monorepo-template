@@ -3,14 +3,14 @@ export {
   allowsWildcardCorsOrigins,
   isStrictCorsAppEnvironment,
   parseAppEnvironment,
-} from "./app-environment";
+} from "./app-environment.ts";
 export {
   CORS_ALLOWED_HEADERS,
   CorsExposedHeader,
   CORS_EXPOSED_HEADERS,
-} from "./cors-allowed-header";
+} from "./cors-allowed-header.ts";
 export {
   CORS_ALLOWED_HTTP_METHODS,
   parseHttpMethod,
   isUnsafeHttpMethod,
-} from "./http-method";
+} from "./http-method.ts";

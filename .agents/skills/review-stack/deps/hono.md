@@ -45,7 +45,7 @@ Security-relevant middleware gaps; unvalidated inputs; leaked internals.
 
 ## Overlaps
 
-Schema design and inference belong to `zod`; `wrangler.jsonc` bindings and envs belong to `wrangler`; the `sentry(...)` options belong to `sentry` (its position in the chain stays here).
+Schema design and inference belong to `zod`; `cloudflare.config.ts` bindings and modes belong to `cf`; the `sentry(...)` options belong to `sentry` (its position in the chain stays here).
 
 ## Accepted
 

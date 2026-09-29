@@ -15,7 +15,7 @@ env:
   DO_NOT_TRACK: "1"
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
-  TURBO_UI: "false"
+  CF_SEND_TELEMETRY: "false"
   PREVIEW_NAME: pr-${{ github.event.pull_request.number }}
 
 jobs:
@@ -37,11 +37,8 @@ jobs:
       contents: read
       pull-requests: write # the Previews comment
     # Cloudflare and GitHub tokens are step-scoped below - install never sees them,
-    # and deploy-previews.sh unsets them around the frontend build.
+    # and deploy-previews.sh unsets them around every build.
     env:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -74,7 +71,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
-          PREVIEW_MESSAGE: pr-${{ github.event.pull_request.number }} ${{ github.event.pull_request.head.sha }}
         run: bash .github/actions/previews/deploy-previews.sh
 
       - name: Comment Preview URLs

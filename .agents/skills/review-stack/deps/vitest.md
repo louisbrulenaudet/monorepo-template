@@ -3,7 +3,7 @@ id: vitest
 summary: node/workers presets, pools, testing split, reporters
 families: [workers]
 packages: [vitest, @cloudflare/vitest-plugin, @vitest/ui, happy-dom, @testing-library/react, @testing-library/dom, @testing-library/jest-dom, @testing-library/user-event]
-paths: [packages/vitest-config/**, apps/*/vitest.config.*, .claude/rules/quality/vitest-config.md, .claude/rules/tests/**]
+paths: [packages/vitest-config/**, apps/*/vitest.config.*, .claude/rules/quality/testing.md, .claude/rules/tests/**]
 ---
 
 # Vitest
@@ -32,7 +32,7 @@ Read both preset entries and every per-app config; sample one Node and one Worke
 
 - **Shared defaults**: mock lifecycle (`restoreMocks`/`clearMocks`/unstub) coherent; `passWithNoTests` only as starter scaffolding; include globs match reality.
 - **Pool selection**: Node suites on `threads` + `isolate: false` justified by cleanup discipline (verify tests clean up); Workers suites never `isolate: false` / custom env; Node apps never resolve the Cloudflare pool package.
-- **Workers testing split**: single-Worker tests in workerd via the pool; multi-Worker integration reserved for Wrangler `createTestHarness()` from a Node suite.
+- **Workers testing split**: single-Worker tests in workerd via the pool, which reads `cloudflare.config.ts` in mode `test` (`experimental: { newConfig: true }`) with fake secrets as text bindings there, never in `miniflare.bindings`; multi-Worker integration reserved for Wrangler `createTestHarness()` from a Node suite.
 - **Reporter & CI**: agent-aware reporter detection preserved; GitHub job summaries intact; watch vs run wiring correct.
 - **Version currency**: experimental flags (`fsModuleCache`) still valid; new stable options worth adopting.
 - **Agent loop**: per-app filter documented; failure output parseable; DOM/RTL depth delegated to skill `front-vitest`.
@@ -43,8 +43,8 @@ Broken isolation; pool misuse; deprecated config that fails on the installed ver
 
 ## Overlaps
 
-Test value and pruning are out of scope (`/review-tests`); Workers runtime config belongs to `wrangler`.
+Test value and pruning are out of scope (`/review tests`); Workers runtime config, the `test` mode included, belongs to `cf`.
 
 ## Accepted
 
-- Preset rationale in [.claude/rules/quality/vitest-config.md](../../../../.claude/rules/quality/vitest-config.md) and [packages/vitest-config/AGENTS.md](../../../../packages/vitest-config/AGENTS.md).
+- Factory rationale in [packages/vitest-config/AGENTS.md](../../../../packages/vitest-config/AGENTS.md); app-side toolchain rules in [.claude/rules/quality/testing.md](../../../../.claude/rules/quality/testing.md).

@@ -22,18 +22,17 @@ A `worker-*`, `queue-*`, `webhook-*`, or `mcp-*` app, whose tests run inside wor
 
 ```ts
 // vitest.config.mts
-import path from "node:path";
 import { defineWorkersConfig, resolvePackageRoot } from "@repo/vitest-config/workers";
 
 const root = resolvePackageRoot(import.meta.dirname);
 
 export default defineWorkersConfig(
-  { wrangler: { configPath: path.join(root, "wrangler.jsonc") } },
+  { experimental: { newConfig: true } },
   { root, test: { dir: root } },
 );
 ```
 
-Worker apps also add `@cloudflare/vitest-plugin` as a devDependency, and take `vitest` from the `vitest4` catalog until that plugin supports Vitest 5 (see `pnpm-workspace.yaml`).
+`experimental: { newConfig: true }` has the pool read the app's `cloudflare.config.ts` in mode `test`, so fake secret values live there as `bindings.text()` bindings rather than in `miniflare.bindings`. Worker apps also add `@cloudflare/vitest-plugin` as a devDependency, and take `vitest` from the `vitest4` catalog until that plugin supports Vitest 5 (see `pnpm-workspace.yaml`).
 
 Pin `root` and `test.dir` with `resolvePackageRoot(import.meta.dirname)` in every app config: the Vitest VS Code explorer caches the realpath of the workspace folder, and a non-realpathed path (notably through a macOS symlink) fails with `Fatal Error: Attempted to get parent of root folder "/"`.
 

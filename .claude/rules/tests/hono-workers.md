@@ -1,22 +1,20 @@
 ---
 paths:
-  - "apps/worker-*/**"
-  - "apps/queue-*/**"
-  - "apps/webhook-*/**"
-  - "apps/mcp-*/**"
+  - "apps/worker-*/tests/**"
+  - "apps/queue-*/tests/**"
+  - "apps/webhook-*/tests/**"
+  - "apps/mcp-*/tests/**"
+  - "apps/{worker,queue,webhook,mcp}-*/vitest.config.{ts,mts}"
+  - "apps/{worker,queue,webhook,mcp}-*/package.json"
 ---
 
 # Hono Workers Vitest (Cloudflare pool)
 
-Governs Vitest for Hono apps on Cloudflare Workers via `@cloudflare/vitest-plugin` (workerd). General bar: [vitest.md](vitest.md). Discipline: [testing.md](../quality/testing.md). Prefer Cloudflare / Hono docs via the installed documentation MCP collector over training memory for API details.
+Vitest inside workerd through `@cloudflare/vitest-plugin`. General toolchain and discipline: [testing.md](../quality/testing.md).
 
-## Repo invariants
-
-- Config: `defineWorkersConfig` from `@repo/vitest-config/workers` with absolute `wrangler.configPath` via `path.join(resolvePackageRoot(import.meta.dirname), "wrangler.jsonc")` and `root` / `test.dir` from the same realpath. Do **not** use removed Cloudflare helpers `defineWorkersConfig` / `defineWorkersProject` from `@cloudflare/vitest-plugin/config`, or `test.poolOptions.workers` nesting.
-- Prefer `import { env, exports } from "cloudflare:workers"`. `SELF` / `env` from `cloudflare:test` are deprecated; `fetchMock` is removed - mock `globalThis.fetch` or MSW. Integration default: `exports.default.fetch(...)`. Hono unit: `app.request(path, init?, env?)`.
-- Storage isolation is **per test file** by default. Within a file, call `await reset()` when needed. Never `isolate: false` / `--no-isolate` casually (shares binding storage). Never set Node pool on Workers configs.
-- `compatibility_date` comes from `wrangler.jsonc` (use 2026-08-04 or later so Node.js compatibility is default; do not require a redundant `nodejs_compat` flag). Give every `secrets.required` name a fake value in `vitest.config.mts` - `defineWorkersConfig({ wrangler: { configPath }, miniflare: { bindings: { NAME: "test-value" } } })`; the pool merges `miniflare` over the Wrangler-derived bindings - tests must never depend on a local `.env` / `.dev.vars`, which CI and sandboxed agents cannot read.
-- Types: `tests/env.d.ts` with `ProvidedEnv extends Env`; tests tsconfig includes `@cloudflare/vitest-plugin/types` and committed `worker-configuration.d.ts`.
-- Assert status/body/headers/binding state. Agents: `pnpm turbo run test --filter=<app>` non-watch.
-- Keep this pool for unit/route tests. Add Wrangler `createTestHarness` only for multi-Worker production-build integration when a service binding exists - do not replace these suites. See `packages/vitest-config/AGENTS.md`.
-- Every route test imports the Worker entry (`import app from "../src/index"` or a relative equivalent) immediately followed by `void app;`, uncommented - the unused-looking side-effect import is what makes Vitest re-run the suite when the entry module changes.
+- Config: `defineWorkersConfig({ experimental: { newConfig: true } }, { root, test: { dir: root } })` from `@repo/vitest-config/workers`, with `root = resolvePackageRoot(import.meta.dirname)`: the plugin reads the app's `cloudflare.config.ts` in mode `test`. No `wrangler.configPath` - there is no Wrangler config. The plugin still peers on `vitest ^4.1.0`, so Workers apps pin `vitest` to `catalog:vitest4`; a dependency bump never moves that group to Vitest 5 until `pnpm view @cloudflare/vitest-plugin peerDependencies` allows it. Never use the removed Cloudflare helpers `defineWorkersConfig` / `defineWorkersProject` from `@cloudflare/vitest-plugin/config`, or `test.poolOptions.workers` nesting.
+- Import `{ env, exports }` from `"cloudflare:workers"`: `SELF` / `env` from `cloudflare:test` are deprecated, and `fetchMock` is removed (mock `globalThis.fetch` or use MSW). Integration default: `exports.default.fetch(...)`; Hono unit: `app.request(path, init?, env?)`.
+- Storage is isolated per test file; within a file call `await reset()` when needed. Never set a Node pool on a Workers config.
+- Fake secrets: every `bindings.secret()` gets a text binding in the `test` mode of `cloudflare.config.ts` (`TEST` sets `sentryDsn: bindings.text("")`, bound as `SENTRY_DSN`), never in `miniflare.bindings`; tests never depend on a local `.env` / `.dev.vars`, which CI and sandboxed agents cannot read.
+- Types: the tests tsconfig lists `@cloudflare/vitest-plugin/types` in `types` and includes `.cloudflare/types`, whose `Cloudflare.Env` types `env` from `cloudflare:workers` - no `tests/env.d.ts` / `ProvidedEnv` augmentation.
+- Every route test imports the Worker entry (`import app from "../src/index"` or a relative equivalent) immediately followed by `void app;`, uncommented: that unused-looking import is what makes Vitest re-run the suite when the entry module changes.

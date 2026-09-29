@@ -3,47 +3,47 @@ paths:
   - "apps/front-*/vite.config.ts"
 ---
 
+# Vite Config (`front-*`)
+
 ## Config shape
 
-- `defineConfig(({ command, mode }) => …)` - compare `command === "build"` / `command === "serve"` explicitly.
-- `appDir` from `import.meta.url`, not `process.cwd()`. Config-time env: `loadEnv(mode, appDir, "VITE_")` - `.env*` is not in `process.env` during config evaluation.
-- Small build-only plugins inline; extract only when shared across `front-*` apps. TS bundling issues: `vite --configLoader runner`.
+- `defineConfig(({ command, mode }) => …)`, comparing `command === "build"` / `command === "serve"` explicitly.
+- `appDir` from `import.meta.url`, not `process.cwd()`. Config-time env: `loadEnv(mode, appDir, "VITE_")` - `.env*` is not in `process.env` while the config evaluates.
+- Small build-only plugins stay inline; extract one only when `front-*` apps share it. TS bundling issues: `vite --configLoader runner`.
 
 ## Vite 8 (Rolldown + Oxc)
 
-- `build.rolldownOptions` / `optimizeDeps.rolldownOptions` - not deprecated `rollupOptions` / `esbuildOptions`. `build.minify: "oxc"`. `build.commonjsOptions` is a no-op.
-- `manualChunks` (function) works but is deprecated - preserve existing splits when editing; use `codeSplitting` for refactors.
+- `build.rolldownOptions` / `optimizeDeps.rolldownOptions`, not the deprecated `rollupOptions` / `esbuildOptions`; `build.minify: "oxc"`; `build.commonjsOptions` is a no-op.
+- `manualChunks` (function) works but is deprecated: preserve existing splits when editing; use `codeSplitting` for refactors.
 
 ## Plugins (order matters)
 
-`devtools` → `tanstackRouter` (**before** `react`) → `react({ compiler: true })` (native Rust React Compiler via optional peer `oxc-transform-react`; no Babel pass) → `tailwindcss` → `cloudflare` → build-only (`apply: "build"`) → conditional via spread. Falsy plugins are skipped. Compiler on → less manual memoization ([react.md](react.md)). Do not configure `auxiliaryWorkers` on `front-*` to embed `worker-api` or other backends - HTTP-only SPA boundary.
+`devtools` → `tanstackRouter` (before `react`) → `react({ compiler: true })` (native Rust React Compiler via the optional peer `oxc-transform-react`; no Babel pass) → `tailwindcss` → `cloudflare` → build-only (`apply: "build"`) → conditional via spread. Falsy plugins are skipped.
+
+- `cloudflare({ types: { generate: false } })`: the assets-only SPA reads no `env`. Worker settings (name, assets, observability per mode) live in `cloudflare.config.ts`.
+- `@cloudflare/vite-plugin` is a 2.0 beta snapshot pinned exactly in the catalog (`2.0.0-beta.sha-…`): cf requires `>=2.0.0-0 <3`, and a snapshot is published per push, so a range would float onto untested builds.
+- Plugin 2.0 no longer replaces `server.config` (1.x's shallow copy made the injected DevTools `<script type="module">` 500 through Vite's html-proxy cache), so no config-identity workaround plugin is needed.
 
 ## DevTools
 
-- `DevTools()` (embedded plugin) and the top-level `devtools` config key are alternatives, not complements - enabling the key registers a *second* DevTools instance on serve and calls `start()` on build. Stay on the plugin.
-- Keep `build.rolldownOptions.devtools` set explicitly. `@vitejs/devtools` only seeds it from `DevToolsBuildIntegration`, which Vite registers when the top-level `devtools` key is enabled; that key is absent here, so without the explicit flag no build writes `node_modules/.rolldown` and the Rolldown dock stays empty (`RDDT0001`). Populate it with one `build`.
+- `DevTools()` (embedded plugin) and the top-level `devtools` config key are alternatives, not complements: the key registers a second instance on serve and calls `start()` on build. Stay on the plugin.
+- Keep `build.rolldownOptions.devtools` set explicitly: `@vitejs/devtools` seeds it only from `DevToolsBuildIntegration`, which Vite registers only when the top-level `devtools` key is on; without the flag no build writes `node_modules/.rolldown` and the Rolldown dock stays empty (`RDDT0001`). One `build` populates it.
 - `embeddedVisibility: "passive"` keeps Vite's floating dock clear of TanStack's; **Shift+Alt+D** reveals it.
-- The `devframe auth code` banner is the client auth handshake, not an error. `clientAuthTokens` is readable only from the top-level key, so it stays un-pre-approved; never set `clientAuth: false` - it exposes the dev server and filesystem to any browser that can reach the port.
-- `@vitest/ui` stays a **root** devDependency: `@vitejs/devtools-vitest` probes for it at the pnpm workspace root, so an app-local install fails the Vitest dock with `VTDT0001` ([knip.md](../quality/knip.md)).
+- The `devframe auth code` banner is the client auth handshake, not an error. `clientAuthTokens` is readable only from the top-level key, so it stays un-pre-approved; **never set `clientAuth: false`** - it exposes the dev server and filesystem to any browser that can reach the port.
+- `@vitest/ui` stays a **root** devDependency: `@vitejs/devtools-vitest` probes for it with `isPackageExists("@vitest/ui", { paths: [workspaceRoot] })` while `@vitejs/devtools` core probes integrations against the app `cwd`, so under pnpm's isolated layout an app-local install is invisible and the Vitest dock fails with `VTDT0001`. Never move it into an app.
 
-## Monorepo
+## Monorepo and dev server
 
-- `server.fs.allow: [repoRoot]` (`path.resolve(appDir, "../..")`) for `@repo/*`; leave `server.fs.strict` at its default (`true`).
-- In-app absolute imports use package.json `"imports"` (`#/*` → `./src/*`); Vite resolves them natively - do not add `resolve.alias` for the same map.
-
-## Dev server
-
-- Ports per app in [ports.md](../backend/ports.md) (frontends **5170–5199**); set `server.port` / `preview.port` + `strictPort: true` in each app's config.
+- `server.fs.allow: [repoRoot]` (`path.resolve(appDir, "../..")`) for `@repo/*`; leave `server.fs.strict` at its default `true`.
+- Vite resolves the `package.json` `"imports"` map (`#/*`) natively: never add `resolve.alias` for it.
 - `server.warmup.clientFiles` for hot entry files only. Keep `server.forwardConsole` (or `{ unhandledErrors: true, logLevels: ["warn", "error"] }`) for agentic dev.
 
 ## Build, env, deps
 
-- Leave `build.target` unset (Vite 8 default `baseline-widely-available`). `sourcemap`: inline (development mode) / `hidden` (production - maps kept for symbolication, excluded from upload via `*.map` in generated `dist/.assetsignore`). `reportCompressedSize: false`; leave `cssCodeSplit`, `assetsInlineLimit`, and `chunkSizeWarningLimit` at their defaults. Leave `modulePreload.polyfill` at its Vite default `true` unless you intentionally drop older-browser preload support.
-- Chunk vendors: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`. HTML `Cache-Control: no-cache` via generated `_headers`.
-- Handle `vite:preloadError` in the client entry: reload once per session (sessionStorage guard) so returning users recover from stale-chunk loads after deploys.
-- Only `VITE_*` in client bundle - no secrets. Fail production `build` on missing/placeholder required vars; skip under static analysis (`knip`). Generate `dist/_headers` + append to `dist/.assetsignore` in a build plugin - never hand-edit ([guardrails.md](../core/guardrails.md)). Deploy in `wrangler.jsonc`.
-- `optimizeDeps.entries` + `include` for heavy deps - dev pre-bundler only, not production bundle size.
-
-## Verification
-
-`pnpm run ci` → `pnpm --filter <front-app> run build`. Analyze: `ANALYZE=true vite build` when the app exposes an `analyze` script.
+- Leave `build.target` unset (Vite 8 default `baseline-widely-available`). `sourcemap`: inline in development mode, `hidden` in production (kept for symbolication, excluded from the assets upload by the generated `.assetsignore`). `reportCompressedSize` is on only for the `analyze` build (`ANALYZE=true`): gzip sizing slows every build, and the `bundle-analyzer` agent reads the gzip column from that build's chunk table. Leave `cssCodeSplit`, `assetsInlineLimit`, and `chunkSizeWarningLimit` at their defaults. Leave `modulePreload.polyfill` at its default `true` unless you intentionally drop older-browser preload support.
+- Vendor chunks: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`. HTML gets `Cache-Control: no-cache` through the generated `_headers`.
+- Handle `vite:preloadError` in the client entry: reload once per session (sessionStorage guard) so returning users recover from stale chunks after a deploy.
+- Fail the production `build` on missing or placeholder required `VITE_*` values; skip that check under static analysis (`knip`).
+- `_headers` (cache + CSP) and `.assetsignore` (`*.map`) come from the `generated-build-artifacts` plugin, which `this.emitFile`s them in `generateBundle` for the `client` environment only; never hand-edit them.
+- `cf build` writes the Build Output to `.cloudflare/output/v0/`, not `dist/`, with the client build in `workers/default/assets/`, where `sentry:sourcemaps` reads the maps; the only `dist/` file left is the `analyze` build's `dist/stats.html`.
+- `optimizeDeps.entries` + `include` for heavy deps tune the dev pre-bundler only, not production bundle size.

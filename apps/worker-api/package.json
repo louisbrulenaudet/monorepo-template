@@ -9,14 +9,17 @@
     "hono": "catalog:"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "catalog:",
     "@cloudflare/vitest-plugin": "catalog:",
     "@hono/cli": "catalog:",
     "@repo/typescript-config": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "@sentry/cli": "catalog:",
+    "@types/node": "catalog:",
+    "cf": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:vitest4",
-    "wrangler": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:vitest4"
   },
   "keywords": [
     "api",
@@ -38,22 +41,21 @@
   },
   "private": true,
   "scripts": {
-    "build": "wrangler deploy --dry-run --outdir dist --env production",
-    "check-types": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
-    "deploy": "wrangler deploy --env production",
-    "dev": "wrangler dev",
+    "build": "cf build",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tests/tsconfig.json",
+    "deploy": "cf deploy --prebuilt --mode production",
+    "dev": "cf dev",
     "format:check": "pnpm -w exec oxfmt --check apps/worker-api",
     "format:fix": "pnpm -w exec oxfmt apps/worker-api",
     "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern apps/worker-api",
     "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix apps/worker-api",
-    "promote": "wrangler versions deploy --env production",
     "routes": "hono routes",
     "sentry:deploy": "sentry-cli releases set-commits \"$npm_package_name@$npm_package_version\" --auto --ignore-missing && sentry-cli releases finalize \"$npm_package_name@$npm_package_version\" && sentry-cli deploys new --release \"$npm_package_name@$npm_package_version\" --env production",
-    "sentry:sourcemaps": "sentry-cli releases new \"$npm_package_name@$npm_package_version\" --project \"$npm_package_name\" && sentry-cli sourcemaps upload --project \"$npm_package_name\" --release=\"$npm_package_name@$npm_package_version\" --strip-prefix 'dist/..' dist",
+    "sentry:sourcemaps": "sentry-cli releases new \"$npm_package_name@$npm_package_version\" --project \"$npm_package_name\" && sentry-cli sourcemaps upload --project \"$npm_package_name\" --release=\"$npm_package_name@$npm_package_version\" --strip-prefix '.cloudflare/output/v0/workers/default/bundle/../../../../../..' .cloudflare/output/v0/workers/default/bundle",
     "test": "vitest run",
     "test:watch": "vitest",
-    "types": "wrangler types -c ./wrangler.jsonc",
-    "types:check": "wrangler types -c ./wrangler.jsonc --check",
-    "upload": "wrangler versions upload --env production --outdir dist"
-  }
+    "types": "cf workers types --mode development",
+    "upload": "cf workers versions create --prebuilt --mode production"
+  },
+  "type": "module"
 }

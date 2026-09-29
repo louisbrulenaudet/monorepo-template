@@ -30,7 +30,7 @@ Read `knip.jsonc`; run `pnpm knip`, `pnpm knip:production`, and `pnpm knip:agent
 
 ## Axes
 
-- **Coverage**: both passes green; entry points/plugins detected for Vite/Vitest/Turbo/Wrangler surfaces; no whole-workspace ignore masking real debt (each `ignoreWorkspaces` entry justified in the knip rule).
+- **Coverage**: both passes green; entry points/plugins detected for Vite/Vitest/Turbo surfaces and the explicit `cloudflare.config.ts` app entries; no whole-workspace ignore masking real debt (each `ignoreWorkspaces` entry justified in the knip rule).
 - **Suppression discipline**: no blanket `ignore`; scoped patterns only (`ignoreIssues`, `"dep!"`/`"!tests/**!"`); every override traceable to a reason; `treatConfigHintsAsErrors` keeps config honest.
 - **Production pass**: `--production --strict` reflects shipped code (dev-only deps excluded deliberately); workspace isolation verified.
 - **Fix workflow**: `knip --fix --fix-type dependencies,catalog` safe for agents; results verified by reinstall + gates.

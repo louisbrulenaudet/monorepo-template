@@ -7,7 +7,6 @@
   "include": [
     "${configDir}/**/*.ts",
     "${configDir}/../src/**/*.ts",
-    "${configDir}/../worker-configuration.d.ts",
-    "${configDir}/../types.d.ts"
+    "${configDir}/../.cloudflare/types"
   ]
 }
