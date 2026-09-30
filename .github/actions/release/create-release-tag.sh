@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Purpose: Tag the current commit vX.Y.Z, idempotently, via the GitHub API.
-# Target: called by action.yml; gh resolves {owner}/{repo} placeholders from GH_REPO.
+# Target: called by release.yml (Tag released version step) from the workspace root;
+# gh resolves {owner}/{repo} placeholders from GH_REPO.
 set -euo pipefail
 : "${GH_REPO:?GH_REPO is required (owner/repo)}"
-: "${VERSION:?VERSION is required (X.Y.Z)}"
 
-tag="v${VERSION}"
+version="$(node "$(dirname "$0")/read-release-version.mjs")"
+tag="v${version}"
 echo "tag=${tag}" >> "$GITHUB_OUTPUT"
 
 # 2xx = tag exists (skip), 404 = create, anything else fails rather than guessing.

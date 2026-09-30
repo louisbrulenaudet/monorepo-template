@@ -1,0 +1,117 @@
+name: Code quality
+
+on:
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  DO_NOT_TRACK: "1"
+  TELEMETRY_DISABLED: "1"
+
+jobs:
+  analyze:
+    name: Analyze
+    if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      body: ${{ steps.report.outputs.body }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      - name: Set runner-temp paths
+        run: |
+          echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
+          echo "QUALITY_DIR=$RUNNER_TEMP/quality" >> "$GITHUB_ENV"
+          echo "BASE_DIR=$RUNNER_TEMP/base" >> "$GITHUB_ENV"
+          echo "BASE_SHA=$(git rev-parse HEAD^1)" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/quality"
+
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          install: false
+
+      - name: Locate pnpm store
+        id: pnpm-store
+        run: echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check out and install the base commit
+        run: |
+          git worktree add --detach "$BASE_DIR" "$BASE_SHA"
+          pnpm --dir "$BASE_DIR" install --frozen-lockfile --prefer-offline
+
+      - parallel:
+          - name: Knip (PR)
+            id: knip-head
+            continue-on-error: true
+            run: pnpm --silent run knip --reporter json --no-exit-code > "$QUALITY_DIR/knip-head.json"
+
+          - name: Knip production (PR)
+            id: knip-production-head
+            continue-on-error: true
+            run: pnpm --silent run knip:production --reporter json --no-exit-code > "$QUALITY_DIR/knip-production-head.json"
+
+          - name: Knip (base)
+            id: knip-base
+            continue-on-error: true
+            run: pnpm --silent --dir "$BASE_DIR" run knip --reporter json --no-exit-code > "$QUALITY_DIR/knip-base.json"
+
+          - name: Knip production (base)
+            id: knip-production-base
+            continue-on-error: true
+            run: pnpm --silent --dir "$BASE_DIR" run knip:production --reporter json --no-exit-code > "$QUALITY_DIR/knip-production-base.json"
+
+          - name: jscpd new duplication
+            id: jscpd-new
+            continue-on-error: true
+            run: pnpm exec jscpd . --baseline-from-ref "$BASE_SHA" --reporters json --output "$QUALITY_DIR/jscpd-new"
+
+          - name: jscpd resolved duplication
+            id: jscpd-resolved
+            continue-on-error: true
+            run: pnpm exec jscpd "$BASE_DIR" --config .jscpd.json --baseline-from-ref "$GITHUB_SHA" --reporters json --output "$QUALITY_DIR/jscpd-resolved"
+
+      - name: Build the report
+        id: report
+        if: ${{ !cancelled() }}
+        env:
+          STEPS: ${{ toJSON(steps) }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node .github/actions/quality/build-report.mjs
+
+  comment:
+    name: Comment
+    needs: analyze
+    if: ${{ !cancelled() && needs.analyze.outputs.body != '' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write # the Code quality comment
+    steps:
+      - uses: changesets/action/pr-comment@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          body: ${{ needs.analyze.outputs.body }}
+          update-id: code-quality

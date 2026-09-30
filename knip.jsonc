@@ -33,6 +33,7 @@
         "!.agents/**",
         "!.agents/**!",
       ],
+      "ignoreBinaries": ["changeset!"],
       "ignoreDependencies": ["@vitest/ui", "wrangler"],
     },
     "packages/vitest-config": {

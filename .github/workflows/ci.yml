@@ -28,9 +28,8 @@ env:
 jobs:
   ci:
     name: Lint, typecheck, test, and build
-    # The version PR is validated by release.yml's `gate` on the merge commit, before
-    # any tag is cut; skipping here avoids a permanently pending required check. Bound
-    # to the bot's exact branch, or any PR could skip the check by naming its branch.
+    # The version PR gets this check from the run release.yml dispatches on its branch.
+    # Bound to the bot's exact branch, or any PR could skip the check by naming its branch.
     if: ${{ !(github.head_ref == 'changeset-release/main' && github.event.pull_request.user.login == 'github-actions[bot]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -57,13 +56,22 @@ jobs:
         uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
           runtime: node@24
-          cache: true
-          cache-dependency-path: pnpm-lock.yaml
           install: false
 
       # Must be a step: `runner` in workflow/job `env:` makes the file unparseable (ops/ci).
       - name: Enable Node compile cache
         run: echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
+
+      - name: Locate pnpm store
+        id: pnpm-store
+        run: echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -89,22 +97,31 @@ jobs:
           - name: Format
             run: pnpm run format:check
 
-          - name: Knip
-            run: pnpm run knip && pnpm run knip:production
-
           - name: Syncpack
             run: pnpm run deps:check && pnpm run deps:format:check
 
-          - name: Typecheck, test, and build (affected)
+          - name: Changesets
             if: github.event_name == 'pull_request'
-            run: pnpm turbo run check-types test build --affected --continue=dependencies-successful
+            env:
+              GITHUB_TOKEN: ${{ github.token }}
+              CHANGESET_ALLOW_MAJOR: ${{ contains(github.event.pull_request.labels.*.name, 'release:major') && '1' || '' }}
+              CHANGESET_SKIP_RUNTIME_DEPENDENCIES: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && secrets.CHANGESET_BOT_TOKEN == '' && '1' || '' }}
+            run: pnpm run release:check
 
-          - name: Typecheck, test, and build (full graph)
+          - name: Workflow security
+            if: github.event_name == 'pull_request'
+            uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+            with:
+              advanced-security: false
+              annotations: true
+
+          - name: Typecheck, test, build, and deploy check (affected)
+            if: github.event_name == 'pull_request'
+            run: pnpm turbo run check-types test build deploy:check --affected --continue=dependencies-successful
+
+          - name: Typecheck, test, build, and deploy check (full graph)
             if: github.event_name != 'pull_request'
-            run: pnpm turbo run check-types test build --continue=dependencies-successful
-
-      - name: cf deploy dry-run
-        run: pnpm turbo run deploy --filter='./apps/*' -- --dry-run
+            run: pnpm turbo run check-types test build deploy:check --continue=dependencies-successful
 
       - name: Upload build artifacts on failure
         if: failure()

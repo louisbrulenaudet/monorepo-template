@@ -32,7 +32,7 @@ globs: apps/front-*/src/**/*.{ts,tsx},apps/front-*/index.html
 - Routes split through the router's `autoCodeSplitting`; `React.lazy` + `<Suspense>` for heavy, rarely used components (editors, charts); defer non-critical third-party libraries (analytics) until after first paint; preload heavy chunks on intent (`onMouseEnter` / `onFocus` → `void import("./heavy")`).
 - Keep `import()` statically analyzable: literal paths, or a partially dynamic path that starts with `./` / `../`, ends with a file extension, and varies one path segment (`` import(`./locales/${lang}.json`) ``); a fully dynamic `import(pathVariable)` cannot be chunked.
 - Import large libraries from their deep path, not a barrel, so production tree-shaking drops unused exports (`optimizeDeps` only tunes the dev pre-bundler).
-- Client env is `VITE_*` only and is inlined into the public bundle: never a secret. Read it through `src/config/env.ts` with a fallback, not scattered `import.meta.env.X` reads.
+- Client env is `VITE_*` only and is inlined into the public bundle: never a secret. Read it through `src/config/env.ts` with a fallback, not scattered `import.meta.env.X` reads. Exception: `src/config/sentry.ts` reads `VITE_SENTRY_DSN` literally, so an unset DSN drops the SDK from the build.
 
 ## React Doctor
 

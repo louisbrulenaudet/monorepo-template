@@ -44,6 +44,7 @@
     "build": "cf build",
     "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tests/tsconfig.json",
     "deploy": "cf deploy --prebuilt --mode production",
+    "deploy:check": "cf deploy --prebuilt --mode production --dry-run",
     "dev": "cf dev",
     "format:check": "pnpm -w exec oxfmt --check apps/worker-api",
     "format:fix": "pnpm -w exec oxfmt apps/worker-api",

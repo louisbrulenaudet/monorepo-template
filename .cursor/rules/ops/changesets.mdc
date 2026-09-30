@@ -1,0 +1,65 @@
+---
+description: "Writing changesets - when one is needed, apps-only frontmatter, bump levels for deployed apps, summary style, non-interactive creation"
+alwaysApply: false
+globs: .changeset/*.md
+---
+
+# Changesets
+
+A changeset is the release note for one user-visible change. Its readers operate or call the deployed apps, in `apps/<app>/CHANGELOG.md` and in the GitHub Release CD builds from those files; rationale and implementation go in the commit and PR body. Procedure: skill `changeset`. Config, gate, and pipeline internals: [release.mdc](release.mdc).
+
+## When
+
+`pnpm release:check` decides whether a shipped path changed. It also runs in `pnpm run ci` and PR CI. Every file of an app or of a package it bundles counts, except tests, top-level `*.md`, `turbo.json`, Vitest config, and `@repo/vitest-config`.
+
+| Change | Changeset |
+|--------|-----------|
+| Observable change to a deployed app, including through a bundled `@repo/*` package | `patch` or `minor` (see Bump) |
+| Catalog bump of an entry an app lists under `dependencies` | `patch` naming that app; Dependabot PRs get one committed for them when `CHANGESET_BOT_TOKEN` is set |
+| Shipped path changed, nothing observable: types, comments, a behavior-identical refactor, devDependency lines in an app `package.json` | `--empty` with a one-line reason; `changeset version` deletes it unread |
+| Tests, docs, `.github/`, agent config, or root tooling only | none |
+
+- A fix to a change still pending on `main` edits that pending changeset: nothing has shipped, so there is nothing new to note.
+- One changeset per logical change: a fix and a feature in one PR are two files. Iterating on your own PR edits the file you added, never a second one for the same change.
+
+## Frontmatter
+
+- **Name only apps** - the unscoped workspaces under `apps/` - each one whose behavior changes. Never an `@repo/*` package: its entry lands in a `packages/*/CHANGELOG.md` that no release note reads. `release:check` enforces this.
+- The `fixed` group bumps every app to the highest bump anyway; the names only decide which CHANGELOG carries the entry. An app no changeset names gets "No changes in this release.", which the GitHub Release skips.
+
+## Bump
+
+| Bump | For |
+|------|-----|
+| `patch` | Fixes, performance, hardening, runtime dependency and bundler bumps, `compatibilityDate` moves, copy |
+| `minor` | Additive capability old clients survive (route, response field, UI feature), or anything the operator must act on or know (new secret, binding, or variable; changed default) |
+| `major` | A broken public contract: removed or renamed route or field, stricter validation, changed error envelope or wire enum value |
+
+- **While the apps are `0.x`, a breaking change is `minor`** and its first line starts with `**Breaking:**`. `major` cuts 1.0.0, a maintainer decision: `release:check` refuses it without the `release:major` PR label. Never choose `major` unless the user asked for a breaking release.
+- Judge "breaking" against production (the last `v*` tag), not against earlier commits of the same PR or unreleased changes on `main`.
+- A wire break must survive the rollout. `worker-api` promotes before `front-app`, and open tabs keep running the old SPA, so ship expand, then migrate, then contract ([contracts.mdc](../contracts/contracts.mdc)); the contract step carries the breaking changeset.
+
+## Summary
+
+- **First line**: one imperative sentence of at most 100 characters (enforced), naming the surface in backticks and the observable effect; a fix names the symptom it removes. It becomes the changelog bullet.
+- **Body** (optional): at most three short paragraphs of what a consumer must know - operator action, changed defaults, migration. A breaking change says what changed, who is affected, and how to migrate, with a before/after snippet.
+- No headings (enforced): the body renders inside a list item, so use a **bold** lead-in. One line per paragraph ([markdown-style.mdc](../quality/markdown-style.mdc)).
+- Never file inventories, internal symbol lists, the PR's story, or "this PR". Never user or tenant identifiers, customer names, Sentry event ids, internal URLs, or secrets: changelogs are published ([guardrails.mdc](../core/guardrails.mdc)).
+- `#123` links the issue. Never write `pr:`, `commit:`, or `author:` lines: `@changesets/changelog-github` reads them as attribution overrides.
+- Reread it as an operator skimming the release notes: do they learn what changed for them?
+
+## Files
+
+- Create non-interactively and keep the generated name, never one chosen by hand: two open PRs that pick the same descriptive name conflict, and the CLI overwrites an existing file without checking. The random three-word id makes a clash between pending files negligible. The only other name is the Dependabot writer's `dependabot-<PR>-<app>.md`, unique per PR. Quote the heredoc: inside double quotes, backticks are command substitution.
+- Rename a pending changeset in a commit of its own, with `git mv`, before editing it: `changelog-github` credits the commit that added the file, found through `git log --follow`, and a rename committed with a rewrite reads as a new file.
+
+  ```sh
+  pnpm changeset --patch worker-api,front-app -m "$(cat <<'EOF'
+  Fix `POST /api/v1/echo` rejecting a JSON array with the wrong message
+  EOF
+  )"
+  ```
+
+- `--minor <apps>` and `--empty` take the same `-m`. `git add` a new changeset before `pnpm release:check`: `--since` diffs tracked files only.
+- Never hand-edit `CHANGELOG.md` (hook-enforced), push to `changeset-release/main`, or run `changeset version`, `pre`, `git-tag`, or `publish`: CI owns them. Edit another PR's pending changeset only in a PR that says so.
+- No prereleases: CD fails closed on a pre-mode tag. Test a branch with a Worker Preview (rule `ops/previews`).

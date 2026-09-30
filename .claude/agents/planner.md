@@ -20,7 +20,7 @@ You already hold root `AGENTS.md` (Decision Checklist, Enforced Boundaries, Wher
 - Name real files with real paths. Reuse what exists - check `packages/` and the existing routes before proposing anything new.
 - Order the steps so the contract lands before its consumers: enums, then DTOs, then the Worker route, then the frontend call site.
 - Say which verification proves each step; the repo gate is `pnpm run ci`. Lint and format are whole-repo `//#` root tasks - never plan a `cd` into a package to lint.
-- Call out when a step needs a changeset, a `cloudflare.config.ts` binding (then `pnpm types` and `pnpm check-types`), a secret (`bindings.secret()` plus a fake `test`-mode value; local values from the shell, never an `.env` or `.dev.vars` in a Worker app), or a new `turbo.json` tag. These are the steps most often forgotten.
+- Call out when a step needs a changeset, a `cloudflare.config.ts` binding (then `pnpm types` and `pnpm check-types`), a secret (`bindings.secret()` plus a fake `test`-mode value; local values from a gitignored `.env` or the shell, never a `.dev.vars`), or a new `turbo.json` tag. These are the steps most often forgotten.
 - A new app copies an existing app's `cloudflare.config.ts` and `vite.config.ts` and adapts them by hand; never plan `cf init`.
 - Flag anything you could not verify by reading, rather than assuming it.
 

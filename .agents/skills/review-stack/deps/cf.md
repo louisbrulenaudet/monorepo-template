@@ -23,7 +23,7 @@ Every `cloudflare.config.ts` and the `cf` workflow: config currency, modes, bind
 
 - [apps/worker-api/cloudflare.config.ts](../../../../apps/worker-api/cloudflare.config.ts), [apps/front-app/cloudflare.config.ts](../../../../apps/front-app/cloudflare.config.ts) - `DEPLOYMENTS` table, `test` / Preview branches, bindings
 - Generated `apps/*/.cloudflare/types/index.d.ts` (gitignored; `pnpm types`, and the turbo `types` task before `check-types`)
-- Secrets declared with `bindings.secret()`; no `.env` / `.dev.vars` in a Worker app; rule `backend/workers-config`
+- Secrets declared with `bindings.secret()`; a Worker `.env` gitignored, no `.dev.vars`; rule `backend/workers-config`
 - App `build` / `deploy` / `upload` / `types` scripts; [.github/workflows/cd.yml](../../../../.github/workflows/cd.yml) and `.github/actions/cd/`; [.github/workflows/preview.yml](../../../../.github/workflows/preview.yml) and `.github/actions/previews/` (paused state documented)
 
 ## Probe
@@ -38,7 +38,7 @@ Read both `cloudflare.config.ts` against the installed `cf/config` types; run `p
 - **Observability**: logs/traces enabled with sensible per-mode sampling (the `worker-api` Preview persisted at sampling 1, the `front-app` Preview on production's); telemetry off (`DO_NOT_TRACK`, `CF_SEND_TELEMETRY`, and `WRANGLER_SEND_METRICS`, which cf also honors).
 - **Assets & SPA**: front-app assets-only with `notFoundHandling: "single-page-application"`; `workersDev` left at its default unless custom domains only; the gateway never co-located as the assets Worker.
 - **Build Output & deploy flow**: every `--prebuilt` command passes the mode the Build Output records; `cf workers versions create` → `cf workers deployments create` aligned with current guidance; Wrangler-only commands (tail, one secret, Preview delete and secrets) still pinned and documented; CD guard state documented.
-- **Agent loop**: `pnpm types` deterministic; the discover → `cf schema` → `--help` → `--dry-run` loop and the no-deploy boundary documented in skill `cf`; no env file a sandboxed `cf` cannot read.
+- **Agent loop**: `pnpm types` deterministic; the discover → `cf schema` → `--help` → `--dry-run` loop and the no-deploy boundary documented in skill `cf`; a sandboxed `cf` skips a Worker `.env` it cannot read through `SKIP_ENV_FILES` (skill `cf`).
 
 ## Critical when
 

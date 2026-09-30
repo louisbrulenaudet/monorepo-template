@@ -36,7 +36,8 @@
       "WRANGLER_REGISTRY_PATH",
       "CLOUDFLARE_REGISTRY_PATH",
       "CF_SEND_TELEMETRY",
-      "DO_NOT_TRACK"
+      "DO_NOT_TRACK",
+      "SKIP_ENV_FILES"
     ]
   },
   "boundaries": {
@@ -99,18 +100,6 @@
       "description": "Whole-repo oxfmt --check.",
       "cache": false
     },
-    "//#knip": {
-      "description": "Unused files, exports, and dependencies across every workspace.",
-      "cache": false
-    },
-    "//#knip:agent": {
-      "description": "Same Knip pass with --reporter symbols.",
-      "cache": false
-    },
-    "//#knip:production": {
-      "description": "Knip --production --strict: shipped code only, workspace isolation.",
-      "cache": false
-    },
     "//#deps:check": {
       "description": "syncpack lint: catalog: for third-party deps, workspace:* for internal.",
       "inputs": [
@@ -134,6 +123,11 @@
     "//#hooks:test": {
       "description": "sh -n plus the regression table for the agent guard hooks.",
       "cache": false
+    },
+    "//#release:check": {
+      "description": "Changeset gate: coverage since origin/main, app-only names, title shape, gated majors.",
+      "cache": false,
+      "passThroughEnv": ["CHANGESET_ALLOW_MAJOR"]
     },
     "//#spell:check": {
       "description": "Whole-repo cspell lint.",
@@ -222,6 +216,12 @@
         "CLOUDFLARE_API_TOKEN",
         "CLOUDFLARE_ACCOUNT_ID"
       ]
+    },
+    "deploy:check": {
+      "description": "cf deploy --prebuilt --mode production --dry-run: validate the Build Output, no credentials.",
+      "dependsOn": ["build"],
+      "inputs": ["cloudflare.config.ts"],
+      "outputs": []
     },
     "upload": {
       "description": "cf workers versions create --prebuilt --mode production (no traffic change).",

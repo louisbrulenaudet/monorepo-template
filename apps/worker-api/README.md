@@ -15,7 +15,7 @@ curl -s http://localhost:8700/api/v1/health
 
 Run commands from the repository root, or with `pnpm -w` from this directory: raw package scripts bypass Turbo's dependency graph. Test, typegen, deploy, and Hono CLI commands are listed in [AGENTS.md](AGENTS.md).
 
-Bindings, the Worker name and observability per mode live in [`cloudflare.config.ts`](cloudflare.config.ts); the dev port and build settings in [`vite.config.ts`](vite.config.ts). This app keeps no `.env` or `.dev.vars`: Sentry is off locally unless the dev server starts with `SENTRY_DSN=<dsn>` in its environment.
+Bindings, the Worker name and observability per mode live in [`cloudflare.config.ts`](cloudflare.config.ts); the dev port and build settings in [`vite.config.ts`](vite.config.ts). Sentry is off locally unless `SENTRY_DSN=<dsn>` is set in a gitignored `.env` here or in the dev server's environment; never use a `.dev.vars`.
 
 ## What ships today
 

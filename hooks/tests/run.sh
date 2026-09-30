@@ -108,6 +108,7 @@ G=security/guard-generated-files.sh
 expect 2 $G "$(write_payload apps/worker-api/.cloudflare/types/index.d.ts 'x')" 'cf generated types'
 expect 2 $G "$(write_payload apps/front-app/.cloudflare/output/v0/workers/default/assets/index.html 'x')" 'cf Build Output'
 expect 2 $G "$(write_payload apps/front-app/src/routeTree.gen.ts 'x')" 'router tree output'
+expect 2 $G "$(write_payload apps/worker-api/CHANGELOG.md 'x')" 'changesets changelog'
 expect 2 $G "$(write_payload pnpm-lock.yaml 'x')" 'lockfile'
 expect 2 $G "$(write_payload apps/front-app/dist/index.js 'x')" 'build output'
 expect 0 $G "$(write_payload apps/worker-api/src/index.ts 'x')" 'ordinary source'

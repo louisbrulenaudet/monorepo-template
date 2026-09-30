@@ -38,7 +38,7 @@ apps/worker-api/
 | Handler logic past thin orchestration (I/O, binding calls, non-trivial mapping) | `src/services/<feature>.ts` - create on first use |
 | Binding, text value, observability, Worker name per mode | `cloudflare.config.ts` (`DEPLOYMENTS`, `TEST`, `PREVIEW`), then `pnpm -w types` |
 | Dev port, inspector, minify, source maps | `vite.config.ts` |
-| Secrets | `bindings.secret()` in `cloudflare.config.ts`, with a `bindings.text()` fake in `TEST` (and `PREVIEW` when Previews run without it). No `.env` / `.dev.vars` here: local values come from the shell (`SENTRY_DSN=<dsn>`) |
+| Secrets | `bindings.secret()` in `cloudflare.config.ts`, with a `bindings.text()` fake in `TEST` (and `PREVIEW` when Previews run without it). Local values come from a gitignored `.env` here or the shell (`SENTRY_DSN=<dsn>`), never a `.dev.vars` (root `AGENTS.md`, Environment) |
 | Unit tests Vitest pool | `tests/` + `vitest.config.mts` `@repo/vitest-config/workers` |
 
 ## Adding an Endpoint

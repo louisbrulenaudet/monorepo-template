@@ -1,6 +1,6 @@
 # Dependabot version updates. No docker / docker-compose ecosystems (none in
-# this repo). Absent options (`cooldown`, `labels`, group `dependency-type`)
-# are absent on purpose - add only when the DX need is clear.
+# this repo). Absent options (`labels`, group `dependency-type`) are absent on
+# purpose - add only when the DX need is clear.
 version: 2
 
 updates:
@@ -9,6 +9,9 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+      exclude: ["@cloudflare/*", "cf", "wrangler", "miniflare", "typescript"]
     commit-message:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
@@ -21,6 +24,8 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "ci(deps)"
     groups:

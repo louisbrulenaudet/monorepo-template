@@ -64,7 +64,7 @@ For the hand-off: promote or roll back with `pnpm --filter=<app> exec cf workers
 
 ## Secrets
 
-- Worker apps keep no `.env` and no `.dev.vars`: cf and the Vite plugin abort on an env file they cannot read, and the agent sandbox denies `**/.env*`. Local values come from the shell (`SENTRY_DSN=… pnpm dev`; turbo passes `SENTRY_DSN` to `worker-api#dev`); unset means Sentry is off in dev.
+- Local values come from a gitignored Worker `.env` or the shell (`SENTRY_DSN=… pnpm dev`; turbo passes `SENTRY_DSN` to `worker-api#dev`), never a `.dev.vars`; unset means Sentry is off in dev. The Vite plugin aborts on an env file it cannot read and the agent sandbox denies `**/.env`, so the agent session sets `SKIP_ENV_FILES=1` and sandboxed runs skip the `.env` (rule `backend/workers-config`).
 - Deployed secrets are declared with `bindings.secret()`; the `test` mode and Previews use `bindings.text("")` for `SENTRY_DSN`. Values go up with `--secrets-file <path>` on `cf deploy` / `cf workers versions create` (a file outside the checkout, e.g. under `$TMPDIR`, deleted after use), or one at a time with `wrangler secret put` (below) - users and CD only.
 - Every `apps/front-app/.env*` file holds public `VITE_*` values only, and the sandbox reads them through the `**/apps/front-app/.env*` allow, because `build` hashes them as inputs.
 

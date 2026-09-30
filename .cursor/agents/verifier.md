@@ -21,7 +21,7 @@ You independently verify the repository gate and surface only what a human or th
 
 ## Commands - tests
 
-`pnpm run ci:agent` already runs the full test graph (`turbo run check-types test build`). For targeted verification:
+`pnpm run ci:agent` already runs the full test graph (`turbo run check-types test build deploy:check`). For targeted verification:
 
 - Single workspace: `pnpm turbo run test --filter=<workspace>`. Turbo caches `test` with no outputs: a cache hit replays the stored log, so rely on the replay rather than reading `.turbo/**`; add `--force` only when the caller explicitly needs a fresh execution.
 - Single file: `pnpm --filter=<workspace> exec vitest run tests/<path>.test.ts`.

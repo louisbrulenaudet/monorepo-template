@@ -1,0 +1,26 @@
+---
+description: "PR code-quality report: non-blocking Knip and jscpd diff against the merge base, isolated write token, sticky comment, and the .jscpd.json rationale."
+alwaysApply: false
+globs: .github/workflows/quality.yml,.github/actions/quality/**,.jscpd.json
+---
+
+# Code Quality Report
+
+[`quality.yml`](../../../.github/workflows/quality.yml) posts one sticky PR comment listing the unused code (Knip) and duplication (jscpd) a PR adds or resolves; pre-existing findings stay out. Workflow-wide rules (pins, permissions, install, cache key): [ci.mdc](ci.mdc).
+
+## Invariants
+
+- **Never blocking**: not in the `main` ruleset, never a `ci.yml` step. Findings keep `Analyze` green; only a tool that could not run turns it red (`build-report.mjs` exits 1 after writing the comment), so a crash never reads as clean. Every tool step is `continue-on-error: true` and reports through `steps.<id>.outcome`, so one crash never hides the other tool.
+- **Diff against the merge base**: the checkout is the PR merge commit at `fetch-depth: 2`, so `HEAD^1` is the exact base the merge lands on, with no full history. Knip runs both passes on both sides - the base in a `git worktree` with its own install, `knip.jsonc`, and scripts - keyed by type, file, and symbol, never by line. Knip gates nothing, so the base carries findings of its own: only the base run keeps them out of the report and yields the resolved ones.
+- **jscpd diffs in both directions with its own fingerprints**: the PR scanned with `--baseline-from-ref "$BASE_SHA"` marks new clones; the base worktree scanned with `--baseline-from-ref "$GITHUB_SHA"` marks the clones the PR removed. Both runs use the PR's binary and `.jscpd.json` (`--config`), so a config change never shows as a diff.
+- **Write token isolated**: `analyze` (`contents: read`) restores `ci.yml`'s pnpm store with `actions/cache/restore` and never saves it; `comment` (`pull-requests: write`) runs no PR code, only `changesets/action/pr-comment` with `update-id: code-quality`, fed through job outputs. Fork PRs skip `comment` and keep the job summary.
+- `pr-comment` searches only the first 30 comments, so a PR that already had 30 when its first report posted gets a new comment per run; the report posts on `opened`, before that happens.
+- Concurrency is keyed by PR number with `cancel-in-progress`: one run per PR, and a cancelled run never reaches `comment`, so the comment only moves forward. Its footer names the analyzed commits.
+
+## `.jscpd.json`
+
+Comment-free; only non-default keys.
+
+- `format`: code only (`javascript` covers `.mjs`). No Markdown, YAML, or JSON: the `.claude` / `.cursor` rule twins and workflow step blocks repeat on purpose.
+- `ignore`: `**/.git/**` because jscpd walks hidden directories, and a checkout's `.git/hooks/*.sample` scripts are absent from a worktree (whose `.git` is a file), which skewed every diff; `**/*.gen.ts` and `**/.agents/**` mirror `.oxlintrc.json` and `knip.jsonc`. Keep the `**/` prefix: globs match the whole path, and the base scan's root is absolute. Symlinks are not followed, so `.claude/skills` never double-counts `.agents`.
+- `pnpm jscpd` is the whole-repo local view, not a gate: existing clones stay out of `ci` and of the report.
