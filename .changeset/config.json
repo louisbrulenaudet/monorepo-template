@@ -1,18 +1,20 @@
 {
-  "changelog": [
-    "@changesets/changelog-github",
-    {
-      "repo": "louisbrulenaudet/monorepo-template"
-    }
-  ],
-  "commit": false,
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+  "changelog": "@changesets/changelog-github",
   "baseBranch": "main",
+  "changedFilePatterns": [
+    "**",
+    "!*.md",
+    "!tests/**",
+    "!vitest.config.*",
+    "!vitest.setup.*",
+    "!turbo.json"
+  ],
   "privatePackages": {
     "version": true,
     "tag": false
   },
   "fixed": [["*"]],
-  "updateInternalDependencies": "patch",
-  "ignore": [],
-  "format": "auto"
+  "ignore": ["@repo/vitest-config"],
+  "format": false
 }

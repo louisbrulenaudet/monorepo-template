@@ -45,7 +45,7 @@ Queue-only / dual-handler workers: `handlers/request.ts`, `handlers/message.ts`,
 
 ## Environment
 
-Node 24 (≥ 24.11, the floor Vite+ `vp` requires) and the exact pnpm version pinned in root `package.json`. Worker apps keep no `.env` and no `.dev.vars`: `cf` and the Cloudflare Vite plugin abort on an env file they cannot read, and the agent sandbox denies reading `.env` files. A local secret value comes from the shell instead (`SENTRY_DSN=<dsn> pnpm dev`; Turbo passes `SENTRY_DSN` through to `worker-api#dev`), and unset leaves Sentry off in dev. Every `front-app` `.env*` file holds only public `VITE_*` values, and the sandbox may read all of them (`**/apps/front-app/.env*`); frontend dev overrides go in `.env`. Local ports: rule `backend/ports`.
+Node 24 (≥ 24.11, the floor Vite+ `vp` requires) and the exact pnpm version pinned in root `package.json`. A Worker app may keep a gitignored `.env` for local secret values, which `cf dev` loads; the shell works too (`SENTRY_DSN=<dsn> pnpm dev`; Turbo passes `SENTRY_DSN` through to `worker-api#dev`), and unset leaves Sentry off in dev. Never a `.dev.vars`: it breaks the Vitest pool, which skips only an unreadable `.env`. The agent sandbox denies reading a Worker `.env`, and the Cloudflare Vite plugin aborts on an env file it cannot read, so `.claude/settings.json` sets `SKIP_ENV_FILES=1` and each app's `vite.config.ts` turns it into `envDir: false`: sandboxed `cf dev` / `cf build` start without the `.env` values (Sentry off). Every `front-app` `.env*` file holds only public `VITE_*` values; frontend dev overrides go in `.env`, which the sandboxed dev server skips in favor of the `src/config/env.ts` defaults. Local ports: rule `backend/ports`.
 
 A worktree is a fresh checkout: run `pnpm install --frozen-lockfile --prefer-offline` in it before any turbo command. Sparse-checkout and `.worktreeinclude` policy: rule `core/worktrees`.
 
@@ -62,8 +62,8 @@ Cloudflare tooling is the `cf` CLI (beta) over each app's typed `cloudflare.conf
 | `pnpm run check` | Fastest tier: `types`, then lint, format, both syncpack checks, and the hook suite as parallel `//#` root tasks |
 | `pnpm run fix` | `types`, `deps:fix`, `deps:format`, `lint:fix`, then `format:fix` (format last) |
 | `pnpm run ci` | Full local PR gate: `pnpm run types`, `pnpm run boundaries`, one `turbo run --continue=dependencies-successful` of every check, `pnpm run audit`. Reports all failures in one pass |
-| `pnpm run ci:affected` | `ci` scoped with `--affected`, minus knip and audit - mid-task only, never a substitute for `ci` |
-| `pnpm run ci:agent` | `ci` with `lint:agent` / `knip:agent`, `--output-logs=errors-only`, `--log-order=grouped` |
+| `pnpm run ci:affected` | `ci` scoped with `--affected`, minus audit - mid-task only, never a substitute for `ci` |
+| `pnpm run ci:agent` | `ci` with `lint:agent`, `--output-logs=errors-only`, `--log-order=grouped` |
 | `pnpm run ci:sandbox` | `ci:agent` minus `build`: `front-app` declares `.env*` as `build` inputs, and turbo aborts traversal on one the sandbox cannot read. They are all readable through the `**/apps/front-app/.env*` allow once the settings patch lands; until then only `.env` and `.env.production` are. Ask the user to run `pnpm run ci` for build coverage |
 | `pnpm lint:agent` | Lint with `--format=agent`, no auto-fix |
 | `pnpm react-doctor` / `:changed` | Offline React Doctor scan of `front-*`; `:changed` after React edits (rule `frontend/react`) |
@@ -71,10 +71,12 @@ Cloudflare tooling is the `cf` CLI (beta) over each app's typed `cloudflare.conf
 | `pnpm boundaries` | Package tags vs `turbo.json` |
 | `pnpm hooks:test` | `sh -n` plus the regression table for `hooks/` |
 | `pnpm spell:check` / `spell:words` | cspell over the repo, dotfiles included / unknown words only, one per line. Vocabulary: `.cspell/project-words.txt` (not in `check` or `ci`) |
-| `pnpm knip` / `knip:production` / `knip:agent` | Unused files, exports, deps; `--production --strict`; one line per symbol |
+| `pnpm knip` / `knip:production` / `knip:agent` | Unused files, exports, deps; `--production --strict`; one line per symbol. Diagnostic only, never in `ci` |
+| `pnpm jscpd` | Whole-repo copy/paste scan (`.jscpd.json`). Report-only, never in `check` or `ci`: the PR `Code quality` comment shows only the duplication and Knip findings a PR adds or resolves (rule `ops/quality-report`) |
 | `pnpm deps:check` / `deps:fix` / `deps:format` | syncpack lint (`catalog:` for third-party, `workspace:*` for `@repo/**`) / autofix / field ordering |
 | `pnpm preview:deploy` / `preview:delete` | Worker Preview of every app (branch-slug name). Outward-facing; denied to agents (rule `ops/previews`) |
-| `pnpm changeset` / `pnpm release:status` | Add a changeset / read-only release state (exits 1 when changed packages lack one, so not in `ci`) |
+| `pnpm release:check` | Changeset gate, also in `ci`, `ci:agent`, `ci:sandbox`, and PR CI: fails when a shipped path or an app's runtime catalog entry changed with no changeset since `origin/main`, on a non-app name, a title over 100 characters or a heading, and on `major` without `CHANGESET_ALLOW_MAJOR=1`. Diffs tracked files only: `git add` a new changeset first |
+| `pnpm release:status` | Read-only release plan: every pending changeset and the next versions |
 
 **Dependencies:** add every third-party dependency to the catalog in `pnpm-workspace.yaml` and reference it as `"catalog:"` (one-offs install via `catalogMode: prefer` but fail `syncpack lint`); internal packages use `"workspace:*"`.
 
@@ -82,7 +84,7 @@ Cloudflare tooling is the `cf` CLI (beta) over each app's typed `cloudflare.conf
 
 Every app under `apps/` bumps together as one Changesets `fixed` group, so one `vX.Y.Z` tag is a valid release coordinate. Nothing is published to npm; a release is a git tag plus a Cloudflare Workers promote.
 
-- **Every PR that changes a deployable app ships a changeset** (`pnpm changeset`; `--empty` for no-release changes). Docs/tests/tooling-only PRs do not need one.
+- **A PR that changes what an app ships carries a changeset naming the affected apps, never an `@repo/*` package**: `pnpm changeset --patch <app>[,<app>] -m '<title>'` (or `--minor`; `--empty -m '<reason>'` when nothing observable changes), then `git add` it and run `pnpm release:check`. Tests, docs, and tooling need none. Writing and bump rules: rule `ops/changesets`; the procedure: skill `changeset`.
 - **Merging the `chore: release` PR is the release act; no `v*` tag is ever pushed by hand.** `gate` validates the merged commit on `main`, then the tag is cut and handed to CD.
 
 Release state machine, recovery, and rollback: rule `ops/release`; contributor walkthrough: [`.changeset/README.md`](.changeset/README.md).
@@ -90,9 +92,9 @@ Release state machine, recovery, and rollback: rule `ops/release`; contributor w
 ### Scoping
 
 - Turbo filters (`--filter=<pkg>`, `--filter=...pkg...`, `--affected`) apply to `check-types`, `test`, `build`, `dev`, `deploy`, `upload`, `preview`, `types`. Prefer scoped turbo while iterating; `--affected` is for GitHub CI. Run package scripts from the root or with `pnpm -w` - a raw package script bypasses Turbo dependencies. Never combine `-w` with `--filter`: pnpm adds the root project to the selection and runs the command there too.
-- **Lint, format, Knip, and syncpack are `//#` root tasks** - one whole-repo pass at repo-root CWD. Never `cd` into a package to lint; narrow with a path: `pnpm --filter=front-app run lint:check`. Why: rules `core/turborepo`, `quality/lint-config`.
+- **Lint, format, and syncpack are `//#` root tasks** - one whole-repo pass at repo-root CWD. Never `cd` into a package to lint; narrow with a path: `pnpm --filter=front-app run lint:check`. Why: rules `core/turborepo`, `quality/lint-config`.
 - **Lint contract:** iterate with `pnpm lint:fix`, finish with `pnpm lint:agent` and read only that output (`file:line:col: severity plugin(rule): message help:`); never parse the TTY-dependent `lint:check` output. On a fresh clone, run `pnpm types` before a bare `pnpm lint:fix` / `pnpm lint:agent`: type-aware lint reads the gitignored `.cloudflare/types`, which `check`, `fix`, and the `ci*` scripts generate first. Suppressions: `oxlint-disable*` only (rule `quality/code-style`). Type checking stays with tsc via `turbo run check-types`.
-- **Knip:** the default and `--production` passes both stay green; never blanket-`ignore`; per-override rationale in rule `quality/knip`.
+- **Knip is a diagnostic, not a gate**: neither CI nor `pnpm run ci` runs it, and the PR `Code quality` comment lists what a change adds or resolves; never blanket-`ignore`; per-override rationale in rule `quality/knip`.
 
 ### Verifying a change (agents)
 

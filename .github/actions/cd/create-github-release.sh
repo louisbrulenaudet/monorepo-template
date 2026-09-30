@@ -33,6 +33,7 @@ notes="$(mktemp)"
       ' "$changelog"
     )"
     [[ -n "${excerpt//[[:space:]]/}" ]] || continue
+    [[ "$(echo "$excerpt" | sed '/^[[:space:]]*$/d')" != "No changes in this release." ]] || continue
     echo
     echo "### ${app}"
     echo "$excerpt"

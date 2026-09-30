@@ -179,7 +179,7 @@ Use pnpm strict linking defaults. This repository has no hoisting override: work
 
 GitHub Actions uses:
 
-1. `pnpm/setup` (pnpm v11+ successor to `pnpm/action-setup`) with `runtime: node@24`, store `cache: true`, and `install: false` (default install is not frozen)
+1. `pnpm/setup` (pnpm v11+ successor to `pnpm/action-setup`) with `runtime: node@24` and `install: false` (default install is not frozen); the store cache is `actions/cache` keyed on `pnpm-lock.yaml` in `ci.yml` only, since `pnpm/setup`'s `cache: true` saves a new entry on every run
 2. `pnpm install --frozen-lockfile` (version comes from root `package.json` `devEngines.packageManager`)
 3. `pnpm turbo run <task> --affected`
 

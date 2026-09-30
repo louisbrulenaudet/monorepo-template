@@ -21,7 +21,7 @@ Partly enforced; "never to the default branch" and "read before overwriting" are
 
 ## Generated files are outputs, not sources
 
-Never hand-edit a generated artifact (anything under `apps/*/.cloudflare/**` - cf Build Output, generated `Env` types, local dev state - or any other build output). Change the source and regenerate with the documented command (`pnpm types`, the app's build). Enforced.
+Never hand-edit a generated artifact: anything under `apps/*/.cloudflare/**` (cf Build Output, generated `Env` types, local dev state), a `CHANGELOG.md` (written by `changeset version` in the Release workflow), or any other build output. Change the source and regenerate with the documented command (`pnpm types`, the app's build); a changelog entry changes through its pending `.changeset/*.md`. Enforced.
 
 ---
 

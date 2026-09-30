@@ -26,7 +26,7 @@ jobs:
     name: Validate main
     permissions:
       contents: read
-    uses: ./.github/workflows/ci.yml
+    uses: $/.github/workflows/ci.yml
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
@@ -58,6 +58,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -70,8 +71,6 @@ jobs:
       - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
           runtime: node@24
-          cache: true
-          cache-dependency-path: pnpm-lock.yaml
           install: false
       - run: pnpm install --frozen-lockfile
       - id: version
@@ -91,6 +90,13 @@ jobs:
           PR_NUMBER: ${{ steps.version.outputs.pr-number }}
         run: bash .github/actions/release/comment-release-pr-contract.sh
 
+      - name: Run CI on the release PR
+        if: steps.version.outputs.pr-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run ci.yml --ref changeset-release/main
+
   tag:
     name: Tag release
     needs: [select-mode, gate]
@@ -107,8 +113,12 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
-      - id: tag
-        uses: ./.github/actions/create-release-tag
+      - name: Tag released version
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash .github/actions/release/create-release-tag.sh
 
   # `created` is false when the tag already existed, so re-running never re-deploys.
   # Redeploy an existing tag with cd.yml's workflow_dispatch.
@@ -122,6 +132,6 @@ jobs:
     permissions:
       contents: write
       deployments: write
-    uses: ./.github/workflows/cd.yml
+    uses: $/.github/workflows/cd.yml
     with:
       tag: ${{ needs.tag.outputs.tag }}

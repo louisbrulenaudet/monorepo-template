@@ -21,15 +21,15 @@ Every `apps/*/cloudflare.config.ts` and `apps/*/vite.config.ts`, app `package.js
 
 ## Probe
 
-`find apps -path '*/worker-*' -name '.env*' -not -path '*/node_modules/*'` (existence only - never read the files), `find apps -name '.dev.vars*' -not -path '*/node_modules/*'`, `git check-ignore -v <path>`, `grep -rn "import.meta.env" apps/front-*/src`, `pnpm types` (writes only the gitignored generated types).
+`find apps -path '*/worker-*' -name '.env*' -not -path '*/node_modules/*'` (existence only - never read the files; each hit must be gitignored and untracked), `find apps -name '.dev.vars*' -not -path '*/node_modules/*'`, `git check-ignore -v <path>`, `grep -rn "import.meta.env" apps/front-*/src`, `pnpm types` (writes only the gitignored generated types).
 
 ## Axes
 
 - **Mode matrix**: build one table per app - `development` / `staging` / `production` / `test` / Preview × Worker name, routes, `workersDev` / `previewUrls`, each binding, each secret, `ENVIRONMENT`, `CORS_ORIGINS` - and check it against rule `backend/workers-config`: an unknown mode throws, `ctx.isPreview` throws outside `production`, one `env` shape and one `return`, names `<app>` / `<app>-staging` / `<app>-production`, never production data bindings, queue consumers, crons, or routes in the Preview branch.
 - **Fail closed**: every guard reading required config throws or returns 503 when the value is missing; an empty `bindings.text("")` stand-in (test, Preview) disables a feature and never turns a check off (no "no secret → skip verification"); `CORS_ORIGINS` empty is permissive only in `dev`.
-- **Secrets declared, not stored**: every secret the code reads is `bindings.secret()` in each mode that reads it; never a `bindings.text()` value, code constant, or log; no `.env` / `.dev.vars` in a Worker app (report existence from the probe, never contents); `.env*` / `.dev.vars*` gitignored.
+- **Secrets declared, not stored**: every secret the code reads is `bindings.secret()` in each mode that reads it; never a `bindings.text()` value, code constant, or log; a Worker `.env` gitignored and untracked, no `.dev.vars` (report existence from the probe, never contents); `.env*` / `.dev.vars*` gitignored.
 - **Config loading**: every `@repo/*` import in `cloudflare.config.ts` is type-only; `compatibilityDate` meets the rule's floor and never adds `nodejs_compat`; observability per deployment (sampling rates) matches the rule and the Sentry sampler that mirrors it.
-- **Client env**: `front-*` `.env*` hold public `VITE_*` values only; `envPrefix` is never widened; client code reads env through `src/config/env.ts`, never scattered `import.meta.env.X`; the production build fails on missing or placeholder required `VITE_*` values; config-time env uses `loadEnv(mode, appDir, "VITE_")`.
+- **Client env**: `front-*` `.env*` hold public `VITE_*` values only; `envPrefix` is never widened; client code reads env through `src/config/env.ts`, never scattered `import.meta.env.X` (except the literal `VITE_SENTRY_DSN` reads in `src/config/sentry.ts`, which let the build drop the SDK); the production build fails on missing or placeholder required `VITE_*` values; config-time env uses `loadEnv(mode, envDir, "VITE_")` with the same `envDir` as the returned config (`false` under `SKIP_ENV_FILES`).
 - **What ships**: production source maps are `hidden` and excluded by the generated `.assetsignore`; no `.env`, map, or secret-bearing file in the client assets; `_headers` and `.assetsignore` are generated, never hand-edited; every `--prebuilt` script passes the mode the Build Output records.
 - **Build inputs and env passthrough**: `apps/front-app/turbo.json` `build` inputs cover the `.env*` files that change the bundle; `envMode: strict` lists every variable a task needs in `env` / `passThroughEnv` (e.g. `SENTRY_DSN` for `worker-api#dev`).
 - **Ports and dev**: dev ports and `strictPort` per rule `backend/ports`; `inspectorPort: 0`; dev settings (minify, source maps, port) in `vite.config.ts`, never in `cloudflare.config.ts`.
@@ -45,4 +45,4 @@ Secret **leakage** (logs, error bodies, bundle) and CORS/CSRF behavior belong to
 ## Accepted
 
 - `workersDev: true` until custom domains serve the Worker; `previewUrls: true` in production only: rule [backend/workers-config](../../../../.claude/rules/backend/workers-config.md).
-- Local secret values from the shell, never an env file: root [AGENTS.md](../../../../AGENTS.md), Environment.
+- Local secret values from a gitignored Worker `.env` or the shell, never a `.dev.vars`: root [AGENTS.md](../../../../AGENTS.md), Environment.

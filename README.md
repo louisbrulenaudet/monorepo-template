@@ -97,7 +97,7 @@ pnpm prepare   # Vite+ pre-commit hook
 
 Each app's Cloudflare config is a typed `cloudflare.config.ts`, run by the `cf` CLI (beta). `pnpm types` generates the `Env` types of every app with a `types` script (`worker-api` today) into its gitignored `.cloudflare/types/index.d.ts`; `pnpm check-types` runs it first, and `cf dev` / `cf build` refresh it. Run it once after install so the editor sees `Env`, and again after editing a `cloudflare.config.ts`.
 
-No env file is needed for a first run. Worker apps keep no `.env` or `.dev.vars`: a local secret comes from the shell, so `SENTRY_DSN=<dsn> pnpm dev` turns on the gateway's Sentry, which stays off when unset. Frontend overrides go in `apps/front-app/.env`, copied from `.env.example`. Every `.env*` file there holds public `VITE_*` values only, and the agent sandbox may read all of them, because the Cloudflare Vite plugin aborts on an env file it cannot read.
+No env file is needed for a first run. A Worker app takes local secrets from a gitignored `.env` or the shell, never a `.dev.vars`: `SENTRY_DSN=<dsn>` in `apps/worker-api/.env`, or `SENTRY_DSN=<dsn> pnpm dev`, turns on the gateway's Sentry, which stays off when unset. Frontend overrides go in `apps/front-app/.env`, copied from `.env.example`. Every `.env*` file there holds public `VITE_*` values only, and the agent sandbox, which cannot read them, runs the app with `SKIP_ENV_FILES=1` so the Cloudflare Vite plugin skips them instead of aborting.
 
 ### First run
 
@@ -106,7 +106,7 @@ No env file is needed for a first run. Worker apps keep no `.env` or `.dev.vars`
 3. `http://localhost:5174` serves the SPA; its footer shows the API version.
 4. **Shift+Alt+D** reveals the Vite DevTools dock. Its Rolldown panel stays empty until a build has run: `pnpm turbo run build --filter=front-app`.
 
-Work on one app with `pnpm turbo run dev --filter=worker-api`. `pnpm run` lists every root script; `pnpm run check` is the seconds-long static check and `pnpm run ci` the full local PR gate.
+Work on one app with `pnpm turbo run dev --filter=worker-api`. `pnpm run` lists every root script; `pnpm run check` is the seconds-long static check and `pnpm run ci` the full local PR gate. Every PR also gets a non-blocking **Code quality** comment listing the unused code (Knip) and duplicated code (jscpd) it adds or resolves; `pnpm knip` and `pnpm jscpd` show the whole repo locally.
 
 ### Git hooks
 
@@ -131,7 +131,7 @@ Service bindings and RPC typing: [`.claude/rules/backend/workers-config.md`](.cl
 
 ## Releases and deploys
 
-Versioning is [Changesets](https://changesets.dev). Every app under `apps/` shares one version, a release is a `vX.Y.Z` git tag plus a Cloudflare Workers promote, and nothing is published to npm. Add `pnpm changeset` to any PR that changes an app or a shared contract package, check what is queued with `pnpm release:status`, and release by merging the `chore: release` PR. Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md); pipeline invariants and recovery: [`.claude/rules/ops/release.md`](.claude/rules/ops/release.md).
+Versioning is [Changesets](https://changesets.dev). Every app under `apps/` shares one version, a release is a `vX.Y.Z` git tag plus a Cloudflare Workers promote, and nothing is published to npm. Add a changeset naming the affected apps to any PR that changes what an app ships (`pnpm changeset`; `pnpm release:check` gates it in CI), check what is queued with `pnpm release:status`, and release by merging the `chore: release` PR. Contributor walkthrough: [`.changeset/README.md`](.changeset/README.md); pipeline invariants and recovery: [`.claude/rules/ops/release.md`](.claude/rules/ops/release.md).
 
 ### Continuous deployment
 
@@ -183,7 +183,7 @@ To ship by hand: `pnpm turbo run deploy --filter=<app> --force` (or `pnpm run de
 ## Contribution
 
 - Run `pnpm run ci` before opening a PR; GitHub CI runs the same gates.
-- Add a changeset (`pnpm changeset`) to every PR that changes an app or a shared contract package.
+- Add a changeset (`pnpm changeset`) naming the affected apps to every PR that changes what an app ships, including through a shared package or a runtime dependency bump.
 - Wire-format changes update `@repo/dtos-common` and every producer and consumer in the same PR.
 
 Licensed under the [Apache License 2.0](LICENSE).

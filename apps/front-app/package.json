@@ -81,6 +81,7 @@
     "build": "cf build",
     "check-types": "pnpm run routes:check && tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tests/tsconfig.json",
     "deploy": "cf deploy --prebuilt --mode production",
+    "deploy:check": "cf deploy --prebuilt --mode production --dry-run",
     "dev": "cf dev",
     "format:check": "pnpm -w exec oxfmt --check apps/front-app",
     "format:fix": "pnpm -w exec oxfmt apps/front-app",

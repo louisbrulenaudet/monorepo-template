@@ -38,7 +38,7 @@ flowchart LR
 | Local dev overrides | Copy [`.env.example`](.env.example) to `.env` |
 | Production build / deploy | Copy [`.env.production.example`](.env.production.example) to `.env.production` |
 
-The agent sandbox may read every `.env*` file here, since the Cloudflare Vite plugin aborts on an env file it cannot read. Vite loads `.env.production` only for a production build (`cf build`), never under `cf dev`, so a deploy origin does not change dev defaults. `VITE_*` values are inlined into the public bundle at build time: changing one means rebuilding and redeploying, and none may hold a secret.
+The agent sandbox cannot read the `.env*` files here, and the Cloudflare Vite plugin aborts on an env file it cannot read, so the sandbox sets `SKIP_ENV_FILES=1` and `vite.config.ts` skips them: sandboxed dev runs on the `src/config/env.ts` defaults. Vite loads `.env.production` only for a production build (`cf build`), never under `cf dev`, so a deploy origin does not change dev defaults. `VITE_*` values are inlined into the public bundle at build time: changing one means rebuilding and redeploying, and none may hold a secret.
 
 A production build fails without `VITE_API_BASE_URL`, because it also generates `_headers` in the client output (`.cloudflare/output/v0/workers/default/assets/`) - cache and security headers whose CSP `connect-src` names the API origin, plus the Sentry ingest origin when `VITE_SENTRY_DSN` is set. `pnpm run ci` supplies a non-deployed validation origin, so a clean clone runs the full gate without production values.
 

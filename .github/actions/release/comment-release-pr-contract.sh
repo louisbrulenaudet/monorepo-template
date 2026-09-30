@@ -23,7 +23,11 @@ Merging this PR:
 3. cuts the tag `v<version>` at it - the single release coordinate for both apps;
 4. hands that tag to `CD`, which uploads and promotes both Workers to 100%.
 
+The required check on this PR comes from the `CI` run that `Release` dispatches on
+`changeset-release/main`. GitHub holds the `pull_request` runs of a bot-opened PR
+for approval; leave them unapproved.
+
 Do not push edits to `changeset-release/main`: this branch is reset from the `main`
 tip and force-pushed on every push to `main`, so the commit would be discarded.
-Corrections belong in a new changeset on `main`.
+To correct an entry, edit its pending changeset in a PR to `main`.
 BODY

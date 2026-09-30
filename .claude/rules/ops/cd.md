@@ -45,10 +45,10 @@ The pipeline is [`.github/workflows/cd.yml`](../../../.github/workflows/cd.yml);
 ## Release and deployment records
 
 - **GitHub creates the deployment record** because the job references an environment. Never re-create deployments through the REST API: an earlier pipeline did, producing a duplicate record and marking GitHub's own inactive.
-- **Only the GitHub Release is ours to write**: created or updated in-workflow with `gh release create --verify-tag`, listing each deployed app's version id with its `apps/<app>/CHANGELOG.md` section when present.
+- **Only the GitHub Release is ours to write**: created or updated in-workflow with `gh release create --verify-tag`, listing each deployed app's version id with its `apps/<app>/CHANGELOG.md` section when present, except a section that only says "No changes in this release." (the `fixed` group writes that for an app no changeset named).
 
 ## Deliberately not used
 
 - **Workers Builds**: external GitHub Actions is the chosen path so CI and CD share one pipeline; never dual-enable Cloudflare Builds on the same production Workers. Branch Previews follow the same choice ([previews.md](previews.md)).
 - **Secrets baked into `bindings.text()` values or workflow YAML**: runtime secrets stay in Cloudflare (`bindings.secret()`), build secrets in GitHub Environments.
-- **Deploying every green `main`**: only a newly created release tag deploys, gated on `create-release-tag`'s `created` output.
+- **Deploying every green `main`**: only a newly created release tag deploys, gated on `create-release-tag.sh`'s `created` output.

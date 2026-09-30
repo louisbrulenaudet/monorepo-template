@@ -1,0 +1,4 @@
+{
+  "format": ["javascript", "typescript", "tsx", "css", "bash"],
+  "ignore": ["**/.git/**", "**/*.gen.ts", "**/.agents/**"]
+}

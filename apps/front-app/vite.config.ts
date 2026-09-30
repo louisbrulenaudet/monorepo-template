@@ -12,6 +12,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig, loadEnv, type Plugin, type PluginOption } from "vite";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
+const envDir = process.env["SKIP_ENV_FILES"] ? false : appDir;
 const analyzeBundle = process.env["ANALYZE"] === "true";
 const isStaticAnalysis = process.argv.some((arg) => arg.includes("knip"));
 const repoRoot = path.resolve(appDir, "../..");
@@ -36,7 +37,7 @@ function assertProductionOriginEnv(mode: string, command: string): void {
     return;
   }
 
-  const env = loadEnv(mode, appDir, "VITE_");
+  const env = loadEnv(mode, envDir, "VITE_");
   const missing = productionEnvKeys.filter((key) => !env[key]);
   if (missing.length > 0) {
     throw new Error(
@@ -99,7 +100,7 @@ function generatedBuildArtifactsPlugin(mode: string): Plugin {
     apply: "build",
     applyToEnvironment: (environment) => environment.name === "client",
     generateBundle() {
-      const env = loadEnv(mode, appDir, "VITE_");
+      const env = loadEnv(mode, envDir, "VITE_");
       const apiBaseUrl = env["VITE_API_BASE_URL"];
       if (!apiBaseUrl) {
         throw new Error(
@@ -204,6 +205,7 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins,
+    envDir,
     css: {
       devSourcemap: true,
     },

@@ -8,14 +8,14 @@ catalog:
   '@changesets/changelog-github': ^1.0.1
   '@changesets/cli': ^3.0.3
   '@cloudflare/vite-plugin': 2.0.0-beta.sha-ad79608dd
-  '@cloudflare/vitest-plugin': ^1.3.1
+  '@cloudflare/vitest-plugin': ^1.3.4
   '@hono/cli': 0.2.0-next.9
   '@hono/zod-validator': ^0.9.1
-  '@playwright/cli': ^0.1.21
+  '@playwright/cli': ^0.1.22
   '@sentry/cli': ^3.8.0
-  '@sentry/cloudflare': 11.0.0
-  '@sentry/hono': 11.0.0
-  '@sentry/react': 11.0.0
+  '@sentry/cloudflare': 11.1.0
+  '@sentry/hono': 11.1.0
+  '@sentry/react': 11.1.0
   '@sentry/vite-plugin': ^5.4.0
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
@@ -40,14 +40,15 @@ catalog:
   '@vitejs/devtools-vitest': ^0.7.6
   '@vitest/ui': ^5.0.2
   '@vitejs/plugin-react': ^6.1.1
-  cf: 1.0.0-beta.5
+  cf: 1.0.0-beta.6
   cross-env: ^10.1.0
   cspell: ^10.3.5
   eslint-plugin-better-tailwindcss: ^4.7.0
   happy-dom: ^20.14.5
-  hono: ^4.13.10
+  hono: ^4.13.11
+  jscpd: ^5.3.3
   knip: ^6.38.0
-  oxc-transform-react: ^0.151.0
+  oxc-transform-react: ^0.152.0
   oxfmt: ^0.71.0
   oxlint: ^1.86.0
   oxlint-plugin-react-doctor: ^0.9.14
@@ -63,7 +64,7 @@ catalog:
   vite: ^8.3.1
   vite-plus: ^1.0.0
   vitest: ^5.0.2
-  wrangler: ^4.143.0
+  wrangler: ^4.145.0
   zod: ^4.6.5
 
 # Temporary: @cloudflare/vitest-plugin still pins vitest ^4.1.0. Once it supports v5,
@@ -96,6 +97,7 @@ minimumReleaseAgeExclude:
   - '@voidzero-dev/vite-plus-win32-arm64-msvc@1.0.0'
   - '@voidzero-dev/vite-plus-win32-x64-msvc@1.0.0'
   - vite-plus@1.0.0
+  - workerd@1.20260930.2
 
 blockExoticSubdeps: true
 

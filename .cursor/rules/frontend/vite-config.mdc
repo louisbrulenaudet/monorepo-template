@@ -9,7 +9,7 @@ globs: apps/front-*/vite.config.ts
 ## Config shape
 
 - `defineConfig(({ command, mode }) => …)`, comparing `command === "build"` / `command === "serve"` explicitly.
-- `appDir` from `import.meta.url`, not `process.cwd()`. Config-time env: `loadEnv(mode, appDir, "VITE_")` - `.env*` is not in `process.env` while the config evaluates.
+- `appDir` from `import.meta.url`, not `process.cwd()`. Config-time env: `loadEnv(mode, envDir, "VITE_")` - `.env*` is not in `process.env` while the config evaluates. `envDir` is `false` under `SKIP_ENV_FILES` and `appDir` otherwise, and the returned config sets the same `envDir`: the agent sandbox cannot read `.env*`, and the Cloudflare Vite plugin aborts on an unreadable env file (root `AGENTS.md`, Environment).
 - Small build-only plugins stay inline; extract one only when `front-*` apps share it. TS bundling issues: `vite --configLoader runner`.
 
 ## Vite 8 (Rolldown + Oxc)

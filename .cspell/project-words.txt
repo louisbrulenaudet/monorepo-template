@@ -68,6 +68,7 @@ IOSFODNN
 jamiemason
 jank
 janky
+jscpd
 jsdom
 keyof
 Knip
@@ -184,3 +185,5 @@ worktree
 worktreeinclude
 worktrees
 xlink
+zizmor
+zizmorcore
