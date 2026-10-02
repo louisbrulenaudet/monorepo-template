@@ -19,9 +19,8 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
-      pull-requests: write
-      # Required so missing labels can be auto-created.
-      issues: write
+      pull-requests: write # apply labels
+      issues: write # create missing labels
     steps:
       # No checkout: labeler loads `.github/labeler.yml` via the GitHub API.
       - name: Apply path and branch labels

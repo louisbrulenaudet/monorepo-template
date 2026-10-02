@@ -2,6 +2,7 @@
 paths:
   - ".github/workflows/preview.yml"
   - ".github/actions/previews/**"
+  - ".github/actions/lib/smoke.mjs"
 ---
 
 # Worker Previews
@@ -15,6 +16,8 @@ Branch and PR testing uses [Worker Previews](https://developers.cloudflare.com/w
 - `CLOUDFLARE_PREVIEW_BUILD=true` is cf's internal, undocumented variable that makes a build a Preview build (`ctx.isPreview`, recorded as `buildContext.isPreview`). `cf previews deploy --prebuilt` refuses Build Output that is not a Preview build, so if cf drops the variable the deploy fails loudly instead of shipping production values to a Preview; conversely `cf deploy`, `cf workers versions create`, and `cf workers triggers deploy` refuse a Preview build.
 - `cf previews deploy` prints one JSON object on stdout (`type: "preview"`, `preview_urls`, `deployment_id`, …) and build logs on stderr; the URL is `.preview_urls[0]`. It takes no `--message`.
 - The SPA's `VITE_API_BASE_URL` is the gateway **Preview** URL, which is why the gateway is previewed first and the frontend built afterwards.
+- **One smoke, after the last deploy**: `deploy-previews.sh` hands every Preview URL to `.github/actions/lib/smoke.mjs`, the same smoke as CD and skill `run-app`, so the gateway check also proves its CORS allowlist admits the SPA Preview origin. A `--url` target is retried for ~25 s on an error, a 404, or a 52x while the new hostname starts serving. A broken gateway therefore costs one SPA build before the run fails.
+- **The PR comment is `changesets/action/pr-comment`** (`update-id: worker-previews`), fed by the deploy step's `body` output; locally the same URL table goes to stdout. It searches only the first 30 comments ([quality-report.md](quality-report.md)).
 - cf has no Preview delete or list. `delete-previews.sh` runs `pnpm exec wrangler preview delete --worker-name <app>-production --name <preview> -y` for every app, attempting each even when one fails, with no config file. Locally it authenticates through Wrangler (`pnpm exec wrangler login`, or exported `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`); `cf auth login` does not cover it.
 
 ## Exposure and credentials

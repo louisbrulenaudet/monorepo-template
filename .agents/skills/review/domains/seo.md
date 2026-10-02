@@ -23,7 +23,7 @@ Can a crawler discover, render, and correctly index the public pages of a client
 
 ## Probe
 
-`git log --follow --format='%h %s' -- <file>`. When dev servers are **already** running (never start them): the SPA-route probes of `node .agents/skills/run-app/scripts/smoke.mjs`, or `pnpm exec playwright-cli snapshot <url>` to see the rendered head.
+`git log --follow --format='%h %s' -- <file>`. When dev servers are **already** running (never start them): the SPA-route probes of `node .github/actions/lib/smoke.mjs`, or `pnpm exec playwright-cli snapshot <url>` to see the rendered head.
 
 ## Axes
 

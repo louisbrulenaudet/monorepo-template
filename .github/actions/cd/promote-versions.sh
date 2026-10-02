@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Purpose: promote every uploaded version to 100%.
-# Target: called by cd.yml with VERSION_IDS_FILE and the Cloudflare credentials.
 set -euo pipefail
 : "${VERSION_IDS_FILE:?VERSION_IDS_FILE is required (exported by upload-versions.sh)}"
 

@@ -3,7 +3,7 @@ id: changesets
 summary: versioning config, release:check gate, release and Dependabot workflows
 families: [toolchain]
 packages: [@changesets/cli, @changesets/changelog-github]
-paths: [.changeset/**, .github/workflows/release.yml, .github/workflows/changeset-pr-status.yml, .github/workflows/dependabot-changesets.yml, .github/actions/ci/check-changesets.mjs, .github/actions/lib/changesets.mjs, .github/actions/dependabot-changesets/**, .github/actions/release/**]
+paths: [.changeset/**, .github/workflows/release.yml, .github/workflows/changeset-pr-status.yml, .github/workflows/dependabot-changesets.yml, .github/actions/changesets/**, .github/actions/release/**]
 ---
 
 # Changesets
@@ -21,7 +21,7 @@ Changesets v3 plus `changesets/action` v2: the app version group, the changelog 
 
 - [.changeset/config.json](../../../../.changeset/config.json) and the pending `.changeset/*.md`
 - [release.yml](../../../../.github/workflows/release.yml), [changeset-pr-status.yml](../../../../.github/workflows/changeset-pr-status.yml), [dependabot-changesets.yml](../../../../.github/workflows/dependabot-changesets.yml), and the `Changesets` step of [ci.yml](../../../../.github/workflows/ci.yml)
-- [check-changesets.mjs](../../../../.github/actions/ci/check-changesets.mjs), [changesets.mjs](../../../../.github/actions/lib/changesets.mjs), [write-changesets.mjs](../../../../.github/actions/dependabot-changesets/write-changesets.mjs)
+- [changesets/check.mjs](../../../../.github/actions/changesets/check.mjs), [changesets/lib.mjs](../../../../.github/actions/changesets/lib.mjs), [changesets/comment.mjs](../../../../.github/actions/changesets/comment.mjs), [changesets/dependabot.mjs](../../../../.github/actions/changesets/dependabot.mjs)
 - Rules `ops/changesets` and `ops/release` ↔ `.cursor` twins; skill `changeset`; [.changeset/README.md](../../../../.changeset/README.md)
 
 ## Probe
@@ -31,9 +31,9 @@ Changesets v3 plus `changesets/action` v2: the app version group, the changelog 
 ## Axes
 
 - **Config currency**: every option in `config.json` exists at the installed version with the documented meaning; no key restates a default except the one the rule justifies; new options that would replace repo code (a built-in check, a changelog option) are flagged.
-- **Gate soundness**: `release:check` still relies on `changeset status --since --output` semantics (exit 1 only when packages changed and no changeset changed since the ref, tracked files only, the JSON plan shape). If upstream changes any of these, the gate passes while checking nothing: Critical.
+- **Gate soundness**: `release:check` still relies on `changeset status --since --output` semantics (exit 1 only when packages changed and no changeset changed since the ref, tracked files only, the JSON plan shape). If upstream changes any of these, the gate passes while checking nothing: Critical. The PR comment also reads a non-zero exit with no changed changeset as "missing", so a new exit-code contract changes what it reports.
 - **Catalog detection**: `runtimeCatalogChanges` still parses the `pnpm-workspace.yaml` catalog shape (default and named catalogs) and maps it to `dependencies`; pnpm catalog syntax changes are flagged.
-- **Workflow contracts**: the `select-mode` outputs and `version` inputs the release workflow uses still exist; `pr-status` still runs without an install; the release PR branch name and author match the `ci.yml` skip.
+- **Workflow contracts**: the `select-mode` outputs and `version` inputs the release workflow uses still exist; `pr-comment`'s `body` / `update-id` inputs and its `<!-- changesets-action-pr-comment -->` marker still update the PR comment in place; the release PR branch name and author match the `ci.yml` skip.
 - **Dependabot writer**: `createCommitOnBranch` input shape, the signing behavior, the Dependabot secret store, and the `[dependabot skip]` marker still work as the rule describes.
 - **Agent loop**: the non-interactive `add` flags the rule and skill document still exist; the gate's diagnostics name the file, the rule, and a fix.
 

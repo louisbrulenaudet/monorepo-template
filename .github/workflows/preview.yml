@@ -40,7 +40,6 @@ jobs:
     # and deploy-previews.sh unsets them around every build.
     env:
       VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
     steps:
@@ -56,14 +55,13 @@ jobs:
           install: false
 
       # Must be a step: `runner` in workflow/job `env:` makes the file unparseable (ops/ci).
-      - name: Set runner-temp paths
-        run: |
-          echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
-          echo "PREVIEW_URLS_FILE=$RUNNER_TEMP/preview-urls.tsv" >> "$GITHUB_ENV"
+      - name: Enable Node compile cache
+        run: echo "NODE_COMPILE_CACHE=$RUNNER_TEMP/node-compile-cache" >> "$GITHUB_ENV"
 
       - run: pnpm install --frozen-lockfile
 
       - name: Create or update every app's Preview
+        id: previews
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -72,9 +70,10 @@ jobs:
         run: bash .github/actions/previews/deploy-previews.sh
 
       - name: Comment Preview URLs
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: bash .github/actions/previews/comment-previews.sh
+        uses: changesets/action/pr-comment@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          body: ${{ steps.previews.outputs.body }}
+          update-id: worker-previews
 
   cleanup:
     name: Delete Worker Previews

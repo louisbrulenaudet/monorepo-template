@@ -1,14 +1,4 @@
 #!/usr/bin/env bash
-# Purpose: cf workers versions create for every app under apps/, concurrently.
-# Target: called by cd.yml with VERSION, RELEASE_SHA, and the Cloudflare
-# credentials in the environment; writes a name/dir/version-id/worker-name table
-# and exports VERSION_IDS_FILE for the promote and release-notes steps.
-#
-# Uploads run in parallel because they change no traffic - nothing is live until
-# promote-versions.sh, which stays sequential and ordered. Two consequences follow:
-# every upload runs to completion even when one fails (there is no live version to
-# race), and the table is written in a second pass over the discovery order rather
-# than as jobs land, because promote reads it as its deployOrder contract.
 set -euo pipefail
 : "${VERSION:?VERSION is required (X.Y.Z)}"
 : "${RELEASE_SHA:?RELEASE_SHA is required}"
@@ -42,8 +32,6 @@ for i in "${!pids[@]}"; do
   wait "${pids[$i]}" || failed+=("${names[$i]}")
 done
 
-# Replay each upload's output in discovery order; concurrent streams would otherwise
-# interleave into one unreadable block.
 for i in "${!names[@]}"; do
   echo "::group::cf workers versions create ${names[$i]}"
   cat "${logs[$i]}"
