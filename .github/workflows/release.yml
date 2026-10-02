@@ -44,8 +44,11 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
-      # No pnpm/setup or install: select-mode is a bundled action and, unlike
-      # changesets/action/version, does not need @changesets/cli resolvable.
+      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          runtime: node@24
+          install: false
+      - run: pnpm install --frozen-lockfile
       - id: select-mode
         uses: changesets/action/select-mode@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
 
@@ -56,9 +59,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      contents: write
-      pull-requests: write
-      actions: write
+      contents: write # push changeset-release/main
+      pull-requests: write # open the release PR
+      actions: write # dispatch ci.yml on the release branch
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -104,7 +107,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
-      contents: write
+      contents: write # create the release tag
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
       created: ${{ steps.tag.outputs.created }}
@@ -130,8 +133,8 @@ jobs:
     needs: tag
     if: needs.tag.outputs.created == 'true' && vars.CD_ENABLED == 'true'
     permissions:
-      contents: write
-      deployments: write
+      contents: write # GitHub Release in cd.yml
+      deployments: write # production deployment record in cd.yml
     uses: $/.github/workflows/cd.yml
     with:
       tag: ${{ needs.tag.outputs.tag }}

@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# Purpose: delete the Worker Preview named PREVIEW_NAME (default: current branch) from
-# every app under apps/.
-# Target: preview.yml on a closed PR, and `pnpm preview:delete` locally.
-#
-# Every app is attempted even when one fails, so one run reports every leftover.
 set -euo pipefail
 # shellcheck source=./lib.sh
 . "$(dirname "$0")/lib.sh"

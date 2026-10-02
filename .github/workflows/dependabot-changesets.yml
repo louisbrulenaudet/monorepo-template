@@ -34,9 +34,9 @@ jobs:
           install: false
       - name: Write changesets
         env:
-          CHANGESET_BOT_TOKEN: ${{ secrets.CHANGESET_BOT_TOKEN }}
+          CHANGESET_BOT_TOKEN: ${{ secrets.CHANGESET_BOT_TOKEN }} # zizmor: ignore[secrets-outside-env] Dependabot runs read only Dependabot secrets, never environment ones
           GITHUB_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: node .github/actions/dependabot-changesets/write-changesets.mjs
+        run: node .github/actions/changesets/dependabot.mjs

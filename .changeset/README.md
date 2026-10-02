@@ -24,7 +24,7 @@ Nothing here is published to npm. Every workspace is `"private": true`. **A rele
 | Only tests, docs, `.github/`, agent config, or root tooling | none |
 | A fix to a change that is still pending on `main` | edit that pending changeset |
 
-`pnpm release:check` answers the question mechanically: `changedFilePatterns` in [`config.json`](config.json) excludes tests, top-level Markdown, `turbo.json`, Vitest config, and `@repo/vitest-config`. It runs in `pnpm run ci` and fails a PR that needs a changeset and has none.
+`pnpm release:check` answers the question mechanically: `changedFilePatterns` in [`config.json`](config.json) excludes tests, top-level Markdown, `turbo.json`, Vitest config, and `@repo/vitest-config`. It runs in `pnpm run ci` and fails a PR that needs a changeset and has none. The **🦋 Changeset** comment on every PR shows the same verdict, the release notes the PR carries, and the fix.
 
 ## Writing one
 

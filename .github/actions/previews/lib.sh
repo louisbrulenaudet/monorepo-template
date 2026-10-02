@@ -1,12 +1,7 @@
-# Purpose: shared helpers for deploy-previews.sh and delete-previews.sh (sourced).
-
-# Every Preview build and deploy must carry the same --mode: cloudflare.config.ts
-# accepts a Preview only under production, the Worker the Previews live under.
+# cloudflare.config.ts accepts a Preview only under production, the Worker Previews live under.
 PREVIEW_MODE="production"
 
-# Prints PREVIEW_NAME when set, else the current branch as a DNS-safe slug. The
-# Preview URL is <name>-<worker>-production.<subdomain>.workers.dev, and a DNS
-# label caps at 63 characters, so the slug is kept short.
+# <name>-<worker>-production.<subdomain>.workers.dev must fit one 63-character DNS label.
 resolve_preview_name() {
   if [ -n "${PREVIEW_NAME:-}" ]; then
     printf '%s' "$PREVIEW_NAME"

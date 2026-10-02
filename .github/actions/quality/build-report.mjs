@@ -71,7 +71,7 @@ const runUrl = `${repoUrl}/actions/runs/${GITHUB_RUN_ID}`;
  * @property {string[]} header Columns of the new-findings table
  * @property {string[][]} added
  * @property {string[][]} resolved `[finding, location]` rows at the base
- * @property {string} [note]
+ * @property {string} [footer]
  * @property {string} [legend]
  */
 
@@ -161,7 +161,7 @@ function readKnip(files) {
 function knipRow(sha) {
   return (finding) => {
     const symbol = finding.name ? ` \`${cell(finding.name)}\`` : "";
-    const production = finding.production ? " · _production_" : "";
+    const production = finding.production ? " · test-only" : "";
     return [
       `${KNIP_LABELS[finding.type] ?? finding.type}${symbol}${production}`,
       location(sha, finding.file, finding.line),
@@ -178,7 +178,7 @@ function knip() {
     added: added.map(knipRow(GITHUB_SHA)),
     resolved: difference(base, head).map(knipRow(BASE_SHA)),
     legend: added.some((finding) => finding.production)
-      ? "<sub>_production_: only tests or tooling use it (`pnpm knip:production`). Test through the real entry, or tag a test-only export `@internal`.</sub>"
+      ? "<sub>test-only: only tests or tooling use it (`pnpm knip:production`). Test through the real entry, or tag a test-only export `@internal`.</sub>"
       : undefined,
   };
 }
@@ -210,7 +210,7 @@ function jscpd() {
   const head = readClones("jscpd-new/jscpd-report.json");
   const base = readClones("jscpd-resolved/jscpd-report.json");
   return {
-    header: ["Size", "Location", "Duplicate of"],
+    header: ["Size", "Block", "Also at"],
     added: head.clones.map(cloneRow(GITHUB_SHA)),
     resolved: base.clones
       .map(cloneRow(BASE_SHA))
@@ -218,7 +218,7 @@ function jscpd() {
         `Duplicated block (${size})`,
         `${first} ↔ ${second}`,
       ]),
-    note: `${percent(base.percentage)} → ${percent(head.percentage)} duplicated`,
+    footer: `repo duplication ${percent(head.percentage)}`,
   };
 }
 
@@ -248,17 +248,18 @@ function run(title, name, ids, analyze) {
 /**
  * @param {string[]} header
  * @param {string[][]} rows
+ * @param {number} limit
  * @param {string[]} [align] Delimiter-row cells, e.g. `:-:` to center
  */
-function table(header, rows, align = header.map(() => "---")) {
+function table(header, rows, limit, align = header.map(() => ":--")) {
   const lines = [
     `| ${header.join(" | ")} |`,
     `| ${align.join(" | ")} |`,
-    ...rows.slice(0, MAX_ROWS).map((row) => `| ${row.join(" | ")} |`),
+    ...rows.slice(0, limit).map((row) => `| ${row.join(" | ")} |`),
   ];
-  if (rows.length > MAX_ROWS) {
+  if (rows.length > limit) {
     lines.push(
-      `| _…and ${rows.length - MAX_ROWS} more_ |${" |".repeat(header.length - 1)}`,
+      `| _…and ${rows.length - limit} more in the [run summary](${runUrl})_ |${" |".repeat(header.length - 1)}`,
     );
   }
   return [...lines, ""];
@@ -266,17 +267,16 @@ function table(header, rows, align = header.map(() => "---")) {
 
 /** @param {Tool} tool */
 function summaryRow(tool) {
+  const check = `${tool.title} (${tool.name})`;
   if (tool.status !== "success") {
-    const status =
-      tool.status === "failure" ? "❌ Failed to run" : "⏭️ Skipped";
-    return [`${tool.title} · ${tool.name}`, "–", "–", `[${status}](${runUrl})`];
+    return [check, "–", "–", "❌ Did not run"];
   }
   const added = tool.added.length;
   return [
-    `${tool.title} · ${tool.name}`,
+    check,
     added > 0 ? `**${added}**` : "0",
     String(tool.resolved.length),
-    tool.note ? `✅ ${tool.note}` : "✅",
+    added > 0 ? "⚠️" : "✅",
   ];
 }
 
@@ -288,57 +288,65 @@ function plural(count, word) {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
 }
 
-/** @param {Tool[]} tools */
-function render(tools) {
+/**
+ * @param {Tool[]} tools
+ * @param {number} limit Rows per table
+ */
+function render(tools, limit) {
   const failed = tools.filter((tool) => tool.status !== "success");
   const added = tools.reduce((sum, tool) => sum + tool.added.length, 0);
   const resolved = tools.flatMap((tool) =>
     tool.resolved.map(([finding, where]) => [
-      `${finding} · ${tool.name}`,
+      `${finding} (${tool.name})`,
       where,
     ]),
   );
   const lines = ["## Code quality", ""];
 
-  if (added > 0) {
-    lines.push(
-      "> [!WARNING]",
-      `> **${plural(added, "new issue")}** in this PR. Informational: this check never blocks merging.`,
-      "",
-    );
-  } else if (failed.length === 0) {
-    const fixed =
-      resolved.length > 0
-        ? ` It also resolves ${plural(resolved.length, "existing issue")}. 🎉`
-        : "";
-    lines.push(
-      "> [!TIP]",
-      `> **No new issues.** This PR adds no unused code and no duplication.${fixed}`,
-      "",
-    );
-  }
   if (failed.length > 0) {
     const names = failed.map((tool) => tool.name).join(" and ");
+    const findings =
+      added > 0 ? ` **${plural(added, "new finding")}** below.` : "";
     lines.push(
       "> [!CAUTION]",
-      `> **${names} could not run**, so ${failed.length === 1 ? "its" : "their"} results are missing, not clean. See the [run log](${runUrl}).`,
+      `> **${names} did not run**, so ${failed.length === 1 ? "its" : "their"} results are missing, not clean.${findings} See the [run log](${runUrl}).`,
       "",
     );
+  } else if (added > 0) {
+    const counts = tools
+      .map(
+        (tool) =>
+          `${tool.added.length} ${tool.title.toLowerCase()} (${tool.name})`,
+      )
+      .join(", ");
+    lines.push(
+      "> [!WARNING]",
+      `> **${plural(added, "new finding")}**: ${counts}. Informational: this check never blocks merging.`,
+      "",
+    );
+  } else {
+    const fixed =
+      resolved.length > 0
+        ? ` Resolves ${plural(resolved.length, "existing finding")}. 🎉`
+        : "";
+    lines.push(`✅ **No new unused code or duplication.**${fixed}`, "");
   }
 
-  lines.push(
-    ...table(["Check", "New", "Resolved", "Status"], tools.map(summaryRow), [
-      "---",
-      ":-:",
-      ":-:",
-      "---",
-    ]),
-  );
+  if (failed.length > 0) {
+    lines.push(
+      ...table(
+        ["Check", "New", "Resolved", "Status"],
+        tools.map(summaryRow),
+        limit,
+        [":--", ":-:", ":-:", ":--"],
+      ),
+    );
+  }
   for (const tool of tools.filter((item) => item.added.length > 0)) {
     lines.push(
-      `### ${tool.title} · ${tool.added.length} new`,
+      `### ${tool.title} (${tool.name}) · ${tool.added.length} new`,
       "",
-      ...table(tool.header, tool.added),
+      ...table(tool.header, tool.added, limit),
     );
     if (tool.legend) {
       lines.push(tool.legend, "");
@@ -348,24 +356,30 @@ function render(tools) {
     lines.push(
       `<details><summary><b>${resolved.length} resolved</b></summary>`,
       "",
-      ...table(["Resolved", "Location at base"], resolved),
+      ...table(["Resolved", "Location at base"], resolved, limit),
       "</details>",
       "",
     );
   }
-  lines.push(
-    `<sub>${commit(HEAD_SHA)} merged into ${commit(BASE_SHA)} · whole-repo view: \`pnpm knip\`, \`pnpm jscpd\` · [run log](${runUrl})</sub>`,
-  );
-  return { body: lines.join("\n"), failed };
+  const footer = [
+    `${commit(HEAD_SHA)} merged into ${commit(BASE_SHA)}`,
+    ...tools.flatMap((tool) => tool.footer ?? []),
+    "all findings: `pnpm knip`, `pnpm jscpd`",
+    `[run log](${runUrl})`,
+  ];
+  lines.push(`<sub>${footer.join(" · ")}</sub>`);
+  return lines.join("\n");
 }
 
-const { body, failed } = render([
+const tools = [
   run("Unused code", "Knip", KNIP_STEPS, knip),
   run("Duplication", "jscpd", JSCPD_STEPS, jscpd),
-]);
+];
+const body = render(tools, MAX_ROWS);
+const failed = tools.filter((tool) => tool.status !== "success");
 
 console.log(body);
-appendFileSync(GITHUB_STEP_SUMMARY, `${body}\n`);
+appendFileSync(GITHUB_STEP_SUMMARY, `${render(tools, Infinity)}\n`);
 const delimiter = `EOF_${randomUUID()}`;
 appendFileSync(GITHUB_OUTPUT, `body<<${delimiter}\n${body}\n${delimiter}\n`);
 

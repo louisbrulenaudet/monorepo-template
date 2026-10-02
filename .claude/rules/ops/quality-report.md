@@ -23,5 +23,5 @@ paths:
 Comment-free; only non-default keys.
 
 - `format`: code only (`javascript` covers `.mjs`). No Markdown, YAML, or JSON: the `.claude` / `.cursor` rule twins and workflow step blocks repeat on purpose.
-- `ignore`: `**/.git/**` because jscpd walks hidden directories, and a checkout's `.git/hooks/*.sample` scripts are absent from a worktree (whose `.git` is a file), which skewed every diff; `**/*.gen.ts` and `**/.agents/**` mirror `.oxlintrc.json` and `knip.jsonc`. Keep the `**/` prefix: globs match the whole path, and the base scan's root is absolute. Symlinks are not followed, so `.claude/skills` never double-counts `.agents`.
+- `ignore`: `**/.git/**` because jscpd walks hidden directories, and a checkout's `.git/hooks/*.sample` scripts are absent from a worktree (whose `.git` is a file), which skewed every diff; `**/*.gen.ts` and `**/.agents/**` mirror `.oxlintrc.json` and `knip.jsonc`; `**/cloudflare.config.ts` because each app's `selectDeployment` mode dispatch repeats on purpose, so every new app would otherwise add a clone. Keep the `**/` prefix: globs match the whole path, and the base scan's root is absolute. Symlinks are not followed, so `.claude/skills` never double-counts `.agents`.
 - `pnpm jscpd` is the whole-repo local view, not a gate: existing clones stay out of `ci` and of the report.

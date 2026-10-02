@@ -1,28 +1,23 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
 import { parseArgs } from "node:util";
 
-import { readApps } from "../../../../.github/actions/lib/apps.mjs";
+import { readApps } from "./apps.mjs";
 
 const FOREIGN_ORIGIN = "https://smoke-foreign-origin.invalid";
+const READY_ATTEMPTS = 6;
+const READY_DELAY_MS = 5000;
 
 const { values } = parseArgs({
   options: {
     url: { type: "string", multiple: true, default: [] },
+    "expect-version": { type: "string" },
     traces: { type: "boolean", default: false },
   },
 });
-
-/** @type {Map<string, string>} */
-const overrides = new Map(
-  values.url.map((pair) => {
-    const eq = pair.indexOf("=");
-    if (eq < 1) {
-      throw new Error(`--url expects <app>=<base-url>, got "${pair}"`);
-    }
-    return [pair.slice(0, eq), pair.slice(eq + 1).replace(/\/+$/, "")];
-  }),
-);
+const expectedVersion = values["expect-version"];
+const annotate = process.env.GITHUB_ACTIONS === "true";
 
 /**
  * @param {unknown} value
@@ -59,29 +54,57 @@ function devPort(dir) {
 }
 
 const apps = readApps();
-for (const name of overrides.keys()) {
-  if (!apps.some((app) => app.name === name)) {
-    throw new Error(`--url names an unknown app "${name}"`);
+
+/** @param {string} key An app name, or a `monorepo.role` exactly one app has */
+function resolveApp(key) {
+  const named = apps.find((app) => app.name === key);
+  if (named) {
+    return named;
   }
+  const byRole = apps.filter((app) => app.role === key);
+  if (byRole.length !== 1) {
+    throw new Error(
+      `--url key "${key}" is neither an app name nor the monorepo.role of exactly one app`,
+    );
+  }
+  return byRole[0];
 }
 
-/** @typedef {{ name: string; role: string; healthPath: string; base: string }} Target */
+/** @type {Map<string, string>} App name → base URL */
+const overrides = new Map(
+  values.url.map((pair) => {
+    const eq = pair.indexOf("=");
+    const base = pair.slice(eq + 1).replace(/\/+$/, "");
+    if (eq < 1 || !URL.canParse(base)) {
+      throw new Error(`--url expects <app or role>=<base-url>, got "${pair}"`);
+    }
+    return [resolveApp(pair.slice(0, eq)).name, base];
+  }),
+);
 
-// With any --url, only the named apps are probed (a Preview run); otherwise
-// every app with a devPort is probed on localhost.
+/**
+ * @typedef {{
+ *   name: string;
+ *   dir: string;
+ *   role: string;
+ *   healthPath: string;
+ *   base: string;
+ * }} Target
+ */
+
 /** @type {Target[]} */
 const targets = apps.flatMap((app) => {
   if (app.healthPath === null) {
     return [];
   }
-  const { name, role, healthPath } = app;
+  const { name, dir, role, healthPath } = app;
   if (overrides.size > 0) {
     const base = overrides.get(name);
-    return base ? [{ name, role, healthPath, base }] : [];
+    return base ? [{ name, dir, role, healthPath, base }] : [];
   }
-  const port = devPort(app.dir);
+  const port = devPort(dir);
   return typeof port === "number"
-    ? [{ name, role, healthPath, base: `http://localhost:${port}` }]
+    ? [{ name, dir, role, healthPath, base: `http://localhost:${port}` }]
     : [];
 });
 if (targets.length === 0) {
@@ -102,7 +125,7 @@ const accessHeaders =
  *
  * @typedef {Reply | { error: string }} Outcome
  *
- * @typedef {{ label: string; ok: boolean; detail: string }} Check
+ * @typedef {{ label: string; ok: boolean; detail: string; hint?: string }} Check
  */
 
 /**
@@ -153,6 +176,56 @@ function header(outcome, name) {
 
 /**
  * @param {Target} t
+ * @param {Outcome} outcome
+ * @returns {string | undefined}
+ */
+function hint(t, outcome) {
+  if ("error" in outcome) {
+    return undefined;
+  }
+  if (outcome.status === 302 || outcome.status === 403) {
+    return "Cloudflare Access is blocking the probe: set CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET to an Access service token.";
+  }
+  if (t.role === "http-gateway" && outcome.status === 503) {
+    return `A gateway 503 is the fail-closed CORS guard: set this deployment's corsOrigins in apps/${t.dir}/cloudflare.config.ts.`;
+  }
+  return undefined;
+}
+
+/**
+ * @param {Target} t
+ * @param {Outcome} health
+ */
+function serving(t, health) {
+  if (
+    "error" in health ||
+    health.status === 404 ||
+    (health.status >= 520 && health.status <= 529)
+  ) {
+    return false;
+  }
+  return (
+    t.role !== "http-gateway" ||
+    expectedVersion === undefined ||
+    prop(parseJson(health.body), "version") === expectedVersion
+  );
+}
+
+/**
+ * @param {Target} t
+ * @param {number} [attempts]
+ * @returns {Promise<void>}
+ */
+async function ready(t, attempts = READY_ATTEMPTS - 1) {
+  if (attempts === 0 || serving(t, await probe(t.base + t.healthPath))) {
+    return;
+  }
+  await setTimeout(READY_DELAY_MS);
+  await ready(t, attempts - 1);
+}
+
+/**
+ * @param {Target} t
  * @param {Target | undefined} frontend
  * @returns {Promise<Check[]>}
  */
@@ -174,6 +247,7 @@ async function checkGateway(t, frontend) {
   const healthJson = "body" in health ? parseJson(health.body) : undefined;
   const missingJson = "body" in missing ? parseJson(missing.body) : undefined;
   const foreignHeader = header(foreign, "access-control-allow-origin");
+  /** @type {Check[]} */
   const checks = [
     {
       label: `GET ${t.healthPath} returns { status, version }`,
@@ -183,6 +257,7 @@ async function checkGateway(t, frontend) {
         typeof prop(healthJson, "status") === "string" &&
         typeof prop(healthJson, "version") === "string",
       detail: describe(health),
+      hint: hint(t, health),
     },
     {
       label: "sets X-Request-Id",
@@ -214,6 +289,14 @@ async function checkGateway(t, frontend) {
       detail: `allow-origin=${allowedHeader}`,
     });
   }
+  if (expectedVersion !== undefined) {
+    const version = prop(healthJson, "version");
+    checks.push({
+      label: `serves version ${expectedVersion}`,
+      ok: version === expectedVersion,
+      detail: `version=${String(version)}`,
+    });
+  }
   return checks;
 }
 
@@ -231,6 +314,7 @@ async function checkFrontend(t) {
       page.status === 200 &&
       page.body.includes('id="root"'),
     detail: "error" in page ? page.error : `${page.status} in ${page.ms}ms`,
+    hint: hint(t, page),
   }));
 }
 
@@ -245,8 +329,13 @@ async function checkOther(t) {
       label: `GET ${t.healthPath}`,
       ok: "status" in health && health.status === 200,
       detail: describe(health),
+      hint: hint(t, health),
     },
   ];
+}
+
+if (overrides.size > 0) {
+  await Promise.all(targets.map((t) => ready(t)));
 }
 
 const frontend = targets.find((t) => t.role === "frontend");
@@ -264,7 +353,28 @@ for (const [i, t] of targets.entries()) {
   console.log(`# ${t.name} (${t.role}) ${t.base}`);
   for (const c of results[i] ?? []) {
     console.log(`${c.ok ? "ok  " : "FAIL"} ${c.label} - ${c.detail}`);
-    failures += c.ok ? 0 : 1;
+    if (c.ok) {
+      continue;
+    }
+    failures += 1;
+    if (c.hint) {
+      console.log(`     ${c.hint}`);
+    }
+    if (annotate) {
+      const message = [c.label, "-", c.detail, c.hint ?? ""].join(" ").trim();
+      console.log(
+        `::error title=Smoke ${t.name}::${message.replaceAll("%", "%25")}`,
+      );
+    }
+  }
+}
+if (overrides.size > 0) {
+  for (const app of apps) {
+    if (app.healthPath !== null && !overrides.has(app.name)) {
+      console.log(
+        `${annotate ? "::notice::" : "# "}${app.name} not smoked: no --url for it`,
+      );
+    }
   }
 }
 

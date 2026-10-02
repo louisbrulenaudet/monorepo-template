@@ -28,7 +28,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "12.6.0",
+      "version": "12.8.1",
       "onFail": "download"
     },
     "runtime": {
@@ -93,7 +93,7 @@
     "preview:deploy": "bash .github/actions/previews/deploy-previews.sh",
     "react-doctor": "cross-env REACT_DOCTOR_NO_TELEMETRY=1 react-doctor --no-telemetry",
     "react-doctor:changed": "pnpm run react-doctor --scope changed --verbose",
-    "release:check": "node .github/actions/ci/check-changesets.mjs",
+    "release:check": "node .github/actions/changesets/check.mjs",
     "release:status": "changeset status --verbose",
     "skills-update": "bash .agents/skills/skills-update/scripts/update-locked-skills.sh",
     "spell:check": "cspell lint --no-progress --gitignore .",

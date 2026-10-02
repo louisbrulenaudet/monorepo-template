@@ -1,14 +1,9 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 
-import {
-  BASE_REF,
-  MAX_TITLE_LENGTH,
-  runtimeCatalogChanges,
-} from "../lib/changesets.mjs";
+import { BASE_REF, MAX_TITLE_LENGTH, runtimeCatalogChanges } from "./lib.mjs";
 
 const {
   CHANGESET_BOT_TOKEN,
-  DRY_RUN,
   GITHUB_GRAPHQL_URL = "https://api.github.com/graphql",
   GITHUB_REPOSITORY,
   HEAD_REF,
@@ -27,7 +22,7 @@ const MUTATION = `mutation ($input: CreateCommitOnBranchInput!) {
 const prefix = `dependabot-${PR_NUMBER}-`;
 
 /**
- * @param {import("../lib/changesets.mjs").Bump} bump
+ * @param {import("./lib.mjs").Bump} bump
  * @returns {string}
  */
 function describe({ name, from, to }) {
@@ -36,7 +31,7 @@ function describe({ name, from, to }) {
 
 /**
  * @param {string} app
- * @param {import("../lib/changesets.mjs").Bump[]} bumps
+ * @param {import("./lib.mjs").Bump[]} bumps
  * @returns {string}
  */
 function render(app, bumps) {
@@ -78,13 +73,6 @@ const deletions = readdirSync(".changeset")
 
 if (additions.length === 0 && deletions.length === 0) {
   console.log("Changesets already match the runtime dependency bumps.");
-} else if (DRY_RUN === "1") {
-  for (const [file, contents] of desired) {
-    console.log(`${file}\n${contents}`);
-  }
-  for (const { path } of deletions) {
-    console.log(`delete ${path}`);
-  }
 } else if (!CHANGESET_BOT_TOKEN) {
   console.log(
     "::notice::CHANGESET_BOT_TOKEN is not set, so no changeset was committed. Add it by hand: pnpm changeset --patch <app> -m 'Bump …'.",

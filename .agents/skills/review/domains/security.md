@@ -28,7 +28,7 @@ Escalate - one line in the reply, not a finding - to `/security-audit` when the 
 
 ## Probe
 
-`pnpm run audit` (never bare `pnpm audit`, which drops `--audit-level=high`), `pnpm --filter=worker-api run routes`, `git log -S '<string>' --oneline` for a secret-shaped literal's history. When dev servers are **already** running (never start them): `node .agents/skills/run-app/scripts/smoke.mjs` - foreign-origin CORS refusal, `X-Request-Id`, JSON 404 envelope.
+`pnpm run audit` (never bare `pnpm audit`, which drops `--audit-level=high`), `pnpm --filter=worker-api run routes`, `git log -S '<string>' --oneline` for a secret-shaped literal's history. When dev servers are **already** running (never start them): `node .github/actions/lib/smoke.mjs` - foreign-origin CORS refusal, `X-Request-Id`, JSON 404 envelope.
 
 ## Axes
 

@@ -14,7 +14,7 @@ Run everything from the repository root. The smoke script discovers apps from `a
    - `pnpm --filter=front-app dev` - ready when Vite prints `Local:   http://localhost:5174/`
 
    Wait with one capped `until grep -q 'localhost:<port>' …; do sleep 0.5; done` on each task's output file. If the SessionStart context reported a port as already listening, reuse that server instead of starting a second one.
-2. `node .agents/skills/run-app/scripts/smoke.mjs --traces` - every line must read `ok`. `--traces` prints the latest requests the gateway captured, newest first.
+2. `node .github/actions/lib/smoke.mjs --traces` - every line must read `ok`. `--traces` prints the latest requests the gateway captured, newest first.
 3. Browser check (the SPA is only verified once it has rendered):
 
    ```bash
@@ -47,6 +47,6 @@ There is no bindings-aware smoke without `cf dev`: `hono request` loads bindings
 
 Agents never deploy. The user runs `pnpm preview:deploy` and pastes the printed URLs, or you read the Previews comment on the PR (`gh pr view <n> --comments`). Contract: `.claude/rules/ops/previews.md`.
 
-1. `node .agents/skills/run-app/scripts/smoke.mjs --url worker-api=<gateway Preview URL> --url front-app=<front Preview URL>`. With any `--url`, only the named apps are probed. If Cloudflare Access protects the URL, the script sends `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` from the environment, as `deploy-previews.sh` does.
+1. `node .github/actions/lib/smoke.mjs --url worker-api=<gateway Preview URL> --url front-app=<front Preview URL>`. With any `--url`, only the named apps are probed, each retried for ~25 s until it serves; `deploy-previews.sh` and CD run this same script. If Cloudflare Access protects the URL, the script sends `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` from the environment.
 2. Run the same browser loop against the front Preview URL.
 3. Logs and traces come from the `cloudflare-observability` MCP server, filtered by the `X-Request-Id` the smoke printed. The Local Explorer and `pnpm exec wrangler tail` do not reach Previews.
