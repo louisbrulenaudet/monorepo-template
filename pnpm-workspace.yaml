@@ -83,6 +83,9 @@ overrides:
   # Delete once solid-js ships on seroval >= 1.6.3.
   'seroval@<1.6.3': ^1.6.8
   'seroval-plugins@<1.6.3': ^1.6.8
+  # Temporary: every miniflare up to 5.20261006.0-alpha pins sharp 0.35.4 (GHSA-wq5f-xc86-pv6w).
+  # Delete once miniflare ships on sharp >= 0.35.5.
+  'sharp@<0.35.5': ^0.35.5
 
 minimumReleaseAgeExclude:
   - '@cloudflare/*'
