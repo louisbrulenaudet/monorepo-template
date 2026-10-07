@@ -15,7 +15,12 @@ OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format)
 - `typeAware: true`, but oxlint's experimental `options.typeCheck` stays off: type checking stays with tsc (`turbo run check-types`), which keeps Turbo's per-package caching and `--affected`.
 - `respectEslintDisableDirectives: false` with `reportUnusedDisableDirectives: "error"`: `eslint-disable*` comments are ignored, and any stray one fails CI.
 - The `apps/front-*/src/**` override restates the full `plugins` list on purpose: override plugins extend the base, but trimming the list to `react` / `jsx-a11y` enables `react/react-in-jsx-scope` (dozens of false errors). Hook rules and `jsx-a11y` live in that override; no ESLint toolchain exists alongside.
+- The `apps/front-*/src/components/ui/**` override allowlists `#/utils/**` and `#/components/ui/**` through `no-restricted-imports`: primitives stay presentational (layout: rule `frontend/react`).
 - OXC always runs from the repo root because `better-tailwindcss` resolves `settings.better-tailwindcss.entryPoint` against the process CWD, not against `.oxlintrc.json`: `oxlint .` inside `apps/front-app` resolves `apps/front-app/apps/front-app/src/index.css`, so the theme-aware rules print a "No tailwind css entry point found" banner on every message and `no-unknown-classes` rejects every `@theme` token. Scope by path instead (`pnpm --filter=front-app run lint:check`).
+
+## oxfmt
+
+- Markdown is formatted natively, except the agent-loaded files `ignorePatterns` lists: padded tables cost context on every load, and oxfmt cannot parse `.mdc`, so formatting `.claude/**` alone would split the rule twins.
 
 ## better-tailwindcss
 
@@ -27,4 +32,4 @@ OXC is the source of truth: `.oxlintrc.json` (lint) and `.oxfmtrc.json` (format)
 ## React Doctor
 
 - The embedded oxlint plugin (`react-doctor/*` rules in the `front-*` override) fires through the post-edit lint hook; `react-doctor/no-fetch-in-effect` and `react-doctor/no-derived-state` are active. Extend the set deliberately, never blanket.
-- CLI-only rules and severity tuning live in root `doctor.config.jsonc`: `projects` lists every `front-*` app; score, share, and supply-chain checks are disabled (offline).
+- CLI-only rules and severity tuning live in root `doctor.config.jsonc`: `projects` lists every `front-*` app; score, share, and supply-chain checks are disabled (offline); `ignore.files` drops the gitignored `.cloudflare/` Build Output, whose minified vendor chunks the full scan otherwise reports.

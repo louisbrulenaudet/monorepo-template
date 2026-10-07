@@ -3,7 +3,7 @@ id: tanstack-router
 summary: route tree, typed search params, loaders, splitting
 families: [frontend, tanstack]
 packages: [@tanstack/react-router, @tanstack/router-plugin, @tanstack/router-cli, @tanstack/react-router-devtools]
-paths: [apps/front-*/src/routes/**, apps/front-*/tsr.config.json, .claude/rules/frontend/tanstack-router.md]
+paths: [apps/front-*/src/routes/**, .claude/rules/frontend/tanstack-router.md]
 ---
 
 # TanStack Router
@@ -21,13 +21,13 @@ TanStack Router in `front-app`: route-tree generation, type-safe search params, 
 ## Scope
 
 - Route files under [apps/front-app/src/routes/](../../../../apps/front-app/src/routes/) and the generated route tree
-- [apps/front-app/tsr.config.json](../../../../apps/front-app/tsr.config.json), router-plugin options in [apps/front-app/vite.config.ts](../../../../apps/front-app/vite.config.ts)
+- Router-plugin options in [apps/front-app/vite.config.ts](../../../../apps/front-app/vite.config.ts); there is no `tsr.config.json`, so the plugin and the `tsr` CLI both use the generator defaults
 - `@tanstack/router-cli` generate task in package scripts; generated-file ignore policy (oxlint/knip/git)
 - Devtools wiring (`@tanstack/react-router-devtools`)
 
 ## Probe
 
-Read tsr config, vite plugin options, and every route file.
+Read the vite plugin options and every route file.
 
 ## Axes
 

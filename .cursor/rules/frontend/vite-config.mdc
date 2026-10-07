@@ -15,22 +15,25 @@ globs: apps/front-*/vite.config.ts
 ## Vite 8 (Rolldown + Oxc)
 
 - `build.rolldownOptions` / `optimizeDeps.rolldownOptions`, not the deprecated `rollupOptions` / `esbuildOptions`; `build.minify: "oxc"`; `build.commonjsOptions` is a no-op.
-- `manualChunks` (function) works but is deprecated: preserve existing splits when editing; use `codeSplitting` for refactors.
+- Chunk groups live in `codeSplitting.groups`; never add the deprecated `manualChunks`.
 
 ## Plugins (order matters)
 
-`devtools` → `tanstackRouter` (before `react`) → `react({ compiler: true })` (native Rust React Compiler via the optional peer `oxc-transform-react`; no Babel pass) → `tailwindcss` → `cloudflare` → build-only (`apply: "build"`) → conditional via spread. Falsy plugins are skipped.
+`tanstackDevtools` (`@tanstack/devtools-vite`) → `tanstackRouter` (before `react`) → `react({ compiler: { reportDiagnostics: true } })` (native Rust React Compiler via the optional peer `oxc-transform-react`; no Babel pass) → `tailwindcss` → `cloudflare` → build-only (`apply: "build"`), with `sentryVitePlugin` last.
+
+- Keep `reportDiagnostics`: without it, a component the compiler skips loses memoization silently instead of printing a Vite warning, and rule `frontend/react` forbids manual memo.
 
 - `cloudflare({ types: { generate: false } })`: the assets-only SPA reads no `env`. Worker settings (name, assets, observability per mode) live in `cloudflare.config.ts`.
 - `@cloudflare/vite-plugin` is a 2.0 beta snapshot pinned exactly in the catalog (`2.0.0-beta.sha-…`): cf requires `>=2.0.0-0 <3`, and a snapshot is published per push, so a range would float onto untested builds.
-- Plugin 2.0 no longer replaces `server.config` (1.x's shallow copy made the injected DevTools `<script type="module">` 500 through Vite's html-proxy cache), so no config-identity workaround plugin is needed.
+- No config-identity workaround plugin: plugin 2.0 no longer replaces `server.config` (1.x's copy made the injected DevTools script 500).
 
 ## DevTools
 
-- `DevTools()` (embedded plugin) and the top-level `devtools` config key are alternatives, not complements: the key registers a second instance on serve and calls `start()` on build. Stay on the plugin.
-- Keep `build.rolldownOptions.devtools` set explicitly: `@vitejs/devtools` seeds it only from `DevToolsBuildIntegration`, which Vite registers only when the top-level `devtools` key is on; without the flag no build writes `node_modules/.rolldown` and the Rolldown dock stays empty (`RDDT0001`). One `build` populates it.
+- Vite DevTools load from the top-level `devtools` key with `apply: "serve"` and `mcp: false`, never also the `DevTools()` plugin (two instances). **Never drop `mcp: false`**: the default `auto` mounts `/__devtools/__mcp`, which trusts any same-machine caller and exposes `devframes:plugin:terminals:spawn` (the user's shell, any args), so any local process, a sandboxed agent included, could run commands through the user's dev server. Its only other agent tools, inspect and messages, are not worth that shell. Only the key types `mcp`; `apply: "serve"` keeps builds from loading DevTools.
+- `build.rolldownOptions.devtools` is set only for the `analyze` build (`ANALYZE=true`): each session writes 70-90 MB under `node_modules/.rolldown`, and nothing else seeds it under `apply: "serve"`. `pnpm --filter=front-app run analyze` fills the Rolldown dock (empty dock: `RDDT0001`).
 - `embeddedVisibility: "passive"` keeps Vite's floating dock clear of TanStack's; **Shift+Alt+D** reveals it.
-- The `devframe auth code` banner is the client auth handshake, not an error. `clientAuthTokens` is readable only from the top-level key, so it stays un-pre-approved; **never set `clientAuth: false`** - it exposes the dev server and filesystem to any browser that can reach the port.
+- The `devframe auth code` banner is the client auth handshake, not an error: its one-time link authorizes a browser. `clientAuthTokens` stays empty, since a token would be a committed credential; **never set `clientAuth: false`** - it exposes the dev server and filesystem to any browser that can reach the port.
+- `tanstackDevtools` keeps `eventBusConfig` off: the bus listens on `localhost:4206` with no `Origin` check and feeds the marketplace handler that runs `pnpm add`. `vite.config.ts` also filters out the `@tanstack/devtools:event-client-setup` sub-plugin: it applies whatever `eventBusConfig` says, runs `pnpm outdated` on every dev start, and registers those `pnpm add` handlers. `consolePiping` stays off: `server.forwardConsole` already forwards warnings and errors, and piping would print them twice and inject an IIFE into the entry. `injectSource` and `enhancedLogs` stay on: skill `run-app` reads their `data-tsd-source` attributes and `Go to Source` links.
 - `@vitest/ui` stays a **root** devDependency: `@vitejs/devtools-vitest` probes for it with `isPackageExists("@vitest/ui", { paths: [workspaceRoot] })` while `@vitejs/devtools` core probes integrations against the app `cwd`, so under pnpm's isolated layout an app-local install is invisible and the Vitest dock fails with `VTDT0001`. Never move it into an app.
 
 ## Monorepo and dev server
@@ -42,8 +45,7 @@ globs: apps/front-*/vite.config.ts
 ## Build, env, deps
 
 - Leave `build.target` unset (Vite 8 default `baseline-widely-available`). `sourcemap`: inline in development mode, `hidden` in production (kept for symbolication, excluded from the assets upload by the generated `.assetsignore`). `reportCompressedSize` is on only for the `analyze` build (`ANALYZE=true`): gzip sizing slows every build, and the `bundle-analyzer` agent reads the gzip column from that build's chunk table. Leave `cssCodeSplit`, `assetsInlineLimit`, and `chunkSizeWarningLimit` at their defaults. Leave `modulePreload.polyfill` at its default `true` unless you intentionally drop older-browser preload support.
-- Vendor chunks: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`. HTML gets `Cache-Control: no-cache` through the generated `_headers`.
-- Handle `vite:preloadError` in the client entry: reload once per session (sessionStorage guard) so returning users recover from stale chunks after a deploy.
+- The generated `_headers` sets `Cache-Control` on `/assets/*` only: Cloudflare joins a header two rules apply with a comma, so a `/*` value would land on hashed assets too, and HTML keeps the platform default `public, max-age=0, must-revalidate`.
 - Fail the production `build` on missing or placeholder required `VITE_*` values; skip that check under static analysis (`knip`).
 - `_headers` (cache + CSP) and `.assetsignore` (`*.map`) come from the `generated-build-artifacts` plugin, which `this.emitFile`s them in `generateBundle` for the `client` environment only; never hand-edit them.
 - `cf build` writes the Build Output to `.cloudflare/output/v0/`, not `dist/`, with the client build in `workers/default/assets/`, where `sentry:sourcemaps` reads the maps; the only `dist/` file left is the `analyze` build's `dist/stats.html`.

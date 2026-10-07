@@ -38,7 +38,7 @@ export const EchoQuerySchema = z.strictObject(
 );
 
 /** @internal */
-export const EchoResponseSchema = z.strictObject({
+export const EchoResponseSchema = z.object({
   message: z.string(),
   receivedAt: z.iso.datetime(),
   requestId: z.string(),

@@ -49,11 +49,12 @@ describe("POST /api/v1/echo", () => {
     expect(requestId).toMatch(UUID_V4);
 
     const body: unknown = await response.json();
-    expect(EchoResponseSchema.parse(body)).toEqual({
+    expect(body).toEqual({
       message: "hello",
       receivedAt: expect.any(String),
       requestId,
     });
+    expect(EchoResponseSchema.parse(body)).toEqual(body);
   });
 
   it("upper-cases the message when ?uppercase=true", async () => {

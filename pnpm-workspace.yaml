@@ -8,20 +8,20 @@ catalog:
   '@changesets/changelog-github': ^1.0.1
   '@changesets/cli': ^3.0.3
   '@cloudflare/vite-plugin': 2.0.0-beta.sha-ad79608dd
-  '@cloudflare/vitest-plugin': ^1.3.6
+  '@cloudflare/vitest-plugin': ^1.3.7
   '@hono/cli': 0.2.0-next.9
   '@hono/zod-validator': ^0.9.1
   '@playwright/cli': ^0.1.22
   '@sentry/cli': ^3.8.0
-  '@sentry/cloudflare': 11.2.0
-  '@sentry/hono': 11.2.0
-  '@sentry/react': 11.2.0
-  '@sentry/vite-plugin': ^5.4.0
+  '@sentry/cloudflare': 11.4.0
+  '@sentry/hono': 11.4.0
+  '@sentry/react': 11.4.0
+  '@sentry/vite-plugin': ^5.4.1
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
   '@tanstack/react-devtools': ^0.10.13
-  '@tanstack/react-query': ^5.104.0
-  '@tanstack/react-query-devtools': ^5.104.0
+  '@tanstack/react-query': ^5.104.1
+  '@tanstack/react-query-devtools': ^5.104.1
   '@tanstack/react-router': ^1.170.41
   '@tanstack/react-router-devtools': ^1.167.2
   '@tanstack/router-cli': 1.167.40
@@ -30,7 +30,7 @@ catalog:
   '@testing-library/jest-dom': ^7.0.1
   '@testing-library/react': ^16.3.3
   '@testing-library/user-event': ^14.6.7
-  '@types/node': 26.6.3
+  '@types/node': 26.6.4
   '@types/react': ^19.3.0
   '@types/react-dom': ^19.3.0
   '@vitejs/devtools': ^0.7.6
@@ -39,32 +39,32 @@ catalog:
   '@vitejs/devtools-vite': ^0.7.6
   '@vitejs/devtools-vitest': ^0.7.6
   '@vitest/ui': ^5.0.3
-  '@vitejs/plugin-react': ^6.1.1
-  cf: 1.0.0-beta.12
+  '@vitejs/plugin-react': ^6.1.2
+  cf: 1.0.0-beta.13
   cross-env: ^10.1.0
   cspell: ^10.3.6
-  eslint-plugin-better-tailwindcss: ^4.7.0
+  eslint-plugin-better-tailwindcss: ^4.9.0
   happy-dom: ^20.14.5
-  hono: ^4.13.12
+  hono: ^4.13.13
   jscpd: ^5.4.0
-  knip: ^6.39.0
-  oxc-transform-react: ^0.152.0
-  oxfmt: ^0.71.0
-  oxlint: ^1.86.0
-  oxlint-plugin-react-doctor: ^0.9.14
+  knip: ^6.40.0
+  oxc-transform-react: ^0.153.0
+  oxfmt: ^0.72.0
+  oxlint: ^1.87.0
+  oxlint-plugin-react-doctor: ^0.9.17
   oxlint-tsgolint: ^7.0.2003
   react: ^19.3.0
-  react-doctor: ^0.9.14
+  react-doctor: ^0.9.17
   react-dom: ^19.3.0
   rollup-plugin-visualizer: ^7.1.1
   syncpack: ^15.3.3
   tailwindcss: ^4.3.3
-  turbo: 2.11.6
+  turbo: 2.11.7
   typescript: ^7.0.2
-  vite: ^8.3.2
+  vite: ^8.3.3
   vite-plus: ^1.0.0
   vitest: ^5.0.3
-  wrangler: ^4.147.0
+  wrangler: ^4.148.0
   zod: ^4.6.5
 
 # Temporary: @cloudflare/vitest-plugin still pins vitest ^4.1.0. Once it supports v5,
@@ -73,12 +73,16 @@ catalogs:
   vitest4:
     vitest: ^4.1.11
 
-# Transitive @types/node '*' ranges would otherwise resolve to the newest major, ahead of the Node 24 engine.
+# Transitive '*' ranges would otherwise pull the newest @types/node major, ahead of the Node 24 engine.
 overrides:
   '@types/node': 'catalog:'
-  # Temporary: cf 1.0.0-beta.5 pins miniflare 5.20260926.0-alpha, which pins undici 7.29.0
-  # (GHSA-rfgv-xxqx-mfg5, GHSA-w293-vg96-wgc3). Delete once cf ships on miniflare >= 5.20260926.1-alpha.
+  # Temporary: @cloudflare/vite-plugin 2.0.0-beta.sha-ad79608dd pins miniflare 5.20260926.0-alpha, which pins undici 7.29.0
+  # (GHSA-rfgv-xxqx-mfg5, GHSA-w293-vg96-wgc3). Delete once it ships on miniflare >= 5.20260926.1-alpha.
   'undici@>=7.0.0 <7.29.1': ^7.29.1
+  # Temporary: solid-js 1.9.15 pins seroval ~1.5.4 (GHSA-p6vx-979v-rg4c, GHSA-jp82-f5mq-hwhp).
+  # Delete once solid-js ships on seroval >= 1.6.3.
+  'seroval@<1.6.3': ^1.6.8
+  'seroval-plugins@<1.6.3': ^1.6.8
 
 minimumReleaseAgeExclude:
   - '@cloudflare/*'
@@ -102,7 +106,7 @@ minimumReleaseAgeExclude:
 blockExoticSubdeps: true
 
 trustPolicy: no-downgrade
-trustPolicyIgnoreAfter: 525600 # 365 days - skip trust checks for older publishes lacking provenance
+trustPolicyIgnoreAfter: 525600 # minutes (365 days)
 
 allowBuilds:
   # The binary comes from the per-platform optionalDependencies; the postinstall

@@ -47,7 +47,7 @@ Same reach test. A value set is shared when any of these holds: more than one ap
 
 ## Schema authoring
 
-- Unknown keys: one policy per file or feature - if one schema uses `.strict()`, the others in the file follow rather than mixing silently.
+- Unknown keys follow the direction of the data. Request body and query schemas are `z.strictObject`, so the producer rejects a field it does not define. Response schemas a client parses are `z.object`, which strips unknown keys: `worker-api` deploys before `front-app`, so a strict response schema would make every open SPA tab reject a newly added field. The producer's test asserts the exact body with `toEqual` on the raw JSON instead.
 - Cross-field rules go in `.refine()` / `.superRefine()`, with messages safe to return to an API client (no internal paths, stack details, or secret values).
 - `.safeParse()` when you branch on a structured failure (the norm at trust boundaries here); `.parse()` only where the throw is caught in a controlled context.
 

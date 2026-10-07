@@ -9,6 +9,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 if (typeof document !== "undefined") {
   await import("@testing-library/jest-dom/vitest");
-  const { cleanup } = await import("@testing-library/react");
+  const { cleanup, configure } = await import("@testing-library/react");
+  configure({ reactStrictMode: true });
   afterEach(cleanup);
 }

@@ -58,7 +58,7 @@ When reviewing UI code, check for:
 | `transform-origin: center` on popover | Set to trigger location or use Radix/Base UI CSS variable (modals exempt) |
 | Animation on keyboard action | Remove animation entirely |
 | Duration > 300ms on UI element | Reduce to 150–250ms |
-| Hover animation without media query | Add `@media (hover: hover) and (pointer: fine)` |
+| Raw-CSS `:hover` animation without a media query | Add `@media (hover: hover) and (pointer: fine)`; Tailwind v4 `hover:` is already gated |
 | Keyframes on rapidly-triggered element | Use CSS transitions for interruptibility |
 | Framer Motion `x`/`y` props under load | Use `transform: "translateX()"` for hardware acceleration |
 | Same enter/exit transition speed | Make exit faster than enter |

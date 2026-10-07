@@ -13,5 +13,6 @@ TanStack Query owns all server state ([react.md](react.md)). Depth: skill `tanst
 - Define queries with `queryOptions()` in `src/services/worker-api/<feature>-query-options.ts` next to `<feature>.ts`, and reuse that object for `useQuery` / `useSuspenseQuery` / `queryClient.query` / `setQueryData`; never inline `{ queryKey, queryFn }` at a call site.
 - Keys sit under the backend namespace, hierarchical (`['worker-api', …]`) and JSON-serializable; promote to a key factory once a feature has several related queries.
 - `queryFn` delegates to `fetchJsonWithSchema`, which forwards `signal`, throws on non-OK, and validates with the shared Zod schema - never `as T`.
+- `createQueryClient` sets `retry: false` on purpose: a failure surfaces at once with its request id, and a query that should retry sets `retry` in its own `queryOptions`.
 - Mutations invalidate with `invalidateQueries` by default; the full optimistic ritual (`cancelQueries` → snapshot → `setQueryData` → rollback → `invalidateQueries`) only when needed.
 - Warm route loaders with `queryClient.query({ ...opts, staleTime: "static" })`; `ensureQueryData` / `fetchQuery` / `prefetchQuery` are deprecated since 5.102 ([tanstack-router.md](tanstack-router.md)).

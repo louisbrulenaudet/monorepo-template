@@ -22,7 +22,10 @@ A `worker-*`, `queue-*`, `webhook-*`, or `mcp-*` app, whose tests run inside wor
 
 ```ts
 // vitest.config.mts
-import { defineWorkersConfig, resolvePackageRoot } from "@repo/vitest-config/workers";
+import {
+  defineWorkersConfig,
+  resolvePackageRoot,
+} from "@repo/vitest-config/workers";
 
 const root = resolvePackageRoot(import.meta.dirname);
 

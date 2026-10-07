@@ -15,6 +15,5 @@
     "tag": false
   },
   "fixed": [["*"]],
-  "ignore": ["@repo/vitest-config"],
-  "format": false
+  "ignore": ["@repo/vitest-config"]
 }

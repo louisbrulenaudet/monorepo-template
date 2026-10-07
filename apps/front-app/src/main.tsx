@@ -15,13 +15,16 @@ if (!rootElement) {
   throw new Error("Missing #root element");
 }
 
-window.addEventListener("vite:preloadError", (event) => {
+window.addEventListener("vite:preloadError", () => {
   const key = "vite-preload-error-reloaded";
-  if (sessionStorage.getItem(key)) {
-    event.preventDefault();
+  try {
+    if (sessionStorage.getItem(key)) {
+      return;
+    }
+    sessionStorage.setItem(key, "1");
+  } catch {
     return;
   }
-  sessionStorage.setItem(key, String(Date.now()));
   window.location.reload();
 });
 

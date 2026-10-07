@@ -1,4 +1,4 @@
-import { FetchApiError } from "#/utils/fetch-api";
+import { FetchApiError, ResponseSchemaError } from "#/utils/fetch-api";
 
 export type ClientSafeErrorDetails = {
   message: string;
@@ -17,7 +17,7 @@ const REQUEST_FAILED_MESSAGE =
 export function getClientSafeErrorDetails(
   error: unknown,
 ): ClientSafeErrorDetails {
-  if (error instanceof FetchApiError) {
+  if (error instanceof FetchApiError || error instanceof ResponseSchemaError) {
     return {
       message: REQUEST_FAILED_MESSAGE,
       requestId: error.requestId,

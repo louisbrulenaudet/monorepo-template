@@ -4,7 +4,7 @@
 
 `worker-api` is the **public HTTP gateway**: **Cloudflare Workers** + **Hono**, built with the Cloudflare Vite plugin and configured in `cloudflare.config.ts`, port **8700** in dev. Entry point for `front-app` over HTTP; coordinates internal Workers via service bindings when those bindings exist.
 
-Starter surface: `GET /api/v1/health` returns `{ status, version }` (semver from `package.json`, inlined at build; `front-app` renders it in its footer), and `POST /api/v1/echo` is the `validator()` reference implementation (json + query targets), gated off in production because it reflects caller input without auth or rate limiting. `X-Worker-Version-Id` stays the opaque Worker version id (`CF_VERSION_METADATA`).
+Starter surface: `GET /api/v1/health` returns `{ status, version }` (semver from `package.json`, inlined at build), and `POST /api/v1/echo` is the `validator()` reference implementation (json + query targets), gated off in production because it reflects caller input without auth or rate limiting. `X-Worker-Version-Id` stays the opaque Worker version id (`CF_VERSION_METADATA`).
 
 Rules that load with this app: `backend/hono-gateway` (middleware order, CORS/CSRF, errors, validation), `backend/service-bindings`, `backend/workers-config` and `backend/workers-cache` (with `cloudflare.config.ts`).
 

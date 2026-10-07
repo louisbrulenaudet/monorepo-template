@@ -70,13 +70,13 @@ A Worker's name prefix states its role (`worker-api`, `worker-*`, `queue-*`, `we
 └── .github/         # CI, release, CD, and Preview workflows
 ```
 
-| Shared package | Purpose |
-|----------------|---------|
-| [`@repo/dtos-common`](packages/dtos-common/README.md) | Zod Mini wire contracts, one subpath per boundary (`/api` today) |
-| [`@repo/enums-common`](packages/enums-common/README.md) | Shared constrained string values as `as const` objects |
-| [`@repo/hono-middleware`](packages/hono-middleware/README.md) | Hono middlewares shared by the public-HTTP Workers: request id, Sentry, secure headers, JSON errors, validation |
-| [`@repo/typescript-config`](packages/typescript-config/README.md) | TypeScript presets for Workers, React/Vite, and libraries |
-| [`@repo/vitest-config`](packages/vitest-config/README.md) | Vitest factories for Node and the Cloudflare Workers pool |
+| Shared package                                                    | Purpose                                                                                                         |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [`@repo/dtos-common`](packages/dtos-common/README.md)             | Zod Mini wire contracts, one subpath per boundary (`/api` today)                                                |
+| [`@repo/enums-common`](packages/enums-common/README.md)           | Shared constrained string values as `as const` objects                                                          |
+| [`@repo/hono-middleware`](packages/hono-middleware/README.md)     | Hono middlewares shared by the public-HTTP Workers: request id, Sentry, secure headers, JSON errors, validation |
+| [`@repo/typescript-config`](packages/typescript-config/README.md) | TypeScript presets for Workers, React/Vite, and libraries                                                       |
+| [`@repo/vitest-config`](packages/vitest-config/README.md)         | Vitest factories for Node and the Cloudflare Workers pool                                                       |
 
 ## Getting started
 
@@ -103,8 +103,8 @@ No env file is needed for a first run. A Worker app takes local secrets from a g
 
 1. `pnpm dev` starts every dev server (`cf dev`, which runs Vite with the Cloudflare plugin for both apps).
 2. `http://localhost:8700/api/v1/health` answers `{ "status": "ok", "version": "0.0.0" }`.
-3. `http://localhost:5174` serves the SPA; its footer shows the API version.
-4. **Shift+Alt+D** reveals the Vite DevTools dock. Its Rolldown panel stays empty until a build has run: `pnpm turbo run build --filter=front-app`.
+3. `http://localhost:5174` serves the SPA; its Stack check card shows the API status, version, latency, and request id.
+4. **Shift+Alt+D** reveals the Vite DevTools dock. Its Rolldown panel stays empty until the analyze build has run: `VITE_API_BASE_URL=http://localhost:8700 pnpm --filter=front-app run analyze`.
 
 Work on one app with `pnpm turbo run dev --filter=worker-api`. `pnpm run` lists every root script; `pnpm run check` is the seconds-long static check and `pnpm run ci` the full local PR gate. Every PR also gets a non-blocking **Code quality** comment listing the unused code (Knip) and duplicated code (jscpd) it adds or resolves; `pnpm knip` and `pnpm jscpd` show the whole repo locally.
 
@@ -140,15 +140,15 @@ Versioning is [Changesets](https://changesets.dev). Every app under `apps/` shar
 > [!NOTE]
 > **CD is paused** until the `production` GitHub Environment holds the values below. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them.
 
-| Name | Kind | Purpose |
-| --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | secret | `cf` auth - a scoped token, never a global API key |
-| `CLOUDFLARE_ACCOUNT_ID` | secret | Target account |
-| `VITE_API_BASE_URL` | variable | Production API origin baked into `front-app` |
-| `VITE_SENTRY_DSN` | variable | Optional public `front-app` Sentry DSN, also used by Preview builds; empty disables Sentry |
-| `SENTRY_ORG` | variable | Optional; arms the CD steps that upload each app's source maps to the Sentry project named like the app, then mark its release deployed (auto-resolving `Fixes <SHORT-ID>` issues) |
-| `SENTRY_AUTH_TOKEN` | secret | Sentry org auth token for those steps (scoped to the steps, never the build) |
-| `CD_ENABLED` | variable | Must be `true` for `release.yml` to call CD |
+| Name                    | Kind     | Purpose                                                                                                                                                                            |
+| ----------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | secret   | `cf` auth - a scoped token, never a global API key                                                                                                                                 |
+| `CLOUDFLARE_ACCOUNT_ID` | secret   | Target account                                                                                                                                                                     |
+| `VITE_API_BASE_URL`     | variable | Production API origin baked into `front-app`                                                                                                                                       |
+| `VITE_SENTRY_DSN`       | variable | Optional public `front-app` Sentry DSN, also used by Preview builds; empty disables Sentry                                                                                         |
+| `SENTRY_ORG`            | variable | Optional; arms the CD steps that upload each app's source maps to the Sentry project named like the app, then mark its release deployed (auto-resolving `Fixes <SHORT-ID>` issues) |
+| `SENTRY_AUTH_TOKEN`     | secret   | Sentry org auth token for those steps (scoped to the steps, never the build)                                                                                                       |
+| `CD_ENABLED`            | variable | Must be `true` for `release.yml` to call CD                                                                                                                                        |
 
 Token permissions: Account → Workers Scripts Edit (required) and Account Settings Read (typical for `cf` and Wrangler); Zone → Workers Routes Edit only with zone routes; Account → Secrets Store Edit only when binding Secrets Store.
 

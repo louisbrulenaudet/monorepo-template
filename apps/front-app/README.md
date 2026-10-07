@@ -24,7 +24,7 @@ flowchart LR
   Svc --> Fetch["src/utils/fetch-api.ts<br/>fetchJsonWithSchema"]
   Fetch -- "GET /api/v1/health<br/>X-Request-Id read from the response" --> API["worker-api :8700 (HTTP only)"]
   API --> Parse["@repo/dtos-common/api<br/>HealthResponseSchema parse"]
-  Parse --> UI["React UI<br/>components/feedback/ApiHealthIndicator"]
+  Parse --> UI["React UI<br/>components/health/StackCheck"]
 
   style API fill:#fff3e0
 ```
@@ -33,9 +33,9 @@ flowchart LR
 
 `VITE_API_BASE_URL` is the gateway origin. Left unset in development it defaults to `http://localhost:8700` (`src/config/env.ts`).
 
-| Goal | File |
-|------|------|
-| Local dev overrides | Copy [`.env.example`](.env.example) to `.env` |
+| Goal                      | File                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| Local dev overrides       | Copy [`.env.example`](.env.example) to `.env`                                  |
 | Production build / deploy | Copy [`.env.production.example`](.env.production.example) to `.env.production` |
 
 The agent sandbox cannot read the `.env*` files here, and the Cloudflare Vite plugin aborts on an env file it cannot read, so the sandbox sets `SKIP_ENV_FILES=1` and `vite.config.ts` skips them: sandboxed dev runs on the `src/config/env.ts` defaults. Vite loads `.env.production` only for a production build (`cf build`), never under `cf dev`, so a deploy origin does not change dev defaults. `VITE_*` values are inlined into the public bundle at build time: changing one means rebuilding and redeploying, and none may hold a secret.

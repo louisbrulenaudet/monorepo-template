@@ -18,6 +18,7 @@ cloc
 cloudflare
 codegen
 conninfo
+Consolas
 Contentful
 cooldown
 cpuprofile
@@ -79,6 +80,7 @@ lockfiles
 Logpush
 louisbrulenaudet
 Mcpjson
+Menlo
 miniflare
 misconfig
 mktemp
@@ -123,12 +125,14 @@ refspec
 retargeted
 retriable
 rgba
+Roboto
 rollforward
 rollup
 safelists
 SAMEORIGIN
 sandboxed
 sandboxing
+Segoe
 SEGS
 serviceworker
 setsid
@@ -159,6 +163,7 @@ undici
 ungated
 unlabels
 unobserve
+unpadded
 unparseable
 Unsandboxed
 unsanitized

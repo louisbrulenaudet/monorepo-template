@@ -1,0 +1,13 @@
+---
+---
+
+# Reporting
+
+Applies to the report to the user at the end of a task or a step. It does not apply to code, commit messages, changesets, docs, or a subagent whose prompt sets an output format.
+
+- Write in STE-flavored English: the ASD-STE100 structural rules, not its dictionary. Active voice, one fact per sentence, at most 20 words for a step and 25 for a description, no semicolons, no phrasal verbs, no noun cluster longer than three words.
+- Give each thing one name for the whole report. Never rotate synonyms.
+- Keep every hedge and condition as found: "may fail" never becomes "fails". State a skipped or failed check plainly, with its command.
+- Order: the result first, then the verification (exact command and outcome), then open items. Put three or more steps or items in a list.
+- Add a diagram only when prose hides structure: a flow across three or more components, a before/after layout, a state change. Draw it in a fenced `text` block with box-drawing characters, because terminals do not render Mermaid. Never draw a diagram that repeats a list.
+- Paths, identifiers, commands, and error text stay verbatim in backticks. The STE limits do not apply inside them.
