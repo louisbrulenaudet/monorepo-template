@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CopyPromptButton } from "#/components/onboarding/CopyPromptButton";
@@ -22,7 +22,9 @@ describe("CopyPromptButton", () => {
 
     await user.click(screen.getByRole("button", { name: "Copy prompt" }));
 
-    expect(screen.getByRole("status")).toHaveTextContent("Copied!");
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("Copied!");
+    });
     await act(() => vi.advanceTimersByTimeAsync(2_000));
     expect(screen.getByRole("status")).toBeEmptyDOMElement();
   });
@@ -32,6 +34,8 @@ describe("CopyPromptButton", () => {
 
     await user.click(screen.getByRole("button", { name: "Copy prompt" }));
 
-    expect(screen.getByRole("status")).toHaveTextContent("Copy failed");
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("Copy failed");
+    });
   });
 });
