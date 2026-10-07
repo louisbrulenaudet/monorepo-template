@@ -1,24 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
+import type { HealthProbe } from "#/services/worker-api/health";
 import { ApiHealthStatus } from "#/enums/api-health-status";
 import { healthQueryOptions } from "#/services/worker-api/health-query-options";
 
 type UseApiHealthResult = {
   status: ApiHealthStatus;
+  probe: HealthProbe | undefined;
+  error: Error | null;
+  isFetching: boolean;
+  updatedAt: number;
+  refetch: () => void;
 };
 
 /** @internal */
 export function resolveApiHealthStatus({
   isFetching,
-  isPending,
+  isPaused,
   isSuccess,
   isError,
 }: {
   isFetching: boolean;
-  isPending: boolean;
+  isPaused: boolean;
   isSuccess: boolean;
   isError: boolean;
 }): ApiHealthStatus {
-  if (isFetching && isPending) {
+  if (isPaused) {
+    return ApiHealthStatus.IDLE;
+  }
+
+  if (isFetching && !isSuccess) {
     return ApiHealthStatus.CHECKING;
   }
 
@@ -34,15 +44,29 @@ export function resolveApiHealthStatus({
 }
 
 export function useApiHealth(): UseApiHealthResult {
-  const { isFetching, isPending, isSuccess, isError } =
-    useQuery(healthQueryOptions);
-
-  const status = resolveApiHealthStatus({
+  const {
+    data,
+    error,
     isFetching,
-    isPending,
+    isPaused,
     isSuccess,
     isError,
-  });
+    dataUpdatedAt,
+    errorUpdatedAt,
+    refetch,
+  } = useQuery(healthQueryOptions);
 
-  return { status };
+  return {
+    status: resolveApiHealthStatus({
+      isFetching,
+      isPaused,
+      isSuccess,
+      isError,
+    }),
+    probe: data,
+    error,
+    isFetching,
+    updatedAt: Math.max(dataUpdatedAt, errorUpdatedAt),
+    refetch: () => void refetch({ cancelRefetch: false }),
+  };
 }

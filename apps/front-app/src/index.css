@@ -1,9 +1,32 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @source "../index.html";
 @source "./**/*.{ts,tsx}";
 
 @theme {
-  --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --color-*: initial;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --container-frame: 75rem;
+  --container-band: 92.5rem;
+
+  --text-heading: clamp(2rem, 1.25rem + 3vw, 3.5rem);
+  --text-heading--line-height: 1.05;
+  --text-heading--letter-spacing: -0.025em;
+  --text-heading--font-weight: 500;
+  --text-title: 2rem;
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.025em;
+  --text-title--font-weight: 500;
+  --text-ui: 0.9375rem;
+  --text-caption: 0.8125rem;
+  --text-micro: 0.6875rem;
+
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --default-transition-timing-function: var(--ease-out-quad);
 }
 
 :root {
@@ -14,70 +37,61 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Non-namespace design tokens (consumed by the keyframes below). */
-  --health-glow-color: rgba(16, 185, 129, 0.55);
-  --health-shake-distance: 2px;
+  --health-glow-color: color-mix(in oklab, var(--success) 55%, transparent);
+  --dot: oklch(0.916 0 0);
 
-  /* Semantic color tokens - light (default). Neutral gray scale. */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(0.985 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --border: oklch(0.922 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --primary: oklch(0.585 0.233 277.117);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --foreground: oklch(0.269 0 0);
+  --card: oklch(0.994 0.001 0);
+  --border: oklch(0.94 0 0);
+  --muted-foreground: oklch(0.545 0 0);
+  --primary: oklch(0.55 0.179 37.4);
+  --primary-foreground: oklch(1 0 0);
+  --primary-solid: oklch(0.582 0.198 36.1);
+  --primary-solid-hover: oklch(0.539 0.183 36.3);
+  --secondary: oklch(0.977 0.003 48.7);
+  --success: oklch(0.508 0.118 165.612);
+  --danger: oklch(0.577 0.245 27.325);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* True near-black neutral dark theme (OpenAI/ChatGPT style). */
-    --background: oklch(0.13 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --border: oklch(1 0 0 / 10%);
-    --muted-foreground: oklch(0.708 0 0);
-    --primary: oklch(0.585 0.233 277.117);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
+    --background: oklch(0.192 0.002 17.3);
+    --foreground: oklch(0.925 0.016 42.4);
+    --card: oklch(0.21 0.003 67.7);
+    --border: oklch(0.303 0.003 48.6);
+    --muted-foreground: oklch(0.728 0.01 41.9);
+    --primary: oklch(0.687 0.208 38.8);
+    --secondary: oklch(0.281 0.004 84.6);
+    --dot: oklch(0.299 0.003 17.3);
+    --success: oklch(0.765 0.177 163.223);
+    --danger: oklch(0.704 0.191 22.216);
   }
 }
 
-/* Expose the semantic tokens as Tailwind color utilities. `inline` so each
-   utility resolves `var(...)` per-scope and flips with prefers-color-scheme. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
   --color-muted-foreground: var(--muted-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-solid: var(--primary-solid);
+  --color-primary-solid-hover: var(--primary-solid-hover);
   --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
 }
 
 @theme {
-  --animate-health-glow: health-glow 1.25s ease-in-out infinite;
-  --animate-health-shake: health-shake 0.45s ease-in-out infinite;
+  --animate-health-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 2;
+  --animate-health-glow: health-glow 1.25s ease-in-out 3;
+  --animate-health-shake: health-shake 0.45s ease-in-out 2;
 
   @keyframes health-glow {
-    0%,
-    100% {
-      box-shadow:
-        0 0 0 0 rgba(16, 185, 129, 0),
-        0 0 0 0 rgba(16, 185, 129, 0);
-    }
     50% {
-      box-shadow:
-        0 0 0 4px color-mix(in oklab, var(--health-glow-color), transparent 70%),
-        0 0 12px 2px
-          color-mix(in oklab, var(--health-glow-color), transparent 25%);
+      opacity: 1;
     }
   }
 
@@ -87,38 +101,90 @@
       transform: translateX(0);
     }
     20% {
-      transform: translateX(calc(var(--health-shake-distance) * -1));
+      transform: translateX(-2px);
     }
     40% {
-      transform: translateX(var(--health-shake-distance));
+      transform: translateX(2px);
     }
     60% {
-      transform: translateX(calc(var(--health-shake-distance) * -0.75));
+      transform: translateX(-1.5px);
     }
     80% {
-      transform: translateX(calc(var(--health-shake-distance) * 0.75));
+      transform: translateX(1.5px);
     }
   }
 }
 
-@utility squircle-button {
-  border-radius: 2rem;
+@utility glow-health {
+  box-shadow:
+    0 0 0 4px color-mix(in oklab, var(--health-glow-color), transparent 70%),
+    0 0 12px 2px color-mix(in oklab, var(--health-glow-color), transparent 25%);
+}
 
-  @supports (corner-shape: squircle) {
-    corner-shape: squircle;
+@utility reserve-label {
+  display: inline-grid;
+
+  & > *,
+  &::after {
+    grid-area: 1 / 1;
+  }
+
+  &::after {
+    content: attr(data-label);
+    visibility: hidden;
   }
 }
 
-@utility copy-prompt-label {
-  white-space: nowrap;
+@utility bg-dots {
+  background-image: radial-gradient(
+    circle,
+    var(--dot) 0.75px,
+    transparent 1.25px
+  );
+  background-size: 12px 12px;
+  background-position: calc(50% + 6px) 0;
+}
+
+@utility rails-dashed {
+  background-image:
+    linear-gradient(to bottom, var(--border) 50%, transparent 50%),
+    linear-gradient(to bottom, var(--border) 50%, transparent 50%);
+  background-size: 1px 32px;
+  background-position:
+    left top,
+    right top;
+  background-repeat: repeat-y;
+}
+
+@utility rule-dashed {
+  background-image: linear-gradient(
+    to right,
+    var(--border) 50%,
+    transparent 50%
+  );
+  background-size: 32px 1px;
+  background-position: center top;
+  background-repeat: repeat-x;
 }
 
 @layer base {
   a {
-    @apply font-medium text-primary no-underline hover:text-primary/80;
+    @apply font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary;
+  }
+
+  :not(pre) > code {
+    @apply rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[0.85em] text-foreground;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  ::selection {
+    @apply bg-primary/25 text-foreground;
   }
 
   body {
-    @apply m-0 flex min-h-dvh items-center justify-center bg-background text-foreground;
+    @apply bg-background text-foreground;
   }
 }

@@ -53,8 +53,8 @@ Touch devices trigger hover on tap, causing false positives. Gate hover animatio
 ```
 
 ```html
-<!-- Tailwind v4 -->
-<div class="[@media(hover:hover)and(pointer:fine)]:hover:scale-105 transition-transform">
+<!-- Tailwind v4: hover: is already gated by (hover: hover); pointer-fine: adds (pointer: fine) -->
+<div class="transition-transform pointer-fine:hover:scale-105">
 ```
 
 ### Stagger Animations

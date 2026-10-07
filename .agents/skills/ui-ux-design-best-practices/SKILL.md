@@ -128,7 +128,7 @@ When reviewing UI code, output a markdown table:
 | `transform-origin: center` on popover | `origin-[var(--radix-popover-content-transform-origin)]` | Scale from trigger, not center |
 | Animation on keyboard action | Remove animation entirely | Repeated 100x/day - animation adds delay |
 | Duration > 300ms on UI element | Reduce to 150–250ms | Slow transitions feel broken |
-| Hover without `@media (hover: hover)` guard | Add `@media (hover: hover) and (pointer: fine)` | Touch devices trigger hover on tap |
+| Raw-CSS `:hover` without a `@media (hover: hover)` guard | Add `@media (hover: hover) and (pointer: fine)`; Tailwind v4 `hover:` already includes `(hover: hover)` | Touch devices trigger hover on tap |
 | Keyframes on rapidly-triggered element | CSS transitions for interruptibility | Keyframes restart from zero on interruption |
 | Framer Motion `x`/`y` props under load | `transform: "translateX()"` string | Short-hand props are not hardware-accelerated |
 | Same enter/exit speed | Exit faster than enter | Slow deliberate entry, snappy exit |

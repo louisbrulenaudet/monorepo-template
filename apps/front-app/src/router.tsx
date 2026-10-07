@@ -6,8 +6,8 @@ import { routeTree } from "./routeTree.gen";
 function RouterPending() {
   return (
     <div
-      className="flex min-h-dvh items-center justify-center text-muted-foreground"
-      aria-busy="true"
+      role="status"
+      className="flex min-h-96 items-center justify-center text-muted-foreground"
     >
       Loading…
     </div>

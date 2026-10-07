@@ -10,9 +10,10 @@ import {
   reactErrorHandler,
 } from "@sentry/react";
 import { apiBaseUrl, appEnvironment } from "#/config/env";
+import { ResponseSchemaError } from "#/utils/fetch-api";
 import { version } from "../../package.json";
 
-// Mirrors worker-api, which continues the SPA's sampling decision.
+// Keep in sync with packages/hono-middleware/src/sentry.ts.
 const FULL_TRACING_ENVIRONMENTS = new Set<AppEnvironment>([
   AppEnvironment.DEV,
   AppEnvironment.PREVIEW,
@@ -74,8 +75,6 @@ export function sentryEventId(error: unknown): string | undefined {
   return sentryEventIds.get(error);
 }
 
-// Every entry point reads VITE_SENTRY_DSN literally, not through env.ts: the
-// inlined value lets the build drop the whole SDK when the DSN is unset.
 // `undefined` keeps React's default console reporting when Sentry is off.
 export function initSentry(): RootOptions | undefined {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
@@ -128,6 +127,13 @@ export async function startSentryTracing(router: AnyRouter): Promise<void> {
 
 export function captureClientError(error: unknown): void {
   if (!import.meta.env.VITE_SENTRY_DSN) {
+    if (import.meta.env.DEV) {
+      console.error(error);
+    }
+    return;
+  }
+  if (error instanceof ResponseSchemaError && error.requestId) {
+    captureException(error, { tags: { request_id: error.requestId } });
     return;
   }
   captureException(error);

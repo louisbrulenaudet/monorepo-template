@@ -6,23 +6,23 @@ Nothing here is published to npm. Every workspace is `"private": true`. **A rele
 
 ## Commands
 
-| Command | Does |
-|---------|------|
-| `pnpm changeset` | Create a changeset interactively: pick the apps, the bump, the summary |
-| `pnpm changeset --patch worker-api -m '<title>'` | The same without prompts (`--minor`, comma-separated apps) |
-| `pnpm changeset --empty -m '<reason>'` | Record that a change ships nothing observable |
-| `pnpm release:check` | The PR gate, run locally; `git add` a new changeset first, since it only sees tracked files |
-| `pnpm release:status` | Read-only: every pending changeset and the next versions |
+| Command                                          | Does                                                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `pnpm changeset`                                 | Create a changeset interactively: pick the apps, the bump, the summary                      |
+| `pnpm changeset --patch worker-api -m '<title>'` | The same without prompts (`--minor`, comma-separated apps)                                  |
+| `pnpm changeset --empty -m '<reason>'`           | Record that a change ships nothing observable                                               |
+| `pnpm release:check`                             | The PR gate, run locally; `git add` a new changeset first, since it only sees tracked files |
+| `pnpm release:status`                            | Read-only: every pending changeset and the next versions                                    |
 
 ## Do I need one?
 
-| Your change | Changeset |
-|-------------|-----------|
-| Anything a user or operator of a deployed app can observe, including through a shared `@repo/*` package | `patch` or `minor` |
-| A catalog bump of a runtime `dependencies` entry of an app (`pnpm-workspace.yaml`) | `patch` naming that app; Dependabot PRs get one committed for them when the `CHANGESET_BOT_TOKEN` secret is set |
-| An app or package file changed but nothing observable did: types, comments, a behavior-identical refactor, devDependencies | `pnpm changeset --empty -m '<reason>'` |
-| Only tests, docs, `.github/`, agent config, or root tooling | none |
-| A fix to a change that is still pending on `main` | edit that pending changeset |
+| Your change                                                                                                                | Changeset                                                                                                       |
+| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Anything a user or operator of a deployed app can observe, including through a shared `@repo/*` package                    | `patch` or `minor`                                                                                              |
+| A catalog bump of a runtime `dependencies` entry of an app (`pnpm-workspace.yaml`)                                         | `patch` naming that app; Dependabot PRs get one committed for them when the `CHANGESET_BOT_TOKEN` secret is set |
+| An app or package file changed but nothing observable did: types, comments, a behavior-identical refactor, devDependencies | `pnpm changeset --empty -m '<reason>'`                                                                          |
+| Only tests, docs, `.github/`, agent config, or root tooling                                                                | none                                                                                                            |
+| A fix to a change that is still pending on `main`                                                                          | edit that pending changeset                                                                                     |
 
 `pnpm release:check` answers the question mechanically: `changedFilePatterns` in [`config.json`](config.json) excludes tests, top-level Markdown, `turbo.json`, Vitest config, and `@repo/vitest-config`. It runs in `pnpm run ci` and fails a PR that needs a changeset and has none. The **🦋 Changeset** comment on every PR shows the same verdict, the release notes the PR carries, and the fix.
 
@@ -37,11 +37,11 @@ Nothing here is published to npm. Every workspace is `"private": true`. **A rele
 
 ### Bump levels
 
-| Bump | For |
-|------|-----|
-| `patch` | Fixes, performance, hardening, runtime dependency and bundler bumps, `compatibilityDate` moves, copy |
+| Bump    | For                                                                                                                                                                     |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `patch` | Fixes, performance, hardening, runtime dependency and bundler bumps, `compatibilityDate` moves, copy                                                                    |
 | `minor` | New capability old clients survive (route, response field, UI feature), or anything an operator must act on or know (new secret, binding, or variable; changed default) |
-| `major` | A broken public contract: a removed or renamed route or field, stricter validation, a changed error envelope |
+| `major` | A broken public contract: a removed or renamed route or field, stricter validation, a changed error envelope                                                            |
 
 While the apps are `0.x`, a breaking change is `minor` and its first line starts with `**Breaking:**`. `major` means cutting 1.0.0: CI refuses it unless the PR carries the `release:major` label (locally: `CHANGESET_ALLOW_MAJOR=1`). Judge "breaking" against production, not against earlier commits of your own PR. `worker-api` is promoted before `front-app` and open tabs keep the old SPA, so a wire break ships in steps: add the new shape, move clients over, then remove the old one - the last step carries the breaking changeset.
 
@@ -108,13 +108,13 @@ Local preview of the version bump, without touching the tree: `pnpm release:stat
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---------|-----|
-| `release:check` says no changesets were found, but you added one | `git add` it: the check diffs tracked files against `origin/main` |
-| `origin/main is missing` | `git fetch origin main` |
-| `changesets(app-only)` | Replace the `@repo/*` name with the app(s) whose behavior changes |
-| `changesets(runtime-dependency)` | A catalog bump of an app's runtime dependency: add a `patch` changeset for that app, or `--empty` |
-| A Dependabot PR fails `release:check` | The `CHANGESET_BOT_TOKEN` Dependabot secret is expired or lacks access: renew it, or add the changeset to the branch by hand. Without the secret, Dependabot PRs pass with a warning and their bumps ship without a note |
-| The release PR only deletes empty changesets | It releases nothing; merge it to clear the queue |
+| Symptom                                                          | Fix                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `release:check` says no changesets were found, but you added one | `git add` it: the check diffs tracked files against `origin/main`                                                                                                                                                        |
+| `origin/main is missing`                                         | `git fetch origin main`                                                                                                                                                                                                  |
+| `changesets(app-only)`                                           | Replace the `@repo/*` name with the app(s) whose behavior changes                                                                                                                                                        |
+| `changesets(runtime-dependency)`                                 | A catalog bump of an app's runtime dependency: add a `patch` changeset for that app, or `--empty`                                                                                                                        |
+| A Dependabot PR fails `release:check`                            | The `CHANGESET_BOT_TOKEN` Dependabot secret is expired or lacks access: renew it, or add the changeset to the branch by hand. Without the secret, Dependabot PRs pass with a warning and their bumps ship without a note |
+| The release PR only deletes empty changesets                     | It releases nothing; merge it to clear the queue                                                                                                                                                                         |
 
 Pipeline internals, invariants, and recovery: [`.claude/rules/ops/release.md`](../.claude/rules/ops/release.md).

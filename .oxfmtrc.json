@@ -17,9 +17,6 @@
   "proseWrap": "preserve",
   "embeddedLanguageFormatting": "auto",
   "jsdoc": true,
-  "sortPackageJson": {
-    "sortScripts": true
-  },
   "sortImports": {
     "partitionByNewline": true,
     "newlinesBetween": false,
@@ -41,14 +38,14 @@
     // package.json field order is owned by `syncpack format` (`pnpm
     // deps:format`); its sort order differs from oxfmt's sortPackageJson.
     "**/package.json",
-    "**/*.md",
-    "**/*.markdown",
-    "**/*.mdx",
+    "**/AGENTS.md",
+    "**/CLAUDE.md",
     "**/*.yaml",
     "**/*.yml",
     ".claude/**",
     ".agents/**",
     ".vscode/**",
-    ".cursor/**"
+    ".cursor/**",
+    ".opencode/**"
   ]
 }

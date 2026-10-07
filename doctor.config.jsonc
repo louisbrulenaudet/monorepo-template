@@ -6,6 +6,7 @@
   "supplyChain": { "enabled": false },
   "ignore": {
     "rules": ["deslop/unused-dev-dependency"],
+    "files": [".cloudflare/**"],
   },
   "projects": ["front-app"],
 }

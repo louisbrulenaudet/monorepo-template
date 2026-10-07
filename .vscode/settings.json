@@ -37,7 +37,7 @@
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[markdown]": {
-    "editor.formatOnSave": false,
+    "editor.defaultFormatter": "oxc.oxc-vscode",
     "files.trimTrailingWhitespace": false
   },
   "[yaml]": {
@@ -63,7 +63,6 @@
     "**/dist/**",
     "**/.wrangler/**"
   ],
-  // Low-noise inlay hints (helps read Zod/Hono/TanStack inferred types).
   "js/ts.inlayHints.parameterNames.enabled": "literals",
   "js/ts.inlayHints.functionLikeReturnTypes.enabled": true,
   "js/ts.inlayHints.enumMemberValues.enabled": true,
@@ -79,15 +78,13 @@
     ".oxlintrc.json": "jsonc",
     "**/.vite-hooks/*": "shellscript"
   },
-  // unpkg is scoped to knip: the bare domain would trust any npm package.
+  // unpkg is scoped to @changesets/config: the bare domain would trust any npm package.
   "json.schemaDownload.trustedDomains": {
     "https://json.schemastore.org/": true,
     "https://react.doctor/schema/": true,
-    "https://unpkg.com/knip@": true,
-    "https://opencode.ai/": true
+    "https://unpkg.com/@changesets/config@": true
   },
-  // Exclude Vite-only configs from Vitest discovery; keep vitest.config.* so
-  // the explorer finds both .ts (front-*) and .mts (worker-*) packages.
+  // vite.config.ts is never a Vitest project here; only vitest.config.{ts,mts} are.
   "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,*.d.ts,**/vite.config.ts,**/dist/**,**/build/**}",
   "vitest.disableWorkspaceWarning": true,
   "files.trimTrailingWhitespace": true,

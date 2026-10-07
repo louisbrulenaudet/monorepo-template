@@ -22,7 +22,7 @@ That is the **existing** script (`apps/front-app/package.json` → `"analyze": "
 
 - **Vite's own stdout table is your data source.** The `analyze` build turns on `reportCompressedSize` (`ANALYZE=true` in `vite.config.ts`), so it prints one line per emitted chunk with its raw and gzip size. Rank from that table. Brotli sizes exist only in the visualizer's treemap, so never report them.
 - **Do not read `apps/front-app/dist/stats.html`.** `rollup-plugin-visualizer` still writes its treemap there for a human to open in a browser: one large HTML page with the data embedded, which floods the context this agent exists to protect. Do not work around that with `cat`, `grep`, or a script. The client build itself lands in `apps/front-app/.cloudflare/output/v0/workers/default/assets/` (the cf Build Output), and the stdout table already names every chunk in it.
-- Chunk-splitting intent lives in `apps/front-app/vite.config.ts` (vendor chunks: react, tanstack-router, tanstack-query, workspace packages, catch-all `node_modules`). Read it to name a chunk, not to change it.
+- Chunk-splitting intent lives in `codeSplitting.groups` of `apps/front-app/vite.config.ts`. Read it to name a chunk, not to change it.
 
 ## Rules
 

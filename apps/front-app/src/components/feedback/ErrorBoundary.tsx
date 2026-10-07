@@ -1,34 +1,33 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 import { RouteErrorFallback } from "#/components/feedback/RouteErrorFallback";
 
 export type ErrorBoundaryProps = Readonly<{
   children: ReactNode;
 }>;
 
-type ErrorBoundaryState = {
-  error: Error | null;
-};
+type ErrorBoundaryState = { caught: false } | { caught: true; error: unknown };
 
 export class ErrorBoundary extends Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {
-  override state: ErrorBoundaryState = { error: null };
+  override state: ErrorBoundaryState = { caught: false };
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { error };
-  }
-
-  override componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error("Uncaught error in React tree", error, info);
+  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
+    return { caught: true, error };
   }
 
   override render(): ReactNode {
-    const { error } = this.state;
+    const { state } = this;
 
-    if (error) {
+    if (state.caught) {
       return (
-        <RouteErrorFallback error={error} title="The application crashed." />
+        <main className="px-4">
+          <RouteErrorFallback
+            error={state.error}
+            title="The application crashed."
+          />
+        </main>
       );
     }
 

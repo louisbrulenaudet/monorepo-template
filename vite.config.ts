@@ -6,6 +6,8 @@ export default defineConfig({
       "pnpm exec oxlint --fix --no-error-on-unmatched-pattern",
       "pnpm exec oxfmt",
     ],
-    "*.{json,jsonc,css}": ["pnpm exec oxfmt --no-error-on-unmatched-pattern"],
+    "*.{json,jsonc,css,md}": [
+      "pnpm exec oxfmt --no-error-on-unmatched-pattern",
+    ],
   },
 });

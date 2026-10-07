@@ -1,9 +1,8 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
-import { devtools } from "@tanstack/devtools-vite";
+import { devtools as tanstackDevtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import { DevTools } from "@vitejs/devtools";
 import react from "@vitejs/plugin-react";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -83,7 +82,6 @@ function cspHeaders(apiBaseUrl: string, sentryDsn: string | undefined): string {
     "  Cache-Control: public, max-age=31536000, immutable",
     "",
     "/*",
-    "  Cache-Control: public, max-age=0, must-revalidate",
     `  Content-Security-Policy: ${csp}`,
     "  Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=()",
     "  Referrer-Policy: strict-origin-when-cross-origin",
@@ -161,24 +159,23 @@ export default defineConfig(({ command, mode }) => {
   assertProductionOriginEnv(mode, command);
 
   const plugins: PluginOption[] = [
-    devtools({
+    ...tanstackDevtools({
       consolePiping: { enabled: false },
       eventBusConfig: { enabled: false },
-    }),
-    DevTools({ embeddedVisibility: "passive" }),
+    }).filter(
+      (plugin) => plugin.name !== "@tanstack/devtools:event-client-setup",
+    ),
     tanstackRouter({
       autoCodeSplitting: true,
     }),
-    // Native (Rust) React Compiler via oxc-transform-react - no Babel pass.
-    react({ compiler: true }),
+    react({ compiler: { reportDiagnostics: true } }),
     tailwindcss(),
     cloudflare({ types: { generate: false } }),
     generatedBuildArtifactsPlugin(mode),
   ];
 
-  // Last, as the plugin requires. The build only injects debug IDs: the uncached
-  // CD step `sentry:sourcemaps` names the release and uploads, so a turbo cache
-  // hit cannot skip the upload and the auth token never reaches the build.
+  // Last, as the plugin requires. Upload is the uncached CD step
+  // `sentry:sourcemaps`: a cache hit cannot skip it; the build holds no token.
   plugins.push(
     sentryVitePlugin({
       telemetry: false,
@@ -189,22 +186,19 @@ export default defineConfig(({ command, mode }) => {
   );
 
   if (analyzeBundle) {
-    const bundleAnalyzePlugins = visualizer({
-      filename: "dist/stats.html",
-      gzipSize: true,
-      brotliSize: true,
-      open: false,
-    });
-
-    if (Array.isArray(bundleAnalyzePlugins)) {
-      plugins.push(...bundleAnalyzePlugins);
-    } else {
-      plugins.push(bundleAnalyzePlugins);
-    }
+    plugins.push(
+      visualizer({
+        filename: "dist/stats.html",
+        gzipSize: true,
+        brotliSize: true,
+        open: false,
+      }),
+    );
   }
 
   return {
     plugins,
+    devtools: { apply: "serve", embeddedVisibility: "passive", mcp: false },
     envDir,
     css: {
       devSourcemap: true,
@@ -219,7 +213,7 @@ export default defineConfig(({ command, mode }) => {
       sourcemap: mode === "development" ? "inline" : "hidden",
       reportCompressedSize: analyzeBundle,
       rolldownOptions: {
-        devtools: {},
+        ...(analyzeBundle ? { devtools: {} } : {}),
         onLog(level, log, log2) {
           if (
             level === "warn" &&
@@ -259,11 +253,6 @@ export default defineConfig(({ command, mode }) => {
                 name: "repo-dtos-common",
                 test: /packages[\\/]dtos-common[\\/]/,
                 priority: 10,
-              },
-              {
-                name: "vendor",
-                test: /node_modules/,
-                priority: 0,
               },
             ],
           },

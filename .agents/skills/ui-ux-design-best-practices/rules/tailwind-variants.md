@@ -40,9 +40,11 @@ tags: tailwind, variants, motion-reduce, motion-safe, starting-style, stacking, 
 
 ### Touch hover gating
 
+Tailwind v4 compiles `hover:`, `group-hover:`, and `peer-hover:` inside `@media (hover: hover)`, so a tap on a touch screen never leaves a hover style behind. Write plain `hover:`; stack `pointer-fine:` only when the effect must also skip coarse pointers.
+
 ```html
-<!-- Only apply hover on devices that support it (not touch screens) -->
-<div class="[@media(hover:hover)and(pointer:fine)]:hover:scale-105 transition-transform">
+<div class="transition-transform hover:scale-105">
+<div class="transition-transform pointer-fine:hover:scale-105">
 ```
 
 ### `@starting-style` via `starting:` Variant (v4 New)

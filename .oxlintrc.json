@@ -292,6 +292,27 @@
       }
     },
     {
+      "files": ["apps/front-*/src/components/ui/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "#/**",
+                  "!#/utils/**",
+                  "!#/components/ui/**",
+                  "@tanstack/*"
+                ],
+                "message": "components/ui/ holds primitives that import only #/utils/* and other primitives; a component that reads a hook, service, or config lives in src/components/<feature>/."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": [
         "**/*.test.{ts,tsx,js,jsx}",
         "**/tests/**/*.{ts,tsx,js,jsx}",

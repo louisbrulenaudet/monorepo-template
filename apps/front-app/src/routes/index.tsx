@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { healthQueryOptions } from "#/services/worker-api/health-query-options";
+import { HomePage } from "#/pages/HomePage";
 
 export const Route = createFileRoute("/")({
-  loader: ({ context: { queryClient } }) =>
-    queryClient.query({ ...healthQueryOptions, staleTime: "static" }),
+  component: HomePage,
 });

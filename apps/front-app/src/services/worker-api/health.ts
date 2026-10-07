@@ -3,15 +3,27 @@ import {
   HealthResponseSchema,
 } from "@repo/dtos-common/api";
 import { apiBaseUrl } from "#/config/env";
-import { fetchJsonWithSchema } from "#/utils/fetch-api";
+import { type FetchJsonOptions, fetchJsonWithSchema } from "#/utils/fetch-api";
 
-export async function getHealth(options?: {
-  signal?: AbortSignal;
-  timeoutMs?: number;
-}): Promise<HealthResponse> {
-  return fetchJsonWithSchema(
-    `${apiBaseUrl}/api/v1/health`,
+export const HEALTH_PATH = "/api/v1/health";
+
+export type HealthProbe = HealthResponse & {
+  requestId: string | null;
+  latencyMs: number;
+};
+
+export async function getHealth(
+  options?: FetchJsonOptions,
+): Promise<HealthProbe> {
+  const startedAt = performance.now();
+  const { data, requestId } = await fetchJsonWithSchema(
+    `${apiBaseUrl}${HEALTH_PATH}`,
     HealthResponseSchema,
     options,
   );
+  return {
+    ...data,
+    requestId,
+    latencyMs: Math.round(performance.now() - startedAt),
+  };
 }

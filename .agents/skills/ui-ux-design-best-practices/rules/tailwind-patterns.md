@@ -127,6 +127,6 @@ Keep delays short - 30–80ms between items. Longer delays make the interface fe
 | `animate-spin` on an `<svg>` directly | Wrap in `<div class="animate-spin">` - SVG lacks hardware acceleration |
 | `blur-2xl` or heavier in animations | Keep blur at `blur-xs` or `blur-sm`; heavy blur is expensive in Safari |
 | `will-change-transform` on every element | Last resort only - over-use degrades performance |
-| Hover without `[@media(hover:hover)]` guard | Touch triggers hover on tap; gate with the media query |
+| A manual `[@media(hover:hover)]:hover:` guard | v4 `hover:` is already inside `@media (hover: hover)`; write plain `hover:` (add `pointer-fine:` to also skip coarse pointers) |
 | `ease-in` on enter/exit | Use `ease-out` - `ease-in` starts slow and feels unresponsive |
 | `duration-500` on UI elements | UI stays under `duration-300`; use longer only for marketing/explanatory motion |

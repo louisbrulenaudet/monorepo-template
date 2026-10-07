@@ -15,12 +15,17 @@ Path-scoped rules under `src/`: `frontend/react` (all of `src/**`: layout, compo
 apps/front-app/
 ├── src/
 │   ├── routes/          # TanStack file routes (loaders, guards - thin)
-│   ├── pages/           # Page UI (imported by *.lazy.tsx)
+│   ├── pages/           # Page UI (the route's `component`)
 │   ├── services/worker-api/   # <feature>.ts + <feature>-query-options.ts
 │   ├── hooks/           # use-<feature>.ts
-│   ├── components/ui/   # Reusable primitives
+│   ├── components/
+│   │   ├── ui/          # Primitives
+│   │   ├── feedback/    # App-shell states: ErrorBoundary, RouteErrorFallback, NotFoundFallback
+│   │   ├── <feature>/   # Feature components + their content (health/, onboarding/)
+│   │   ├── icons/       # <Name>Icon.tsx, aria-hidden
+│   │   └── devtools/    # AppDevtools (dev only)
 │   ├── config/          # env.ts, query-client.ts, instrument.ts, sentry.ts, sentry-tracing.ts
-│   ├── utils/           # fetch-api, client-safe-error
+│   ├── utils/           # fetch-api, client-safe-error, cx
 │   └── enums/           # Frontend-only value sets (`as const`)
 ├── tests/               # Vitest suites mirroring src/ (Node; DOM suites opt in per file)
 ├── vitest.config.ts     # defineNodeConfig from @repo/vitest-config
@@ -36,27 +41,30 @@ apps/front-app/
 
 | Task | Location |
 |------|---------|
-| New page | `src/pages/<Page>.tsx` + `src/routes/<path>.tsx` + `src/routes/<path>.lazy.tsx` |
+| New page | `src/pages/<Page>.tsx` + `src/routes/<path>.tsx` (`component: <Page>`) |
 | Typed API call | `src/services/worker-api/<feature>.ts` |
 | Query options | `src/services/worker-api/<feature>-query-options.ts` |
-| UI primitive | `src/components/ui/<Name>.tsx` |
+| UI primitive | `src/components/ui/<Name>.tsx` (class-only variants as `<name>-classes.ts`) |
+| Feature component | `src/components/<feature>/<Name>.tsx` (rule `frontend/react`) |
+| Home page | `src/pages/HomePage.tsx`: one screen, no scroll; a new demo gets its own route, reached by its URL only - never linked from `HomePage` |
 | Data hook | `src/hooks/use-<feature>.ts` |
 | API base URL | `src/config/env.ts` (`VITE_API_BASE_URL`) |
-| Sentry | `src/config/sentry.ts`, initialized by `src/config/instrument.ts`, which must stay the first import of `main.tsx`, in its own import block. It reads `VITE_SENTRY_DSN` directly, not through `env.ts`, so an unset DSN folds the SDK out of the bundle. `VITE_APP_ENVIRONMENT` (`AppEnvironment`, matches worker-api) is read in `src/config/env.ts`. Router tracing loads lazily from `sentry-tracing.ts` (its own `sentry-vendor~` chunk). Query/mutation errors other than `FetchApiError` are reported through `createQueryClient` in `query-client.ts`. Builds only inject debug IDs; CD uploads the maps (`sentry:sourcemaps`). The error screen (`RouteErrorFallback`) shows the Sentry event id of the error it renders as `Error id`: `beforeSend` (`rememberSentryEventId`) keys each sent event's id by its error object, and the screen reads it with `useSyncExternalStore`, because React reports a caught error only after the fallback has rendered. Not `lastEventId()`: it is global, so it moves with every later error |
+| Sentry | `src/config/sentry.ts`, initialized by `src/config/instrument.ts`, which must stay the first import of `main.tsx`, in its own import block. `VITE_APP_ENVIRONMENT` (`AppEnvironment`, matches worker-api) is read in `src/config/env.ts`. Router tracing loads lazily from `sentry-tracing.ts` (its own `sentry-vendor~` chunk). Query/mutation errors other than `FetchApiError` are reported through `createQueryClient` in `query-client.ts`. `ResponseSchemaError` events carry worker-api's `request_id` tag, so one Sentry search spans both projects. Builds only inject debug IDs; CD uploads the maps (`sentry:sourcemaps`). The error screen (`RouteErrorFallback`) shows the Sentry event id of the error it renders as `Error id`: `beforeSend` (`rememberSentryEventId`) keys each sent event's id by its error object, and the screen reads it with `useSyncExternalStore`, because React reports a caught error only after the fallback has rendered. Not `lastEventId()`: it is global, so it moves with every later error |
 | Frontend-only value set | `src/enums/<feature>.ts` |
 | Shared value set | `packages/enums-common/src/index.ts` |
 | SPA / deploy config | `cloudflare.config.ts` (Worker name, `ENVIRONMENT`, assets, observability per mode), `vite.config.ts` (ports, build, `_headers` CSP). No `types` script: nothing here reads `Env` |
-| API request id, fetch timeout | `fetch-api.ts` reads the gateway's `X-Request-Id` response header into `FetchApiError.requestId`; the SPA never sends one. Keep `DEFAULT_TIMEOUT_MS` above the gateway's timeout, or the SPA aborts before the `504` and its request id arrive (rule `backend/hono-gateway`) |
+| API request id, fetch timeout | `fetch-api.ts` reads the gateway's `X-Request-Id` response header into the result's `requestId`, or `FetchApiError.requestId` on an error; the SPA never sends one. Keep `DEFAULT_TIMEOUT_MS` above the gateway's timeout, or the SPA aborts before the `504` and its request id arrive (rule `backend/hono-gateway`) |
 | Unit tests | `tests/` mirroring `src/` + `vitest.config.ts` (`@repo/vitest-config`) |
+| Devtools (dev only) | TanStack Devtools panel in `src/components/devtools/AppDevtools.tsx`; Vite DevTools from the top-level `devtools` key in `vite.config.ts`. Agents read router, query, and source state without the panels: skill `run-app` |
 
 ## Adding a Feature
 
 1. Schemas in `packages/dtos-common/src/api/<feature>.ts`.
 2. Route in `apps/worker-api/src/routes/<feature>.ts`.
-3. Service `src/services/worker-api/<feature>.ts` with `fetchJsonWithSchema` (`src/utils/fetch-api.ts`).
+3. Service `src/services/worker-api/<feature>.ts` with `fetchJsonWithSchema` (`src/utils/fetch-api.ts`). Services return data only: the request id reaches the UI through `FetchApiError` (non-OK status) or `ResponseSchemaError` (body fails the schema). Health is the one exception: it returns the request id as diagnostic data.
 4. Query options in `<feature>-query-options.ts` if using TanStack Query.
-5. Hook `src/hooks/use-<feature>.ts`.
-6. Page + eager/lazy routes under `src/pages/` and `src/routes/`.
+5. Hook `src/hooks/use-<feature>.ts` only when it derives state from the query (as `use-api-health` does); otherwise the page calls `useQuery(opts)` / `useSuspenseQuery(opts)` directly.
+6. Page under `src/pages/` and its route file under `src/routes/`.
 7. `pnpm run ci`.
 
 Local env: `cp .env.example .env` (and `.env.production.example` to `.env.production` for prod builds). Every `.env*` file here holds public `VITE_*` values only (root `AGENTS.md`, Environment).
@@ -71,4 +79,4 @@ Local env: `cp .env.example .env` (and `.env.production.example` to `.env.produc
 | `pnpm -w turbo run <upload\|deploy> --filter=front-app --force` | `cf workers versions create --prebuilt --mode production` (no traffic) / `cf deploy --prebuilt --mode production` (upload + 100%), each after `build` and `check-types`; `--force` skips cache reads, so it never ships a Build Output restored from the remote cache that PR runs can write. Promote or roll back with `cf workers deployments create` (root `README.md`, Releases and deploys) |
 | `pnpm -w turbo run check-types --filter=front-app` | Route generation + typecheck |
 | `pnpm -w react-doctor:changed` | React Doctor offline changed-scope scan - run after React edits (deep workflow: skill `react-doctor`) |
-| `pnpm analyze` | Bundle stats (`dist/stats.html`) |
+| `pnpm analyze` | Bundle stats (`dist/stats.html`) and the Rolldown DevTools session, which only this build records |

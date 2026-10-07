@@ -13,7 +13,7 @@ FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // .file_path // empt
 
 case "$FILE" in
   *.d.ts) exit 0 ;;
-  *.ts | *.tsx | *.js | *.jsx | *.mjs | *.cjs | *.json | *.jsonc | *.css) ;;
+  *.ts | *.tsx | *.js | *.jsx | *.mjs | *.cjs | *.json | *.jsonc | *.css | *.md) ;;
   *) exit 0 ;;
 esac
 

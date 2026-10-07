@@ -2,13 +2,13 @@
 
 Shared TypeScript presets. Every app and library extends one and overrides only what it must (usually `types` and `include`), never forking compiler options. All of them inherit the strict core in `strict.json`, which is never extended directly.
 
-| Preset | For |
-|--------|-----|
-| `workers.json` | Cloudflare Worker apps (a role alias of `library.json`) |
-| `library.json` | Runtime-neutral libraries shared by browsers and Workers |
-| `vite-react.json` | React + Vite SPAs |
-| `vite-node.json` | The Node side of a Vite project (`vite.config.ts`) |
-| `tests.json` | Mixin appended after a runtime preset in `tests/tsconfig.json` |
+| Preset            | For                                                            |
+| ----------------- | -------------------------------------------------------------- |
+| `workers.json`    | Cloudflare Worker apps (a role alias of `library.json`)        |
+| `library.json`    | Runtime-neutral libraries shared by browsers and Workers       |
+| `vite-react.json` | React + Vite SPAs                                              |
+| `vite-node.json`  | The Node side of a Vite project (`vite.config.ts`)             |
+| `tests.json`      | Mixin appended after a runtime preset in `tests/tsconfig.json` |
 
 ## Usage
 
@@ -19,7 +19,7 @@ A Worker gets `Env` and its runtime types from `.cloudflare/types/index.d.ts`, w
 {
   "extends": "@repo/typescript-config/workers.json",
   "compilerOptions": { "types": [] },
-  "include": ["src/**/*.ts", "cloudflare.config.ts", ".cloudflare/types"]
+  "include": ["src/**/*.ts", "cloudflare.config.ts", ".cloudflare/types"],
 }
 ```
 

@@ -10,8 +10,8 @@ CSS-first v4: there is no `tailwind.config.js` / `postcss.config.js`. Motion and
 
 ## Engine and source detection
 
-- Single entry `@import "tailwindcss";` in `src/index.css` (canonical: `apps/front-app/src/index.css`), built by `@tailwindcss/vite` with Lightning CSS built in - no Autoprefixer/PostCSS step. Plugin order: [vite-config.mdc](vite-config.mdc).
-- v4 detects sources automatically from the build's working directory (per app here), skipping `.gitignore`, `node_modules`, binaries, CSS, and lockfiles. The current `@source "../index.html"` + `@source "./**/*.{ts,tsx}"` defensively restate that default; keep them so detection stays cwd-independent.
+- Single entry `@import "tailwindcss" source(none);` in `src/index.css` (canonical: `apps/front-app/src/index.css`), built by `@tailwindcss/vite` with Lightning CSS built in - no Autoprefixer/PostCSS step. Plugin order: [vite-config.mdc](vite-config.mdc).
+- `source(none)` turns off v4's automatic detection, which starts from the build's working directory and would also scan `tests/`, `README.md`, and `AGENTS.md` (prose there can emit stray utilities). `@source "../index.html"` + `@source "./**/*.{ts,tsx}"` are then the complete allowlist, so detection stays cwd-independent.
 - Register a workspace package only when it ships Tailwind classes this app renders, pointing at its real source (`@source "../../../packages/<pkg>/src";`), not the `node_modules` symlink. `@repo/dtos-common` / `@repo/enums-common` are class-free: never add them.
 - `@source not "<path>";` excludes a large non-Tailwind directory. `@source inline("...")` safelists classes that never appear as literals - a last resort; prefer static strings.
 
@@ -21,6 +21,7 @@ CSS-first v4: there is no `tailwind.config.js` / `postcss.config.js`. Motion and
 - `@keyframes` for an `--animate-*` token nest inside `@theme`, so they travel with the token.
 - `@theme inline` when a token's value is itself a `var(...)` (semantic theming), so the utility resolves per scope instead of baking in one value.
 - Font stacks are tokens (`@theme { --font-sans: ... }`, which preflight applies to `html`), never `font-family` on `:root`.
+- The first `@theme` resets the default palette (`--color-*: initial`): only the semantic `@theme inline` colors generate utilities, so `no-unknown-classes` rejects `text-white`, `bg-red-500`, and every other single-theme palette class. A new tint starts as a semantic token.
 
 ## Theming and dark mode
 
@@ -41,13 +42,20 @@ CSS-first v4: there is no `tailwind.config.js` / `postcss.config.js`. Motion and
 ## Custom styles
 
 - `@apply` lives only in the global `index.css`, base element styles in `@layer base`; no per-feature `.css` files that `@apply`.
-- `@layer base` holds true global resets only (`body`, `a`, …). App-shell layout (the `max-w-*` / `p-8` wrapper) and per-page type sizing are JSX utilities - the shell on the `RootLayout` wrapper in `__root.tsx`, heading sizes on the page's `<h1>` - never `#root` / `h1` rules in base CSS.
+- `@layer base` holds true global resets only (`body`, `a`, …). App-shell layout (the `max-w-frame` wrapper) and per-page type sizing are JSX utilities - the shell on the `RootLayout` wrapper in `__root.tsx`, heading sizes on the page's `<h1>` - never `#root` / `h1` rules in base CSS.
 - New reusable utilities → `@utility name { ... }` (works with variants); new variants → `@custom-variant`.
+- Every CSS loop takes `motion-safe:` (or `motion-reduce:` to stop it). Keep auto-playing motion under 5 s (finite iterations): a longer loop needs an on-page pause control under WCAG 2.2.2, which `prefers-reduced-motion` alone does not satisfy.
 - A separately bundled stylesheet (CSS module, scoped `<style>`) that uses `@apply` / `@variant` must first `@reference "<entry>.css";` - but prefer plain `var(--color-*)` there, because `@reference` reprocesses the file and slows builds.
 
 ## Classes in components
 
 - Utilities in JSX; factor repetition into `src/components/ui/` primitives composed with `cx()` (see `Button.tsx`, `Card.tsx`).
+- A primitive's `className` adds layout and placement only, never a utility that overrides one of its own: `cx()` only joins strings and v4 emits utilities in stylesheet order, so `<Button className="px-2">` silently loses to `px-5`. A visual change is a new key in the variant `Record`, and a `<Link>` styled as a button takes `className={buttonClasses(...)}`.
+- Type sizes: `text-heading` / `text-title` for `h1`s, `text-ui` for button labels, `text-caption` for the eyebrow and card titles, `text-micro` for chips; built-in `text-xs` / `text-sm` for body copy inside cards and fallbacks, `text-base` / `text-lg` for the page intro.
 - Variants are a `Record<Variant, string>` of complete, static class strings. Never build a class by interpolation (`` `bg-${color}-500` ``): the scanner reads source as plain text and will not emit it.
 - A runtime value goes in `style` as a CSS variable, consumed with the v4 parentheses shorthand: `className="bg-(--brand)"` (= `bg-[var(--brand)]`; not v3 `bg-[--brand]`).
 - **Every `className` token must be a Tailwind utility or a `@theme` token** - `no-unknown-classes` rejects typos, hallucinated utilities, and raw CSS class names; introduce a semantic token or an `@utility` instead. Use the canonical shorthands the linter enforces (`size-2.5`, not `h-2.5 w-2.5`); `pnpm lint:fix` fixes the fixable ones, and `oxfmt` owns class order.
+- Reuse the `index.css` `@theme` tokens and `@utility` classes before an arbitrary value. Status colors are `success` / `danger` (status dots too); dashed chips come from `chipClasses()` (`src/components/ui/chip-classes.ts`).
+- Transitions ease out by default: `@theme` sets `--default-transition-timing-function` to `--ease-out-quad`, so add an `ease-*` class only to pick another curve.
+- `bg-card` measures 1.02:1 against `bg-background` in light mode, so a hover or selected state uses `bg-secondary`, never `bg-card`.
+- White text sits only on `bg-primary-solid` / `hover:bg-primary-solid-hover` with `text-primary-foreground` (4.66:1 and 5.54:1 in both schemes), never on `bg-primary`: `primary` lightens in dark mode to 3.06:1 against white, below AA, and no lint catches it.

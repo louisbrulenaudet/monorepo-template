@@ -40,7 +40,10 @@ import * as z from "zod/mini";
 
 export const AppEnvironmentSchema = z.enum(AppEnvironment);
 
-const deployedEnvironments = [AppEnvironment.STAGING, AppEnvironment.PRODUCTION] as const;
+const deployedEnvironments = [
+  AppEnvironment.STAGING,
+  AppEnvironment.PRODUCTION,
+] as const;
 export const DeployedEnvironmentSchema = z.enum(deployedEnvironments);
 ```
 

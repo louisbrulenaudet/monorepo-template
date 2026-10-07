@@ -107,7 +107,7 @@ Unquoted backticks and `$( … )` split segments like any separator, and `guard_
 
 ### OXC invariants for `quality/` hooks
 
-`check-changed.sh` formats code plus JSON/JSONC/CSS, then lints only JS/TS-family code. The lint step holds four constraints that must not be relaxed:
+`check-changed.sh` formats code plus JSON/JSONC/CSS/Markdown, then lints only JS/TS-family code. The lint step holds four constraints that must not be relaxed:
 
 - **Runs oxlint from the repo root** on a root-relative path, and gives `--config` a root-relative path too. `.oxlintrc.json` resolves `settings.better-tailwindcss.entryPoint` against the process CWD, so linting from anywhere else changes the diagnostics and diverges from `pnpm run ci`; and an **absolute** `--config` stops the `overrides[].files` globs matching, which reports every PascalCase component under `apps/front-*/src/**/*.tsx` as a `unicorn/filename-case` violation.
 - **Exports `SYNCKIT_TIMEOUT=120000` by default.** Tailwind canonicalization starts a sync worker that can exceed its 30-second default on low-power development machines. The post-edit hook `timeout` is therefore `150` in both `.claude/settings.json` and `.cursor/hooks.json`: at the old `30`, the harness killed the hook before this budget ever applied, and a timed-out `PostToolUse` hook drops its diagnostics silently.

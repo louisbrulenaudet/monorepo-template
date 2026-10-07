@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getClientSafeErrorDetails } from "#/utils/client-safe-error";
-import { FetchApiError } from "#/utils/fetch-api";
+import { FetchApiError, ResponseSchemaError } from "#/utils/fetch-api";
 
 describe("getClientSafeErrorDetails", () => {
   it("does not echo raw Error.message", () => {
@@ -20,5 +20,14 @@ describe("getClientSafeErrorDetails", () => {
 
     expect(details.message).not.toContain("upstream");
     expect(details.requestId).toBe("req-uuid");
+  });
+
+  it("surfaces ResponseSchemaError requestId without the schema issues", () => {
+    const details = getClientSafeErrorDetails(
+      new ResponseSchemaError("req-schema", new Error("expected secret_field")),
+    );
+
+    expect(details.message).not.toContain("secret_field");
+    expect(details.requestId).toBe("req-schema");
   });
 });
