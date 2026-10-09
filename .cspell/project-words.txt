@@ -53,6 +53,7 @@ gapless
 geolocation
 getsentry
 github
+GOCACHE
 grayscale
 hardlinks
 heredocs
@@ -88,6 +89,7 @@ mousemove
 mozilla
 navigations
 networkidle
+nodecount
 nohup
 nonblocking
 nosniff

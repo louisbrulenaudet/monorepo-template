@@ -22,8 +22,10 @@ type Deployment = {
   exports: { default?: WorkerEntrypointExport };
 };
 
-const SAMPLED_TRACES: Observability = {
+const DEPLOYED_OBSERVABILITY: Observability = {
   enabled: true,
+  redactQueryString: true,
+  issues: { enabled: true },
   traces: { enabled: true, headSamplingRate: 0.01 },
 };
 
@@ -56,7 +58,7 @@ const DEPLOYMENTS: Record<
     corsOrigins: "",
     sentryDsn: bindings.secret(),
     previewUrls: false,
-    observability: SAMPLED_TRACES,
+    observability: DEPLOYED_OBSERVABILITY,
     ...EDGE_CACHE,
   },
   production: {
@@ -65,7 +67,7 @@ const DEPLOYMENTS: Record<
     corsOrigins: "",
     sentryDsn: bindings.secret(),
     previewUrls: true,
-    observability: SAMPLED_TRACES,
+    observability: DEPLOYED_OBSERVABILITY,
     ...EDGE_CACHE,
   },
 };
@@ -81,6 +83,8 @@ const PREVIEW: Deployment = {
   sentryDsn: bindings.text(""),
   observability: {
     enabled: true,
+    redactQueryString: true,
+    issues: { enabled: true },
     logs: { enabled: true, invocationLogs: true, persist: true },
     traces: { enabled: true, headSamplingRate: 1, persist: true },
   },

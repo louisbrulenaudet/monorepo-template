@@ -1,11 +1,11 @@
 ---
 name: cf
-description: "USE WHEN: running, finding, or troubleshooting Cloudflare CLI (`cf`) commands in this repo - dev servers, builds and their Build Output, `Env` types, startup profiling, local KV/D1/R2 data, the commands that still need Wrangler, or the cf equivalent of a Wrangler habit. DO NOT USE WHEN: editing application code."
+description: "USE WHEN: running, finding, or troubleshooting Cloudflare CLI (`cf`) commands in this repo - dev servers, builds and their Build Output, `Env` types, startup profiling, production profiles, Workers Issues, and telemetry, local KV/D1/R2 data, the commands that still need Wrangler, or the cf equivalent of a Wrangler habit. DO NOT USE WHEN: editing application code."
 ---
 
 # Cloudflare CLI (cf)
 
-`cf` (`cf@1.0.0-beta.5`, exact catalog pin) replaces Wrangler for dev, build, types, and deploy. Each app is configured by a typed `apps/<app>/cloudflare.config.ts` and built through the Cloudflare Vite plugin 2.0 beta (`apps/<app>/vite.config.ts`). `cf` is a devDependency of the root and of each app: run it through the package scripts or `pnpm --filter=<app> exec cf …`, never a global install. The beta changes between releases, so the installed `--help` beats memory and these notes.
+`cf` (`cf@1.0.0-beta.13`, exact catalog pin) replaces Wrangler for dev, build, types, and deploy. Each app is configured by a typed `apps/<app>/cloudflare.config.ts` and built through the Cloudflare Vite plugin 2.0 beta (`apps/<app>/vite.config.ts`). `cf` is a devDependency of the root and of each app: run it through the package scripts or `pnpm --filter=<app> exec cf …`, never a global install. The beta changes between releases, so the installed `--help` beats memory and these notes.
 
 ## Find the command
 
@@ -26,6 +26,14 @@ Run from the repo root; each script runs in its app directory, next to `cloudfla
 | `Env` types | `pnpm types` (`cf workers types`, worker-api) | The turbo `types` task also runs before `check-types`; front-app has type generation off |
 | Startup profile | `pnpm --filter=worker-api exec cf workers check --prebuilt --mode production`, after a build | JSON bundle size and startup timings; writes `worker-startup.cpuprofile` (gitignored). Needs a Worker entrypoint, so not front-app |
 | Deploy, upload | `pnpm run deploy`, `pnpm run upload` | Humans and CD only |
+
+## Production (read-only)
+
+Allowed during a production investigation the user asked for; hand the command over when the sandbox or a missing `cf auth login` blocks it. Run `pnpm exec cf …` from the root: in an app directory cf reads the app's `.env`, which the sandbox denies.
+
+- **Profile**: take the serving `version_id` from the first entry of `cf workers deployments list --worker <app>-production`, never `latest` (CD uploads and Previews create newer versions that serve nothing). Then `cf workers versions profile <version-id> --worker-id <app>-production --duration-ms 10000 --profile-type cpu > "$TMPDIR/<app>.pprof"`, or `heap` for allocations in the window (not retained memory). The version needs live traffic during the capture.
+- **Read**: `GOCACHE="$TMPDIR/go-build" go tool pprof -top -nodecount=30 <file>` (the sandbox denies Go's default cache). Check what is believed off: `sentryMiddleware` stays registered when `SENTRY_DSN` is empty.
+- **Telemetry**: the `cloudflare-observability` MCP first; without its OAuth (routines, CI): `cf o11y issues list --service <app>-production`, `cf o11y issues occurrences <issue-id>`, `cf o11y telemetry query --body '<json>'`.
 
 ## Modes and Build Output
 
