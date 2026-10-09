@@ -19,7 +19,7 @@
     "cf": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:vitest4"
+    "vitest": "catalog:"
   },
   "keywords": [
     "api",

@@ -8,14 +8,14 @@ catalog:
   '@changesets/changelog-github': ^1.0.1
   '@changesets/cli': ^3.0.3
   '@cloudflare/vite-plugin': 2.0.0-beta.sha-ad79608dd
-  '@cloudflare/vitest-plugin': ^1.3.7
+  '@cloudflare/vitest-plugin': ^1.4.0
   '@hono/cli': 0.2.0-next.9
   '@hono/zod-validator': ^0.9.1
   '@playwright/cli': ^0.1.22
   '@sentry/cli': ^3.8.0
-  '@sentry/cloudflare': 11.4.0
-  '@sentry/hono': 11.4.0
-  '@sentry/react': 11.4.0
+  '@sentry/cloudflare': 11.6.0
+  '@sentry/hono': 11.6.0
+  '@sentry/react': 11.6.0
   '@sentry/vite-plugin': ^5.4.1
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
@@ -40,7 +40,7 @@ catalog:
   '@vitejs/devtools-vitest': ^0.7.6
   '@vitest/ui': ^5.0.3
   '@vitejs/plugin-react': ^6.1.2
-  cf: 1.0.0-beta.13
+  cf: 1.0.0-beta.14
   cross-env: ^10.1.0
   cspell: ^10.3.6
   eslint-plugin-better-tailwindcss: ^4.9.0
@@ -61,17 +61,11 @@ catalog:
   tailwindcss: ^4.3.3
   turbo: 2.11.7
   typescript: ^7.0.2
-  vite: ^8.3.3
+  vite: ^8.3.4
   vite-plus: ^1.1.0
   vitest: ^5.0.3
-  wrangler: ^4.148.0
+  wrangler: ^4.149.0
   zod: ^4.6.5
-
-# Temporary: @cloudflare/vitest-plugin still pins vitest ^4.1.0. Once it supports v5,
-# move the Workers apps back to `catalog:` and delete this group.
-catalogs:
-  vitest4:
-    vitest: ^4.1.11
 
 # Transitive '*' ranges would otherwise pull the newest @types/node major, ahead of the Node 24 engine.
 overrides:

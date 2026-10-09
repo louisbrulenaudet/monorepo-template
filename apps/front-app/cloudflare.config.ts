@@ -11,8 +11,9 @@ type Deployment = {
   observability: Observability;
 };
 
-const SAMPLED_TRACES: Observability = {
+const DEPLOYED_OBSERVABILITY: Observability = {
   enabled: true,
+  redactQueryString: true,
   traces: { enabled: true, headSamplingRate: 0.01 },
 };
 
@@ -34,13 +35,13 @@ const DEPLOYMENTS: Record<
     name: "front-app-staging",
     environment: "staging",
     previewUrls: false,
-    observability: SAMPLED_TRACES,
+    observability: DEPLOYED_OBSERVABILITY,
   },
   production: {
     name: "front-app-production",
     environment: "production",
     previewUrls: true,
-    observability: SAMPLED_TRACES,
+    observability: DEPLOYED_OBSERVABILITY,
   },
 };
 

@@ -19,7 +19,7 @@ paths:
 - `compatibilityDate` 2026-08-04 or later, so Node.js compatibility is on by default; never add `nodejs_compat` / `nodejs_compat_v2` to `compatibilityFlags`.
 - A Worker with code sets `entrypoint` from `import * as entrypoint from "./src/index.ts" with { type: "cf-worker" }` (the shared presets set `allowImportingTsExtensions`). The assets-only `front-app` has no `entrypoint` and sets `assets: { notFoundHandling: "single-page-application" }`.
 - `previewUrls: true` in production only - Previews need it. It is applied by `cf workers triggers deploy` (or a full `cf deploy`), never by `cf workers versions create` / `cf workers deployments create`, which is all CD runs; it also exposes production Version URLs, and Preview URLs stay public until Cloudflare Access guards the `front-app` ones (never the gateway's) ([../ops/previews.md](../ops/previews.md)). `workersDev` defaults to `true`; set `false` only once custom domains serve the Worker.
-- Observability per deployment: development samples logs and traces at 1; staging and production trace at `headSamplingRate: 0.01`; the `worker-api` Preview persists logs and traces at 1, the `front-app` Preview keeps production's. The Sentry sampler mirrors these ([hono-gateway.md](hono-gateway.md)).
+- Observability per deployment: development samples logs and traces at 1; staging and production trace at `headSamplingRate: 0.01`; the `worker-api` Preview persists logs and traces at 1, the `front-app` Preview keeps production's. Keep `redactQueryString: true` on every deployed mode: query strings can carry tokens. The Sentry sampler mirrors these ([hono-gateway.md](hono-gateway.md)).
 - Porting a Wrangler config: env blocks → modes, `previews` block → the `ctx.isPreview` branch, `vars` → `bindings.text()`, `secrets.required` → `bindings.secret()`, `version_metadata` → `bindings.versionMetadata()`, `observability` / `assets` / `limits` keys → camelCase under `worker`; `minify`, `upload_source_maps`, `dev.port`, `inspector_port` → `vite.config.ts`.
 
 ## Modes
@@ -63,5 +63,5 @@ paths:
 
 - `limits.cpuMs`: CPU guard (default 30000, max 300000); lower for thin workers, raise for heavy routes.
 - `placement`: `{ mode: "smart" }` or a targeted `region` / `host` / `hostname`, only for workers fronting a centralized backend (DB / Hyperdrive); on a pure edge gateway it only adds latency.
-- `logpush: true` with an account Logpush destination, for long-term retention; `observability.logs.invocationLogs: false` trims per-request logs at high traffic.
+- `logpush: true` with an account Logpush destination, for long-term retention; `observability.logs.invocationLogs: false` or a lower `logs.headSamplingRate` trims billed ingest at high traffic.
 - Assets-only `front-app`: performance comes from the generated `_headers` ([vite-config.md](../frontend/vite-config.md)); `assets.runWorkerFirst` and `bindings.assets()` apply only once the app has an `entrypoint`.
