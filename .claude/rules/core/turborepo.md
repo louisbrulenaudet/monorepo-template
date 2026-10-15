@@ -7,8 +7,7 @@ paths:
 
 Root `turbo.json` task `description`s say what each task does; the why is here. Tags: [boundaries.md](boundaries.md); CI invariants: [../ops/ci.md](../ops/ci.md).
 
-**Docs, in order:** `node_modules/turbo/schema.json` (every key and `futureFlags` entry for the pinned version), `node_modules/turbo/docs/` or `pnpm turbo docs <query>` (version-matched; the upstream-locked `turborepo` skill points there), Context7 `/vercel/turborepo`, then `turborepo.dev`. `agentGuidance: false` stops turbo writing its own pointer block into root `AGENTS.md`, which would cost context every session.
-
+**Docs, in order:** `node_modules/turbo/schema.json` (every key and `futureFlags` entry for the pinned version), `node_modules/turbo/docs/` or `pnpm turbo docs <query>` (version-matched; the upstream-locked `turborepo` skill points there), Context7 `/vercel/turborepo`, then `turborepo.dev`.
 ## Task graph
 
 - **`transit` is a no-op edge** (transit-node pattern): `check-types` and `test` depend on `transit`, not `^check-types`, so packages run in parallel yet invalidate when a dependency's source changes. App-to-app service bindings are not package dependencies: a Worker-name string binding reads nothing from the callee and needs no edge; whether typed cross-Worker RPC adds a `<callee>#transit` edge is decided with the first `worker-*` ([service-bindings.md](../backend/service-bindings.md)).

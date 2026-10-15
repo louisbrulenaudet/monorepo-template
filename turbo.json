@@ -1,6 +1,5 @@
 {
   "$schema": "./node_modules/turbo/schema.json",
-  "agentGuidance": false,
   "futureFlags": {
     "affectedUsingTaskInputs": true,
     // Off on purpose - see core/turborepo (drops dependents for transit tasks).

@@ -5,11 +5,11 @@ description: "USE WHEN: running, finding, or troubleshooting Cloudflare CLI (`cf
 
 # Cloudflare CLI (cf)
 
-`cf` (`cf@1.0.0-beta.13`, exact catalog pin) replaces Wrangler for dev, build, types, and deploy. Each app is configured by a typed `apps/<app>/cloudflare.config.ts` and built through the Cloudflare Vite plugin 2.0 beta (`apps/<app>/vite.config.ts`). `cf` is a devDependency of the root and of each app: run it through the package scripts or `pnpm --filter=<app> exec cf …`, never a global install. The beta changes between releases, so the installed `--help` beats memory and these notes.
+`cf` (exact catalog pin) replaces Wrangler for dev, build, types, and deploy. Each app is configured by a typed `apps/<app>/cloudflare.config.ts` and built through the Cloudflare Vite plugin 2.0 beta (`apps/<app>/vite.config.ts`). `cf` is a devDependency of the root and of each app: run it through the package scripts or `pnpm --filter=<app> exec cf …`, never a global install. The beta changes between releases, so the installed `--help` beats memory and these notes.
 
 ## Find the command
 
-1. `pnpm exec cf cli search "<task>"` - local search, top 5 matches as JSON. Describe the action and the resource type (`list kv keys`, `apply d1 migrations`), never names, IDs, domains, or tokens: the query travels with telemetry when telemetry is on.
+1. `pnpm exec cf cli search "<task>"` - local search, top 5 matches as JSON. Describe the action and the resource type (`list kv keys`, `apply d1 migrations`), never names, IDs, domains, or tokens: the query travels with telemetry when telemetry is on. For a Cloudflare docs page, `pnpm exec cf docs search "<question>"` returns ranked URLs as JSON under the same anonymous-query rule.
 2. `pnpm exec cf schema <command words>` - the API request a generated command sends (`pnpm exec cf schema d1 raw`).
 3. `pnpm exec cf <command words> --help` - flags at the installed version. `--force` is sometimes an API parameter rather than a confirmation skip: read the help before passing it.
 4. `--dry-run` where the help lists it - prints the request, or builds and checks without uploading.
@@ -57,13 +57,13 @@ Allowed during a production investigation the user asked for; hand the command o
 ## Output and exit codes
 
 - Results are JSON on stdout, except binary and text responses (an R2 object body), which are written raw; progress, messages, and errors go to stderr. Parse stdout only, under `NO_COLOR=1`: cf colors its JSON when `FORCE_COLOR` is set, even on a pipe, which is why `deploy-previews.sh` runs `cf previews deploy` that way.
-- In a non-interactive session a destructive command without `--force` prints `Aborted.` and exits 0: a zero exit does not mean anything was deleted.
+- In a non-interactive session a destructive command without `--force` exits 1 instead of prompting.
 - `cf workers versions create` prints no JSON yet (upstream bug `versions-upload-no-json-output`): with `WRANGLER_OUTPUT_FILE_PATH=<file>` it appends an ND-JSON `version-upload` record (`worker_name`, `version_id`, `preview_url`) there, which CD reads. There is no `--strict` flag because cf always uploads strict: in CI a conflict (dashboard edits, remote-secret overrides) aborts with exit 1 and `version_id: null`, and the error's hint to remove `--strict` does not apply.
 - `cf deploy --prebuilt --mode production --dry-run` needs no token and no account ID: it validates Build Output and prints the bindings it would deploy.
 
 ## Never, as an agent
 
-- Deploy, upload, promote, roll back, or preview: `pnpm run deploy`, `pnpm run upload`, `pnpm preview:*`, `cf deploy`, `cf workers versions create`, `cf workers deployments create`, `cf workers triggers deploy`, `cf previews deploy`. CD and the Previews workflow own them (rules `ops/cd`, `ops/previews`, `ops/release`); hand the exact command to the user.
+- Deploy, upload, promote, roll back, or preview: `pnpm run deploy`, `pnpm run upload`, `pnpm preview:*`, `cf deploy`, `cf workers versions create`, `cf workers deployments create`, `cf workers triggers deploy`, `cf previews deploy`, `cf previews delete`. CD and the Previews workflow own them (rules `ops/cd`, `ops/previews`, `ops/release`); hand the exact command to the user.
 - Log in: `cf auth login` (root script `login`) is the user's. cf reads `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` like Wrangler did; `CF_ACCOUNT_ID` is a deprecated alias.
 - Run `cf dev`, `cf build`, `cf deploy`, or `cf init` in a directory without `cloudflare.config.ts` (autoconfiguration rewrites the project), or `cf migrate` anywhere (it rewrites a Wrangler project's files for cf). A new app copies an existing app's `cloudflare.config.ts` and `vite.config.ts`, then is adapted by hand.
 - Change account state without `--local` - a KV, D1, or R2 write or delete, `cf workers secrets update|delete|bulk`, `cf workers delete` - unless the user asked for that exact operation and its `--dry-run` matched.
@@ -84,7 +84,6 @@ The root devDependency `wrangler` stays for what cf lacks. Run it as `pnpm exec 
 |------|---------|
 | Tail production logs | `pnpm exec wrangler tail <app>-production` |
 | Put one deployed secret | `pnpm exec wrangler secret put <NAME> --name <app>-production` |
-| Delete a Preview (no config file needed) | `pnpm exec wrangler preview delete --worker-name <app>-production --name <preview> -y` |
 | Put a Preview secret | `pnpm exec wrangler preview secret put …` (rule `ops/previews`) |
 
 `hono request` no longer sees the bindings: it loads them through Wrangler's `getPlatformProxy`, and `--runtime workerd` needs a Wrangler config. Probe the running `cf dev` server instead; `pnpm --filter=worker-api run routes` (`hono routes`) still works.

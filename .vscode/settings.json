@@ -6,13 +6,12 @@
   "editor.insertSpaces": true,
   "editor.rulers": [80],
   "editor.codeActionsOnSave": {
-    "source.fixAll.oxc": "always"
+    "source.fixAll.oxc": "explicit"
   },
   "oxc.path.oxlint": "node_modules/.bin/oxlint",
   "oxc.path.oxfmt": "node_modules/.bin/oxfmt",
   "oxc.configPath": ".oxlintrc.json",
   "oxc.fmt.configPath": ".oxfmtrc.json",
-  "oxc.lint.run": "onType",
   "oxc.requireConfig": true,
   "oxc.fixKind": "safe_fix",
   "[typescript]": {
@@ -54,7 +53,6 @@
   "editor.linkedEditing": true,
   "editor.renderWhitespace": "trailing",
   "js/ts.experimental.useTsgo": true,
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
   "js/ts.updateImportsOnFileMove.enabled": "always",
   "js/ts.preferences.preferTypeOnlyAutoImports": true,
   "js/ts.preferences.autoImportFileExcludePatterns": [
@@ -155,7 +153,6 @@
   "search.smartCase": true,
   "npm.autoDetect": "off",
   "npm.packageManager": "pnpm",
-  "cSpell.enabled": true,
   "cSpell.language": "en",
   "files.autoSave": "onFocusChange"
 }

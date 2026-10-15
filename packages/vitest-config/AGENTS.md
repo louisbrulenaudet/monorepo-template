@@ -33,9 +33,8 @@ No `check-types` script (same model as `@repo/typescript-config`): consuming app
 1. Keep the package `config`-tagged: no workspace dependency, not even on `@repo/typescript-config` (`config.dependencies.allow` is empty).
 2. Stay JIT with source `.ts` exports; no build-to-dist step unless the monorepo moves off JIT configs.
 3. Never set reporters in the shared defaults: that breaks Vitest's automatic agent detection and the GitHub Actions summary.
-4. Node factory only: `environment: "node"`, `pool: "threads"`, `isolate: false`, `fsModuleCache` (a stable top-level option since Vitest 5). Never attach `cloudflareTest`.
-5. Workers factory only: wrap `cloudflareTest`. Never `isolate: false`, a Node pool, or a custom environment or runner - Workers keep Cloudflare's per-file isolation.
-6. Keep mock hygiene on: `restoreMocks`, `clearMocks`, `unstubEnvs`, `unstubGlobals`. The include globs diverge on purpose: Node matches `tests/**/*.test.{ts,tsx}` (component suites must never be silently skipped), Workers `tests/**/*.test.ts` (no JSX inside workerd). `passWithNoTests` stays at Vitest's default `false`, so a glob mismatch fails loudly; a package with no tests has no `vitest.config` and no `test` script rather than a passing empty run.
+4. Node factory only: `environment: "node"`, `pool: "threads"`, `isolate: false`. Never attach `cloudflareTest`.
+5. Workers factory only: wrap `cloudflareTest`. Never `isolate: false`, a Node pool, or a custom environment or runner - Workers keep Cloudflare's per-file isolation.6. Keep mock hygiene on: `restoreMocks`, `clearMocks`, `unstubEnvs`, `unstubGlobals`. The include globs diverge on purpose: Node matches `tests/**/*.test.{ts,tsx}` (component suites must never be silently skipped), Workers `tests/**/*.test.ts` (no JSX inside workerd). `passWithNoTests` stays at Vitest's default `false`, so a glob mismatch fails loudly; a package with no tests has no `vitest.config` and no `test` script rather than a passing empty run.
 7. No coverage, blob reporters, or sharding without an explicit follow-up that wires Turbo outputs and a merge task.
 
 ## How to use

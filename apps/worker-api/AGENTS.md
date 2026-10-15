@@ -20,7 +20,7 @@ apps/worker-api/
 ├── tests/                    # Vitest suites - Cloudflare pool / workerd
 │   └── tsconfig.json         # @cloudflare/vitest-plugin/types; in check-types
 ├── cloudflare.config.ts      # Worker config per mode: DEPLOYMENTS, TEST, PREVIEW
-├── vite.config.ts            # Cloudflare Vite plugin: port, inspector, minify, source maps
+├── vite.config.ts            # Cloudflare Vite plugin: port, inspector, minify
 ├── vitest.config.mts         # defineWorkersConfig from @repo/vitest-config/workers (reads mode test)
 ├── tsconfig.json             # src + cloudflare.config.ts + .cloudflare/types
 ├── tsconfig.node.json        # vite.config.ts; in check-types
@@ -37,7 +37,7 @@ apps/worker-api/
 | Worker-local value set | `src/enums/` - create the directory on first use |
 | Handler logic past thin orchestration (I/O, binding calls, non-trivial mapping) | `src/services/<feature>.ts` - create on first use |
 | Binding, text value, observability, Worker name per mode | `cloudflare.config.ts` (`DEPLOYMENTS`, `TEST`, `PREVIEW`), then `pnpm -w types` |
-| Dev port, inspector, minify, source maps | `vite.config.ts` |
+| Dev port, inspector, minify | `vite.config.ts` |
 | Secrets | `bindings.secret()` in `cloudflare.config.ts`, with a `bindings.text()` fake in `TEST` (and `PREVIEW` when Previews run without it). Local values come from a gitignored `.env` here or the shell (`SENTRY_DSN=<dsn>`), never a `.dev.vars` (root `AGENTS.md`, Environment) |
 | Unit tests Vitest pool | `tests/` + `vitest.config.mts` `@repo/vitest-config/workers` |
 

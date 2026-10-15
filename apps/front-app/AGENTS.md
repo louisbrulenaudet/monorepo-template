@@ -78,5 +78,5 @@ Local env: `cp .env.example .env` (and `.env.production.example` to `.env.produc
 | `pnpm -w turbo run test --filter=front-app` | Vitest Node, vitest run |
 | `pnpm -w turbo run <upload\|deploy> --filter=front-app --force` | `cf workers versions create --prebuilt --mode production` (no traffic) / `cf deploy --prebuilt --mode production` (upload + 100%), each after `build` and `check-types`; `--force` skips cache reads, so it never ships a Build Output restored from the remote cache that PR runs can write. Promote or roll back with `cf workers deployments create` (root `README.md`, Releases and deploys) |
 | `pnpm -w turbo run check-types --filter=front-app` | Route generation + typecheck |
-| `pnpm -w react-doctor:changed` | React Doctor offline changed-scope scan - run after React edits (deep workflow: skill `react-doctor`) |
+| `pnpm -w react-doctor:changed` | React Doctor offline scan of the functions, elements, and files a change touches - run after React edits (deep workflow: skill `react-doctor`) |
 | `pnpm analyze` | Bundle stats (`dist/stats.html`) and the Rolldown DevTools session, which only this build records |

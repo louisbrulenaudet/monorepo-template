@@ -1,7 +1,7 @@
 ---
 name: review-stack
-description: "Stack review of one or more third-party tools (OXC, TanStack, Vite, cf, Sentry, pnpm, Claude Code...) against current official best practices: one parallel subagent per tool, verified findings, one consolidated plan in chat. USE WHEN: user runs /review-stack or explicitly asks for a dependency/stack review. DO NOT USE WHEN: reviewing our code or design by domain (/review), a PR, or implementing features."
-argument-hint: "<dep|family|all|changed[:ref]>[,...] [focus]"
+description: "Stack review of one or more third-party tools (OXC, TanStack, Vite, cf, Sentry, pnpm, Claude Code...) against current official best practices, or of what a dependency bump brings (`bumped`): one parallel subagent per tool, verified findings, one consolidated plan in chat. USE WHEN: user runs /review-stack or explicitly asks for a dependency/stack review or a changelog review of updated dependencies. DO NOT USE WHEN: reviewing our code or design by domain (/review), a PR, or implementing features."
+argument-hint: "<dep|family|all|changed[:ref]|bumped[:ref]>[,...] [focus]"
 disable-model-invocation: true
 ---
 
@@ -38,8 +38,20 @@ The first word of the arguments is the selector; the rest is the **focus**, whic
 - no selector → the registry table and families; print it and stop.
 - unknown selector → the same table after an error; print it and stop.
 - otherwise → the selected deps, and per dep its catalog / installed / latest versions (`pnpm ls`, `pnpm outdated`) plus `version_cmd` output. With `changed[:<ref>]`, only the deps whose `paths` or catalog entries changed since `<ref>` (default: latest `v*` tag, else the merge-base with `main`), with the matching files.
+- With `bumped[:<ref>]` (same default `<ref>`, working tree included), only the deps whose catalog entries changed, each with `<before> → <after>`, plus `pnpm` for override and exclude cleanup. The version table gains a **Before** column, and an `Uncovered catalog changes` line names bumps that no `deps/<id>.md` lists.
 
-Selectors: a dep `id`, a family, `all`, `changed` or `changed:<ref>`; comma-separate to combine (`oxc,knip`, `changed,sentry`). "Nothing selected" from `changed` is the answer: say so in one line and stop.
+Selectors: a dep `id`, a family, `all`, `changed` or `changed:<ref>`, `bumped` or `bumped:<ref>`; comma-separate to combine (`oxc,knip`, `changed,sentry`). "Nothing selected" from `changed` or `bumped` is the answer: say so in one line and stop.
+
+## Bump mode
+
+`bumped` answers "what does this upgrade let us adopt or force us to change?", not "is this tool configured well?". It narrows every selected review to the changelog window from **Before** to **Installed**, and the hunter prompt carries this section verbatim.
+
+- Read every release in the window, not only the last one: GitHub releases, `CHANGELOG.md`, or the vendor changelog named in the companion's Web fallback. A window that spans a major also reads the migration guide.
+- For each entry, search the repo for the surface it touches (API, config key, CLI flag, default, peer range). An entry with no repo surface stays out of Findings.
+- Classify what remains: an API, flag, or key the repo uses that the window removes or deprecates, or a default change that alters repo behavior, is **Critical**. A new API, option, or default that replaces repo code, config, a workaround, an override, or a doc statement is **Improvement**. A doc or comment that the window made stale is **Optional**.
+- Doc statements count: a rule, skill, or `AGENTS.md` line that describes the old behavior is a finding, with the twin `.cursor` file in the fix.
+- The `pnpm` hunter checks each `overrides` and `minimumReleaseAgeExclude` entry against the lockfile and the registry: an override whose upstream now ships the fixed range, or an exclude whose pinned version is no longer in `pnpm-lock.yaml`, is an Improvement.
+- Coverage is partial by construction: say so in the Scope line, and list the `Uncovered catalog changes` there with the companion to add.
 
 ## Execution safety
 
@@ -51,7 +63,7 @@ Selectors: a dep `id`, a family, `all`, `changed` or `changed:<ref>`; comma-sepa
 ## Run shape
 
 1. **Preflight** - run the script; keep its output.
-2. **Hunt** - launch one `general-purpose` subagent per selected dep (model `sonnet`), **all in a single message** so they run in parallel. Each prompt contains, verbatim: the *Ground truth*, *Evidence bar*, *Accepted choices*, *Severity*, *Smallest effective fix*, *Hunter return contract*, and *Anti-patterns* sections of this file, the dep's companion file, the dep's preflight block, the focus, and the other selected dep ids with their `Overlaps` lines. A single dep still gets its own subagent: doc dumps stay out of the main context, and the author is not the verifier.
+2. **Hunt** - launch one `general-purpose` subagent per selected dep (model `sonnet`), **all in a single message** so they run in parallel. Each prompt contains, verbatim: the *Ground truth*, *Evidence bar*, *Accepted choices*, *Severity*, *Smallest effective fix*, *Hunter return contract*, and *Anti-patterns* sections of this file, the *Bump mode* section when the preflight prints `Mode: bumped`, the dep's companion file, the dep's preflight block, the focus, and the other selected dep ids with their `Overlaps` lines. A single dep still gets its own subagent: doc dumps stay out of the main context, and the author is not the verifier.
 3. **Verify** - in the main thread, per [Verification](#verification).
 4. **Report** - one reply, per [Output](#output).
 
@@ -104,6 +116,8 @@ Needs validation:
 - <hypothesis> - missing fact: <what> - how to check: <owner-side step>
 Coverage:
 - <axis>: finding | no issues | not checked (<reason>)
+Changelog window (bump mode only):
+- <package> <before> → <installed>: read <source url> | not found (<where looked>)
 ```
 
 Every axis in the companion appears under Coverage. No preamble, no summary.
