@@ -7,79 +7,69 @@ catalogMode: prefer
 catalog:
   '@changesets/changelog-github': ^1.0.1
   '@changesets/cli': ^3.0.3
-  '@cloudflare/vite-plugin': 2.0.0-beta.sha-ad79608dd
-  '@cloudflare/vitest-plugin': ^1.4.0
+  '@cloudflare/vite-plugin': 2.0.0-beta.sha-67fa336fd
+  '@cloudflare/vitest-plugin': ^1.4.3
   '@hono/cli': 0.2.0-next.9
   '@hono/zod-validator': ^0.9.1
   '@playwright/cli': ^0.1.22
   '@sentry/cli': ^3.8.0
-  '@sentry/cloudflare': 11.6.0
-  '@sentry/hono': 11.6.0
-  '@sentry/react': 11.6.0
+  '@sentry/cloudflare': 11.7.0
+  '@sentry/hono': 11.7.0
+  '@sentry/react': 11.7.0
   '@sentry/vite-plugin': ^5.4.1
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
   '@tanstack/react-devtools': ^0.10.13
-  '@tanstack/react-query': ^5.104.1
-  '@tanstack/react-query-devtools': ^5.104.1
-  '@tanstack/react-router': ^1.170.41
+  '@tanstack/react-query': ^5.104.2
+  '@tanstack/react-query-devtools': ^5.104.2
+  '@tanstack/react-router': ^1.170.44
   '@tanstack/react-router-devtools': ^1.167.2
-  '@tanstack/router-cli': 1.167.40
-  '@tanstack/router-plugin': ^1.168.42
+  '@tanstack/router-cli': 1.167.44
+  '@tanstack/router-plugin': ^1.168.46
   '@testing-library/dom': ^10.4.2
   '@testing-library/jest-dom': ^7.0.1
   '@testing-library/react': ^16.3.3
-  '@testing-library/user-event': ^14.6.7
-  '@types/node': 26.6.4
+  '@testing-library/user-event': ^14.6.8
+  '@types/node': 26.6.5
   '@types/react': ^19.3.0
   '@types/react-dom': ^19.3.0
-  '@vitejs/devtools': ^0.7.6
-  '@vitejs/devtools-oxc': ^0.7.6
-  '@vitejs/devtools-rolldown': ^0.7.6
-  '@vitejs/devtools-vite': ^0.7.6
-  '@vitejs/devtools-vitest': ^0.7.6
-  '@vitest/ui': ^5.0.3
+  '@vitejs/devtools': ^0.8.0
+  '@vitejs/devtools-oxc': ^0.8.0
+  '@vitejs/devtools-rolldown': ^0.8.0
+  '@vitejs/devtools-vite': ^0.8.0
+  '@vitejs/devtools-vitest': ^0.8.0
+  '@vitest/ui': ^5.0.4
   '@vitejs/plugin-react': ^6.1.2
-  cf: 1.0.0-beta.14
+  cf: 1.0.0-beta.17
   cross-env: ^10.1.0
-  cspell: ^10.3.6
-  eslint-plugin-better-tailwindcss: ^4.9.0
-  happy-dom: ^20.14.5
+  cspell: ^10.4.0
+  eslint-plugin-better-tailwindcss: ^4.9.1
+  happy-dom: ^21.0.1
   hono: ^4.13.13
-  jscpd: ^5.4.0
-  knip: ^6.40.0
-  oxc-transform-react: ^0.153.0
-  oxfmt: ^0.72.0
-  oxlint: ^1.87.0
-  oxlint-plugin-react-doctor: ^0.9.17
-  oxlint-tsgolint: ^7.0.2003
-  react: ^19.3.0
-  react-doctor: ^0.9.17
-  react-dom: ^19.3.0
+  jscpd: ^5.4.1
+  knip: ^6.41.0
+  oxc-transform-react: ^0.154.0
+  oxfmt: ^0.73.0
+  oxlint: ^1.88.0
+  oxlint-plugin-react-doctor: ^0.9.18
+  oxlint-tsgolint: ^7.0.2004
+  react: ^19.3.1
+  react-doctor: ^0.9.18
+  react-dom: ^19.3.1
   rollup-plugin-visualizer: ^7.1.1
   syncpack: ^15.3.3
   tailwindcss: ^4.3.3
-  turbo: 2.11.7
+  turbo: 2.11.8
   typescript: ^7.0.2
   vite: ^8.3.4
-  vite-plus: ^1.1.0
-  vitest: ^5.0.3
-  wrangler: ^4.149.0
-  zod: ^4.6.5
+  vite-plus: ^1.2.0
+  vitest: ^5.0.4
+  wrangler: ^4.151.0
+  zod: ^4.6.7
 
 # Transitive '*' ranges would otherwise pull the newest @types/node major, ahead of the Node 24 engine.
 overrides:
   '@types/node': 'catalog:'
-  # Temporary: @cloudflare/vite-plugin 2.0.0-beta.sha-ad79608dd pins miniflare 5.20260926.0-alpha, which pins undici 7.29.0
-  # (GHSA-rfgv-xxqx-mfg5, GHSA-w293-vg96-wgc3). Delete once it ships on miniflare >= 5.20260926.1-alpha.
-  'undici@>=7.0.0 <7.29.1': ^7.29.1
-  # Temporary: solid-js 1.9.15 pins seroval ~1.5.4 (GHSA-p6vx-979v-rg4c, GHSA-jp82-f5mq-hwhp).
-  # Delete once solid-js ships on seroval >= 1.6.3.
-  'seroval@<1.6.3': ^1.6.8
-  'seroval-plugins@<1.6.3': ^1.6.8
-  # Temporary: every miniflare up to 5.20261006.0-alpha pins sharp 0.35.4 (GHSA-wq5f-xc86-pv6w).
-  # Delete once miniflare ships on sharp >= 0.35.5.
-  'sharp@<0.35.5': ^0.35.5
 
 minimumReleaseAgeExclude:
   - '@cloudflare/*'
@@ -88,17 +78,6 @@ minimumReleaseAgeExclude:
   - miniflare
   - typescript
   - '@hono/cli@0.2.0-next.9'
-  - '@voidzero-dev/vite-plus-core@1.0.0'
-  - '@voidzero-dev/vite-plus-darwin-arm64@1.0.0'
-  - '@voidzero-dev/vite-plus-darwin-x64@1.0.0'
-  - '@voidzero-dev/vite-plus-linux-arm64-gnu@1.0.0'
-  - '@voidzero-dev/vite-plus-linux-arm64-musl@1.0.0'
-  - '@voidzero-dev/vite-plus-linux-x64-gnu@1.0.0'
-  - '@voidzero-dev/vite-plus-linux-x64-musl@1.0.0'
-  - '@voidzero-dev/vite-plus-win32-arm64-msvc@1.0.0'
-  - '@voidzero-dev/vite-plus-win32-x64-msvc@1.0.0'
-  - vite-plus@1.0.0
-  - workerd@1.20260930.2
 
 blockExoticSubdeps: true
 

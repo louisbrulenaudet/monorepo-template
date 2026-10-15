@@ -12,7 +12,7 @@ Every `cloudflare.config.ts` and the `cf` workflow: config currency, modes, bind
 
 ## Ground truth
 
-- **Stale-knowledge risk**: `cf` is a beta (`cf@1.0.0-beta.5`, exact pin) and the Cloudflare Vite plugin a per-push 2.0 snapshot; commands, flags, and config keys move between releases and postdate most training data.
+- **Stale-knowledge risk**: `cf` is a beta (exact pin) and the Cloudflare Vite plugin a per-push 2.0 snapshot; commands, flags, and config keys move between releases and postdate most training data.
 - **Collector**: "Cloudflare Workers" for bindings, compatibility dates, observability, and Previews; the vendor documentation MCP takes precedence for vendor questions. The `cf` pages may not be indexed there - fetch them directly.
 - **Local schema**: the `@cloudflare/config` declarations that `cf/config` re-exports are authoritative for `cloudflare.config.ts` keys at the installed version; `node_modules/cf/README.md`, `pnpm exec cf <command> --help`, and `pnpm exec cf schema <command words>` for the CLI surface.
 - **Local skill**: `.agents/skills/cf/SKILL.md`, `.agents/skills/workers-best-practices/SKILL.md`.

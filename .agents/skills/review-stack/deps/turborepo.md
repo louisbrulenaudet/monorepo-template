@@ -14,7 +14,7 @@ Turborepo: task-graph correctness, cache effectiveness, boundaries enforcement, 
 
 - **Collector**: "Turborepo" - `turbo.json` schema (tasks, `dependsOn`, inputs/outputs, caches), boundaries tags syntax, global dependencies/env handling, `turbo query`.
 - **Local schema**: installed `node_modules/turbo/schema.json` is authoritative for which `turbo.json` keys and `futureFlags` the pinned version accepts - check every key in use against it.
-- **Local skill**: `.agents/skills/turborepo/SKILL.md`. It points at `node_modules/turbo/docs/`, which turbo 2.11.x does not ship; when that directory is absent, fall back to the collector and `turborepo.dev`.
+- **Local skill**: `.agents/skills/turborepo/SKILL.md`. It points at `node_modules/turbo/docs/`, which turbo ships from 2.11.8; when that directory is absent, fall back to the collector and `turborepo.dev`.
 - **Web fallback**: `turborepo.dev` - boundaries reference, caching guide, upgrade notes for the pinned major.
 - **Version currency**: catalog `turbo` in [pnpm-workspace.yaml](../../../../pnpm-workspace.yaml); check the pinned major's deprecations against keys in use.
 

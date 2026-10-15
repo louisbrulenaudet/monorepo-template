@@ -93,7 +93,21 @@ function printRegistry(registry) {
     console.log(`| \`${dep.id}\` | ${dep.families.join(", ")} | ${dep.summary} |`);
   }
   const families = [...new Set(registry.flatMap((dep) => dep.families))].sort();
-  console.log(`\nFamilies: ${families.map((f) => `\`${f}\``).join(", ")}, \`all\`, \`changed[:<ref>]\``);
+  console.log(
+    `\nFamilies: ${families.map((f) => `\`${f}\``).join(", ")}, \`all\`, \`changed[:<ref>]\`, \`bumped[:<ref>]\``,
+  );
+}
+
+/**
+ * @param {string} token
+ * @returns {string}
+ */
+function resolveBase(token) {
+  const base = token.includes(":") ? token.slice(token.indexOf(":") + 1) : defaultBase();
+  if (!run("git", ["rev-parse", "--verify", "--quiet", `${base}^{commit}`]).ok) {
+    throw new Error(`${token.split(":")[0]}: "${base}" is not a commit`);
+  }
+  return base;
 }
 
 /** @returns {string} */
@@ -106,7 +120,7 @@ function defaultBase() {
   if (mergeBase.ok && mergeBase.out.trim()) {
     return mergeBase.out.trim();
   }
-  throw new Error("changed: no v* tag and no merge-base with main; pass changed:<ref>");
+  throw new Error("no v* tag and no merge-base with main; pass changed:<ref> or bumped:<ref>");
 }
 
 /**
@@ -170,9 +184,43 @@ function changedDeps(registry, base) {
   return reasons;
 }
 
-/** @returns {Map<string, string>} */
-function readCatalog() {
-  const lines = readFileSync(path.join(REPO_ROOT, "pnpm-workspace.yaml"), "utf8").split("\n");
+/**
+ * @param {Dep[]} registry
+ * @param {Map<string, string>} before
+ * @param {Map<string, string>} current
+ * @returns {{ reasons: Map<string, string[]>, uncovered: string[] }}
+ */
+function bumpedDeps(registry, before, current) {
+  const bumps = new Map();
+  for (const pkg of new Set([...before.keys(), ...current.keys()])) {
+    if (before.get(pkg) !== current.get(pkg)) {
+      bumps.set(pkg, `${before.get(pkg) ?? "added"} → ${current.get(pkg) ?? "removed"}`);
+    }
+  }
+  /** @type {Map<string, string[]>} */
+  const reasons = new Map();
+  const covered = new Set();
+  for (const dep of registry) {
+    const hits = dep.packages.filter((pkg) => bumps.has(pkg));
+    hits.forEach((pkg) => covered.add(pkg));
+    if (hits.length > 0) {
+      reasons.set(dep.id, hits.map((pkg) => `catalog ${pkg} ${bumps.get(pkg)}`));
+    }
+  }
+  // A bump can retire an override or a minimumReleaseAgeExclude entry, which only the pnpm companion reviews.
+  if (bumps.size > 0 && registry.some((dep) => dep.id === "pnpm") && !reasons.has("pnpm")) {
+    reasons.set("pnpm", ["catalog bump: re-check overrides and minimumReleaseAgeExclude"]);
+  }
+  const uncovered = [...bumps].filter(([pkg]) => !covered.has(pkg)).map(([pkg, range]) => `${pkg} ${range}`);
+  return { reasons, uncovered };
+}
+
+/**
+ * @param {string} text
+ * @returns {Map<string, string>}
+ */
+function parseCatalog(text) {
+  const lines = text.split("\n");
   /** @type {Map<string, string>} */
   const catalog = new Map();
   let inCatalog = false;
@@ -237,18 +285,29 @@ const byId = new Map(registry.map((dep) => [dep.id, dep]));
 const selected = new Set();
 /** @type {Map<string, string[]>} */
 let reasons = new Map();
+/** @type {Map<string, string> | null} */
+let beforeCatalog = null;
 const unknown = [];
+const catalog = parseCatalog(readFileSync(path.join(REPO_ROOT, "pnpm-workspace.yaml"), "utf8"));
 
 for (const token of selector.split(",").map((t) => t.trim()).filter(Boolean)) {
   if (token === "all") {
     registry.forEach((dep) => selected.add(dep.id));
   } else if (token === "changed" || token.startsWith("changed:")) {
-    const base = token.includes(":") ? token.slice(token.indexOf(":") + 1) : defaultBase();
-    if (!run("git", ["rev-parse", "--verify", "--quiet", `${base}^{commit}`]).ok) {
-      throw new Error(`changed: "${base}" is not a commit`);
-    }
+    const base = resolveBase(token);
     reasons = changedDeps(registry, base);
+    beforeCatalog = parseCatalog(run("git", ["show", `${base}:pnpm-workspace.yaml`]).out);
     console.log(`Change base: ${base}`);
+    reasons.forEach((_, id) => selected.add(id));
+  } else if (token === "bumped" || token.startsWith("bumped:")) {
+    const base = resolveBase(token);
+    beforeCatalog = parseCatalog(run("git", ["show", `${base}:pnpm-workspace.yaml`]).out);
+    const bumped = bumpedDeps(registry, beforeCatalog, catalog);
+    reasons = bumped.reasons;
+    console.log(`Mode: bumped. Bump base: ${base}`);
+    if (bumped.uncovered.length > 0) {
+      console.log(`Uncovered catalog changes (no deps/<id>.md lists them): ${bumped.uncovered.join(", ")}`);
+    }
     reasons.forEach((_, id) => selected.add(id));
   } else if (byId.has(token)) {
     selected.add(token);
@@ -272,7 +331,6 @@ if (selected.size === 0) {
   process.exit(0);
 }
 
-const catalog = readCatalog();
 const installed = readInstalled();
 const latest = readLatest();
 
@@ -294,12 +352,18 @@ for (const dep of registry.filter((d) => selected.has(d.id))) {
     console.log(`\`${dep.version_cmd}\`: ${result.ok ? result.out.trim() : "unavailable"}`);
   }
   if (dep.packages.length > 0) {
-    console.log("| Package | Catalog | Installed | Latest |\n|---------|---------|-----------|--------|");
+    const before = beforeCatalog;
+    console.log(
+      before === null
+        ? "| Package | Catalog | Installed | Latest |\n|---------|---------|-----------|--------|"
+        : "| Package | Before | Catalog | Installed | Latest |\n|---------|--------|---------|-----------|--------|",
+    );
     for (const pkg of dep.packages) {
       const versions = [...(installed.get(pkg) ?? [])];
       const current = versions.length > 0 ? versions.join(", ") : "not installed";
       const newest = latest === null ? "unknown" : (latest.get(pkg) ?? "= installed");
-      console.log(`| \`${pkg}\` | ${catalog.get(pkg) ?? "-"} | ${current} | ${newest} |`);
+      const beforeCell = before === null ? "" : ` ${before.get(pkg) ?? "-"} |`;
+      console.log(`| \`${pkg}\` |${beforeCell} ${catalog.get(pkg) ?? "-"} | ${current} | ${newest} |`);
     }
   }
 }

@@ -6,7 +6,7 @@ export default defineConfig({
   envDir: process.env["SKIP_ENV_FILES"] ? false : ".",
   environments: {
     ssr: {
-      build: { minify: true, sourcemap: true },
+      build: { minify: true },
     },
   },
   server: {

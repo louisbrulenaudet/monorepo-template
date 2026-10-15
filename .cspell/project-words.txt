@@ -74,6 +74,7 @@ jscpd
 jsdom
 keyof
 Knip
+kucherenko
 lastmod
 llms
 localstorage
@@ -161,7 +162,6 @@ treemap
 tsgolint
 Turborepo
 typescriptlang
-undici
 ungated
 unlabels
 unobserve

@@ -34,7 +34,7 @@ Read both preset entries and every per-app config; sample one Node and one Worke
 - **Pool selection**: Node suites on `threads` + `isolate: false` justified by cleanup discipline (verify tests clean up); Workers suites never `isolate: false` / custom env; Node apps never resolve the Cloudflare pool package.
 - **Workers testing split**: single-Worker tests in workerd via the pool, which reads `cloudflare.config.ts` in mode `test` (`experimental: { newConfig: true }`) with fake secrets as text bindings there, never in `miniflare.bindings`; multi-Worker integration reserved for Wrangler `createTestHarness()` from a Node suite.
 - **Reporter & CI**: agent-aware reporter detection preserved; GitHub job summaries intact; watch vs run wiring correct.
-- **Version currency**: experimental flags (`fsModuleCache`) still valid; new stable options worth adopting.
+- **Version currency**: options still valid; options set to their default removed; new stable options worth adopting.
 - **Agent loop**: per-app filter documented; failure output parseable; DOM/RTL depth delegated to skill `front-vitest`.
 
 ## Critical when

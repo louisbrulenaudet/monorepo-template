@@ -8,8 +8,8 @@ apps="$(node .github/actions/lib/list-apps.mjs)"
 
 failed=()
 while IFS=$'\t' read -r app _; do
-  if ! pnpm exec wrangler preview delete --worker-name "${app}-production" \
-    --name "$name" -y < /dev/null; then
+  if ! pnpm exec cf previews delete "$name" --worker "${app}-production" \
+    --force < /dev/null; then
     failed+=("$app")
   fi
 done <<< "$apps"
