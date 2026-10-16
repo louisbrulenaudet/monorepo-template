@@ -171,8 +171,8 @@ catalogs:
       specifier: ^3.0.3
       version: 3.0.3
     '@cloudflare/vite-plugin':
-      specifier: 2.0.0-beta.sha-67fa336fd
-      version: 2.0.0-beta.sha-67fa336fd
+      specifier: 2.0.0-beta.v.0
+      version: 2.0.0-beta.v.0
     '@cloudflare/vitest-plugin':
       specifier: ^1.4.3
       version: 1.4.3
@@ -442,7 +442,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: 'catalog:'
-        version: 2.0.0-beta.sha-67fa336fd(@types/node@26.6.5)(vite@8.3.4)(workerd@1.20261012.1)
+        version: 2.0.0-beta.v.0(@types/node@26.6.5)(vite@8.3.4)(workerd@1.20261012.1)
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -560,7 +560,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: 'catalog:'
-        version: 2.0.0-beta.sha-67fa336fd(@types/node@26.6.5)(vite@8.3.4)(workerd@1.20261012.1)
+        version: 2.0.0-beta.v.0(@types/node@26.6.5)(vite@8.3.4)(workerd@1.20261012.1)
       '@cloudflare/vitest-plugin':
         specifier: 'catalog:'
         version: 1.4.3(@types/node@26.6.5)(vitest@5.0.4)
@@ -849,8 +849,8 @@ packages:
       workerd:
         optional: true
 
-  '@cloudflare/vite-plugin@2.0.0-beta.sha-67fa336fd':
-    resolution: {integrity: sha512-hQxF2C3qmNtMLMvFCYk+rv7newngc8OyZO9bzAyQMDyh3vDGZ2tLm5f83MPdrCod4We7XBrpDvCpbihJu644pQ==}
+  '@cloudflare/vite-plugin@2.0.0-beta.v.0':
+    resolution: {integrity: sha512-G7492jrrCF/pUOuKEv7cLdjDDHPjsd+VJXtT0MjEDATiqNV5XsmztSNSEJt9MM5lPw6KbeKKcPHe5az/qrTOmQ==}
     hasBin: true
     peerDependencies:
       vite: ^7.0.0 || ^8.0.0
@@ -6367,7 +6367,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20261012.1
 
-  '@cloudflare/vite-plugin@2.0.0-beta.sha-67fa336fd(@types/node@26.6.5)(vite@8.3.4)(workerd@1.20261012.1)':
+  '@cloudflare/vite-plugin@2.0.0-beta.v.0(@types/node@26.6.5)(vite@8.3.4)(workerd@1.20261012.1)':
     dependencies:
       '@cloudflare/build-output-utils': 0.9.2
       '@cloudflare/config': 0.26.0
