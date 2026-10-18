@@ -44,7 +44,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
-      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+      - uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           runtime: node@24
           install: false
@@ -71,7 +71,7 @@ jobs:
           # an anonymous fetch under persist-credentials: false. blob:none keeps it cheap.
           fetch-depth: 0
           filter: blob:none
-      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+      - uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           runtime: node@24
           install: false

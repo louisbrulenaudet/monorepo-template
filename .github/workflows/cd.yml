@@ -80,7 +80,7 @@ jobs:
           : "${VITE_API_BASE_URL:?repository variable required - the production origin used as the environment url and smoke target}"
 
       - name: Setup pnpm and Node.js
-        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
           runtime: node@24
           install: false
