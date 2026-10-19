@@ -14,6 +14,13 @@ const ENTRY =
 const QUOTES = /^['"]|['"]$/g;
 const HEADING = /^\s*#{1,6}\s/m;
 const RULE = "rule ops/changesets";
+// Rename detection reads blobs the blob:none checkout cannot fetch (rule ops/release).
+const NO_RENAMES_ENV = {
+  ...process.env,
+  GIT_CONFIG_COUNT: "1",
+  GIT_CONFIG_KEY_0: "diff.renames",
+  GIT_CONFIG_VALUE_0: "false",
+};
 
 /**
  * @typedef {object} Bump
@@ -51,7 +58,7 @@ const RULE = "rule ops/changesets";
  * @returns {string}
  */
 export function git(args) {
-  return execFileSync("git", args, { encoding: "utf8" });
+  return execFileSync("git", args, { encoding: "utf8", env: NO_RENAMES_ENV });
 }
 
 /**
@@ -179,7 +186,7 @@ function readReleasePlan() {
     const status = spawnSync(
       "changeset",
       ["status", `--since=${BASE_REF}`, `--output=${output}`],
-      { stdio: "inherit" },
+      { stdio: "inherit", env: NO_RENAMES_ENV },
     );
     if (status.error) {
       throw status.error;
