@@ -86,11 +86,12 @@ The root devDependency `wrangler` stays for what cf lacks. Run it as `pnpm exec 
 | Put one deployed secret | `pnpm exec wrangler secret put <NAME> --name <app>-production` |
 | Put a Preview secret | `pnpm exec wrangler preview secret put …` (rule `ops/previews`) |
 
-`hono request` no longer sees the bindings: it loads them through Wrangler's `getPlatformProxy`, and `--runtime workerd` needs a Wrangler config. Probe the running `cf dev` server instead; `pnpm --filter=worker-api run routes` (`hono routes`) still works.
+`hono request` sees the bindings without a Wrangler config: in a `cf` project it defaults to `--runtime vite`, and the Cloudflare Vite plugin reads `cloudflare.config.ts`. `--runtime workerd` and the Node runtime's `getPlatformProxy` still need a Wrangler config.
 
 ## Sandbox
 
 - `cf dev` and `--local` commands start workerd, so they need `sandbox.network.allowLocalBinding` and a sandbox-writable `CLOUDFLARE_REGISTRY_PATH`: cf keeps its dev registry there and sets `WRANGLER_REGISTRY_PATH` and `MINIFLARE_REGISTRY_PATH` to the same path for its children, so an inherited `WRANGLER_REGISTRY_PATH` does not reach them. The `WRANGLER_*` paths stay for the Workers Vitest pool and the Wrangler-only commands.
+- `hono request` starts the Cloudflare Vite plugin without cf, so cf's handoff does not apply: Miniflare reads `MINIFLARE_REGISTRY_PATH`, and without a sandbox-writable one it fails with `EPERM` on `~/.wrangler/registry` and then hangs.
 - Telemetry: cf checks `DO_NOT_TRACK`, then `CF_SEND_TELEMETRY`, then `WRANGLER_SEND_METRICS`. CI sets `DO_NOT_TRACK=1` and `CF_SEND_TELEMETRY=false`; agents run with `CF_SEND_TELEMETRY=false` from the settings `env`. Humans turn it off once per machine with `pnpm exec cf cli telemetry disable`, which replaces the `send_metrics: false` that left with `wrangler.jsonc`. `pnpm exec cf cli telemetry status` names the source.
 
 ## Wrangler habits
