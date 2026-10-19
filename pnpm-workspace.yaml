@@ -7,7 +7,7 @@ catalogMode: prefer
 catalog:
   '@changesets/changelog-github': ^1.0.1
   '@changesets/cli': ^3.0.3
-  '@cloudflare/vite-plugin': 2.0.0-beta.sha-67fa336fd
+  '@cloudflare/vite-plugin': 2.0.0-beta.v.2
   '@cloudflare/vitest-plugin': ^1.4.5
   '@hono/cli': 1.0.0-rc.8
   '@hono/zod-validator': ^0.9.1
