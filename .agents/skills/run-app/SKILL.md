@@ -60,7 +60,7 @@ The same API is served on `:5174` for front-app's assets Worker.
 
 ## Without a dev server
 
-There is no bindings-aware smoke without `cf dev`: `hono request` loads bindings through Wrangler's `getPlatformProxy`, and `--runtime workerd` needs a Wrangler config the apps no longer have, so neither sees the gateway's bindings. Start the dev server and probe it instead. `pnpm --filter=worker-api run routes` (`hono routes`) still lists the routes offline.
+`pnpm --filter=worker-api exec hono request /api/v1/health --compact` is the bindings-aware smoke without `cf dev`: in a `cf` project it defaults to `--runtime vite`, so the Cloudflare Vite plugin reads `cloudflare.config.ts` and `c.env` has the gateway's local bindings. The output names `"runtime":"vite"`. Inside the sandbox it needs a sandbox-writable `MINIFLARE_REGISTRY_PATH` (skill `cf`, Sandbox). `pnpm --filter=worker-api run routes` (`hono routes`) lists the routes offline. CORS from the SPA origin, the SPA shell, and local traces still need the running dev servers.
 
 ## Worker Preview
 
