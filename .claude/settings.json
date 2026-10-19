@@ -405,6 +405,7 @@
     "WRANGLER_LOG_PATH": "/tmp/claude/wrangler-logs",
     "WRANGLER_REGISTRY_PATH": "/tmp/claude/wrangler-registry",
     "VP_GIT_HOOKS": "0",
+    "MINIFLARE_REGISTRY_PATH": "/tmp/claude/wrangler-registry",
     "GIT_CONFIG_COUNT": "1",
     "GIT_CONFIG_KEY_0": "core.fsmonitor",
     "GIT_CONFIG_VALUE_0": "false",

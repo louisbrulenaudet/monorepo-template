@@ -161,7 +161,7 @@ Configured in `pnpm-workspace.yaml`:
 | `trustPolicy: no-downgrade` | Reject installs that would downgrade package trust/provenance |
 | `blockExoticSubdeps: true` | Block exotic (non-registry) transitive dependencies |
 | `minimumReleaseAge` (unset) | pnpm's default 24-hour cooldown on newly published versions |
-| `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `cf`, `wrangler`, `miniflare`, `typescript`) |
+| `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `cf`, `wrangler`, `miniflare`, `typescript`). An exact-version entry (`workerd@1.20261019.1`, pulled by `wrangler@4.151.2` through `miniflare`) is temporary: delete it once that version is past the 24-hour cooldown. Never exempt bare `workerd`, which runs install scripts |
 
 When `pnpm install` fails on a blocked build script:
 
