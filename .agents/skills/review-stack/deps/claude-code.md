@@ -25,7 +25,7 @@ The Claude Code setup: settings, permissions, rules, hooks, subagents, skills, a
 - [.claude/agents/](../../../../.claude/agents/) - `explorer`, `planner`, `verifier`, `bundle-analyzer`, `docs-researcher` (`tools` least privilege)
 - [.claude/skills/](../../../../.claude/skills/) - symlinks into `.agents/skills/`; broken or stale links
 - [CLAUDE.md](../../../../CLAUDE.md) + nested per-app/package guides - duplication vs pointer discipline
-- `.claude/plugins/`, `.claude/status-line.sh`, `.mcp.json` server list; parity with the Cursor tree
+- `.claude/plugins/`, `.claude/status-line/`, `.mcp.json` server list; parity with the Cursor tree
 - [hooks/AGENTS.md](../../../../hooks/AGENTS.md)
 
 ## Probe

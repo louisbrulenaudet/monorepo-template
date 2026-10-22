@@ -18,6 +18,10 @@ on:
         description: "Existing release tag to deploy (e.g. v0.1.0)"
         required: true
         type: string
+      bootstrap:
+        description: "First production deploy: create the Workers and apply their triggers"
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -82,7 +86,7 @@ jobs:
       - name: Setup pnpm and Node.js
         uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
-          runtime: node@24
+          runtime: node@26
           install: false
 
       # Must be a step: `runner` in workflow/job `env:` makes the file unparseable (ops/ci).
@@ -94,6 +98,17 @@ jobs:
       # check-types is named explicitly because `build` does not depend on it, and this build
       # never sees the gate's cache. The trailing `...` adds the packages the apps ship.
       - run: pnpm turbo run check-types build --filter='./apps/*...'
+
+      - name: Create the Workers and apply their triggers
+        if: ${{ inputs.bootstrap }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          node .github/actions/lib/list-apps.mjs | while IFS=$'\t' read -r app _; do
+            pnpm --filter="$app" run deploy < /dev/null
+          done
 
       - name: Upload a version of every app
         env:

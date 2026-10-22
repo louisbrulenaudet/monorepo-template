@@ -8,11 +8,11 @@ catalog:
   '@changesets/changelog-github': ^1.0.1
   '@changesets/cli': ^3.0.3
   '@cloudflare/vite-plugin': 2.0.0-beta.v.2
-  '@cloudflare/vitest-plugin': ^1.4.5
+  '@cloudflare/vitest-plugin': ^1.4.7
   '@hono/cli': 1.0.0-rc.8
   '@hono/zod-validator': ^0.9.1
   '@playwright/cli': ^0.1.22
-  '@sentry/cli': ^3.8.0
+  '@sentry/cli': ^3.8.1
   '@sentry/cloudflare': 11.8.0
   '@sentry/hono': 11.8.0
   '@sentry/react': 11.8.0
@@ -20,8 +20,8 @@ catalog:
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
   '@tanstack/react-devtools': ^0.10.13
-  '@tanstack/react-query': ^5.104.4
-  '@tanstack/react-query-devtools': ^5.104.4
+  '@tanstack/react-query': ^5.104.5
+  '@tanstack/react-query-devtools': ^5.104.5
   '@tanstack/react-router': ^1.170.45
   '@tanstack/react-router-devtools': ^1.167.2
   '@tanstack/router-cli': 1.167.45
@@ -40,17 +40,17 @@ catalog:
   '@vitejs/devtools-vitest': ^0.8.0
   '@vitest/ui': ^5.0.5
   '@vitejs/plugin-react': ^6.1.2
-  cf: 1.0.0-beta.18
+  cf: 1.0.0-beta.20
   cross-env: ^10.1.0
   cspell: ^10.4.0
-  eslint-plugin-better-tailwindcss: ^4.9.1
-  happy-dom: ^21.0.3
+  eslint-plugin-better-tailwindcss: ^4.10.0
+  happy-dom: ^21.0.4
   hono: ^4.13.13
-  jscpd: ^5.4.1
-  knip: ^6.42.0
-  oxc-transform-react: ^0.154.0
-  oxfmt: ^0.73.0
-  oxlint: ^1.88.0
+  jscpd: ^5.4.2
+  knip: ^6.42.1
+  oxc-transform-react: ^0.155.0
+  oxfmt: ^0.74.0
+  oxlint: ^1.89.0
   oxlint-plugin-react-doctor: ^0.9.18
   oxlint-tsgolint: ^7.0.2004
   react: ^19.3.1
@@ -59,15 +59,15 @@ catalog:
   rollup-plugin-visualizer: ^7.1.1
   syncpack: ^15.3.3
   tailwindcss: ^4.3.3
-  turbo: 2.11.9
+  turbo: 2.11.10
   typescript: ^7.0.2
-  vite: ^8.3.4
+  vite: ^8.3.5
   vite-plus: ^1.3.0
   vitest: ^5.0.5
-  wrangler: ^4.151.2
+  wrangler: ^4.152.0
   zod: ^4.6.7
 
-# Transitive '*' ranges would otherwise pull the newest @types/node major, ahead of the Node 24 engine.
+# Transitive '*' ranges would otherwise pull the newest @types/node major, ahead of the Node 26 engine.
 overrides:
   '@types/node': 'catalog:'
 
@@ -84,12 +84,28 @@ blockExoticSubdeps: true
 trustPolicy: no-downgrade
 trustPolicyIgnoreAfter: 525600 # minutes (365 days)
 
-allowBuilds:
+permissions:
+  '@playwright/cli':
+    skills: true
   # The binary comes from the per-platform optionalDependencies; the postinstall
   # is only a download fallback.
-  '@sentry/cli': false
-  esbuild: true
-  sharp: true
-  workerd: true
+  '@sentry/cli':
+    build: false
+  '@tanstack/devtools-vite':
+    skills: true
+  '@tanstack/router-plugin':
+    skills: true
+  esbuild:
+    build: true
+  sharp:
+    build: true
+  workerd:
+    build: true
+
+# Not .claude/skills: the agent sandbox denies writes there, so every agent-run
+# install would fail. Claude entries are committed symlinks into .agents/skills.
+skills:
+  dirs:
+    - .agents/skills
 
 strictDepBuilds: true

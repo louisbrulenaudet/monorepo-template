@@ -3,7 +3,7 @@ id: playwright-cli
 summary: browser checks for agents, .playwright/cli.config.json, sandbox exclusion
 families: [agents]
 packages: [@playwright/cli]
-paths: [.playwright/**, .agents/skills/run-app/SKILL.md, .agents/skills/playwright-cli/**]
+paths: [.playwright/**, .agents/skills/run-app/SKILL.md, .claude/skills/playwright-cli]
 ---
 
 # Playwright CLI
@@ -14,9 +14,9 @@ paths: [.playwright/**, .agents/skills/run-app/SKILL.md, .agents/skills/playwrig
 
 - **Stale-knowledge risk**: pre-1.0 (`0.x`); commands, flags, and config keys change between minors.
 - **Collector**: "Playwright CLI" (`microsoft/playwright-cli`) at the installed version - command list, `cli.config.json` schema, session and daemon model, output formats (`--raw`, `--json`).
-- **Local skill**: `.agents/skills/playwright-cli/SKILL.md` (vendored, pinned in `skills-lock.json`); official docs beat it, and a drift between the two is a finding against the lock.
+- **Local skill**: `.agents/skills/pnpm-@playwright+cli-playwright-cli/SKILL.md`, linked by `pnpm install` from the installed `@playwright/cli` (`permissions` `skills` grant); official docs beat it.
 - **Web fallback**: `github.com/microsoft/playwright-cli` - README, releases; `playwright.dev` for the browser launch options the config passes through.
-- **Version currency**: catalog `@playwright/cli` in [pnpm-workspace.yaml](../../../../pnpm-workspace.yaml) vs the vendored skill's version in `skills-lock.json`.
+- **Version currency**: catalog `@playwright/cli` in [pnpm-workspace.yaml](../../../../pnpm-workspace.yaml) vs latest; the skill follows the installed version.
 
 ## Scope
 

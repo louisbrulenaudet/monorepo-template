@@ -18,7 +18,7 @@ Branch and PR testing uses [Worker Previews](https://developers.cloudflare.com/w
 - The SPA's `VITE_API_BASE_URL` is the gateway **Preview** URL, which is why the gateway is previewed first and the frontend built afterwards.
 - **One smoke, after the last deploy**: `deploy-previews.sh` hands every Preview URL to `.github/actions/lib/smoke.mjs`, the same smoke as CD and skill `run-app`, so the gateway check also proves its CORS allowlist admits the SPA Preview origin. A `--url` target is retried for ~25 s on an error, a 404, or a 52x while the new hostname starts serving. A broken gateway therefore costs one SPA build before the run fails.
 - **The PR comment is `changesets/action/pr-comment`** (`update-id: worker-previews`), fed by the deploy step's `body` output; locally the same URL table goes to stdout. It searches only the first 30 comments ([quality-report.md](quality-report.md)).
-- `delete-previews.sh` runs `pnpm exec cf previews delete <preview> --worker <app>-production --force` from the repo root for every app, attempting each even when one fails, with no config file. `--force` is required: without a TTY, cf exits 1 on an unconfirmed destructive command. Locally it authenticates through cf (`pnpm run login`, or exported `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`).
+- `delete-previews.sh` runs `pnpm exec cf previews delete <preview> --worker <app>-production --force` from the repo root for every app, attempting each even when one fails, with no config file. `--force` is required: without a TTY, cf exits 1 on an unconfirmed destructive command. Locally it authenticates through cf (`pnpm run login:cloudflare`, or exported `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`).
 
 ## Exposure and credentials
 

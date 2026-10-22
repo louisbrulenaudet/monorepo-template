@@ -13,12 +13,6 @@
       "skillPath": "skills/hono/SKILL.md",
       "computedHash": "f469bac28a53d010bb47bd61109d0cfebe9a4f3fd407310746114549886b5870"
     },
-    "playwright-cli": {
-      "source": "microsoft/playwright-cli",
-      "sourceType": "github",
-      "skillPath": "skills/playwright-cli/SKILL.md",
-      "computedHash": "1e6cef0264b72fbf47618ccb82644b9a72934b2eeb35186842332928492a3cd2"
-    },
     "pnpm": {
       "source": "./project",
       "sourceType": "local",

@@ -51,7 +51,7 @@ expect_cursor() {
   fi
 }
 
-for f in "$HOOKS"/*/*.sh; do
+for f in "$HOOKS"/*/*.sh "$ROOT"/.claude/status-line/*.sh; do
   runs=$((runs + 1))
   sh -n "$f" || fail "syntax: ${f#"$ROOT"/}"
 done
@@ -179,6 +179,46 @@ runs=$((runs + 1))
 out=$(printf '{}' | CURSOR_PROJECT_DIR="$CLEAN" sh "$HOOKS/$X" 2>/dev/null)
 [ "$(printf '%s' "$out" | jq -r '.additional_context' 2>/dev/null | head -n 1)" = 'Session checks:' ] ||
   fail "$X: Cursor additional_context (got: $out)"
+
+SL=.claude/status-line/line.sh
+NOW=$(date +%s)
+STATUS=$(jq -nc --arg cwd "$SCRATCH" --argjson now "$NOW" '{
+  model: {display_name: "Opus"},
+  workspace: {current_dir: $cwd},
+  context_window: {context_window_size: 200000, total_input_tokens: 20000, used_percentage: 10},
+  cost: {total_cost_usd: 1.5},
+  rate_limits: {
+    five_hour: {used_percentage: 42, resets_at: ($now + 7200)},
+    seven_day: {used_percentage: 18, resets_at: ($now + 360000)}
+  }
+}')
+runs=$((runs + 1))
+out=$(printf '%s' "$STATUS" | sh "$ROOT/$SL" 2>/dev/null)
+case "$out" in
+  'Opus │ ctx 10% (180k left) │ 5h 42% ↺'*' │ 7d 18% ↺'*' │ $1.50') ;;
+  *) fail "$SL: every segment of a full payload (got: $out)" ;;
+esac
+runs=$((runs + 1))
+out=$(printf '%s' "$STATUS" | COLUMNS=56 sh "$ROOT/$SL" 2>/dev/null)
+case "$out" in
+  *'7d'* | *'$'*) fail "$SL: a narrow line drops cost and 7d first (got: $out)" ;;
+  'Opus │ ctx 10% (180k left) │ 5h 42% ↺'*) ;;
+  *) fail "$SL: a narrow line keeps model, ctx, and 5h (got: $out)" ;;
+esac
+runs=$((runs + 1))
+out=$(printf '{}' | CLAUDE_PROJECT_DIR="$SCRATCH" sh "$ROOT/$SL" 2>/dev/null)
+[ "$out" = 'claude │ ctx n/a' ] || fail "$SL: empty payload (got: $out)"
+
+SA=.claude/status-line/subagents.sh
+runs=$((runs + 1))
+out=$(jq -nc '{columns: 80, tasks: [{
+  id: "a1", agentType: "explorer", status: "running", startTime: 0,
+  label: "read \u001b]52;c;eA==\u0007 hooks", model: "claude-sonnet-5-5", tokenCount: 900, tokenSamples: [100, 900]
+}]}' | sh "$ROOT/$SA" 2>/dev/null)
+content=$(printf '%s' "$out" | jq -r 'select(.id == "a1") | .content' 2>/dev/null)
+case "$content" in
+  '' | *"$(printf '\033')"*) fail "$SA: row a1 rendered without control characters (got: $out)" ;;
+esac
 
 L=logging/instructions-loaded.sh
 runs=$((runs + 1))

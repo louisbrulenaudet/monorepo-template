@@ -82,16 +82,17 @@ A Worker's name prefix states its role (`worker-api`, `worker-*`, `queue-*`, `we
 
 ### Prerequisites
 
-- **Node.js 24** (≥ 24.11; `.nvmrc` pins the exact version) - [fnm](https://github.com/Schniz/fnm) is a good version manager
+- **Node.js 26** (≥ 26.12.1, the October 2026 security release; `.nvmrc` pins the exact version) - [fnm](https://github.com/Schniz/fnm) is a good version manager
 - **pnpm** 11 or later on `PATH`: it switches itself to the version pinned in root `package.json` `devEngines.packageManager` (Corepack reads only the legacy `packageManager` field, so it no longer applies)
-- **Cloudflare account** only for `pnpm run login`, deploys, and remote Worker features
+- **Cloudflare account** only for `pnpm run login:cloudflare`, deploys, and remote Worker features
 
 ### Install
 
 ```sh
 pnpm install   # dependencies + workspace links - always from the repo root
 pnpm exec cf cli telemetry disable # once per machine; replaces Wrangler's send_metrics: false
-pnpm run login # optional - cf auth login, for deploys and remote resources (bare pnpm login is the npm-registry builtin)
+pnpm run login:cloudflare # optional - cf auth login, for deploys and remote resources
+pnpm run login:turbo      # optional - turbo login && turbo link, for the Turbo remote cache
 pnpm prepare   # Vite+ pre-commit hook
 ```
 
@@ -140,24 +141,28 @@ Versioning is [Changesets](https://changesets.dev). Every app under `apps/` shar
 > [!NOTE]
 > **CD is paused** until the `production` GitHub Environment holds the values below. Set the repository variable `CD_ENABLED` to `true` in the same act as adding them.
 
-| Name                    | Kind     | Purpose                                                                                                                                                                            |
-| ----------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | secret   | `cf` auth - a scoped token, never a global API key                                                                                                                                 |
-| `CLOUDFLARE_ACCOUNT_ID` | secret   | Target account                                                                                                                                                                     |
-| `VITE_API_BASE_URL`     | variable | Production API origin baked into `front-app`                                                                                                                                       |
-| `VITE_SENTRY_DSN`       | variable | Optional public `front-app` Sentry DSN, also used by Preview builds; empty disables Sentry                                                                                         |
-| `SENTRY_ORG`            | variable | Optional; arms the CD steps that upload each app's source maps to the Sentry project named like the app, then mark its release deployed (auto-resolving `Fixes <SHORT-ID>` issues) |
-| `SENTRY_AUTH_TOKEN`     | secret   | Sentry org auth token for those steps (scoped to the steps, never the build)                                                                                                       |
-| `CD_ENABLED`            | variable | Must be `true` for `release.yml` to call CD                                                                                                                                        |
+| Name                    | Kind                            | Purpose                                                                                                                                                                            |
+| ----------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | `production` environment secret | `cf` auth - a scoped token, never a global API key                                                                                                                                 |
+| `CLOUDFLARE_ACCOUNT_ID` | `production` environment secret | Target account                                                                                                                                                                     |
+| `VITE_API_BASE_URL`     | repository variable             | Production API origin baked into `front-app`                                                                                                                                       |
+| `VITE_SENTRY_DSN`       | repository variable             | Optional public `front-app` Sentry DSN, also used by Preview builds; empty disables Sentry                                                                                         |
+| `SENTRY_ORG`            | repository variable             | Optional; arms the CD steps that upload each app's source maps to the Sentry project named like the app, then mark its release deployed (auto-resolving `Fixes <SHORT-ID>` issues) |
+| `SENTRY_AUTH_TOKEN`     | `production` environment secret | Sentry org auth token for those steps (scoped to the steps, never the build)                                                                                                       |
+| `CD_ENABLED`            | repository variable             | Must be `true` for `release.yml` to call CD                                                                                                                                        |
+
+The secrets must live on the `production` environment: when `release.yml` calls `cd.yml`, a repository secret of the same name does not reach it, and the deploy stops at `Require deploy inputs`. `VITE_API_BASE_URL` is a variable, not a secret: it is also the environment URL, which cannot read secrets.
 
 Token permissions: Account → Workers Scripts Edit (required) and Account Settings Read (typical for `cf` and Wrangler); Zone → Workers Routes Edit only with zone routes; Account → Secrets Store Edit only when binding Secrets Store.
 
 Before the first production deploy:
 
-- Set `SENTRY_DSN` once per deployed Worker: `pnpm exec wrangler secret put SENTRY_DSN --name worker-api-<staging|production>`, or pass `--secrets-file <path>` to `cf deploy` / `cf workers versions create`, keeping that file outside the checkout (e.g. under `$TMPDIR`) and deleting it after use. `worker-api` declares it with `bindings.secret()`; Previews bind it as an empty text value, so Sentry stays off there. Wrangler signs in separately from `pnpm run login` (`cf auth login`): run `pnpm exec wrangler login` first, or export `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`.
+- Set `SENTRY_DSN` once per deployed Worker: `read -rs V && pnpm --filter=worker-api exec cf workers secrets update SENTRY_DSN --worker worker-api-<staging|production> --type secret_text --text "$V"; unset V` (reading the value without echo keeps it out of shell history), or pass `--secrets-file <path>` to `cf deploy` / `cf workers versions create`, keeping that file outside the checkout (e.g. under `$TMPDIR`) and deleting it after use. `worker-api` declares it with `bindings.secret()`, so a deploy without it fails with `The following required secrets have not been set: SENTRY_DSN`; Previews bind it as an empty text value, so Sentry stays off there. To keep Sentry off in production, set it empty with the same command and `--text ""`.
 - Set `corsOrigins` in the `production` deployment of [`apps/worker-api/cloudflare.config.ts`](apps/worker-api/cloudflare.config.ts) (the `CORS_ORIGINS` binding). It ships empty, which fails closed (`/api/*` answers 503 and the CD smoke fails), and text bindings ship inside the uploaded version, so fixing it takes a new release rather than a CD re-run.
 
-After the first production deploy, run `pnpm --filter=<app> exec cf workers triggers deploy --mode production` once per app, and again after changing `previewUrls`, `workersDev`, routes, custom domains, or crons in its `cloudflare.config.ts`: CD's versions and deployments apply no triggers.
+The first release cannot ship through a normal CD run: a version upload fails on a Worker that does not exist, and it never applies a custom domain or route. Once the values above are set, run `gh workflow run cd.yml -f tag=v<version> -f bootstrap=true`: it runs `cf deploy` per app in `deployOrder`, which creates each Worker and applies its triggers, then the usual upload, promote, smoke, and GitHub Release. Then set `CD_ENABLED` to `true`, and every later release deploys on its own.
+
+Run `pnpm --filter=<app> exec cf workers triggers deploy --mode production` after changing `previewUrls`, `workersDev`, routes, custom domains, or crons in its `cloudflare.config.ts`: CD's versions and deployments apply no triggers.
 
 To ship by hand: `pnpm turbo run deploy --filter=<app> --force` (or `pnpm run deploy` for every app) builds, type-checks, uploads, and moves 100% of traffic in one step (`cf deploy --prebuilt --mode production`); `pnpm turbo run upload --filter=<app> --force` (or `pnpm run upload`) only uploads a version. `--force` skips Turbo cache reads, so a hand ship never uses a Build Output restored from the remote cache, which same-repo PR runs can write. Promote an uploaded version, or roll back to an earlier one (`pnpm --filter=<app> exec cf workers deployments list --worker <app>-production` shows the previous version ids), with `pnpm --filter=<app> exec cf workers deployments create --worker <app>-production --strategy percentage --versions '[{"version_id":"<id>","percentage":100}]'`.
 

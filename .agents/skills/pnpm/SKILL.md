@@ -1,6 +1,6 @@
 ---
 name: pnpm
-description: "pnpm workspace and dependency management for this monorepo. Triggers on: pnpm install, pnpm add/remove/update, workspace protocol, catalogs, filtering, lockfile, hoisting, allowBuilds, minimumReleaseAge, CI install failures, and dependency version drift. Use when user or agent: adds/removes packages, scaffolds workspace packages, debugs install/hoisting issues, updates shared tool versions, or changes pnpm-workspace.yaml."
+description: "pnpm workspace and dependency management for this monorepo. Triggers on: pnpm install, pnpm add/remove/update, workspace protocol, catalogs, filtering, lockfile, hoisting, permissions, allowBuilds, agent skills from dependencies, minimumReleaseAge, CI install failures, and dependency version drift. Use when user or agent: adds/removes packages, scaffolds workspace packages, debugs install/hoisting issues, updates shared tool versions, or changes pnpm-workspace.yaml."
 metadata:
   source: project-owned
 disable-model-invocation: true
@@ -157,7 +157,8 @@ Configured in `pnpm-workspace.yaml`:
 | Setting | Purpose |
 |---------|---------|
 | `strictDepBuilds: true` | Block lifecycle scripts unless explicitly allowed |
-| `allowBuilds` | Map of packages allowed (`true`) or denied (`false`) to run install scripts |
+| `permissions` | Per-package capabilities: `build` allows (`true`) or denies (`false`) install scripts, `skills` links the agent skills a direct dependency ships. Replaces `allowBuilds`, which pnpm still reads |
+| `skills.dirs` | `.agents/skills` only: pnpm links each granted skill there as `pnpm-<package>-<skill>` (gitignored by the nested `.gitignore`). Never add `.claude/skills`: the agent sandbox denies writes there and every agent-run install fails with `ERR_PNPM_AGENT_SKILL_LINK` |
 | `trustPolicy: no-downgrade` | Reject installs that would downgrade package trust/provenance |
 | `blockExoticSubdeps: true` | Block exotic (non-registry) transitive dependencies |
 | `minimumReleaseAge` (unset) | pnpm's default 24-hour cooldown on newly published versions |
@@ -166,10 +167,12 @@ Configured in `pnpm-workspace.yaml`:
 When `pnpm install` fails on a blocked build script:
 
 1. Decide if the script is **necessary** (e.g. `esbuild`, `workerd`) or **optional**.
-2. Add to `allowBuilds` in `pnpm-workspace.yaml` with `true` or `false`.
+2. Add `build: true` or `build: false` under the package in `permissions` in `pnpm-workspace.yaml` (`pnpm approve` writes the same entry).
 3. Re-run `pnpm install`.
 
 Do **not** disable `strictDepBuilds` to silence failures.
+
+When `pnpm permissions` lists a direct dependency awaiting `skills`, grant it with `skills: true` only after reading what it ships, then run `pnpm install`. Claude Code reads `.claude/skills`, so each granted skill also needs a committed symlink `.claude/skills/<name>` → `../../.agents/skills/pnpm-<package>-<skill>`, created by a human (the sandbox denies it to agents). A skill vendored through `skills-lock.json` for the same package is then removed.
 
 ## Hoisting Policy
 
@@ -179,7 +182,7 @@ Use pnpm strict linking defaults. This repository has no hoisting override: work
 
 GitHub Actions uses:
 
-1. `pnpm/setup` (pnpm v11+ successor to `pnpm/action-setup`) with `runtime: node@24` and `install: false` (default install is not frozen); the store cache is `actions/cache` keyed on `pnpm-lock.yaml` in `ci.yml` only, since `pnpm/setup`'s `cache: true` saves a new entry on every run
+1. `pnpm/setup` (pnpm v11+ successor to `pnpm/action-setup`) with `runtime: node@26` and `install: false` (default install is not frozen); the store cache is `actions/cache` keyed on `pnpm-lock.yaml` in `ci.yml` only, since `pnpm/setup`'s `cache: true` saves a new entry on every run
 2. `pnpm install --frozen-lockfile` (version comes from root `package.json` `devEngines.packageManager`)
 3. `pnpm turbo run <task> --affected`
 
@@ -199,7 +202,7 @@ Rules:
 | Registry version for a catalogued package | Use `catalog:` |
 | Put install policy in `.npmrc` | Put it in `pnpm-workspace.yaml` |
 | Hoist a missing package to mask a phantom dependency | Declare it in the importing package |
-| Disable `strictDepBuilds` | Add entry to `allowBuilds` |
+| Disable `strictDepBuilds` | Add a `build` entry to `permissions` |
 | Run `pnpm build` for app tasks | Use `pnpm turbo run build` or `pnpm build` |
 | Hand-edit `pnpm-lock.yaml` | Run `pnpm install` to regenerate |
 
