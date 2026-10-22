@@ -61,7 +61,7 @@ jobs:
       - name: Check out and install the base commit
         run: |
           git worktree add --detach "$BASE_DIR" "$BASE_SHA"
-          pnpm --dir "$BASE_DIR" install --frozen-lockfile --prefer-offline
+          pnpm --dir "$BASE_DIR" install --frozen-lockfile --prefer-offline --runtime-on-fail=warn
 
       - parallel:
           - name: Knip (PR)
@@ -77,12 +77,12 @@ jobs:
           - name: Knip (base)
             id: knip-base
             continue-on-error: true
-            run: pnpm --silent --dir "$BASE_DIR" run knip --reporter json --no-exit-code > "$QUALITY_DIR/knip-base.json"
+            run: pnpm --silent --dir "$BASE_DIR" --runtime-on-fail=warn run knip --reporter json --no-exit-code > "$QUALITY_DIR/knip-base.json"
 
           - name: Knip production (base)
             id: knip-production-base
             continue-on-error: true
-            run: pnpm --silent --dir "$BASE_DIR" run knip:production --reporter json --no-exit-code > "$QUALITY_DIR/knip-production-base.json"
+            run: pnpm --silent --dir "$BASE_DIR" --runtime-on-fail=warn run knip:production --reporter json --no-exit-code > "$QUALITY_DIR/knip-production-base.json"
 
           - name: jscpd new duplication
             id: jscpd-new
