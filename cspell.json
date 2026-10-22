@@ -15,7 +15,6 @@
   "ignorePaths": [
     ".agents/skills/git-commit/**",
     ".agents/skills/hono/**",
-    ".agents/skills/playwright-cli/**",
     ".agents/skills/pnpm/**",
     ".agents/skills/react-doctor/**",
     ".agents/skills/security-audit/**",

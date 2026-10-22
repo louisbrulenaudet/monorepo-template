@@ -4,7 +4,12 @@
   "subagentPromptCacheTtl": "1h",
   "statusLine": {
     "type": "command",
-    "command": "sh \"${CLAUDE_PROJECT_DIR}/.claude/status-line.sh\""
+    "command": "sh \"${CLAUDE_PROJECT_DIR}/.claude/status-line/line.sh\"",
+    "refreshInterval": 60
+  },
+  "subagentStatusLine": {
+    "type": "command",
+    "command": "sh \"${CLAUDE_PROJECT_DIR}/.claude/status-line/subagents.sh\""
   },
   "permissions": {
     "allow": [
@@ -75,9 +80,12 @@
       "Bash(rm -r -f:*)",
       "Bash(rm -f -r:*)",
       "Bash(wrangler preview:*)",
+      "Bash(cf workers secrets:*)",
+      "Bash(pnpm exec cf workers secrets:*)",
+      "Bash(pnpm --filter=* exec cf workers secrets *)",
       "Bash(cf previews:*)",
       "Bash(pnpm exec cf previews:*)",
-      "Bash(pnpm --filter=* exec cf previews:*)",
+      "Bash(pnpm --filter=* exec cf previews *)",
       "Bash(pnpm preview:deploy*)",
       "Bash(pnpm preview:delete*)",
       "Bash(pnpm run preview:*)",
@@ -140,7 +148,7 @@
     ],
     "ask": [
       "Edit(/hooks/**)",
-      "Edit(/.claude/status-line.sh)",
+      "Edit(/.claude/status-line/**)",
       "Bash(git push:*)",
       "Bash(git reset --hard:*)",
       "Bash(git clean -f:*)",
@@ -343,11 +351,12 @@
         "./apps/front-app/.env.production"
       ],
       "allowWrite": [
-        "~/Library/pnpm/package-manager-store"
+        "~/Library/pnpm/package-manager-store",
+        "~/Library/Application Support/turborepo"
       ],
       "denyWrite": [
         "./hooks",
-        "./.claude/status-line.sh"
+        "./.claude/status-line"
       ]
     }
   },

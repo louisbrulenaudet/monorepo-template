@@ -48,6 +48,6 @@ Repo-wide checks - `//#lint:check`, `//#lint:agent`, `//#format:check`, `//#deps
 
 Enabled and signed (`remoteCache.signature: true`, `longerSignatureKey`). Local dev and CI need `TURBO_REMOTE_CACHE_SIGNATURE_KEY` (>= 32 bytes, the same value everywhere) alongside `TURBO_TOKEN` / `TURBO_TEAM`, or signed fetches fail closed; without the key, expect remote misses - local caching is unaffected. Rotating the key invalidates every signed artifact once.
 
-A dev machine gets none of them automatically: `turbo login && turbo link`, or export all three in the shell profile, never committed. Verify with a task CI already built: a cold local cache logs `cache hit, replaying logs`. Without them the machine is local-cache-only, by design.
+A dev machine gets none of them automatically: `pnpm run login:turbo` (`turbo login && turbo link`) stores the token and team, but Turbo reads the signature key only from the environment, so pass it per command or export it in the shell profile, never committed. Verify with a task CI already built: a cold local cache logs `cache hit, replaying logs`. Without them the machine is local-cache-only, by design.
 
 On 4 cores / <4 GB RAM, pass `--concurrency=2` on heavy graphs; never lower `concurrency` in `turbo.json` (it would slow CI).

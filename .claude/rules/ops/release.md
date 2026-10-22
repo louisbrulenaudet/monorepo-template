@@ -59,6 +59,7 @@ push to main ──► Release  (concurrency release-main, queue: max, never can
 | `gate` red | Fix on a PR. No tag, no deploy. |
 | `version` push rejected | Re-run; the branch is reset from `main` each time. |
 | Release PR waits on the required check | The dispatch failed or predates the head commit: `gh workflow run ci.yml --ref changeset-release/main`. Never approve the held `pull_request` runs. |
+| `version`: *GitHub Actions is not permitted to create or approve pull requests* | Enable the setting below. If the organization locks it, mint a GitHub App token (`actions/create-github-app-token`, contents and pull requests write) and pass it to `changesets/action/version` as `github-token`; the release PR's author is then `<app-slug>[bot]`, so update the author in `ci.yml`'s job-level `if`. Never use that token to approve a PR. |
 | `tag` version drift | Re-align every app in one commit; the action fails closed, naming each app and its version. |
 | Tag already exists | `created=false`, deploy skipped. Not an error. |
 | `release:check` fails on a Dependabot PR | `CHANGESET_BOT_TOKEN` is set but expired or lacks access (the Dependabot changesets job is red): renew it, or add `pnpm changeset --patch <app> -m 'Bump …'` to the branch by hand. Without the secret the gate only warns. |

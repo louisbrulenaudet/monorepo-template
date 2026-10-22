@@ -10,6 +10,8 @@ const sharedTestDefaults: InlineConfig = {
   clearMocks: true,
   unstubEnvs: true,
   unstubGlobals: true,
+  // Per-app cache: the workspace-root default is wiped by any parallel run that sees a new lockfile hash.
+  fsModuleCachePath: "node_modules/.vitest-cache",
 };
 
 /** Node Vitest config for `front-*` apps. */

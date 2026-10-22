@@ -6,7 +6,7 @@ A minimal, production-oriented monorepo starter: **pnpm workspaces** + **Turbore
 
 ## Quick Start
 
-`pnpm install`, then `pnpm dev` (all dev servers). One-time machine setup (`cf` telemetry off, `pnpm run login`, `pnpm prepare` for the Vite+ pre-commit hooks): README "Getting started". `pnpm run login` is `cf auth login`; bare `pnpm login` is the npm-registry builtin.
+`pnpm install`, then `pnpm dev` (all dev servers). One-time machine setup (`cf` telemetry off, `pnpm run login:cloudflare` / `login:turbo`, `pnpm prepare` for the Vite+ pre-commit hooks): README "Getting started".
 
 A new worker under `apps/` needs `monorepo.deployOrder` (lower promotes first; gateways before the SPAs that call them) and `monorepo.healthPath` (public probe path, or `null` for no public HTTP surface) in its `package.json`, then `pnpm install` before turbo commands. Nothing else lists apps: the changeset group, the root `--filter='./apps/*'` scripts, and CD all discover them.
 
@@ -45,13 +45,13 @@ Queue-only / dual-handler workers: `handlers/request.ts`, `handlers/message.ts`,
 
 ## Environment
 
-Node 24 (≥ 24.11, the floor Vite+ `vp` requires) and the exact pnpm version pinned in root `package.json`. A Worker app may keep a gitignored `.env` for local secret values, which `cf dev` loads; the shell works too (`SENTRY_DSN=<dsn> pnpm dev`; Turbo passes `SENTRY_DSN` through to `worker-api#dev`), and unset leaves Sentry off in dev. Never a `.dev.vars`: it breaks the Vitest pool, which skips only an unreadable `.env`. The agent sandbox denies reading a Worker `.env`, and the Cloudflare Vite plugin aborts on an env file it cannot read, so `.claude/settings.json` sets `SKIP_ENV_FILES=1` and each app's `vite.config.ts` turns it into `envDir: false`: sandboxed `cf dev` / `cf build` start without the `.env` values (Sentry off). Every `front-app` `.env*` file holds only public `VITE_*` values; frontend dev overrides go in `.env`, which the sandboxed dev server skips in favor of the `src/config/env.ts` defaults. Local ports: rule `backend/ports`.
+Node 26 (≥ 26.12.1, the October 2026 security release) and the exact pnpm version pinned in root `package.json`. A Worker app may keep a gitignored `.env` for local secret values, which `cf dev` loads; the shell works too (`SENTRY_DSN=<dsn> pnpm dev`; Turbo passes `SENTRY_DSN` through to `worker-api#dev`), and unset leaves Sentry off in dev. Never a `.dev.vars`: it breaks the Vitest pool, which skips only an unreadable `.env`. The agent sandbox denies reading a Worker `.env`, and the Cloudflare Vite plugin aborts on an env file it cannot read, so `.claude/settings.json` sets `SKIP_ENV_FILES=1` and each app's `vite.config.ts` turns it into `envDir: false`: sandboxed `cf dev` / `cf build` start without the `.env` values (Sentry off). Every `front-app` `.env*` file holds only public `VITE_*` values; frontend dev overrides go in `.env`, which the sandboxed dev server skips in favor of the `src/config/env.ts` defaults. Local ports: rule `backend/ports`.
 
 A worktree is a fresh checkout: run `pnpm install --frozen-lockfile --prefer-offline` in it before any turbo command. Sparse-checkout and `.worktreeinclude` policy: rule `core/worktrees`.
 
 ## cf CLI
 
-Cloudflare tooling is the `cf` CLI (beta) over each app's typed `cloudflare.config.ts`, run through the package scripts or `pnpm --filter=<app> exec cf …`, never a global install. The root `wrangler` devDependency stays only for `wrangler tail`, a single `wrangler secret put`, and `wrangler preview secret put`. Find a command with `pnpm exec cf cli search "<task>"` - keep the query anonymous, the action and resource type only, never names, IDs, domains, or tokens - then read `<command> --help` (`cf schema <command words>` for the API request shape) and try it with `--dry-run` before running it. Results are JSON on stdout, messages and errors on stderr. In a non-interactive session a destructive command without `--force` exits 1; `--force` can also be an API parameter, so read `--help` before passing it. Never run `cf dev`, `cf build`, `cf deploy`, or `cf init` in a directory without `cloudflare.config.ts`: autoconfiguration rewrites the project. Agents never run `cf auth login`. Modes, bindings, Build Output, and the Local Explorer: skill `cf`.
+Cloudflare tooling is the `cf` CLI (beta) over each app's typed `cloudflare.config.ts`, run through the package scripts or `pnpm --filter=<app> exec cf …`, never a global install. The root `wrangler` devDependency stays only for `wrangler tail` and `wrangler preview secret put`; a single deployed secret goes up with `cf workers secrets update`. Find a command with `pnpm exec cf cli search "<task>"` - keep the query anonymous, the action and resource type only, never names, IDs, domains, or tokens - then read `<command> --help` (`cf schema <command words>` for the API request shape) and try it with `--dry-run` before running it. Results are JSON on stdout, messages and errors on stderr. In a non-interactive session a destructive command without `--force` exits 1; `--force` can also be an API parameter, so read `--help` before passing it. Never run `cf dev`, `cf build`, `cf deploy`, or `cf init` in a directory without `cloudflare.config.ts`: autoconfiguration rewrites the project. Agents never run `cf auth login`. Modes, bindings, Build Output, and the Local Explorer: skill `cf`.
 
 ## Root Scripts (pnpm)
 
@@ -65,18 +65,13 @@ Cloudflare tooling is the `cf` CLI (beta) over each app's typed `cloudflare.conf
 | `pnpm run ci:affected` | `ci` scoped with `--affected`, minus audit - mid-task only, never a substitute for `ci` |
 | `pnpm run ci:agent` | `ci` with `lint:agent`, `--output-logs=errors-only`, `--log-order=grouped` |
 | `pnpm run ci:sandbox` | `ci:agent` minus `build`: `front-app` declares `.env*` as `build` inputs, and turbo aborts traversal on one the sandbox cannot read. They are all readable through the `**/apps/front-app/.env*` allow once the settings patch lands; until then only `.env` and `.env.production` are. Ask the user to run `pnpm run ci` for build coverage |
-| `pnpm lint:agent` | Lint with `--format=agent`, no auto-fix |
 | `pnpm react-doctor` / `:changed` | Offline React Doctor scan of `front-*`; `:changed` after React edits (rule `frontend/react`) |
 | `pnpm types` | `cf workers types` per Worker: regenerates the gitignored `.cloudflare/types/index.d.ts` (global `Env`) from `cloudflare.config.ts`. Cached by Turbo, and `check-types` depends on it |
-| `pnpm boundaries` | Package tags vs `turbo.json` |
-| `pnpm hooks:test` | `sh -n` plus the regression table for `hooks/` |
 | `pnpm spell:check` / `spell:words` | cspell over the repo, dotfiles included / unknown words only, one per line. Vocabulary: `.cspell/project-words.txt` (not in `check` or `ci`) |
 | `pnpm knip` / `knip:production` / `knip:agent` | Unused files, exports, deps; `--production --strict`; one line per symbol. Diagnostic only, never in `ci` |
 | `pnpm jscpd` | Whole-repo copy/paste scan (`.jscpd.json`). Report-only, never in `check` or `ci`: the PR `Code quality` comment shows only the duplication and Knip findings a PR adds or resolves (rule `ops/quality-report`) |
-| `pnpm deps:check` / `deps:fix` / `deps:format` | syncpack lint (`catalog:` for third-party, `workspace:*` for `@repo/**`) / autofix / field ordering |
 | `pnpm preview:deploy` / `preview:delete` | Worker Preview of every app (branch-slug name). Outward-facing; denied to agents (rule `ops/previews`) |
 | `pnpm release:check` | Changeset gate, also in `ci`, `ci:agent`, `ci:sandbox`, and PR CI: fails when a shipped path or an app's runtime catalog entry changed with no changeset since `origin/main`, on a non-app name, a title over 100 characters or a heading, and on `major` without `CHANGESET_ALLOW_MAJOR=1`. Diffs tracked files only: `git add` a new changeset first |
-| `pnpm release:status` | Read-only release plan: every pending changeset and the next versions |
 
 **Dependencies:** add every third-party dependency to the catalog in `pnpm-workspace.yaml` and reference it as `"catalog:"` (one-offs install via `catalogMode: prefer` but fail `syncpack lint`); internal packages use `"workspace:*"`.
 

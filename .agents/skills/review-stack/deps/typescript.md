@@ -34,7 +34,7 @@ Read every preset and consuming tsconfig; map preset → consumers.
 - **Module resolution & emit**: `moduleResolution: bundler` (or current recommendation) for Vite/Workers; no `noEmit` conflicts; `verbatimModuleSyntax` / type-import discipline; `isolatedModules` for single-file transpilers.
 - **Monorepo layout**: presets consumed everywhere (no drift); workspace imports over path aliases, never importing an app; precise include/exclude (tests, generated files).
 - **Workers specifics**: workers preset matches runtime types (`.cloudflare/types` in `include` with `"types": []`); every `cloudflare.config.ts` type-checked (worker-api: main tsconfig, with `allowImportingTsExtensions` from the shared presets for its `./src/index.ts` entrypoint import; front-app: `tsconfig.node.json`); `nodejs_compat` reflected in lib settings.
-- **Version currency**: new flags worth adopting; deprecated flags flagged; `@types/node` aligned with the Node 24 engine.
+- **Version currency**: new flags worth adopting; deprecated flags flagged; `@types/node` aligned with the Node 26 engine.
 - **Agent loop**: `turbo run check-types` caching effective; error output stable; presets documented so agents extend the right one.
 
 ## Critical when

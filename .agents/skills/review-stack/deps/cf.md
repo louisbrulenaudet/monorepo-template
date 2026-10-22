@@ -52,4 +52,4 @@ Assumptions broken by the compatibility date; invalid config keys; a secret as a
 
 - Config policy in [.claude/rules/backend/workers-config.md](../../../../.claude/rules/backend/workers-config.md); CD and Previews are paused behind `CD_ENABLED` / `PREVIEWS_ENABLED` on purpose.
 - Exact pins for `cf` and `@cloudflare/vite-plugin`: both are betas, and the plugin ships a snapshot per push.
-- `wrangler` stays a root devDependency for tail, single-secret put, and Preview delete / secrets, which cf lacks; `WRANGLER_OUTPUT_FILE_PATH` carries the version-upload record until cf prints JSON for `versions create`.
+- `wrangler` stays a root devDependency for tail and Preview delete / secrets, which cf lacks; `WRANGLER_OUTPUT_FILE_PATH` carries the version-upload record until cf prints JSON for `versions create`.

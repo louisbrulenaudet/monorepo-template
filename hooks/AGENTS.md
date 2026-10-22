@@ -8,7 +8,7 @@ Guardrails enforced here mirror rule [`core/guardrails`](../.claude/rules/core/g
 
 ## Structure
 
-`lib/` sourced helpers, never executed (`guard.sh`: payload, verdicts, fail-closed trap, the segment loop; `parse-command.sh`: the quote-aware parser) · `git/` shell-command guards · `security/` content guards (Claude only) · `quality/` post-edit format + lint and the stop gate · `session/` session-start context · `logging/` debug logs · `tests/run.sh` (`pnpm hooks:test`) · `logs/` git-ignored runtime output, size-capped. Per-script triggers: [Hook Behavior Summary](#hook-behavior-summary).
+`lib/` sourced helpers, never executed (`guard.sh`: payload, verdicts, fail-closed trap, the segment loop; `parse-command.sh`: the quote-aware parser) · `git/` shell-command guards · `security/` content guards (Claude only) · `quality/` post-edit format + lint and the stop gate · `session/` session-start context · `logging/` debug logs · `tests/run.sh` (`pnpm hooks:test`; also covers the `.claude/status-line/` scripts) · `logs/` git-ignored runtime output, size-capped. Per-script triggers: [Hook Behavior Summary](#hook-behavior-summary).
 
 ## Where to Change Things
 

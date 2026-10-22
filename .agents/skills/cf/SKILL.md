@@ -64,7 +64,7 @@ Allowed during a production investigation the user asked for; hand the command o
 ## Never, as an agent
 
 - Deploy, upload, promote, roll back, or preview: `pnpm run deploy`, `pnpm run upload`, `pnpm preview:*`, `cf deploy`, `cf workers versions create`, `cf workers deployments create`, `cf workers triggers deploy`, `cf previews deploy`, `cf previews delete`. CD and the Previews workflow own them (rules `ops/cd`, `ops/previews`, `ops/release`); hand the exact command to the user.
-- Log in: `cf auth login` (root script `login`) is the user's. cf reads `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` like Wrangler did; `CF_ACCOUNT_ID` is a deprecated alias.
+- Log in: `cf auth login` (root script `login:cloudflare`) is the user's. cf reads `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` like Wrangler did; `CF_ACCOUNT_ID` is a deprecated alias.
 - Run `cf dev`, `cf build`, `cf deploy`, or `cf init` in a directory without `cloudflare.config.ts` (autoconfiguration rewrites the project), or `cf migrate` anywhere (it rewrites a Wrangler project's files for cf). A new app copies an existing app's `cloudflare.config.ts` and `vite.config.ts`, then is adapted by hand.
 - Change account state without `--local` - a KV, D1, or R2 write or delete, `cf workers secrets update|delete|bulk`, `cf workers delete` - unless the user asked for that exact operation and its `--dry-run` matched.
 
@@ -73,7 +73,7 @@ For the hand-off: promote or roll back with `pnpm --filter=<app> exec cf workers
 ## Secrets
 
 - Local values come from a gitignored Worker `.env` or the shell (`SENTRY_DSN=… pnpm dev`; turbo passes `SENTRY_DSN` to `worker-api#dev`), never a `.dev.vars`; unset means Sentry is off in dev. The Vite plugin aborts on an env file it cannot read and the agent sandbox denies `**/.env`, so the agent session sets `SKIP_ENV_FILES=1` and sandboxed runs skip the `.env` (rule `backend/workers-config`).
-- Deployed secrets are declared with `bindings.secret()`; the `test` mode and Previews use `bindings.text("")` for `SENTRY_DSN`. Values go up with `--secrets-file <path>` on `cf deploy` / `cf workers versions create` (a file outside the checkout, e.g. under `$TMPDIR`, deleted after use), or one at a time with `wrangler secret put` (below) - users and CD only.
+- Deployed secrets are declared with `bindings.secret()`; the `test` mode and Previews use `bindings.text("")` for `SENTRY_DSN`. Values go up with `--secrets-file <path>` on `cf deploy` / `cf workers versions create` (a file outside the checkout, e.g. under `$TMPDIR`, deleted after use), or one at a time with `read -rs V && pnpm --filter=<app> exec cf workers secrets update <NAME> --worker <app>-production --type secret_text --text "$V"; unset V`, which keeps the value out of shell history - users and CD only.
 - Every `apps/front-app/.env*` file holds public `VITE_*` values only, and the sandbox reads them through the `**/apps/front-app/.env*` allow, because `build` hashes them as inputs.
 
 ## Still Wrangler
@@ -83,7 +83,6 @@ The root devDependency `wrangler` stays for what cf lacks. Run it as `pnpm exec 
 | Task | Command |
 |------|---------|
 | Tail production logs | `pnpm exec wrangler tail <app>-production` |
-| Put one deployed secret | `pnpm exec wrangler secret put <NAME> --name <app>-production` |
 | Put a Preview secret | `pnpm exec wrangler preview secret put …` (rule `ops/previews`) |
 
 `hono request` sees the bindings without a Wrangler config: in a `cf` project it defaults to `--runtime vite`, and the Cloudflare Vite plugin reads `cloudflare.config.ts`. `--runtime workerd` and the Node runtime's `getPlatformProxy` still need a Wrangler config.
@@ -104,6 +103,7 @@ The root devDependency `wrangler` stays for what cf lacks. Run it as `pnpm exec 
 | `dist/` | `.cloudflare/output/v0/` |
 | `wrangler check startup` | `cf workers check` |
 | `wrangler versions deploy`, `wrangler rollback` | `cf workers deployments create` with the version id |
+| `wrangler secret put` (prompts for the value) | `cf workers secrets update --type secret_text --text <value>` (no prompt: read the value without echo, as in Secrets) |
 | Waiting for "Ready on" | Vite's `Local:` banner |
 
 ## Docs

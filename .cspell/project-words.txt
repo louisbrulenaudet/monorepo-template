@@ -37,6 +37,7 @@ devframe
 doas
 dtos
 effectful
+elif
 empt
 enam
 endgroup
@@ -55,6 +56,7 @@ getsentry
 github
 GOCACHE
 grayscale
+gsub
 hardlinks
 heredocs
 hono
@@ -156,8 +158,10 @@ syncpack
 syncpackrc
 tailwindcss
 tanstack
+tonumber
 toplevel
 tosorted
+tostring
 treemap
 tsgolint
 Turborepo
