@@ -12,20 +12,20 @@ catalog:
   '@hono/cli': 1.0.0-rc.8
   '@hono/zod-validator': ^0.9.1
   '@playwright/cli': ^0.1.22
-  '@sentry/cli': ^3.8.1
-  '@sentry/cloudflare': 11.8.0
-  '@sentry/hono': 11.8.0
-  '@sentry/react': 11.8.0
-  '@sentry/vite-plugin': ^11.8.0
+  '@sentry/cli': ^3.8.2
+  '@sentry/cloudflare': 11.9.0
+  '@sentry/hono': 11.9.0
+  '@sentry/react': 11.9.0
+  '@sentry/vite-plugin': ^11.9.0
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
   '@tanstack/react-devtools': ^0.10.13
   '@tanstack/react-query': ^5.104.5
   '@tanstack/react-query-devtools': ^5.104.5
-  '@tanstack/react-router': ^1.170.45
+  '@tanstack/react-router': ^1.170.46
   '@tanstack/react-router-devtools': ^1.167.2
-  '@tanstack/router-cli': 1.167.45
-  '@tanstack/router-plugin': ^1.168.47
+  '@tanstack/router-cli': 1.167.46
+  '@tanstack/router-plugin': ^1.168.48
   '@testing-library/dom': ^10.4.2
   '@testing-library/jest-dom': ^7.0.1
   '@testing-library/react': ^16.3.3
@@ -40,19 +40,19 @@ catalog:
   '@vitejs/devtools-vitest': ^0.8.0
   '@vitest/ui': ^5.0.5
   '@vitejs/plugin-react': ^6.1.2
-  cf: 1.0.0-beta.20
+  cf: 1.0.0-beta.21
   cross-env: ^10.1.0
   cspell: ^10.4.0
   eslint-plugin-better-tailwindcss: ^4.10.0
   happy-dom: ^21.0.4
   hono: ^4.13.13
   jscpd: ^5.4.2
-  knip: ^6.42.1
+  knip: ^6.43.0
   oxc-transform-react: ^0.155.0
   oxfmt: ^0.74.0
   oxlint: ^1.89.0
   oxlint-plugin-react-doctor: ^0.9.18
-  oxlint-tsgolint: ^7.0.2004
+  oxlint-tsgolint: ^7.0.2005
   react: ^19.3.1
   react-doctor: ^0.9.18
   react-dom: ^19.3.1
@@ -62,7 +62,7 @@ catalog:
   turbo: 2.11.10
   typescript: ^7.0.2
   vite: ^8.3.5
-  vite-plus: ^1.3.0
+  vite-plus: ^1.4.0
   vitest: ^5.0.5
   wrangler: ^4.152.0
   zod: ^4.6.7
