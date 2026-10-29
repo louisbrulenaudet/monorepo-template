@@ -226,22 +226,22 @@ async function ready(t, attempts = READY_ATTEMPTS - 1) {
 
 /**
  * @param {Target} t
- * @param {Target | undefined} frontend
+ * @param {Target[]} frontends
  * @returns {Promise<Check[]>}
  */
-async function checkGateway(t, frontend) {
+async function checkGateway(t, frontends) {
   /** @param {string} origin */
   const preflight = (origin) =>
     probe(t.base + t.healthPath, {
       method: "OPTIONS",
       headers: { origin, "access-control-request-method": "GET" },
     });
-  const allowedOrigin = frontend ? new URL(frontend.base).origin : undefined;
-  const [health, missing, allowed, foreign] = await Promise.all([
+  const allowedOrigins = frontends.map((f) => new URL(f.base).origin);
+  const [health, missing, foreign, ...allowed] = await Promise.all([
     probe(t.base + t.healthPath),
     probe(`${t.base}/__smoke-not-found__`),
-    allowedOrigin ? preflight(allowedOrigin) : undefined,
     preflight(FOREIGN_ORIGIN),
+    ...allowedOrigins.map((origin) => preflight(origin)),
   ]);
 
   const healthJson = "body" in health ? parseJson(health.body) : undefined;
@@ -281,14 +281,14 @@ async function checkGateway(t, frontend) {
       detail: `allow-origin=${foreignHeader}`,
     },
   ];
-  if (allowed && allowedOrigin) {
-    const allowedHeader = header(allowed, "access-control-allow-origin");
+  allowed.forEach((response, i) => {
+    const allowedHeader = header(response, "access-control-allow-origin");
     checks.push({
-      label: `CORS allows ${allowedOrigin}`,
-      ok: allowedHeader === allowedOrigin,
+      label: `CORS allows ${allowedOrigins[i]}`,
+      ok: allowedHeader === allowedOrigins[i],
       detail: `allow-origin=${allowedHeader}`,
     });
-  }
+  });
   if (expectedVersion !== undefined) {
     const version = prop(healthJson, "version");
     checks.push({
@@ -338,11 +338,11 @@ if (overrides.size > 0) {
   await Promise.all(targets.map((t) => ready(t)));
 }
 
-const frontend = targets.find((t) => t.role === "frontend");
+const frontends = targets.filter((t) => t.role === "frontend");
 const results = await Promise.all(
   targets.map((t) => {
     if (t.role === "http-gateway") {
-      return checkGateway(t, frontend);
+      return checkGateway(t, frontends);
     }
     return t.role === "frontend" ? checkFrontend(t) : checkOther(t);
   }),
@@ -413,7 +413,7 @@ if (values.traces && gateway && overrides.size === 0) {
   }
 } else if (values.traces) {
   console.log(
-    "# --traces reads the local Explorer only; for a Preview use the cloudflare-observability MCP server",
+    "# --traces reads the local Explorer only; for a Preview use the cloudflare-api MCP server",
   );
 }
 

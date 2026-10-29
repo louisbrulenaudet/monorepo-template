@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -136,6 +136,50 @@ async function readWorkspaceAt(commit) {
   return response.text();
 }
 
+/** @returns {Map<string, Record<string, string>>} Package name → `dependencies` */
+function readPackageDependencies() {
+  const dependencies = new Map();
+  for (const entry of readdirSync("packages", { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    const manifest = JSON.parse(
+      readFileSync(path.join("packages", entry.name, "package.json"), "utf8"),
+    );
+    dependencies.set(manifest.name, manifest.dependencies ?? {});
+  }
+  return dependencies;
+}
+
+/**
+ * An app's `dependencies` plus those of every `workspace:` package it bundles,
+ * transitively: a bundled package's catalog bump changes the app's bytes too.
+ *
+ * @param {Record<string, string>} appDependencies
+ * @param {Map<string, Record<string, string>>} packageDependencies
+ * @returns {[string, string][]} Name and specifier of each external dependency
+ */
+function runtimeDependencies(appDependencies, packageDependencies) {
+  const external = [];
+  const seen = new Set();
+  const pending = [appDependencies];
+  for (let i = 0; i < pending.length; i += 1) {
+    for (const [name, specifier] of Object.entries(pending[i])) {
+      if (seen.has(name)) {
+        continue;
+      }
+      seen.add(name);
+      const bundled = packageDependencies.get(name);
+      if (specifier.startsWith("workspace:") && bundled) {
+        pending.push(bundled);
+      } else {
+        external.push([name, specifier]);
+      }
+    }
+  }
+  return external;
+}
+
 /**
  * @param {string} baseRef
  * @returns {Promise<Map<string, Bump[]>>} App name → its changed runtime
@@ -145,6 +189,7 @@ export async function runtimeCatalogChanges(baseRef) {
   const base = git(["merge-base", baseRef, "HEAD"]).trim();
   const before = parseCatalogs(await readWorkspaceAt(base));
   const after = parseCatalogs(readFileSync(WORKSPACE_FILE, "utf8"));
+  const packageDependencies = readPackageDependencies();
 
   const changes = new Map();
   for (const app of readApps()) {
@@ -152,8 +197,9 @@ export async function runtimeCatalogChanges(baseRef) {
       readFileSync(path.join("apps", app.dir, "package.json"), "utf8"),
     );
     const bumps = [];
-    for (const [name, specifier] of Object.entries(
+    for (const [name, specifier] of runtimeDependencies(
       manifest.dependencies ?? {},
+      packageDependencies,
     )) {
       if (!specifier.startsWith("catalog:")) {
         continue;
