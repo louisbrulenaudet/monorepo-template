@@ -7,7 +7,6 @@ export { resolvePackageRoot } from "./package-root.js";
 const sharedTestDefaults: InlineConfig = {
   include: ["tests/**/*.test.{ts,tsx}"],
   restoreMocks: true,
-  clearMocks: true,
   unstubEnvs: true,
   unstubGlobals: true,
   // Per-app cache: the workspace-root default is wiped by any parallel run that sees a new lockfile hash.

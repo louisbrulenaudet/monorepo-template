@@ -1,9 +1,15 @@
 {
   "$schema": "./node_modules/syncpack/schema.json",
+  "strict": true,
   "dependencyGroups": [
     {
       "aliasName": "sentry-sdk",
-      "dependencies": ["@sentry/cloudflare", "@sentry/hono", "@sentry/react"]
+      "dependencies": [
+        "@sentry/cloudflare",
+        "@sentry/hono",
+        "@sentry/react",
+        "@sentry/vite-plugin"
+      ]
     }
   ],
   "versionGroups": [

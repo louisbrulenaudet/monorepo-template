@@ -34,7 +34,7 @@
         "!.agents/**!",
       ],
       "ignoreBinaries": ["changeset!"],
-      "ignoreDependencies": ["@vitest/ui", "wrangler"],
+      "ignoreDependencies": ["@vitest/ui", "skills", "wrangler"],
     },
     "packages/vitest-config": {
       "ignoreFiles": ["src/package-root.d.ts"],
