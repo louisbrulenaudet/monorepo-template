@@ -10,11 +10,11 @@ paths:
 
 # Agent Instructions
 
-How the instruction layers load, and how to edit them without growing context. Long-form layout and sync policy: skill `monorepo-agent-setup`.
+How the instruction layers load, and how to edit them without growing context. Long-form layout and sync policy: `.agents/skills/monorepo-agent-setup/SKILL.md` (a human-only skill: Read it).
 
 ## Loading (Claude Code, verified)
 
-- Root `CLAUDE.md` → `@AGENTS.md` and every rule without `paths` load at session start and in every custom subagent. Path-scoped rules and a nested `CLAUDE.md` → `AGENTS.md` load when a matching file is Read (subagents included) and then stay loaded. Built-in `Explore` / `Plan` load none of it.
+- Root `CLAUDE.md` → `@AGENTS.md` and every rule without `paths` load at session start and in every custom subagent. Path-scoped rules and a nested `CLAUDE.md` → `AGENTS.md` load when a matching file is Read (subagents included) and then stay loaded. Built-in `Explore` / `Plan` skip root `CLAUDE.md`, `AGENTS.md`, and the always-on rules; they load nested guides and path-scoped rules only on file access.
 - Markdown links are never followed: a link costs only its text, and the target loads only if an agent Reads it.
 
 ## Placement

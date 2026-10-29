@@ -24,7 +24,7 @@ globs: apps/front-*/vite.config.ts
 - Keep `reportDiagnostics`: without it, a component the compiler skips loses memoization silently instead of printing a Vite warning, and rule `frontend/react` forbids manual memo.
 
 - `cloudflare({ types: { generate: false } })`: the assets-only SPA reads no `env`. Worker settings (name, assets, observability per mode) live in `cloudflare.config.ts`.
-- `@cloudflare/vite-plugin` is a 2.0 beta snapshot pinned exactly in the catalog (`2.0.0-beta.sha-…`): cf requires `>=2.0.0-0 <3`, and a snapshot is published per push, so a range would float onto untested builds.
+- `@cloudflare/vite-plugin` is pinned exactly to a numbered 2.0 beta (`2.0.0-beta.v.N`): cf requires `>=2.0.0-0 <3`, and beta numbers change behavior (v.3 errors on legacy config, v.6 turns the dev registry on), so a range would float onto untested behavior.
 - No config-identity workaround plugin: plugin 2.0 no longer replaces `server.config` (1.x's copy made the injected DevTools script 500).
 
 ## DevTools
@@ -38,7 +38,7 @@ globs: apps/front-*/vite.config.ts
 
 ## Monorepo and dev server
 
-- `server.fs.allow: [repoRoot]` (`path.resolve(appDir, "../..")`) for `@repo/*`; leave `server.fs.strict` at its default `true`.
+- Leave `server.fs.allow` unset: its default, the workspace root Vite finds from `pnpm-workspace.yaml`, already serves `@repo/*` and the pnpm store. Never narrow it to the app plus `packages/` (dependencies under the root `node_modules/.pnpm` would 403), and leave `server.fs.strict` at its default `true`.
 - Vite resolves the `package.json` `"imports"` map (`#/*`) natively: never add `resolve.alias` for it.
 - `server.warmup.clientFiles` for hot entry files only. Keep `server.forwardConsole` (or `{ unhandledErrors: true, logLevels: ["warn", "error"] }`) for agentic dev.
 
@@ -47,6 +47,7 @@ globs: apps/front-*/vite.config.ts
 - Leave `build.target` unset (Vite 8 default `baseline-widely-available`). `sourcemap`: inline in development mode, `hidden` in production (kept for symbolication, excluded from the assets upload by the generated `.assetsignore`). `reportCompressedSize` is on only for the `analyze` build (`ANALYZE=true`): gzip sizing slows every build, and the `bundle-analyzer` agent reads the gzip column from that build's chunk table. Leave `cssCodeSplit`, `assetsInlineLimit`, and `chunkSizeWarningLimit` at their defaults. Leave `modulePreload.polyfill` at its default `true` unless you intentionally drop older-browser preload support.
 - The generated `_headers` sets `Cache-Control` on `/assets/*` only: Cloudflare joins a header two rules apply with a comma, so a `/*` value would land on hashed assets too, and HTML keeps the platform default `public, max-age=0, must-revalidate`.
 - Fail the production `build` on missing or placeholder required `VITE_*` values; skip that check under static analysis (`knip`).
-- `_headers` (cache + CSP) and `.assetsignore` (`*.map`) come from the `generated-build-artifacts` plugin, which `this.emitFile`s them in `generateBundle` for the `client` environment only; never hand-edit them.
+- Declare every `VITE_*` key in `src/vite-env.d.ts`: `ViteTypeOptions.strictImportMetaEnv` makes an undeclared or misspelled read a type error instead of `any`.
+- `_headers` (cache + CSP) and `.assetsignore` (`*.map`) come from the `generated-build-artifacts` plugin, which `this.emitFile`s them in `generateBundle` for the `client` environment only; never hand-edit them. The same plugin injects a `preconnect` link to the `VITE_API_BASE_URL` origin through `transformIndexHtml`, so the first API call skips the DNS, TCP, and TLS round trips.
 - `cf build` writes the Build Output to `.cloudflare/output/v0/`, not `dist/`, with the client build in `workers/default/assets/`, where `sentry:sourcemaps` reads the maps; the only `dist/` file left is the `analyze` build's `dist/stats.html`.
 - `optimizeDeps.entries` + `include` for heavy deps tune the dev pre-bundler only, not production bundle size.

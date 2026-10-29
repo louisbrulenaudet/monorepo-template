@@ -13,9 +13,6 @@ If a Worker-only shared library later needs different options (e.g. real Worker 
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@repo/typescript-config/workers.json",
-  "compilerOptions": {
-    "types": []
-  },
   "include": ["src/**/*.ts", "cloudflare.config.ts", ".cloudflare/types"]
 }
 ```

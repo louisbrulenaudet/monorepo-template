@@ -19,7 +19,6 @@
     ".agents/skills/react-doctor/**",
     ".agents/skills/security-audit/**",
     ".agents/skills/tanstack-config/**",
-    ".agents/skills/tanstack-devtools/**",
     ".agents/skills/tanstack-query/**",
     ".agents/skills/tanstack-router/**",
     ".agents/skills/turborepo/**",

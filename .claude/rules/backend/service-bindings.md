@@ -22,11 +22,13 @@ paths:
 - Extend `WorkerEntrypoint` from `cloudflare:workers` and add public methods - those are what callers invoke. RPC methods cannot live on a plain `export default { fetch }` handler.
 - Default-export the entrypoint class, or export a named class and set `exportName` on the caller.
 - Bindings are `this.env` (a class property of `WorkerEntrypoint`: `this.env.GREETING`, `this.env.D1`); RPC methods take only their own arguments, no `request` / `env` parameters.
+- Errors lose their class across a binding, so a thrown `HTTPException` reaches the gateway's `errorHandler` as a 500. Return expected outcomes as a result union from `@repo/dtos-common/rpc`; throw an `Error` with a serializable `name` / `code` for the unexpected, which the caller maps by those fields, never `instanceof`. `HTTPException` stays in the Hono gateway.
 
 ## After a binding change
 
 1. Callee: exported `WorkerEntrypoint` class with public RPC methods.
 2. Caller: `bindings.worker()` in `cloudflare.config.ts`, named per mode.
-3. Shared payload schemas in `dtos-common/rpc` if needed.
-4. `pnpm types`, then `pnpm check-types`.
-5. The first `worker-*` binding also adds the `createTestHarness` Node suite (checklist in `packages/vitest-config/AGENTS.md`), keeping the pool suites.
+3. Order: the callee takes a lower `monorepo.deployOrder` than every caller, so it is live before a caller binds it. Remove an RPC method one release after the last caller stops calling it.
+4. Shared payload schemas in `dtos-common/rpc` if needed.
+5. `pnpm types`, then `pnpm check-types`.
+6. The first `worker-*` binding also adds the `createTestHarness` Node suite (checklist in `packages/vitest-config/AGENTS.md`), keeping the pool suites.

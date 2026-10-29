@@ -8,14 +8,15 @@ paths:
 
 # TanStack Router (v1)
 
-Client-side routing only: ignore TanStack Start, SSR, and server functions. Depth: skill `tanstack-router`.
+Client-side routing only: ignore TanStack Start, SSR, and server functions. Depth: skill `router-plugin` (shipped by `@tanstack/router-plugin` at the installed version); the vendored `tanstack-router` skill's `.lazy.tsx` guidance does not apply here.
 
 - File-based routing through the Vite plugin (`tanstackRouter` before `@vitejs/plugin-react`, [vite-config.md](vite-config.md)).
 - `routeTree.gen.ts` is generated and **committed**: never hand-edit it (hook-enforced); regenerate with the app's `routes:generate` / `routes:check`. It is excluded from OXC. `routes:check` diffs the working tree against the git index, so `git add` the regenerated file before re-running `check-types`.
 - Register the router once (`declare module "@tanstack/react-router" { interface Register { router: typeof router } }`): one `router`, one `<RouterProvider>`, `defaultPreload: "intent"`, `scrollRestoration: true`.
 - Two layers: `src/routes/<path>.tsx` (loaders, guards, `validateSearch`, and `component`) → `src/pages/<Page>.tsx`. Route files stay thin. `autoCodeSplitting` already moves `component` into its own chunk, so never add a `.lazy.tsx` file.
+- In `pages/`, read route data with `getRouteApi("<id>")`, never by importing the route's `Route`: that import is an `import/no-cycle` error and defeats code splitting. Pass `from` / `to` to `<Link>` / `useNavigate()`, and type link constants `as const satisfies LinkProps` (un-narrowed `LinkProps` slows type checking at scale).
 - Typed `<Link>` / `useNavigate()` only - no hand-built internal URLs. Search params: `validateSearch` with a Zod v4 schema passed directly (native support; never reintroduce `@tanstack/zod-adapter`), `.catch()` fallbacks to keep inference, `loaderDeps` when loaders depend on search.
-- Auth and redirects in `beforeLoad`, not render; throw `notFound()` from loaders when appropriate.
+- Auth and redirects in `beforeLoad`, not render; throw `notFound()` from loaders when appropriate. `.oxlintrc.json` allows the router's `Redirect` and `NotFoundError` in `typescript/only-throw-error`, so neither throw needs a suppression.
 - Page title: render a React 19 `<title>` in the page component; react-dom inserts it ahead of the static `index.html` title, so it wins while mounted. Never add a route `head()` without mounting `<HeadContent />` in `RootLayout`: `head()` renders nothing without it.
 - With the first loader route, wrap the router-free `RouteErrorFallback` in a route-level error component that retries with `router.invalidate()` plus `useQueryErrorResetBoundary().reset()`: the router's `reset()` alone does not re-run loaders.
 - Query integration: `queryClient` on the root context; loaders call `queryClient.query({ ...opts, staleTime: "static" })`; components `useSuspenseQuery(opts)`. Await in a loader only data the route renders through `useSuspenseQuery`: a rejecting loader swaps the page for `errorComponent`, so optional data (the stack check) stays with its component's `useQuery`. Set `defaultPreloadStaleTime: 0` so Query's `staleTime` owns freshness (a common misconfiguration).

@@ -166,7 +166,15 @@
       "Bash(wrangler secret:*)",
       "Bash(npm publish:*)",
       "Bash(pnpm publish:*)",
-      "Bash(pnpm changeset --major:*)"
+      "Bash(pnpm changeset --major:*)",
+      "Bash(turbo run deploy:*)",
+      "Bash(turbo run upload:*)",
+      "Bash(pnpm upload:*)",
+      "Bash(pnpm run upload:*)",
+      "Bash(pnpm turbo run upload:*)",
+      "Bash(pnpm --filter=* run deploy*)",
+      "Bash(pnpm --filter=* run upload*)",
+      "Bash(pnpm exec cf deploy:*)"
     ],
     "defaultMode": "acceptEdits",
     "disableBypassPermissionsMode": "disable"
@@ -183,6 +191,7 @@
               "${CLAUDE_PROJECT_DIR}/hooks/git/guard-secret-commit.sh"
             ],
             "timeout": 10,
+            "onFailure": "block",
             "statusMessage": "Checking git command for secret paths"
           },
           {
@@ -192,6 +201,7 @@
               "${CLAUDE_PROJECT_DIR}/hooks/git/guard-destructive-git.sh"
             ],
             "timeout": 10,
+            "onFailure": "block",
             "statusMessage": "Checking git command for destructive operations"
           }
         ]
@@ -206,6 +216,7 @@
               "${CLAUDE_PROJECT_DIR}/hooks/security/guard-secret-content.sh"
             ],
             "timeout": 10,
+            "onFailure": "block",
             "statusMessage": "Scanning content for credentials"
           },
           {
@@ -215,6 +226,7 @@
               "${CLAUDE_PROJECT_DIR}/hooks/security/guard-generated-files.sh"
             ],
             "timeout": 10,
+            "onFailure": "block",
             "statusMessage": "Checking for generated files"
           }
         ]
@@ -302,6 +314,7 @@
   },
   "sandbox": {
     "enabled": true,
+    "failIfUnavailable": true,
     "autoAllowBashIfSandboxed": true,
     "allowUnsandboxedCommands": false,
     "excludedCommands": [
@@ -406,6 +419,7 @@
     "baseRef": "fresh"
   },
   "env": {
+    "NO_UPDATE_NOTIFIER": "1",
     "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "20",
     "TURBO_TELEMETRY_DISABLED": "1",
     "TURBO_UI": "false",

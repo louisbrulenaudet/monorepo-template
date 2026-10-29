@@ -1,6 +1,5 @@
 import { ClaudeIcon } from "#/components/icons/ClaudeIcon";
 import { CodexIcon } from "#/components/icons/CodexIcon";
-import { OpenCodeIcon } from "#/components/icons/OpenCodeIcon";
 import { PiIcon } from "#/components/icons/PiIcon";
 import { AGENT_SETUP_PROMPT } from "#/components/onboarding/agent-setup-prompt";
 import { Button } from "#/components/ui/Button";
@@ -26,7 +25,7 @@ export function CopyPromptButton() {
     <>
       <Button className="group" onClick={() => void copy(AGENT_SETUP_PROMPT)}>
         <span
-          className="relative flex h-5 w-23.5 shrink-0 items-center justify-start"
+          className="relative flex h-5 w-18 shrink-0 items-center justify-start"
           aria-hidden="true"
         >
           <ClaudeIcon
@@ -45,12 +44,6 @@ export function CopyPromptButton() {
             className={cx(
               ICON_MOTION,
               "ml-1 motion-safe:group-hover:translate-x-px motion-safe:group-hover:translate-y-0.5 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6",
-            )}
-          />
-          <OpenCodeIcon
-            className={cx(
-              ICON_MOTION,
-              "ml-0.5 rotate-6 motion-safe:group-hover:translate-x-1 motion-safe:group-hover:rotate-12",
             )}
           />
         </span>

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `hooks/` directory holds **shared agent hook scripts** for Cursor and Claude Code. Hooks observe or control the agent loop: block unsafe git commands, format/lint after edits, and log debug events. Scripts are tool-agnostic; wiring lives in [`.cursor/hooks.json`](../.cursor/hooks.json) and [`.claude/settings.json`](../.claude/settings.json).
+The `hooks/` directory holds **shared agent hook scripts** for Claude Code, Cursor, and Codex. Hooks observe or control the agent loop: block unsafe git commands, format/lint after edits, and log debug events. Scripts are tool-agnostic; wiring lives in [`.claude/settings.json`](../.claude/settings.json), [`.cursor/hooks.json`](../.cursor/hooks.json), and [`.codex/hooks.json`](../.codex/hooks.json) (the git guards only).
 
 Guardrails enforced here mirror rule [`core/guardrails`](../.claude/rules/core/guardrails.md).
 
@@ -29,7 +29,7 @@ Guardrails enforced here mirror rule [`core/guardrails`](../.claude/rules/core/g
 
 ## Wiring
 
-Paths in `.cursor/hooks.json` and `.claude/settings.json` are **relative to the repo root** (e.g. `hooks/git/guard-secret-commit.sh`).
+Paths in `.cursor/hooks.json` and `.claude/settings.json` are **relative to the repo root** (e.g. `hooks/git/guard-secret-commit.sh`). Codex sets no project-dir variable, so `.codex/hooks.json` resolves the root with `git rev-parse --show-toplevel`; it runs project hooks only after the user trusts the `.codex/` layer (`/hooks`).
 
 ## Authoring Conventions
 
@@ -52,6 +52,8 @@ The git guards serve two harnesses with incompatible expectations, so the JSON i
 | stdout | **silent** | `{"permission":"allow"}` / `{"permission":"deny",...}` |
 | Detected via | `CLAUDE_PROJECT_DIR` | `CURSOR_PROJECT_DIR` (never set by Claude Code) |
 
+Codex takes the Claude column: it sets neither variable, and exit 2 with the reason on stderr blocks.
+
 Claude Code **ignores stdout entirely on exit 2** and does not inject it on `PreToolUse`. Emitting the Cursor JSON unconditionally would make the block depend on Claude Code tolerating unknown JSON keys - behavior that is not documented, and that on builds before v2.1.214 turned an exit-2-plus-invalid-JSON hook into a *non-blocking* error that let the command run. Gating the JSON removes that dependency instead of relying on it.
 
 ### Failure semantics: guards fail CLOSED
@@ -60,7 +62,7 @@ A guard that cannot evaluate must not wave a command through. Missing `jq`/`awk`
 
 - Each guard checks that `lib/guard.sh` is readable with shell builtins only (`printf`, `${0##*/}`) before sourcing it, and `guard.sh` installs the `trap` before it reads the payload or sources the parser, so a broken `PATH` still yields exit 2 rather than exit 1.
 - A syntax error in a guard or in the library **denies every Bash command** until it is fixed. `pnpm hooks:test` (inside `pnpm run check` and `pnpm run ci`) runs `sh -n` on every script plus the regression table in `tests/run.sh`.
-- **A harness timeout is the one fail-open path on Claude Code.** Per the hooks reference, a timed-out `PreToolUse` command hook does not block: the call continues through the normal permission flow. No trap can catch that, because the harness stops waiting rather than signaling the script. Cursor is covered by `failClosed: true` in `.cursor/hooks.json`. The guards run in ~35 ms against a 10 s budget, so the realistic trigger is a hung `git add --dry-run` / `git status` inside `guard-secret-commit.sh`. Keep the timeout at 10 s: a larger value does not close the gap, it only makes a stall longer. The backstops are the `permissions.ask` prefix rules for the common destructive git forms, `permissions.deny`, and the sandbox. Those rules never prompt in normal use, because `PreToolUse` denies before the permission check runs.
+- **A harness timeout blocks too.** No trap catches a timeout, because the harness stops waiting rather than signaling the script, so the wiring closes it: `"onFailure": "block"` on each Claude Code `PreToolUse` guard in `.claude/settings.json` (v2.1.295+; without it a timed-out guard lets the call continue) and `failClosed: true` in `.cursor/hooks.json`. Codex does not document its timeout behavior. The guards run in ~35 ms against a 10 s budget, so the realistic trigger is a hung `git add --dry-run` / `git status` inside `guard-secret-commit.sh`. Keep the timeout at 10 s: a larger value only makes a stall longer. The backstops are the `permissions.ask` prefix rules for the common destructive git forms, `permissions.deny`, and the sandbox. Those rules never prompt in normal use, because `PreToolUse` denies before the permission check runs.
 - **Parser functions must never return a non-zero status.** Guards call them as bare assignments (`gc_segs=$(pc_segments "$1")`), where `set -e` promotes that status to a guard fault - a *silent* denial of a legitimate command, not a syntax error you would notice. This is why `pc_operands` ends in an explicit `return 0`; a trailing `[ $# -gt 0 ] && shift` would otherwise fail whenever its value-taking token is last. Regression case: `git add foo.txt 2>&1` (segmentation splits at the `&`, leaving a bare `2>`) must **allow**.
 
 Empty or absent stdin still **allows**: no payload is not evidence of wrongdoing.
@@ -77,8 +79,8 @@ Unquoted backticks and `$( … )` split segments like any separator, and `guard_
 
 | Script | Trigger | Exit 2 when |
 |--------|---------|-------------|
-| `git/guard-secret-commit.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash | Secret path named, or in the set `git add --dry-run` (or `commit -a`) would stage |
-| `git/guard-destructive-git.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash | reset --hard, push --force, checkout --, etc. |
+| `git/guard-secret-commit.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash; Codex PreToolUse `^Bash$` | Secret path named, or in the set `git add --dry-run` (or `commit -a`) would stage |
+| `git/guard-destructive-git.sh` | Cursor `beforeShellExecution`; Claude PreToolUse Bash; Codex PreToolUse `^Bash$` | reset --hard, push --force, checkout --, etc. |
 | `quality/check-changed.sh` | Cursor `afterFileEdit`; Claude PostToolUse Edit\|Write | oxlint reports problems on `.ts`/`.tsx`/`.js`/`.jsx`/`.mjs`/`.cjs` (never `.d.ts`); oxfmt runs first and never blocks |
 | `security/guard-secret-content.sh` | Claude PreToolUse Edit\|Write | written content matches a high-signal credential pattern |
 | `security/guard-generated-files.sh` | Claude PreToolUse Edit\|Write | the target is a generated artifact (`.cloudflare/**` - cf Build Output, `Env` types, local dev state - `routeTree.gen.ts`, `CHANGELOG.md`, `pnpm-lock.yaml`, `dist/**`, `build/**`) - a hook rather than an `Edit(...)` deny, because those denies also blocked the generators inside the sandbox. For the same reason there are deliberately no `Read(...)` denies on `coverage/**`, `*.tsbuildinfo`, or `*.map` (tsc incremental builds and the cf source-map upload read them) |
@@ -102,7 +104,7 @@ Unquoted backticks and `$( … )` split segments like any separator, and `guard_
 `security/guard-secret-content.sh` is the other direction of the path-based `permissions.deny` rules: it catches a real key pasted into an ordinary source file. Three constraints hold it in shape:
 
 - **`PreToolUse`, never `PostToolUse`.** A post-edit hook cannot undo the write - the credential would already be on disk, in the editor buffer, and in any backup. Blocking beforehand is the only point at which it never lands.
-- **Only high-signal literal prefixes** (`AKIA`, private-key blocks, `ghp_`, `sk-ant-`, ...). There is deliberately no entropy or `password = ...` heuristic, and no bare Cloudflare-token shape: an earlier audit found that over-broad matching denied legitimate edits (minified JS, content hashes, base64), and a false denial on every edit is worse than the gap.
+- **Only high-signal literal prefixes** (`AKIA`, private-key blocks, `ghp_` / `github_pat_`, `sk-ant-`, the prefixed Cloudflare `cfk_` / `cfut_` / `cfat_` / `cfast_` and Sentry `sntrys_` formats, ...). There is deliberately no entropy or `password = ...` heuristic, and no bare Cloudflare-token shape: an earlier audit found that over-broad matching denied legitimate edits (minified JS, content hashes, base64), and a false denial on every edit is worse than the gap.
 - **The reason names the pattern and line numbers only.** The matched text is never echoed, so the secret is not copied into the transcript, the debug log, or any hook log.
 
 ### OXC invariants for `quality/` hooks

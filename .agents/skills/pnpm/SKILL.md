@@ -26,7 +26,7 @@ Do **not** put task logic in root `package.json` when it belongs in packages - s
 
 | Setting | Value |
 |---------|-------|
-| pnpm version | `12.6.0` (pinned via `devEngines.packageManager` in root `package.json`; resolved version and integrity in `pnpm-lock.yaml` `packageManagerDependencies`) |
+| pnpm version | `devEngines.packageManager` in root `package.json`. CI installs it through `pnpm/setup`; locally run that version (`pnpm self-update <version>`), because `pmOnFail: ignore` stops pnpm switching to it and keeps the pin out of `pnpm-lock.yaml` (GitHub's dependency graph reads only the lockfile's first YAML document, dependabot-core#15904) |
 | Workspace globs | `apps/*`, `packages/*` in `pnpm-workspace.yaml` |
 | Install (local) | `pnpm install` |
 | Install (CI) | `pnpm install --frozen-lockfile` |
@@ -56,31 +56,11 @@ Never duplicate a shared package version as a registry range in an app - use `wo
 
 ## Catalogs (Shared Tool Versions)
 
-Shared versions live in the **default catalog** in `pnpm-workspace.yaml` with `catalogMode: prefer` (prefer catalog on `pnpm add` when listed; one-off deps still allowed):
+Shared versions live in the **default catalog** in `pnpm-workspace.yaml` (read it for the entries) with `catalogMode: prefer`: `pnpm add` prefers a listed catalog entry, and a one-off installs as a literal range that fails `pnpm deps:check`. `catalogPrune: true` drops an entry once no manifest references it.
 
-```yaml
-catalog:
-  '@cloudflare/vite-plugin': 2.0.0-beta.sha-ad79608dd
-  '@tailwindcss/vite': ^4.3.3
-  '@vitejs/plugin-react': ^6.0.5
-  babel-plugin-react-compiler: ^1.0.0
-  cf: 1.0.0-beta.5
-  hono: ^4.13.0
-  oxfmt: ^0.62.0
-  oxlint: ^1.77.0
-  oxlint-tsgolint: ^7.0.2001
-  react: ^19.2.8
-  react-dom: ^19.2.8
-  tailwindcss: ^4.3.3
-  typescript: ^7.0.2
-  vite: ^8.2.0
-  wrangler: ^4.143.0
-  zod: ^4.5.2
-```
+`cf` and `@cloudflare/vite-plugin` are exact beta pins: cf accepts only plugin versions `>=2.0.0-0 <3`, and each numbered plugin beta can change behavior. Bump the two deliberately and together, and re-check both pins after `pnpm run update` (`pnpm update --recursive --latest`).
 
-`cf` and `@cloudflare/vite-plugin` are exact beta pins: cf accepts only plugin versions `>=2.0.0-0 <3`, and the plugin ships a snapshot per push. Bump the two deliberately and together, and re-check both pins after `pnpm run update` (`pnpm update --recursive --latest`).
-
-TanStack packages (`@tanstack/*`) and `@types/*` are also in the catalog - see `pnpm-workspace.yaml` for the full list.
+`@hono/cli` is an exact `1.0.0-rc.*` pin: its npm `latest` tag is still `0.1.x`, so `pnpm run update` never advances it. Move it with `pnpm update @hono/cli@next` or by editing the catalog entry, and switch to a caret range once `1.0.0` ships.
 
 Reference in any `package.json`:
 
@@ -96,7 +76,7 @@ Reference in any `package.json`:
 }
 ```
 
-Keep front-app-only utilities (e.g. `rollup-plugin-visualizer`) out of the catalog. Escalate `catalogMode` to `strict` only after catalog coverage is complete.
+Escalate `catalogMode` to `strict` only after catalog coverage is complete.
 
 **Workflow for bumping a shared tool:**
 
@@ -120,6 +100,9 @@ pnpm add -D <pkg> --filter worker-api
 
 # Add tooling dep to workspace root
 pnpm add -D <pkg> -w
+
+# Move a literal range that pnpm add wrote into the catalog (review the pnpm-workspace.yaml diff)
+pnpm deps:fix && pnpm install
 
 # Remove from one package
 pnpm remove <pkg> --filter front-app
@@ -161,8 +144,8 @@ Configured in `pnpm-workspace.yaml`:
 | `skills.dirs` | `.agents/skills` only: pnpm links each granted skill there as `pnpm-<package>-<skill>` (gitignored by the nested `.gitignore`). Never add `.claude/skills`: the agent sandbox denies writes there and every agent-run install fails with `ERR_PNPM_AGENT_SKILL_LINK` |
 | `trustPolicy: no-downgrade` | Reject installs that would downgrade package trust/provenance |
 | `blockExoticSubdeps: true` | Block exotic (non-registry) transitive dependencies |
-| `minimumReleaseAge` (unset) | pnpm's default 24-hour cooldown on newly published versions |
-| `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `cf`, `wrangler`, `miniflare`, `typescript`). An exact-version entry (`workerd@1.20261019.1`, pulled by `wrangler@4.151.2` through `miniflare`) is temporary: delete it once that version is past the 24-hour cooldown. Never exempt bare `workerd`, which runs install scripts |
+| `minimumReleaseAgeStrict: true` | Makes pnpm's default 24-hour cooldown (`minimumReleaseAge` unset) strict: an install that needs a version younger than 24 hours fails instead of taking it |
+| `minimumReleaseAgeExclude` | Hotfix exceptions (`@cloudflare/*`, `cf`, `wrangler`, `miniflare`, `typescript`). An exact-version entry (e.g. a `workerd@<version>` that `miniflare` pins) is temporary: delete it once that version is past the 24-hour cooldown. Never exempt bare `workerd`, which runs install scripts |
 
 When `pnpm install` fails on a blocked build script:
 

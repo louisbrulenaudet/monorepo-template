@@ -37,8 +37,8 @@ echo "Updating ${#SKILL_NAMES[@]} locked skill(s) from skills-lock.json..."
 
 for name in "${SKILL_NAMES[@]}"; do
   echo ""
-  echo "==> npx skills update ${name}"
-  if ! npx skills update "${name}"; then
+  echo "==> pnpm exec skills update ${name}"
+  if ! pnpm exec skills update "${name}"; then
     echo "error: failed to update skill '${name}'" >&2
     exit 1
   fi

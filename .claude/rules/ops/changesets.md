@@ -14,7 +14,7 @@ A changeset is the release note for one user-visible change. Its readers operate
 | Change | Changeset |
 |--------|-----------|
 | Observable change to a deployed app, including through a bundled `@repo/*` package | `patch` or `minor` (see Bump) |
-| Catalog bump of an entry an app lists under `dependencies` | `patch` naming that app; Dependabot PRs get one committed for them when `CHANGESET_BOT_TOKEN` is set |
+| Catalog bump of an entry an app, or a `@repo/*` package it bundles, lists under `dependencies` | `patch` naming that app; Dependabot PRs get one committed for them when `CHANGESET_BOT_TOKEN` is set |
 | Shipped path changed, nothing observable: types, comments, a behavior-identical refactor, devDependency lines in an app `package.json` | `--empty` with a one-line reason; `changeset version` deletes it unread |
 | Tests, docs, `.github/`, agent config, or root tooling only | none |
 

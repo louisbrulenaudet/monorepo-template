@@ -28,7 +28,7 @@ globs: apps/front-*/src/**/*.{ts,tsx},apps/front-*/index.html
 
 - Providers compose once at the root, outermost first: `<QueryClientProvider>` → `<RouterProvider>`, with a top-level error boundary, route-level `<Suspense>` / pending components, error boundaries at tree and lazy-route edges, and route errors through the router's `errorComponent`.
 - One module-singleton `QueryClient` in `src/config/query-client.ts` (never `new QueryClient()` in a component) and one `router` at module scope, with `queryClient` in its context today; pass further runtime values through `<RouterProvider context={...}>` when they exist. Auth, when added, belongs in route `beforeLoad` / context; never invent an auth field the app does not define.
-- Devtools (`ReactQueryDevtools`, router devtools) mount dev-only behind `import.meta.env.DEV`, so production tree-shakes them.
+- Devtools panels mount only through the lazy `AppDevtools` shell (one `TanStackDevtools` with the Query and Router panels) behind `import.meta.env.DEV`, so production tree-shakes them; the `@tanstack/devtools-vite` default `removeDevtoolsOnBuild: true` is the second layer. Never mount a panel a second time.
 - Routes split through the router's `autoCodeSplitting`; `React.lazy` + `<Suspense>` for heavy, rarely used components (editors, charts); defer non-critical third-party libraries (analytics) until after first paint; preload heavy chunks on intent (`onMouseEnter` / `onFocus` → `void import("./heavy")`).
 - Keep `import()` statically analyzable: literal paths, or a partially dynamic path that starts with `./` / `../`, ends with a file extension, and varies one path segment (`` import(`./locales/${lang}.json`) ``); a fully dynamic `import(pathVariable)` cannot be chunked.
 - Handle `vite:preloadError` in `src/main.tsx`: reload once per session (sessionStorage guard) so returning users recover from stale chunks after a deploy. **Never call `event.preventDefault()`**: the failed `import()` then resolves to `undefined`, and TanStack Router's `lazyRouteComponent` throws a `TypeError` instead of running its own once-per-chunk reload.
@@ -37,6 +37,6 @@ globs: apps/front-*/src/**/*.{ts,tsx},apps/front-*/index.html
 
 ## React Doctor
 
-- After React changes, run `pnpm react-doctor:changed` and fix what it reports before calling the task done (deep workflow: skill `react-doctor`; config: [lint-config.mdc](../quality/lint-config.mdc)).
+- After React changes, run `pnpm react-doctor:changed` and fix what it reports before calling the task done. CI and `pnpm run ci` also gate on a full-scope `pnpm run react-doctor`, which fails on any error-level diagnostic (deep workflow: skill `react-doctor`; config: [lint-config.mdc](../quality/lint-config.mdc)).
 - The CLI's "not installed" banner (`react-doctor install --yes`) checks only the app's own `package.json`; the root `react-doctor` scripts are the install, so never run `react-doctor install`: it adds a duplicate skill, an `npx @latest` script, and a non-catalog dependency.
 - Suppress inline only when justified: `// react-doctor-disable-next-line react-doctor/<rule>`. Never delete a correctness diagnostic to go green; run `pnpm react-doctor why <file>:<line>` when unclear.

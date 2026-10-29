@@ -1,21 +1,17 @@
 ---
-# Purpose: Claude Code skill for safe locked-skills updates.
-# Target tool: Claude Code.
-# Date reviewed: June 2026.
-# Derived from: https://code.claude.com/docs/en/skills
 name: skills-update
-description: Update locked agent skills from skills-lock.json one at a time. Use when the user asks to update, refresh, or sync project skills via npx skills update.
-when_to_use: Trigger for "update skills", "refresh skills", "sync skills-lock.json", "npx skills update", or "skills-update".
+description: Update locked agent skills from skills-lock.json one at a time. Use when the user asks to update, refresh, or sync project skills via pnpm exec skills update.
+when_to_use: Trigger for "update skills", "refresh skills", "sync skills-lock.json", "pnpm exec skills update", or "skills-update".
+disable-model-invocation: true
 allowed-tools:
   - Read
   - Grep
   - Glob
   - Bash(git diff:*)
   - Bash(git status:*)
-  - Bash(npx skills update:*)
+  - Bash(pnpm exec skills update:*)
   - Bash(bash .agents/skills/skills-update/scripts/update-locked-skills.sh:*)
-  - Bash(bash .agents/skills/skills-update/scripts/readd-legacy-skills.sh:*)
-  - Bash(npx skills add:*)
+  - Bash(bash .agents/skills/skills-update/scripts/read-legacy-skills.sh:*)
   - Bash(pnpm exec cspell:*)
 ---
 
@@ -35,14 +31,13 @@ Safe per-skill refresh for externally installed skills. Invocation is **explicit
 3. For a single skill, run one command:
 
    ```bash
-   npx skills update <skill-name>
+   pnpm exec skills update <skill-name>
    ```
 
 4. Report using the output format from the shared skill.
 
 ## Hard stops
 
-- Never run bare `npx skills update` without skill names.
-- Never run `npx skills add <source>` without `--skill <name>`.
-- Never run `npx skills add` unless explicitly requested (new skill or legacy refresh).
+- Never run bare `pnpm exec skills update` without skill names.
+- Never run `pnpm exec skills add <source>` without `--skill <name>`, and only when the user explicitly asks (new skill or legacy refresh); it needs a prompt, since it is not pre-approved.
 - Do not update project-local skills not listed in `skills-lock.json`.

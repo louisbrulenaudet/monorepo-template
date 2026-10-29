@@ -1,0 +1,5 @@
+interface:
+  display_name: "Review"
+  short_description: "Human-invoked domain review of the repo"
+policy:
+  allow_implicit_invocation: false

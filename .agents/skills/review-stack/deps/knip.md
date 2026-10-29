@@ -48,3 +48,4 @@ Gates failing; dead code masked and shipping in production builds.
 ## Accepted
 
 - Every override justified in [.claude/rules/quality/knip.md](../../../../.claude/rules/quality/knip.md); `knip.jsonc` stays comment-free by policy.
+- `knip:agent` (`--reporter symbols`) restates Knip's default reporter on purpose: the script name is the stable agent entry point, and pinning the reporter keeps its output shape fixed if the default changes.
