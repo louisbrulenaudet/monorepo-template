@@ -4,7 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { devtools as tanstackDevtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
-import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { visualizer } from "rollup-plugin-visualizer";
@@ -14,7 +13,6 @@ const appDir = path.dirname(fileURLToPath(import.meta.url));
 const envDir = process.env["SKIP_ENV_FILES"] ? false : appDir;
 const analyzeBundle = process.env["ANALYZE"] === "true";
 const isStaticAnalysis = process.argv.some((arg) => arg.includes("knip"));
-const repoRoot = path.resolve(appDir, "../..");
 const productionEnvKeys = ["VITE_API_BASE_URL"] as const;
 const optionalProductionOriginKeys = ["VITE_SENTRY_DSN"] as const;
 
@@ -70,6 +68,7 @@ function cspHeaders(apiBaseUrl: string, sentryDsn: string | undefined): string {
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
+    "form-action 'self'",
     "img-src 'self' data: https:",
     "font-src 'self'",
     "script-src 'self'",
@@ -83,6 +82,7 @@ function cspHeaders(apiBaseUrl: string, sentryDsn: string | undefined): string {
     "",
     "/*",
     `  Content-Security-Policy: ${csp}`,
+    "  Cross-Origin-Opener-Policy: same-origin",
     "  Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=()",
     "  Referrer-Policy: strict-origin-when-cross-origin",
     "  Strict-Transport-Security: max-age=31536000; includeSubDomains",
@@ -93,13 +93,29 @@ function cspHeaders(apiBaseUrl: string, sentryDsn: string | undefined): string {
 }
 
 function generatedBuildArtifactsPlugin(mode: string): Plugin {
+  const env = loadEnv(mode, envDir, "VITE_");
+  const apiBaseUrl = env["VITE_API_BASE_URL"];
   return {
     name: "generated-build-artifacts",
     apply: "build",
     applyToEnvironment: (environment) => environment.name === "client",
+    transformIndexHtml() {
+      if (!apiBaseUrl) {
+        return [];
+      }
+      return [
+        {
+          tag: "link",
+          attrs: {
+            rel: "preconnect",
+            href: new URL(apiBaseUrl).origin,
+            crossorigin: true,
+          },
+          injectTo: "head-prepend",
+        },
+      ];
+    },
     generateBundle() {
-      const env = loadEnv(mode, envDir, "VITE_");
-      const apiBaseUrl = env["VITE_API_BASE_URL"];
       if (!apiBaseUrl) {
         throw new Error(
           "Missing VITE_API_BASE_URL: cannot generate _headers. " +
@@ -117,40 +133,6 @@ function generatedBuildArtifactsPlugin(mode: string): Plugin {
         fileName: ".assetsignore",
         source: "*.map\n",
       });
-    },
-  };
-}
-
-const DEBUG_ID_COMMENT = /\/\/# debugId=([\da-f-]+)/;
-
-// @sentry/vite-plugin stamps a debug ID into each chunk but, under rolldown, not
-// into its hidden source map; Sentry matches the two only when both carry it.
-function sentryDebugIdSourceMapsPlugin(): Plugin {
-  return {
-    name: "sentry-debug-id-source-maps",
-    apply: "build",
-    writeBundle(outputOptions, bundle) {
-      const outDir = outputOptions.dir;
-      if (!outDir) {
-        return;
-      }
-      for (const output of Object.values(bundle)) {
-        if (output.type !== "chunk" || !output.sourcemapFileName) {
-          continue;
-        }
-        const debugId = DEBUG_ID_COMMENT.exec(output.code)?.[1];
-        if (!debugId) {
-          continue;
-        }
-        const mapPath = path.resolve(outDir, output.sourcemapFileName);
-        const map: unknown = JSON.parse(readFileSync(mapPath, "utf-8"));
-        if (typeof map === "object" && map !== null) {
-          writeFileSync(
-            mapPath,
-            JSON.stringify({ ...map, debug_id: debugId, debugId }),
-          );
-        }
-      }
     },
   };
 }
@@ -182,7 +164,6 @@ export default defineConfig(({ command, mode }) => {
       release: { name: "", inject: false },
       sourcemaps: { disable: "disable-upload" },
     }),
-    sentryDebugIdSourceMapsPlugin(),
   );
 
   if (analyzeBundle) {
@@ -273,9 +254,6 @@ export default defineConfig(({ command, mode }) => {
           "./src/router.tsx",
           "./src/routes/__root.tsx",
         ],
-      },
-      fs: {
-        allow: [repoRoot],
       },
     },
 
