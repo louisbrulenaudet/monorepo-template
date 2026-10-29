@@ -42,8 +42,8 @@
     "check-types": "tsc --noEmit",
     "format:check": "pnpm -w exec oxfmt --check packages/hono-middleware",
     "format:fix": "pnpm -w exec oxfmt packages/hono-middleware",
-    "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/hono-middleware",
-    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/hono-middleware"
+    "lint:check": "SYNCKIT_TIMEOUT=120000 pnpm -w exec oxlint --no-error-on-unmatched-pattern packages/hono-middleware",
+    "lint:fix": "SYNCKIT_TIMEOUT=120000 pnpm -w exec oxlint --no-error-on-unmatched-pattern --fix packages/hono-middleware"
   },
   "sideEffects": false,
   "type": "module",

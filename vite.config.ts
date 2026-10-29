@@ -2,11 +2,11 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   staged: {
-    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+    "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}": [
       "pnpm exec oxlint --fix --no-error-on-unmatched-pattern",
-      "pnpm exec oxfmt",
+      "pnpm exec oxfmt --no-error-on-unmatched-pattern",
     ],
-    "*.{json,jsonc,css,md}": [
+    "*.{json,jsonc,css,md,html}": [
       "pnpm exec oxfmt --no-error-on-unmatched-pattern",
     ],
   },

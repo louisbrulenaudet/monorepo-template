@@ -13,7 +13,6 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noUncheckedSideEffectImports": true,
     "erasableSyntaxOnly": true,
     "noErrorTruncation": true,
     "skipLibCheck": true,

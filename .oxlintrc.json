@@ -30,7 +30,7 @@
   ],
   "settings": {
     "react": {
-      "version": "19.2.8"
+      "version": "19.3.1"
     },
     "better-tailwindcss": {
       "entryPoint": "apps/front-app/src/index.css"
@@ -57,6 +57,14 @@
         "varsIgnorePattern": "^_",
         "caughtErrorsIgnorePattern": "^_",
         "ignoreRestSiblings": true
+      }
+    ],
+    "typescript/ban-ts-comment": [
+      "error",
+      {
+        "ts-ignore": true,
+        "ts-nocheck": true,
+        "ts-expect-error": "allow-with-description"
       }
     ],
     "typescript/no-explicit-any": "error",
@@ -96,7 +104,18 @@
     ],
     "typescript/await-thenable": "error",
     "typescript/require-await": "error",
-    "typescript/only-throw-error": "error",
+    "typescript/only-throw-error": [
+      "error",
+      {
+        "allow": [
+          {
+            "from": "package",
+            "package": "@tanstack/router-core",
+            "name": ["Redirect", "NotFoundError"]
+          }
+        ]
+      }
+    ],
     "typescript/prefer-promise-reject-errors": "error",
     "typescript/use-unknown-in-catch-callback-variable": "error",
     "typescript/no-unnecessary-type-assertion": "error",
@@ -251,7 +270,8 @@
       ],
       "jsPlugins": [
         "eslint-plugin-better-tailwindcss",
-        "oxlint-plugin-react-doctor"
+        "oxlint-plugin-react-doctor",
+        "@tanstack/eslint-plugin-query"
       ],
       "rules": {
         "react/exhaustive-deps": "error",
@@ -279,6 +299,8 @@
         ],
         "react-doctor/no-fetch-in-effect": "error",
         "react-doctor/no-derived-state": "error",
+        "@tanstack/query/exhaustive-deps": "error",
+        "@tanstack/query/stable-query-client": "error",
         "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
         "better-tailwindcss/enforce-canonical-classes": "error",
         "better-tailwindcss/no-concatenated-classes": "error",

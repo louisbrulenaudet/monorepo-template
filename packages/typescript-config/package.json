@@ -28,8 +28,8 @@
   "scripts": {
     "format:check": "pnpm -w exec oxfmt --check packages/typescript-config",
     "format:fix": "pnpm -w exec oxfmt packages/typescript-config",
-    "lint:check": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern packages/typescript-config",
-    "lint:fix": "pnpm -w exec cross-env SYNCKIT_TIMEOUT=120000 oxlint --no-error-on-unmatched-pattern --fix packages/typescript-config"
+    "lint:check": "SYNCKIT_TIMEOUT=120000 pnpm -w exec oxlint --no-error-on-unmatched-pattern packages/typescript-config",
+    "lint:fix": "SYNCKIT_TIMEOUT=120000 pnpm -w exec oxlint --no-error-on-unmatched-pattern --fix packages/typescript-config"
   },
   "sideEffects": false
 }

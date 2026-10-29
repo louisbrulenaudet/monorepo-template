@@ -1,4 +1,5 @@
 {
+  "failOnEmpty": true,
   "format": ["javascript", "typescript", "tsx", "css", "bash"],
   "ignore": [
     "**/.git/**",
