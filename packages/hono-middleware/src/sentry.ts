@@ -16,6 +16,11 @@ const DATA_COLLECTION = {
   httpBodies: [],
   urlQueryParams: false,
   stackFrameVariables: false,
+  databaseQueryData: false,
+  queues: false,
+  genAI: { inputs: false, outputs: false },
+  graphQL: { document: false, variables: false },
+  mcp: { inputs: false, outputs: false },
 };
 
 export function sentryMiddleware<Bindings extends BaseBindings>(
@@ -26,9 +31,10 @@ export function sentryMiddleware<Bindings extends BaseBindings>(
     dsn: env.SENTRY_DSN,
     environment: env.ENVIRONMENT,
     release,
-    tracesSampler: () =>
-      FULL_TRACING_ENVIRONMENTS.has(env.ENVIRONMENT) ||
-      Math.random() < SAMPLED_TRACES_RATE,
+    // A rate, not a sampler: a sampler's return value replaces the SPA's sampling decision.
+    tracesSampleRate: FULL_TRACING_ENVIRONMENTS.has(env.ENVIRONMENT)
+      ? 1
+      : SAMPLED_TRACES_RATE,
     dataCollection: DATA_COLLECTION,
     // Console text can carry sensitive user data; errorHandler already logs
     // the stack to Workers Observability.
