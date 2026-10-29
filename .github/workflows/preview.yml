@@ -16,6 +16,7 @@ env:
   TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
   CF_SEND_TELEMETRY: "false"
+  CLOUDFLARE_DEPENDENCIES_INSTRUMENTATION: "false"
   PREVIEW_NAME: pr-${{ github.event.pull_request.number }}
 
 jobs:

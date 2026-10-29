@@ -43,7 +43,7 @@ function readApp(dir) {
   if (!Number.isInteger(deployOrder)) {
     throw new Error(
       `Missing integer monorepo.deployOrder in ${manifestPath}. Every app declares ` +
-        "where it sits in the production promote order (gateways before the SPAs that call them).",
+        "where it sits in the production promote order (callees before their callers).",
     );
   }
 
@@ -87,9 +87,17 @@ export function readApps() {
       throw new Error(
         `Apps ${sorted[i - 1].name} and ${sorted[i].name} share monorepo.deployOrder ` +
           `${sorted[i].deployOrder} in ${APPS_DIR}/. Promote order must be total - give each ` +
-          "app its own position (gateways before the SPAs that call them).",
+          "app its own position (callees before their callers).",
       );
     }
+  }
+
+  const gateways = sorted.filter((app) => app.role === "http-gateway");
+  if (gateways.length > 1) {
+    throw new Error(
+      `Apps ${gateways.map((app) => app.name).join(", ")} all declare monorepo.role ` +
+        '"http-gateway". CD and Previews address the gateway by role, so exactly one app may hold it.',
+    );
   }
   return sorted;
 }

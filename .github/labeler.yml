@@ -24,6 +24,10 @@ enums-common:
   - changed-files:
       - any-glob-to-any-file: packages/enums-common/**
 
+hono-middleware:
+  - changed-files:
+      - any-glob-to-any-file: packages/hono-middleware/**
+
 typescript-config:
   - changed-files:
       - any-glob-to-any-file: packages/typescript-config/**
@@ -56,6 +60,7 @@ agent:
       - any-glob-to-any-file:
           - .agents/**
           - .claude/**
+          - .codex/**
           - .cursor/**
           - skills-lock.json
 

@@ -8,14 +8,16 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
     cooldown:
       default-days: 7
       exclude: ["@cloudflare/*", "cf", "wrangler", "miniflare", "typescript"]
     commit-message:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
+    # First match wins: Cloudflare betas get their own PR, so one red bump does not block the rest.
     groups:
+      cloudflare:
+        patterns: ["@cloudflare/*", "cf", "wrangler", "miniflare"]
       npm:
         patterns: ["*"]
 
