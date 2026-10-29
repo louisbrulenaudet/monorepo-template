@@ -14,7 +14,7 @@ The `TanStackDevtools` shell that hosts the React Query and Router panels in the
 
 - **Stale-knowledge risk**: pre-1.0 (`0.x`); the shell `config`, the plugin shape, and the panel exports change between minors.
 - **Collector**: "TanStack Devtools" at the installed version - `TanStackDevtools` props (`config`, `plugins`), plugin `id`/`name`/`render`, panel components (`ReactQueryDevtoolsPanel`, `TanStackRouterDevtoolsPanel`), production behavior.
-- **Local skill**: `.agents/skills/tanstack-devtools/SKILL.md` (vendored, pinned in `skills-lock.json`); official docs beat it.
+- **Local skill**: the `devtools-production` skill shipped inside the installed `@tanstack/devtools`; official docs beat it.
 - **Web fallback**: `tanstack.com/devtools` - docs, `github.com/TanStack/devtools` releases.
 - **Version currency**: catalog `@tanstack/react-devtools` in [pnpm-workspace.yaml](../../../../pnpm-workspace.yaml); check that the Query and Router panel packages it hosts are on versions it supports.
 

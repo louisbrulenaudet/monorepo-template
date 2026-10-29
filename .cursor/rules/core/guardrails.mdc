@@ -6,7 +6,7 @@ alwaysApply: true
 
 Hard "don'ts" for every change. When one would be violated, stop and ask.
 
-The first three sections are enforced by `.claude/settings.json` and `hooks/` ([hooks/AGENTS.md](../../../hooks/AGENTS.md)); change the mechanism there, not only this wording.
+The first three sections are enforced by `.claude/settings.json` and `hooks/` ([hooks/AGENTS.md](../../../hooks/AGENTS.md)); change the mechanism there, not only this wording. Claude Code runs every guard; Cursor and Codex run only the git guards, so there the secret-content and generated-file checks are advisory.
 
 ## Never commit secrets
 

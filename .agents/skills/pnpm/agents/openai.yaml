@@ -1,0 +1,5 @@
+interface:
+  display_name: "pnpm"
+  short_description: "Workspace dependency and catalog procedures"
+policy:
+  allow_implicit_invocation: false

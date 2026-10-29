@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$(git rev-parse --show-toplevel)/hooks/git/guard-secret-commit.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking git command for secret paths"
+          },
+          {
+            "type": "command",
+            "command": "sh \"$(git rev-parse --show-toplevel)/hooks/git/guard-destructive-git.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking git command for destructive operations"
+          }
+        ]
+      }
+    ]
+  }
+}

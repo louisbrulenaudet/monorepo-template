@@ -84,6 +84,13 @@ expect 0 $D "$(bash_payload 'cat hooks/git/guard-destructive-git.sh')" 'command 
 expect 0 $D '' 'empty payload'
 expect_cursor 2 $D "$(jq -nc '{command:"git push --force"}')" deny 'Cursor deny verdict'
 expect_cursor 0 $D "$(jq -nc '{command:"git status"}')" allow 'Cursor allow verdict'
+# Codex sets no project-dir variable and runs hooks from the session directory.
+runs=$((runs + 1))
+out=$(cd "$ROOT" && bash_payload 'git push --force' | env -u CLAUDE_PROJECT_DIR sh "$HOOKS/$D" 2>/dev/null)
+got=$?
+if [ "$got" -ne 2 ] || [ -n "$out" ]; then
+  fail "$D: Codex path denies with exit 2 and silent stdout (got $got: $out)"
+fi
 
 S=git/guard-secret-commit.sh
 expect 2 $S "$(bash_payload 'git add .env')" 'add .env'
@@ -101,7 +108,11 @@ expect_cursor 2 $S "$(jq -nc '{command:"git add .env"}')" deny 'Cursor deny verd
 C=security/guard-secret-content.sh
 expect 2 $C "$(write_payload src/a.ts 'const k = "AKIA''IOSFODNN7EXAMPLE";')" 'AWS access key id'
 expect 2 $C "$(write_payload src/a.pem '-----BEGIN RSA ''PRIVATE KEY-----')" 'private key block'
+expect 2 $C "$(write_payload src/a.ts 'token = "cfut_''aB3dE5fG7hJ9kL1mN3pQ5rS7tU9vW1xY3zA5bC7dE9fG1"')" 'Cloudflare user token'
+expect 2 $C "$(write_payload src/a.ts 'token = "github_pat_''11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyz"')" 'GitHub fine-grained token'
+expect 2 $C "$(write_payload src/a.ts 'token = "sntrys_''eyJpYXQiOjE3MDAwMDAwMDB9_aB3dE5fG7hJ9kL1mN3pQ5rS7tU9vW1xY3zA5bC7dE9f"')" 'Sentry org auth token'
 expect 0 $C "$(write_payload src/a.ts 'const k = "AKIA...";')" 'placeholder key'
+expect 0 $C "$(write_payload src/a.ts 'token = "cfut_..."; pat = "github_pat_..."; s = "sntrys_..."')" 'placeholder prefixed tokens'
 expect 0 $C "$(write_payload src/a.ts 'export const x = 1;')" 'ordinary source'
 
 G=security/guard-generated-files.sh
@@ -227,6 +238,26 @@ printf '%s' '{"hook_event_name":"InstructionsLoaded","file_path":"/r/CLAUDE.md",
 line=$(tail -n 1 "$SCRATCH/hooks/logs/instructions-loaded.log" 2>/dev/null | cut -f 2)
 [ "$(printf '%s' "$line" | jq -r '.path + " " + .reason' 2>/dev/null)" = '/r/CLAUDE.md session_start' ] ||
   fail "$L: file_path and load_reason must be logged (got: $line)"
+
+# Rule twins: equal bodies once links to sibling rules are mapped from .md to .mdc.
+rule_body() {
+  awk 'NR == 1 && !/^---$/ { body = 1 } body { print; next } /^---$/ && ++n == 2 { body = 1 }' "$1"
+}
+for md in "$ROOT"/.claude/rules/*/*.md; do
+  runs=$((runs + 1))
+  rel=${md#"$ROOT"/.claude/rules/}
+  mdc="$ROOT/.cursor/rules/${rel%.md}.mdc"
+  if [ ! -f "$mdc" ]; then
+    fail "rule twin missing: .cursor/rules/${rel%.md}.mdc"
+    continue
+  fi
+  want=$(rule_body "$md" | sed -E \
+    -e 's|\]\(((\.\./)?(\.\./)?[a-z-]*/?[a-z-]+)\.md(#[^)]*)?\)|](\1.mdc\4)|g' \
+    -e 's|\[([^]]*)\.md\]\(([^)]*\.mdc)|[\1.mdc](\2|g')
+  if [ "$want" != "$(rule_body "$mdc")" ]; then
+    fail "rule twin drift: .claude/rules/$rel vs .cursor/rules/${rel%.md}.mdc"
+  fi
+done
 
 printf '%s checks, %s failed\n' "$runs" "$fails"
 [ "$fails" -eq 0 ]

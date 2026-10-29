@@ -33,6 +33,9 @@ scan() {
 scan 'AWS access key id' 'AKIA[0-9A-Z]{16}'
 scan 'private key block' '-----BEGIN[A-Z ]*PRIVATE KEY-----'
 scan 'GitHub token' 'gh[pousr]_[A-Za-z0-9]{36,}'
+scan 'GitHub fine-grained token' 'github_pat_[A-Za-z0-9_]{36,}'
+scan 'Cloudflare API credential' 'cf(k|ut|at|ast)_[A-Za-z0-9_-]{40,}'
+scan 'Sentry org auth token' 'sntrys_[A-Za-z0-9+/=]+_[A-Za-z0-9+/]{43}'
 scan 'Slack token' 'xox[baprs]-[0-9A-Za-z-]{10,}'
 scan 'Anthropic API key' 'sk-ant-[A-Za-z0-9_-]{24,}'
 scan 'OpenAI API key' 'sk-(proj-)?[A-Za-z0-9]{32,}'
@@ -40,9 +43,6 @@ scan 'Google API key' 'AIza[0-9A-Za-z_-]{35}'
 scan 'Stripe secret key' 'sk_live_[0-9A-Za-z]{20,}'
 scan 'JSON web token' 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'
 
-# Deliberately NOT scanned: a bare 40-char-token-dot-suffix shape (the generic
-# Cloudflare API token form). It matches minified JS, content hashes and base64
-# blobs, and would deny ordinary edits - the same over-broad failure this audit
-# set out to remove. Path-based `permissions.deny` covers the files that hold it.
+# Unprefixed pre-2026 Cloudflare tokens stay unscanned: that bare shape matches minified JS and hashes.
 
 emit_allow

@@ -33,7 +33,7 @@ Allowed during a production investigation the user asked for; hand the command o
 
 - **Profile**: take the serving `version_id` from the first entry of `cf workers deployments list --worker <app>-production`, never `latest` (CD uploads and Previews create newer versions that serve nothing). Then `cf workers versions profile <version-id> --worker-id <app>-production --duration-ms 10000 --profile-type cpu > "$TMPDIR/<app>.pprof"`, or `heap` for allocations in the window (not retained memory). The version needs live traffic during the capture.
 - **Read**: `GOCACHE="$TMPDIR/go-build" go tool pprof -top -nodecount=30 <file>` (the sandbox denies Go's default cache). Check what is believed off: `sentryMiddleware` stays registered when `SENTRY_DSN` is empty.
-- **Telemetry**: the `cloudflare-observability` MCP first; without its OAuth (routines, CI): `cf o11y issues list --service <app>-production`, `cf o11y issues occurrences <issue-id>`, `cf o11y telemetry query --body '<json>'`.
+- **Telemetry**: the `cloudflare-api` MCP (read scopes only) first; without its OAuth (routines, CI): `cf o11y issues list --service <app>-production`, `cf o11y issues occurrences <issue-id>`, `cf o11y telemetry query --body '<json>'`.
 
 ## Modes and Build Output
 
@@ -73,7 +73,7 @@ For the hand-off: promote or roll back with `pnpm --filter=<app> exec cf workers
 ## Secrets
 
 - Local values come from a gitignored Worker `.env` or the shell (`SENTRY_DSN=… pnpm dev`; turbo passes `SENTRY_DSN` to `worker-api#dev`), never a `.dev.vars`; unset means Sentry is off in dev. The Vite plugin aborts on an env file it cannot read and the agent sandbox denies `**/.env`, so the agent session sets `SKIP_ENV_FILES=1` and sandboxed runs skip the `.env` (rule `backend/workers-config`).
-- Deployed secrets are declared with `bindings.secret()`; the `test` mode and Previews use `bindings.text("")` for `SENTRY_DSN`. Values go up with `--secrets-file <path>` on `cf deploy` / `cf workers versions create` (a file outside the checkout, e.g. under `$TMPDIR`, deleted after use), or one at a time with `read -rs V && pnpm --filter=<app> exec cf workers secrets update <NAME> --worker <app>-production --type secret_text --text "$V"; unset V`, which keeps the value out of shell history - users and CD only.
+- Deployed secrets are declared with `bindings.secret()`; the `test` mode and Previews use `bindings.text("")` for `SENTRY_DSN`. Values go up with `--secrets-file <path>` on `cf deploy` / `cf workers versions create` (a JSON file outside the checkout, e.g. under `$TMPDIR`, deleted after use: a dotenv file expands `$VAR` and yields to a same-named process environment variable, even an empty one), or one at a time with `read -rs V && pnpm --filter=<app> exec cf workers secrets update <NAME> --worker <app>-production --type secret_text --text "$V"; unset V`, which keeps the value out of shell history - users and CD only.
 - Every `apps/front-app/.env*` file holds public `VITE_*` values only, and the sandbox reads them through the `**/apps/front-app/.env*` allow, because `build` hashes them as inputs.
 
 ## Still Wrangler
@@ -89,9 +89,9 @@ The root devDependency `wrangler` stays for what cf lacks. Run it as `pnpm exec 
 
 ## Sandbox
 
-- `cf dev` and `--local` commands start workerd, so they need `sandbox.network.allowLocalBinding` and a sandbox-writable `CLOUDFLARE_REGISTRY_PATH`: cf keeps its dev registry there and sets `WRANGLER_REGISTRY_PATH` and `MINIFLARE_REGISTRY_PATH` to the same path for its children, so an inherited `WRANGLER_REGISTRY_PATH` does not reach them. The `WRANGLER_*` paths stay for the Workers Vitest pool and the Wrangler-only commands.
-- `hono request` starts the Cloudflare Vite plugin without cf, so cf's handoff does not apply: Miniflare reads `MINIFLARE_REGISTRY_PATH`, and without a sandbox-writable one it fails with `EPERM` on `~/.wrangler/registry` and then hangs.
-- Telemetry: cf checks `DO_NOT_TRACK`, then `CF_SEND_TELEMETRY`, then `WRANGLER_SEND_METRICS`. CI sets `DO_NOT_TRACK=1` and `CF_SEND_TELEMETRY=false`; agents run with `CF_SEND_TELEMETRY=false` from the settings `env`. Humans turn it off once per machine with `pnpm exec cf cli telemetry disable`, which replaces the `send_metrics: false` that left with `wrangler.jsonc`. `pnpm exec cf cli telemetry status` names the source.
+- `cf dev` and `--local` commands start workerd, so they need `sandbox.network.allowLocalBinding` and a sandbox-writable `CLOUDFLARE_DEV_REGISTRY_PATH`: cf passes the environment through unchanged, and Miniflare keeps its dev registry there. The `WRANGLER_*` paths stay for the Workers Vitest pool and the Wrangler-only commands.
+- `hono request` starts the Cloudflare Vite plugin without cf; its Miniflare reads the same `CLOUDFLARE_DEV_REGISTRY_PATH`, and without a sandbox-writable one it fails with `EPERM` on its default registry directory and then hangs.
+- Telemetry: cf checks `DO_NOT_TRACK`, then `CF_SEND_TELEMETRY`, then `WRANGLER_SEND_METRICS`. CI sets `DO_NOT_TRACK=1` and `CF_SEND_TELEMETRY=false`; agents run with `CF_SEND_TELEMETRY=false` from the settings `env`. Humans turn it off once per machine with `pnpm exec cf cli telemetry disable`, which replaces the `send_metrics: false` that left with `wrangler.jsonc`. `pnpm exec cf cli telemetry status` names the source. `cf deploy` and `cf workers versions create` also upload npm dependency metadata by default (cf `1.0.0-beta.15`); `cd.yml` and `preview.yml` set `CLOUDFLARE_DEPENDENCIES_INSTRUMENTATION=false`, so nothing leaves the pipeline.
 
 ## Wrangler habits
 
@@ -108,7 +108,7 @@ The root devDependency `wrangler` stays for what cf lacks. Run it as `pnpm exec 
 
 ## Docs
 
-The installed `node_modules/cf/README.md` and `--help` match the pinned beta; the pages below may lag it. Append `index.md` to a page URL for Markdown; where a page and the installed `--help` disagree, the help wins. Until cloudflare/cloudflare-docs#33735 merges, the `/cf/` pages return 404 - read the same paths on `https://docs-cloudflare-cli.preview.developers.cloudflare.com`.
+The installed `node_modules/cf/README.md` and `--help` match the pinned beta; the pages below may lag it. Append `index.md` to a page URL for Markdown; where a page and the installed `--help` disagree, the help wins.
 
 - Overview: https://developers.cloudflare.com/cf/
 - From Wrangler: https://developers.cloudflare.com/cf/wrangler/migrate/ and the command mapping, https://developers.cloudflare.com/cf/wrangler/reference/

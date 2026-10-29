@@ -1,0 +1,5 @@
+interface:
+  display_name: "Review Stack"
+  short_description: "Human-invoked review of third-party tools against current docs"
+policy:
+  allow_implicit_invocation: false

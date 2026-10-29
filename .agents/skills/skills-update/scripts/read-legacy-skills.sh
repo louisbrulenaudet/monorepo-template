@@ -47,8 +47,8 @@ for row in "${LEGACY_SKILLS[@]}"; do
   fi
 
   echo ""
-  echo "==> npx skills add ${source} --skill ${name} -y"
-  if ! npx skills add "${source}" --skill "${name}" -y; then
+  echo "==> pnpm exec skills add ${source} --skill ${name} -y"
+  if ! pnpm exec skills add "${source}" --skill "${name}" -y; then
     echo "error: failed to re-add skill '${name}' from '${source}'" >&2
     exit 1
   fi

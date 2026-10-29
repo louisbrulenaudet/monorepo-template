@@ -8,7 +8,7 @@ A minimal, production-oriented monorepo starter: **pnpm workspaces** + **Turbore
 
 `pnpm install`, then `pnpm dev` (all dev servers). One-time machine setup (`cf` telemetry off, `pnpm run login:cloudflare` / `login:turbo`, `pnpm prepare` for the Vite+ pre-commit hooks): README "Getting started".
 
-A new worker under `apps/` needs `monorepo.deployOrder` (lower promotes first; gateways before the SPAs that call them) and `monorepo.healthPath` (public probe path, or `null` for no public HTTP surface) in its `package.json`, then `pnpm install` before turbo commands. Nothing else lists apps: the changeset group, the root `--filter='./apps/*'` scripts, and CD all discover them.
+A new worker under `apps/` needs `monorepo.role` (`http-gateway` for the single gateway, `frontend` for an SPA; `apps.mjs` rejects a second gateway), `monorepo.deployOrder` (lower promotes first: callees before callers, so RPC `worker-*` / `queue-*` before the gateway and the gateway before the SPAs that call it), and `monorepo.healthPath` (public probe path, or `null` for no public HTTP surface) in its `package.json`, then `pnpm install` before turbo commands. Nothing else lists apps: the changeset group, the root `--filter='./apps/*'` scripts, and CD all discover them.
 
 ## Worker Prefixes
 
@@ -64,12 +64,12 @@ Cloudflare tooling is the `cf` CLI (beta) over each app's typed `cloudflare.conf
 | `pnpm run ci` | Full local PR gate: `pnpm run types`, `pnpm run boundaries`, one `turbo run --continue=dependencies-successful` of every check, `pnpm run audit`. Reports all failures in one pass |
 | `pnpm run ci:affected` | `ci` scoped with `--affected`, minus audit - mid-task only, never a substitute for `ci` |
 | `pnpm run ci:agent` | `ci` with `lint:agent`, `--output-logs=errors-only`, `--log-order=grouped` |
-| `pnpm run ci:sandbox` | `ci:agent` minus `build`: `front-app` declares `.env*` as `build` inputs, and turbo aborts traversal on one the sandbox cannot read. They are all readable through the `**/apps/front-app/.env*` allow once the settings patch lands; until then only `.env` and `.env.production` are. Ask the user to run `pnpm run ci` for build coverage |
+| `pnpm run ci:sandbox` | `ci:agent` minus `deploy:check`: `cf deploy --dry-run` stats the Worker `.env`, which the agent sandbox denies (rule `ops/ci`). Ask the user to run `pnpm run ci` for that check |
 | `pnpm react-doctor` / `:changed` | Offline React Doctor scan of `front-*`; `:changed` after React edits (rule `frontend/react`) |
 | `pnpm types` | `cf workers types` per Worker: regenerates the gitignored `.cloudflare/types/index.d.ts` (global `Env`) from `cloudflare.config.ts`. Cached by Turbo, and `check-types` depends on it |
 | `pnpm spell:check` / `spell:words` | cspell over the repo, dotfiles included / unknown words only, one per line. Vocabulary: `.cspell/project-words.txt` (not in `check` or `ci`) |
 | `pnpm knip` / `knip:production` / `knip:agent` | Unused files, exports, deps; `--production --strict`; one line per symbol. Diagnostic only, never in `ci` |
-| `pnpm jscpd` | Whole-repo copy/paste scan (`.jscpd.json`). Report-only, never in `check` or `ci`: the PR `Code quality` comment shows only the duplication and Knip findings a PR adds or resolves (rule `ops/quality-report`) |
+| `pnpm jscpd` / `jscpd:agent` | Whole-repo copy/paste scan (`.jscpd.json`); `:agent` prints the compact `ai` report. Report-only, never in `check` or `ci`: the PR `Code quality` comment shows only the duplication and Knip findings a PR adds or resolves (rule `ops/quality-report`) |
 | `pnpm preview:deploy` / `preview:delete` | Worker Preview of every app (branch-slug name). Outward-facing; denied to agents (rule `ops/previews`) |
 | `pnpm release:check` | Changeset gate, also in `ci`, `ci:agent`, `ci:sandbox`, and PR CI: fails when a shipped path or an app's runtime catalog entry changed with no changeset since `origin/main`, on a non-app name, a title over 100 characters or a heading, and on `major` without `CHANGESET_ALLOW_MAJOR=1`. Diffs tracked files only: `git add` a new changeset first |
 
@@ -101,16 +101,16 @@ Release state machine, recovery, and rollback: rule `ops/release`; contributor w
 | After editing a `cloudflare.config.ts` | `pnpm types`, then `pnpm check-types` |
 | Mid-task iteration | `pnpm run ci:affected` |
 | Full gate - required before finishing or opening a PR | `pnpm run ci`, or `pnpm run ci:agent` for machine-readable output |
-| Full gate inside a sandbox | `pnpm run ci:agent`; fall back to `pnpm run ci:sandbox` if traversal aborts, then hand `build` back to the user |
+| Full gate inside a sandbox | `pnpm run ci:agent`; when `deploy:check` hits `Operation not permitted` on a Worker `.env`, fall back to `pnpm run ci:sandbox` and hand `deploy:check` back to the user |
 | Run, smoke, browser-check, local traces, Preview probe | skill `run-app` |
 
 Run dev servers through the harness's background-task mechanism (never a bare `&`) and stop them when done.
 
 ## Agent tooling
 
-Dual-tree layout, sync policy, hooks, skills, MCP: skill `monorepo-agent-setup`; hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Every `apps/*`, `packages/*`, and `hooks/` directory has an `AGENTS.md` + `CLAUDE.md` pair - give new packages the same. `turbo query` and remote-cache provisioning: rule `core/turborepo`.
+Dual-tree layout, sync policy, hooks, skills, MCP: `.agents/skills/monorepo-agent-setup/SKILL.md` (human-only skill: Read it); hook scripts: [hooks/AGENTS.md](hooks/AGENTS.md). Every `apps/*`, `packages/*`, and `hooks/` directory has an `AGENTS.md` + `CLAUDE.md` pair - give new packages the same. `turbo query` and remote-cache provisioning: rule `core/turborepo`. An agent that does not load `.claude/rules` (Codex, OpenCode-style tools) reads the always-on rules first: `.claude/rules/core/guardrails.md` and `quality/{comments,simplicity,reporting}.md`.
 
-**Subagents** (read-only): `explorer`, `planner`, `verifier`, `bundle-analyzer`, `docs-researcher`, `reviewer` (launched by `/review`). They load this file and the always-on rules at start, and path-scoped rules when they Read a matching file. Use `explorer` / `planner` instead of the built-in `Explore` / `Plan`, which load neither `CLAUDE.md` nor `.claude/rules/`; if you use a built-in anyway, restate the binding constraints in the prompt. The human-only `/review` and `/review-stack` commands are described in [README.md](README.md).
+**Subagents**: `explorer`, `planner`, and `docs-researcher` are read-only by `tools`; `verifier`, `bundle-analyzer`, and `reviewer` (launched by `/review`) keep Bash and are read-only by prompt only. They load this file and the always-on rules at start, and path-scoped rules when they Read a matching file. Use `explorer` / `planner` instead of the built-in `Explore` / `Plan`, which skip root `CLAUDE.md`, this file, and the always-on rules (they load nested guides and path-scoped rules only on file access); if you use a built-in anyway, restate the binding constraints in the prompt. The human-only `/review` and `/review-stack` commands are described in [README.md](README.md).
 
 - **Main thread**: iterative work, phases sharing context, a small targeted change, latency-sensitive work.
 - **Plan mode**: an uncertain approach or a multi-file change; skip it when the diff fits one sentence.

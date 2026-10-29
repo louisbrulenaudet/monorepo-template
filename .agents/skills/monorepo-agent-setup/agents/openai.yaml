@@ -1,0 +1,5 @@
+interface:
+  display_name: "Monorepo Agent Setup"
+  short_description: "Agent tree layout and sync policy"
+policy:
+  allow_implicit_invocation: false

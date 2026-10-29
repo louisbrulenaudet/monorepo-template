@@ -5,6 +5,6 @@
 interface:
   display_name: "Skills Update"
   short_description: "Update locked skills one at a time via skills-lock.json"
-  default_prompt: "Use $skills-update to refresh skills listed in skills-lock.json without running a bare npx skills update."
+  default_prompt: "Use $skills-update to refresh skills listed in skills-lock.json without running a bare pnpm exec skills update."
 policy:
   allow_implicit_invocation: false

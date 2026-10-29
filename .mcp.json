@@ -4,9 +4,9 @@
       "type": "http",
       "url": "https://docs.mcp.cloudflare.com/mcp"
     },
-    "cloudflare-observability": {
+    "cloudflare-api": {
       "type": "http",
-      "url": "https://observability.mcp.cloudflare.com/mcp"
+      "url": "https://mcp.cloudflare.com/mcp"
     },
     "context7": {
       "type": "http",

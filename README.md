@@ -123,7 +123,7 @@ There is no generator: copy the closest sibling under `apps/`, its `cloudflare.c
 
 1. **Name** it with the prefix for its role (table in [AGENTS.md](AGENTS.md)), e.g. `apps/worker-account`, and rename `name` in `package.json` and in each deployment of `cloudflare.config.ts` (the bare name for development, `-staging` / `-production` for the deployed Workers).
 2. **Port**: take the next free port in the role's range - `server.port` in `vite.config.ts` and `monorepo.devPort` in `package.json`.
-3. **Release wiring** in the `package.json` `monorepo` block: `deployOrder` (lower promotes first - gateways before the SPAs that call them) and `healthPath` (the public path CD probes, or `null` when the app has no public HTTP surface). CD discovers apps from `apps/*` and fails closed when either is missing.
+3. **Release wiring** in the `package.json` `monorepo` block: `role` (`http-gateway` for the single gateway, `frontend` for an SPA), `deployOrder` (lower promotes first - callees before callers: RPC `worker-*` / `queue-*` before the gateway, the gateway before the SPAs that call it) and `healthPath` (the public path CD probes, or `null` when the app has no public HTTP surface). CD discovers apps from `apps/*` and fails closed when one is missing or a second app claims `http-gateway`. Add the new `<app>-production` Worker to the CD token's Specified Workers.
 4. **Turbo**: a package `turbo.json` with `"extends": ["//"]` and `"tags": ["app"]`, which `pnpm boundaries` checks.
 5. **Bindings and secrets**: in `env` of `cloudflare.config.ts` - `bindings.secret()` for a secret, with a `bindings.text()` fake in the `test` mode. Keep the same `env` keys in every mode: `Env` is inferred from the whole config.
 6. **Install and typegen**: `pnpm install`, then `pnpm types`.
@@ -153,7 +153,7 @@ Versioning is [Changesets](https://changesets.dev). Every app under `apps/` shar
 
 The secrets must live on the `production` environment: when `release.yml` calls `cd.yml`, a repository secret of the same name does not reach it, and the deploy stops at `Require deploy inputs`. `VITE_API_BASE_URL` is a variable, not a secret: it is also the environment URL, which cannot read secrets.
 
-Token permissions: Account → Workers Scripts Edit (required) and Account Settings Read (typical for `cf` and Wrangler); Zone → Workers Routes Edit only with zone routes; Account → Secrets Store Edit only when binding Secrets Store.
+Token permissions: an account-owned API token with the Workers **Editor** role scoped to Specified Workers (each `<app>-production`) and an expiration date, plus Account Settings Read (typical for `cf` and Wrangler). The one-off `bootstrap` run creates Workers, so give it a separate short-lived Workers Admin token; Zone → Workers Routes Edit only with zone routes; Account → Secrets Store Edit only when binding Secrets Store.
 
 Before the first production deploy:
 

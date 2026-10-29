@@ -47,8 +47,10 @@ apps/worker-api/
 2. Route `src/routes/<feature>.ts`, with `validator()` on every input. An input-less GET with a constant body (e.g. health) asserts the shared schema in Vitest instead of re-parsing on every request.
 3. Mount in `src/index.ts`.
 4. A new secret: `bindings.secret()` in `cloudflare.config.ts` with a `bindings.text()` fake in `TEST`, then `pnpm -w types`.
-5. Add the endpoint to the list in `README.md`.
-6. `pnpm run ci`.
+5. Add the endpoint to the list in `README.md` and to the Starter surface paragraph above.
+6. One Vitest case at the route boundary in `tests/routes/<feature>.test.ts` (rule `quality/testing`).
+7. When the SPA calls it: the service and query options in `apps/front-app/src/services/worker-api/` (front-app `AGENTS.md`, Adding a Feature).
+8. `pnpm run ci`.
 
 ## Security
 
@@ -64,7 +66,7 @@ Before shipping auth or other abuse-prone public writes, add a Workers [Rate Lim
 | `pnpm --filter=worker-api exec cf workers check --prebuilt --mode production` | After a build, and after dependency or DTO changes: bundle size and startup timings as JSON, CPU profile in `worker-startup.cpuprofile` (gitignored) |
 | `pnpm --filter=worker-api exec hono --help` | **Run first when working on this app.** Hono CLI (`@hono/cli`, a devDependency) agent guide from the installed version, so it cannot drift; every command prints JSON, `--plain` is for humans |
 | `pnpm --filter=worker-api run routes` | `hono routes`: every registered route as JSON, without booting a server; run it after changing middleware order or a mount, `--verbose` for middleware |
-| `pnpm --filter=worker-api exec hono request /api/v1/health` | Call a route without a dev server: in a `cf` project `hono request` defaults to `--runtime vite`, so the Cloudflare Vite plugin reads `cloudflare.config.ts` and `c.env` has this app's local bindings. The sandbox needs a writable `MINIFLARE_REGISTRY_PATH` (skill `cf`). This is the fast loop between edits, not a replacement for the pool suites |
+| `pnpm --filter=worker-api exec hono request /api/v1/health` | Call a route without a dev server: in a `cf` project `hono request` defaults to `--runtime vite`, so the Cloudflare Vite plugin reads `cloudflare.config.ts` and `c.env` has this app's local bindings. The sandbox needs a writable `CLOUDFLARE_DEV_REGISTRY_PATH` (skill `cf`). This is the fast loop between edits, not a replacement for the pool suites |
 | `curl -s http://localhost:8700/api/v1/health` | Call a route on the running dev server: smoke probes, CORS, and local traces (skill `run-app`) |
 | `pnpm -w turbo run test --filter=worker-api` | Vitest Workers pool, vitest run |
 | `pnpm -w turbo run <upload\|deploy> --filter=worker-api --force` | `cf workers versions create --prebuilt --mode production` (no traffic) / `cf deploy --prebuilt --mode production` (upload + 100%), each after `build` and `check-types`; `--force` skips cache reads, so it never ships a Build Output restored from the remote cache that PR runs can write. Promote or roll back with `cf workers deployments create` (root `README.md`, Releases and deploys) |

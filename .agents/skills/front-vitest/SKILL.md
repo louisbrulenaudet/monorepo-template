@@ -1,6 +1,6 @@
 ---
 name: front-vitest
-description: "Depth for Vitest tests of front-* React 19 SPAs when DOM, RTL, TanStack Query hooks, or TanStack Router route-tree tests are needed. USE WHEN: adding jsdom or testing-library, writing tsx render or renderHook tests, testing createMemoryHistory plus RouterProvider, Suspense UI, or React 19 act fixtures. DO NOT USE WHEN: Node-only services or queryOptions unit tests - follow the front-react path rule instead - or Workers pool tests."
+description: "Depth for Vitest tests of front-* React 19 SPAs when DOM, RTL, TanStack Query hooks, or TanStack Router route-tree tests are needed. USE WHEN: writing testing-library tests, writing tsx render or renderHook tests, testing createMemoryHistory plus RouterProvider, Suspense UI, or React 19 act fixtures. DO NOT USE WHEN: Node-only services or queryOptions unit tests - follow the front-react path rule instead - or Workers pool tests."
 metadata:
   source: project-owned
 ---
@@ -17,7 +17,7 @@ Installed in front-app (catalog deps): happy-dom, @testing-library/react, @testi
 
 Keep package default environment node for existing Node suites. A DOM suite opts in per file with the control comment `// @vitest-environment happy-dom` on line 1 (installed default; jsdom only as a per-file fallback, see Prerequisites).
 
-Setup file `apps/front-app/vitest.setup.ts` (wired via `setupFiles`): sets `globalThis.IS_REACT_ACT_ENVIRONMENT = true` for every suite, then behind a `typeof document !== "undefined"` guard imports `@testing-library/jest-dom/vitest` and registers `afterEach(cleanup)` - Node suites skip the harness entirely - Vitest globals are off, so RTL auto-cleanup never registers, and `isolate: false` would leak DOM state across files without it. React act requires that flag; see https://react.dev/reference/react/act .
+Setup file `apps/front-app/vitest.setup.ts` (wired via `setupFiles`): sets `globalThis.IS_REACT_ACT_ENVIRONMENT = true` for every suite, then behind a `typeof document !== "undefined"` guard imports `@testing-library/jest-dom/vitest` and registers `afterEach(cleanup)` and `configure({ reactStrictMode: true })` - Node suites skip the harness entirely - Vitest globals are off, so RTL auto-cleanup never registers, and `isolate: false` would leak DOM state across files without it. React act requires that flag; see https://react.dev/reference/react/act .
 
 ### Vitest config for JSX
 
@@ -29,7 +29,7 @@ Do not blindly mergeConfig the full apps/front-app/vite.config.ts - it loads clo
 
 - Prefer await act with an async callback. Sync act is discouraged and will be deprecated. Prefer RTL render / userEvent, which wrap act.
 - ref is a normal prop - do not add forwardRef in new fixtures.
-- StrictMode double-invokes render/effects/ref callbacks in development only. Vitest does not mount StrictMode unless the test tree does.
+- RTL renders under StrictMode, because `vitest.setup.ts` sets `configure({ reactStrictMode: true })`: effects and ref callbacks run twice on mount, so never assert a mount-time call count.
 - use with a promise needs a stable, cached promise under Suspense - never use fetch created during render.
 - useActionState is the React 19 name formerly useFormState in canaries.
 

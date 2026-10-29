@@ -21,7 +21,7 @@ The test is reach, not similarity: look-alike shapes that never cross the same b
 | Layer | Import | Shape rules | Consumer validation |
 |-------|--------|-------------|---------------------|
 | HTTP REST | `@repo/dtos-common/api` | JSON-safe types only (no `Date` on the wire) | `validator()` in `worker-api`, `fetchJsonWithSchema` in `front-app` |
-| RPC | `@repo/dtos-common/rpc` | service-binding shapes; may use `z.coerce.date()` or ISO strings and richer joined read models not exposed on public HTTP | parse at the binding boundary before business logic |
+| RPC | `@repo/dtos-common/rpc` | service-binding shapes; use `z.date()` (structured clone carries a `Date`), one shared `z.codec(z.iso.datetime(), z.date(), …)` from `dtos-common` for a `Date` crossing a JSON layer (queue, webhook), never `z.coerce.date()` (it accepts `null`, `true`, and numbers), plus richer joined read models not exposed on public HTTP | parse at the binding boundary before business logic |
 | Queue | `@repo/dtos-common/queue` | durable job payloads; version carefully once several producers or consumers exist; `…MessageSchema` | parse in `handlers/message.ts` (or equivalent) |
 | Webhook | `@repo/dtos-common/webhook` | third-party event bodies; `…EventSchema` | parse at the `webhook-*` route/handler entry, before handing off to business workers |
 

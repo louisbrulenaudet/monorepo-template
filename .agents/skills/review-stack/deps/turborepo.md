@@ -49,3 +49,4 @@ Workflow-level CI structure beyond turbo invocations is out of scope (`/review c
 ## Accepted
 
 - Task rationale in [.claude/rules/core/turborepo.md](../../../../.claude/rules/core/turborepo.md) (`//#` root tasks, cache inputs) and tag rationale in [core/boundaries.md](../../../../.claude/rules/core/boundaries.md).
+- `apps/front-app/turbo.json` lists the `VITE_*` build env names that framework inference already adds: the list documents what reaches the build, so a new `VITE_*` key is added there too.
